@@ -35,6 +35,31 @@
 		</div>
 	</div>
 
+	<div class="view" data-path="fsp:publish">
+		<div class="header space-between">
+			<a class="back">[назад]</a>
+			<div class="caption grow">Публикация</div>
+		</div>
+		<div class="objects">
+			<div class="object type-text">
+				<div class="object-column">
+					<div class="content-view">
+						<p>Текст сообщения:</p>
+						<p><textarea name="text"></textarea></p>
+						<div class="input-addon">(просто текст без разметки)</div>
+						<p>Комментируемый объект:</p>
+						<p><input type="text" name="reply" value=""></p>
+						<div class="input-addon">(опциональное поле, содержит адрес на объект)</div>
+						<p class="error publish-error"></p>
+						<p class="success publish-success"></p>
+						<p><a class="button publish-action">Опубликовать</a><span class="submit-button-ring"></span></p>
+						<p><em>Внимание! Вся информация будет записана в блокчейн, её невозможно будет «удалить».</em></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<div class="view" data-level="0">
 		<div class="header space-between">
 			<a class="show-menu">[меню]</a>

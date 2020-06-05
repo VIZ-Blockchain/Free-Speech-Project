@@ -6,7 +6,7 @@ body{
 a{
 	cursor:pointer;
 }
-input{
+input,textarea{
 	outline:none;
 }
 .content{
@@ -150,6 +150,15 @@ input{
 }
 .content-view input{
 	width:100%;
+	font-size:15px;
+	line-height:20px;
+	padding:5px 10px;
+	border:1px solid #ccd;
+	border-radius:15px;
+}
+.content-view textarea{
+	width:100%;
+	height:30vh;
 	font-size:15px;
 	line-height:20px;
 	padding:5px 10px;
