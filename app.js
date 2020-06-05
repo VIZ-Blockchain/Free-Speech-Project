@@ -2,7 +2,7 @@ var level=0;
 var path='viz://';
 var search='';
 
-function app_mouse(){
+function app_mouse(e){
 	if(!e)e=window.event;
 	var target=e.target || e.srcElement;
 	if(typeof $(target).attr('data-href') != 'undefined'){
@@ -108,6 +108,6 @@ $(window).on('hashchange',function(e){
 parse_fullpath();
 view_path(path,{},true);
 
-document.addEventListener('click', app_mouse, false);
-document.addEventListener('tap', app_mouse, false);
-document.addEventListener('keyup', app_keyboard, false);
+document.addEventListener('click',app_mouse,false);
+document.addEventListener('tap',app_mouse,false);
+document.addEventListener('keyup',app_keyboard,false);
