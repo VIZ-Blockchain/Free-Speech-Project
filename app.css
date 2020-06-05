@@ -21,6 +21,7 @@ input{
 	width:598px;
 	border:1px solid #ccd;
 	border-top:0;
+	border-bottom:0;
 }
 .header{
 	height:53px;
@@ -49,6 +50,9 @@ input{
 }
 .header .grow{
 	flex-grow:1;
+}
+.header .caption{
+	margin-left:15px;
 }
 .header .link{
 	padding:0 10px;
@@ -123,12 +127,95 @@ input{
 .object.type-text-preview .object-column .author-column{
 	margin:0;
 }
-
+.object.type-text .author-column .profile-link{
+	display:block;
+	margin:0;
+}
 .reply-view{
 	margin:2px 0;
 	color:#596c7c;
 }
 .reply-view a{
+	color:#1c98e5;
+}
+.object.type-text .content-view{
+	margin:10px 0;
+	font-size:20px;
+}
+.object.type-text .content-view a{
+	color:#1c98e5;
+}
+.content-view p{
+	margin-bottom:5px;
+}
+.content-view input{
+	width:100%;
+	font-size:15px;
+	line-height:20px;
+	padding:5px 10px;
+	border:1px solid #ccd;
+	border-radius:15px;
+}
+.input-addon{
+	font-size:14px;
+	margin-bottom:10px;
+}
+.button{
+	display:inline-block;
+	background:#1c98e5;
+	color:#fff !important;
+	border-radius:25px;
+	line-height:25px;
+	font-size:18px;
+	font-weight:bold;
+	padding:15px 30px;
+	margin:5px 0;
+	box-shadow:0px 5px 15px rgba(0,0,0,0.1);
+	transition-duration:0.2s;
+	transition-property:background-color;
+}
+.button:hover{
+	background:#1a83c4;
+}
+.button.disabled{
+	opacity:0.5;
+}
+.error{
+	font-size:15px;
+	color:#e90b0b;
+}
+.success{
+	font-size:15px;
+	color:#1a83c4;
+}
+.object.type-text .date-view{
+	color:#99a;
+	font-size:18px;
+	margin:5px 0;
+}
+.object.type-text .date-view div{
+	display:inline;
+}
+.object.type-text .date-view .date::before{
+	content:"·";
+	margin:0 5px;
+}
+
+.actions-view{
+	display:flex;
+	flex-direction:row;
+	-webkit-box-direction:normal;
+	-webkit-box-orient:horizontal;
+	justify-content:space-between;
+	border-top:1px solid #dde;
+	margin:10px 0;
+	padding-top:10px;
+}
+.actions-view a{
+	flex-direction:column;
+	flex-basis:15%;
+}
+.actions-view a:hover{
 	color:#1c98e5;
 }
 div.avatar{
@@ -147,4 +234,30 @@ div.avatar .shadow{
 }
 div.avatar:hover .shadow{
 	box-shadow: inset 0 -1px 20px rgba(50,50,100,0.3);
+}
+.submit-button-ring{
+	display:none;
+	width:50px;
+	height:50px;
+	vertical-align:middle;
+	margin-left:20px;
+}
+.submit-button-ring:after {
+	content:" ";
+	display:block;
+	width:30px;
+	height:30px;
+	margin-top:10px;
+	border-radius:50%;
+	border:5px solid #fff;
+	border-color:rgba(0, 0, 0, 0.3) transparent rgba(0, 0, 0, 0.3) transparent;
+	animation:ring 1.5s linear infinite;
+}
+@keyframes ring {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
 }

@@ -10,6 +10,31 @@
 </head>
 <body class="light">
 <div class="content">
+
+	<div class="view" data-path="fsp:settings">
+		<div class="header space-between">
+			<a class="back">[назад]</a>
+			<div class="caption grow">Настройки</div>
+		</div>
+		<div class="objects">
+			<div class="object type-text">
+				<div class="object-column">
+					<div class="content-view">
+						<p>Аккаунт в VIZ:</p>
+						<p><input type="text" name="viz_account" value=""></p>
+						<div class="input-addon">(регистрация через <a href="https://start.viz.plus/" target="_blank">start.viz.plus</a>)</div>
+						<p>Приватный обычный ключ:</p>
+						<p><input type="password" name="viz_regular_key" value=""></p>
+						<div class="input-addon">(regular private key)</div>
+						<p class="error save-action-error"></p>
+						<p class="success save-action-success"></p>
+						<p><a class="button account-save-action">Сохранить</a><span class="submit-button-ring"></span></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<div class="view" data-level="0">
 		<div class="header space-between">
 			<a class="show-menu">[меню]</a>
@@ -20,13 +45,16 @@
 			<div class="object type-text-preview">
 				<div class="avatar-column"><div class="avatar"><a data-href="viz://@author/"><div class="shadow"></div><img src="https://pbs.twimg.com/profile_images/994867894680018944/I3fNnxvS_bigger.jpg"></a></div></div>
 				<div class="object-column">
-					<div class="author-view"><a class="profile-name"></a><a class="profile-link"></a><a data-href="viz://@author/block_num/" class="short-date-view"></a></div>
+					<div class="author-view">
+						<div class="author-column"><a class="profile-name">Anatoly Piskunov</a><a class="profile-link">@on1x</a><a data-href="viz://@author/block_num/" class="short-date-view">date&hellip;</a></div>
+					</div>
 					<div class="content-view">&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br></div>
-					<div class="actions"><a class="share">[поделиться]</a><a class="reply">[ответить]</a><a class="award">[наградить]</a><a class="copy-link">[скопировать ссылку]</a></div>
+					<div class="actions-view"><a class="share">[поделиться]</a><a class="reply">[ответить]</a><a class="award">[наградить]</a><a class="copy-link">[скопировать ссылку]</a></div>
 				</div>
 			</div>
 		</div>
 	</div>
+
 	<div class="view" data-level="1" data-path="viz://@on1x/">
 		<div class="header space-between">
 			<a class="back">[назад]</a>
@@ -40,9 +68,9 @@
 					<div class="author-column"><a class="profile-name">Anatoly Piskunov</a><a class="profile-link">@on1x</a></div>
 				</div>
 				<div class="object-column">
-					<div class="content-view">&hellip;</div>
-					<div class="date-view"><div class="time">time &hellip;</div><div class="date"> date&hellip;</div></div>
-					<div class="actions"><a class="share">[поделиться]</a><a class="reply">[ответить]</a><a class="award">[наградить]</a><a class="copy-link">[скопировать ссылку]</a></div>
+					<div class="content-view">Текст сообщения в социальной сети:<br>- бла<br>- бла<br>- бла&hellip;</div>
+					<div class="date-view"><div class="time">time&hellip;</div><div class="date">date&hellip;</div></div>
+					<div class="actions-view"><a class="share">[поделиться]</a><a class="reply">[ответить]</a><a class="award">[наградить]</a><a class="copy-link">[скопировать ссылку]</a></div>
 				</div>
 			</div>
 
@@ -50,16 +78,17 @@
 				<div class="avatar-column"><div class="avatar"><a href="avatar"><div class="shadow"></div><img src="https://pbs.twimg.com/profile_images/994867894680018944/I3fNnxvS_bigger.jpg"></a></div></div>
 				<div class="object-column">
 					<div class="author-view">
-						<div class="author-column"><a class="profile-name">Anatoly Piskunov</a><a class="profile-link">@on1x</a><a data-href="viz://@author/block_num/" class="short-date-view">&hellip;</a></div>
+						<div class="author-column"><a class="profile-name">Anatoly Piskunov</a><a class="profile-link">@on1x</a><a data-href="viz://@author/block_num/" class="short-date-view">date&hellip;</a></div>
 					</div>
 					<div class="reply-view">В ответ <a data-href="viz://@on1x/">@on1x</a></div>
 					<div class="content-view">&hellip;</div>
-					<div class="actions"><a class="share">[поделиться]</a><a class="reply">[ответить]</a><a class="award">[наградить]</a><a class="copy-link">[скопировать ссылку]</a></div>
+					<div class="actions-view"><a class="share">[поделиться]</a><a class="reply">[ответить]</a><a class="award">[наградить]</a><a class="copy-link">[скопировать ссылку]</a></div>
 				</div>
 			</div>
 
 		</div>
 	</div>
+
 </div>
 <script src="app.js?1"></script>
 </body>
