@@ -1,0 +1,8 @@
+.content{
+	margin:0 auto;
+	width:600px;
+	max-width:600px;
+	min-width:600px;
+	z-index:1;
+	position:relative;
+}
