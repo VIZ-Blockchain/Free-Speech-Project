@@ -300,7 +300,7 @@ div.avatar:hover .shadow{
 }
 .loader{
 	text-align:center;
-	padding:10vh 0;
+	padding:20vh 0;
 	width:598px;
 	height:100vh;
 	border:1px solid #ccd;
@@ -312,5 +312,6 @@ div.avatar:hover .shadow{
 }
 .none{
 	text-align:center;
-	padding:10vh 0;
+	padding:20vh 0;
+	font-size:20px;
 }
