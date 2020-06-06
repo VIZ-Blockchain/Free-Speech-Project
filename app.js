@@ -56,6 +56,7 @@ function app_mouse(e){
 function view_account_settings(view,path_parts,title){
 	document.title=ltmp_arr.account_settings_caption+' - '+title;
 	view.find('.header .caption').html(ltmp_arr.account_settings_caption);
+	$('.loader').css('display','none');
 	view.css('display','block');
 }
 function app_keyboard(e){
@@ -119,7 +120,7 @@ function view_path(location,state,save_state,update){
 	console.log('location: '+location,path_parts,'search: '+search);
 
 	if(''==path_parts[0]){
-		$('.loader').css('display','none');
+		$('.loader').css('display','block');
 		$('.view').css('display','none');
 		let view=$('.view[data-level="0"]');
 		let header='';
@@ -127,11 +128,12 @@ function view_path(location,state,save_state,update){
 		view.find('.header').html(header);
 		view.find('.objects').html(ltmp_arr.none);
 		level=0;
+		$('.loader').css('display','none');
 		view.css('display','block');
 	}
 	else{
 		if(0==path_parts[0].indexOf('fsp:')){
-			$('.loader').css('display','none');
+			$('.loader').css('display','block');
 			$('.view').css('display','none');
 			let view=$('.view[data-path="'+path_parts[0]+'"]');
 			level++;
@@ -142,6 +144,7 @@ function view_path(location,state,save_state,update){
 				setTimeout(window['view_'+current_view],1,view,path_parts,title);
 			}
 			else{
+				$('.loader').css('display','none');
 				view.css('display','block');
 			}
 		}
