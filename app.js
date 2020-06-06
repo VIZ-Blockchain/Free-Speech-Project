@@ -4,7 +4,8 @@ var search='';
 
 var ltmp_arr={
 	none:'<div class="none"><em>Ничего не найдено.</em></div>',
-	settings:'<a data-href="fsp:account">[настройки]</a>',
+	account_settings:'<a data-href="fsp:account_settings">[настройки]</a>',
+	account_settings_caption:'Настройки аккаунта',
 };
 function app_mouse(e){
 	if(!e)e=window.event;
@@ -52,6 +53,11 @@ function app_mouse(e){
 	*/
 }
 
+function view_account_settings(view,path_parts,title){
+	document.title=ltmp_arr.account_settings_caption+' - '+title;
+	view.find('.header .caption').html(ltmp_arr.account_settings_caption);
+	view.css('display','block');
+}
 function app_keyboard(e){
 	if(!e)e=window.event;
 	var key=(e.charCode)?e.charCode:((e.keyCode)?e.keyCode:((e.which)?e.which:0));
@@ -117,7 +123,7 @@ function view_path(location,state,save_state,update){
 		$('.view').css('display','none');
 		let view=$('.view[data-level="0"]');
 		let header='';
-		header+=ltmp_arr.settings;
+		header+=ltmp_arr.account_settings;
 		view.find('.header').html(header);
 		view.find('.objects').html(ltmp_arr.none);
 		level=0;
@@ -131,9 +137,9 @@ function view_path(location,state,save_state,update){
 			level++;
 			//view.data('level',level);
 			//execute view_ function if exist to prepare page (load vars to input)
-			if(typeof window['view_'+path[1]] === 'function'){
-				current_view=path[1];
-				setTimeout(window['view_'+path[1]],1,path_parts,title);
+			let current_view=path_parts[0].substring(('fsp:').length);
+			if(typeof window['view_'+current_view] === 'function'){
+				setTimeout(window['view_'+current_view],1,view,path_parts,title);
 			}
 			else{
 				view.css('display','block');
