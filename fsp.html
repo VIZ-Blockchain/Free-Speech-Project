@@ -12,10 +12,10 @@
 <body class="light">
 <div class="content">
 
-	<div class="view" data-path="fsp:settings">
+	<div class="view" data-path="fsp:account">
 		<div class="header space-between">
 			<a class="back">[назад]</a>
-			<div class="caption grow">Настройки</div>
+			<div class="caption grow">Аккаунт</div>
 		</div>
 		<div class="objects">
 			<div class="object type-text">
@@ -27,9 +27,52 @@
 						<p>Приватный обычный ключ:</p>
 						<p><input type="password" name="viz_regular_key" value=""></p>
 						<div class="input-addon">(regular private key)</div>
-						<p class="error save-action-error"></p>
-						<p class="success save-action-success"></p>
-						<p><a class="button account-save-action">Сохранить</a><span class="submit-button-ring"></span></p>
+						<p class="error save-account-error"></p>
+						<p class="success save-account-success"></p>
+						<p><a class="button account-save-account">Сохранить</a><span class="submit-button-ring"></span></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="view" data-path="fsp:profile">
+		<div class="header space-between">
+			<a class="back">[назад]</a>
+			<div class="caption grow">Профиль</div>
+		</div>
+		<div class="objects">
+			<div class="object type-text">
+				<div class="object-column">
+					<div class="content-view">
+						<p>Имя:</p>
+						<p><input type="text" name="nickname" value=""></p>
+						<div class="input-addon">(будет отображаться рядом с аккаунтом <span class="viz_account">@on1x</span>)</div>
+
+						<p>Немного о себе:</p>
+						<p><input type="text" name="about" value=""></p>
+						<div class="input-addon">(отображается в вашем профиле)</div>
+
+						<p>Ссылка на аватар:</p>
+						<p><input type="text" name="avatar" value=""></p>
+						<div class="input-addon">(минимальный размер изображения 49x49 пикселей)</div>
+
+						<p>Интересы:</p>
+						<p><input type="text" name="interests" value=""></p>
+						<div class="input-addon">(через запятую)</div>
+
+						<p>Телеграм:</p>
+						<p><input type="text" name="telegram" value=""></p>
+						<div class="input-addon">(укажите имя пользователя без символа «@»)</div>
+
+						<p>GitHub:</p>
+						<p><input type="text" name="github" value=""></p>
+						<div class="input-addon">(укажите имя пользователя)</div>
+
+						<p class="error save-profile-error"></p>
+						<p class="success save-profile-success"></p>
+						<p><a class="button account-save-profile">Сохранить</a><span class="submit-button-ring"></span></p>
+						<p><em>Внимание! Вся информация будет записана в блокчейн, её можно заменить, но невозможно будет «удалить» или «стереть» из истории.</em></p>
 					</div>
 				</div>
 			</div>
@@ -63,9 +106,9 @@
 
 	<div class="view" data-level="0">
 		<div class="header space-between">
-			<a class="show-menu">[меню]</a>
+			<a class="show-menu">[настройки]</a>
 			<a class="view-profile">[профиль]</a>
-			<a class="new-object">[написать]</a>
+			<a class="new-object">[поиск]</a>
 		</div>
 		<div class="objects">
 			<div class="object type-text-preview">
@@ -81,11 +124,10 @@
 		</div>
 	</div>
 
-	<div class="view" data-level="1" data-path="viz://@on1x/">
+	<div class="view" data-level="1" data-path="viz://@on1x/1554345/">
 		<div class="header space-between">
 			<a class="back">[назад]</a>
-			<div class="link grow"><input type="text" value="" placeholder="viz://"></div>
-			<a class="award">[наградить]</a>
+			<div class="link grow"><input type="text" value="viz://@on1x/1554345/" disabled></div>
 		</div>
 		<div class="objects">
 			<div class="object type-text">
@@ -112,6 +154,34 @@
 				</div>
 			</div>
 
+		</div>
+	</div>
+
+
+	<div class="view" data-level="2" data-path="viz://@on1x/">
+		<div class="header space-between">
+			<a class="back">[назад]</a>
+			<div class="link grow"><input type="text" value="viz://@on1x/" disabled></div>
+			<a data-href="fsp:profile">[изменить]</a>
+			<a class="new-object">[написать]</a>
+		</div>
+		<div class="tabs">
+			<a class="show-all current">Всё</a>
+			<a class="show-posts">Посты</a>
+			<a class="show-reposts">Репосты</a>
+			<a class="show-replies">Ответы</a>
+		</div>
+		<div class="objects">
+			<div class="object type-text-preview">
+				<div class="avatar-column"><div class="avatar"><a data-href="viz://@author/"><div class="shadow"></div><img src="https://pbs.twimg.com/profile_images/994867894680018944/I3fNnxvS_bigger.jpg"></a></div></div>
+				<div class="object-column">
+					<div class="author-view">
+						<div class="author-column"><a class="profile-name">Anatoly Piskunov</a><a class="profile-link">@on1x</a><a data-href="viz://@author/block_num/" class="short-date-view">date&hellip;</a></div>
+					</div>
+					<div class="content-view">&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br>&hellip;<br></div>
+					<div class="actions-view"><a class="share">[поделиться]</a><a class="reply">[ответить]</a><a class="award">[наградить]</a><a class="copy-link">[скопировать ссылку]</a></div>
+				</div>
+			</div>
 		</div>
 	</div>
 
