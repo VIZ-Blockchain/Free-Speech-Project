@@ -160,7 +160,7 @@ function save_account_settings(view,login,regular_key,energy_step){
 
 var level=0;
 var path='viz://';
-var search='';
+var query='';
 
 function ltmp(ltmp_str,ltmp_args){
 	for(ltmp_i in ltmp_args){
@@ -193,7 +193,7 @@ var ltmp_arr={
 	account_not_found:'Пользователь не найден',
 
 	view:`
-		<div class="view" data-level="{level}" data-path="{path}" data-search="{search}">
+		<div class="view" data-level="{level}" data-path="{path}" data-query="{query}">
 			<div class="header space-between"></div>
 			{profile}
 			{tabs}
@@ -208,6 +208,9 @@ var ltmp_arr={
 
 	header_back_action:'<a class="back-action">[назад]</a>',
 	header_link:'<div class="link grow"><input type="text" class="header-link" value="{link}" disabled></div>',
+
+	edit_profile_link:'<a data-href="fsp:profile">[изменить]</a>',
+	new_object_link:'<a data-href="fsp:publish">[написать]</a>',
 };
 
 function app_mouse(e){
@@ -249,14 +252,14 @@ function app_mouse(e){
 
 		level--;
 		path='viz://';
-		search='';
+		query='';
 		//search prev level props
 		if(0<$('.view[data-level="'+level+'"]').length){
 			if(typeof $('.view[data-level="'+level+'"]').data('path') != 'undefined'){
 				path=$('.view[data-level="'+level+'"]').data('path');
 			}
-			if(typeof $('.view[data-level="'+level+'"]').data('search') != 'undefined'){
-				search=$('.view[data-level="'+level+'"]').data('search');
+			if(typeof $('.view[data-level="'+level+'"]').data('query') != 'undefined'){
+				query=$('.view[data-level="'+level+'"]').data('query');
 			}
 		}
 		//trigger view_path with update prop
@@ -313,13 +316,13 @@ function app_keyboard(e){
 function parse_fullpath(){
 	let fullpath=window.location.hash.substr(1);
 	path='';
-	search='';
+	query='';
 	if(-1==fullpath.indexOf('?')){
 		path=fullpath;
 	}
 	else{
 		path=fullpath.substring(0,fullpath.indexOf('?'));
-		search=fullpath.substring(fullpath.indexOf('?')+1);
+		query=fullpath.substring(fullpath.indexOf('?')+1);
 	}
 	if(''==path){
 		path='viz://';
@@ -332,16 +335,25 @@ var preload_object={};
 function view_path(location,state,save_state,update){
 	//save to history browser
 	save_state=typeof save_state==='undefined'?false:save_state;
-	//update current level?
+	//update current level? not work now
 	update=typeof update==='undefined'?false:update;
 	var path_parts=[];
 	var title='Free Speech Project';
 
 	if(typeof state.path == 'undefined'){
 		if(-1!=location.indexOf('viz://')){
+			//check query state
+			if(-1!=location.indexOf('?')){
+				query=location.substring(location.indexOf('?')+1);
+				location=location.substring(0,location.indexOf('?'));
+			}
 			path_parts=location.substr(location.indexOf('viz://')+6).split('/');
 		}
 		else{
+			if(-1!=location.indexOf('?')){
+				query=location.substring(location.indexOf('?')+1);
+				location=location.substring(0,location.indexOf('?'));
+			}
 			path_parts=location.split('/');
 		}
 	}
@@ -354,12 +366,12 @@ function view_path(location,state,save_state,update){
 	//$('.view').css('display','none');
 
 	if(save_state){
-		history.pushState({path,title},'','#'+location);
+		history.pushState({path,title},'','#'+location+(''!=query?'?'+query:''));
 	}
 
 	document.title=title;
 
-	console.log('location: '+location,path_parts,'search: '+search);
+	console.log('location: '+location,path_parts,'query: '+query);
 
 	if(''==path_parts[0]){
 		$('.loader').css('display','block');
@@ -410,7 +422,7 @@ function view_path(location,state,save_state,update){
 							$('.loader').css('display','block');
 							$('.view').css('display','none');
 							level++;
-							let new_view=ltmp(ltmp_arr.view,{level:level,path:location,search:search,tabs:'',profile:''});
+							let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
 							$('.content').append(new_view);
 							let view=$('.view[data-level="'+level+'"]');
 							let header='';
@@ -426,7 +438,7 @@ function view_path(location,state,save_state,update){
 								$('.loader').css('display','block');
 								$('.view').css('display','none');
 								level++;
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,search:search,tabs:'',profile:''});
+								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
 								$('.content').append(new_view);
 								let view=$('.view[data-level="'+level+'"]');
 								let header='';
@@ -482,13 +494,16 @@ function view_path(location,state,save_state,update){
 								$('.loader').css('display','block');
 								$('.view').css('display','none');
 								level++;
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,search:search,tabs:'',profile:profile});
-								console.log(new_view);
+								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile});
 								$('.content').append(new_view);
 								let view=$('.view[data-level="'+level+'"]');
 								let header='';
 								header+=ltmp_arr.header_back_action;
 								header+=ltmp(ltmp_arr.header_link,{link:location});
+								if(check_account==current_user){
+									header+=ltmp_arr.edit_profile_link;
+									header+=ltmp_arr.new_object_link;
+								}
 								view.find('.header').html(header);
 								view.find('.objects').html(ltmp_arr.loader_notice);
 								$('.loader').css('display','none');
