@@ -1,3 +1,84 @@
+var api_gates=[
+	'https://node.viz.plus/',
+	'https://vizrpc.lexa.host/',
+	'https://viz-node.dpos.space/',
+	'https://solox.world/',
+];
+var default_api_gate=api_gates[0];
+var best_gate=-1;
+var best_gate_latency=-1;
+var api_gate=default_api_gate;
+console.log('using default node',default_api_gate);
+viz.config.set('websocket',default_api_gate);
+
+select_best_gate();
+
+function update_api_gate(value=false){
+	if(false==value){
+		api_gate=api_gates[best_gate];
+	}
+	else{
+		api_gate=value;
+	}
+	console.log('using new node',api_gate,'latency: ',best_gate_latency);
+	viz.config.set('websocket',api_gate);
+}
+
+function select_best_gate(){
+	for(i in api_gates){
+		let current_gate=i;
+		let current_gate_url=api_gates[i];
+		let latency_start=new Date().getTime();
+		let latency=-1;
+
+		let protocol='websocket';
+		let gate_protocol=current_gate_url.substring(0,current_gate_url.indexOf(':'));
+
+		if('http'==gate_protocol||'https'==gate_protocol){
+			protocol='http';
+		}
+		if('websocket'==protocol){
+			let socket = new WebSocket(current_gate_url);
+			socket.onmessage=function(event){
+				latency=new Date().getTime() - latency_start;
+				if(best_gate!=current_gate){
+					if((best_gate_latency>latency)||(best_gate==-1)){
+						best_gate=current_gate;
+						best_gate_latency=latency;
+						update_api_gate();
+					}
+				}
+				socket.close();
+			}
+			socket.onopen=function(){
+				socket.send('{"id":1,"method":"call","jsonrpc":"2.0","params":["database_api","get_dynamic_global_properties",[]]}');
+			};
+		}
+		if('http'==protocol){
+			let xhr = new XMLHttpRequest();
+			xhr.overrideMimeType('text/plain');
+
+			xhr.open('GET',current_gate_url);
+			xhr.setRequestHeader('accept','application/json, text/plain, */*');
+			xhr.setRequestHeader('content-type','application/json');
+			xhr.onreadystatechange = function() {
+				if(4==xhr.readyState && 200==xhr.status){
+					latency=new Date().getTime() - latency_start;
+					console.log('check node',current_gate_url,'latency: ',latency);
+					if(best_gate!=current_gate){
+						if((best_gate_latency>latency)||(best_gate==-1)){
+							best_gate=current_gate;
+							best_gate_latency=latency;
+							update_api_gate();
+						}
+					}
+				}
+			}
+			xhr.send('{"id":1,"method":"call","jsonrpc":"2.0","params":["database_api","get_dynamic_global_properties",[]]}');
+		}
+	}
+}
+
 var level=0;
 var path='viz://';
 var search='';
@@ -10,6 +91,7 @@ var ltmp_arr={
 	search:'<a data-href="fsp:search">[поиск]</a>',
 	search_caption:'Поиск',
 };
+
 function app_mouse(e){
 	if(!e)e=window.event;
 	var target=e.target || e.srcElement;
