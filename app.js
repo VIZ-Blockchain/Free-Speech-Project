@@ -764,7 +764,9 @@ function view_path(location,state,save_state,update){
 							console.log(err);
 							$('.loader').css('display','block');
 							$('.view').css('display','none');
-							level++;
+							if(!update){
+								level++;
+							}
 							let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
 							$('.content').append(new_view);
 							let view=$('.view[data-level="'+level+'"]');
@@ -780,7 +782,9 @@ function view_path(location,state,save_state,update){
 							if(typeof response[0] == 'undefined'){
 								$('.loader').css('display','block');
 								$('.view').css('display','none');
-								level++;
+								if(!update){
+									level++;
+								}
 								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
 								$('.content').append(new_view);
 								let view=$('.view[data-level="'+level+'"]');
@@ -837,7 +841,9 @@ function view_path(location,state,save_state,update){
 
 								$('.loader').css('display','block');
 								$('.view').css('display','none');
-								level++;
+								if(!update){
+									level++;
+								}
 								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile});
 								$('.content').append(new_view);
 								let view=$('.view[data-level="'+level+'"]');
