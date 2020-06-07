@@ -200,6 +200,9 @@ input,textarea{
 	font-size:15px;
 	color:#1a83c4;
 }
+.success a{
+	text-decoration:underline;
+}
 .object.type-text .date-view{
 	color:#99a;
 	font-size:18px;

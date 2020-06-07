@@ -1,3 +1,6 @@
+var app_version=1;
+var app_protocol='V';//V for Voice :)
+
 var api_gates=[
 	'https://node.viz.plus/',
 	'https://vizrpc.lexa.host/',
@@ -215,8 +218,84 @@ var ltmp_arr={
 	new_object_link:'<a data-href="fsp:publish">[написать]</a>',
 
 	publish_caption:'Публикация',
+	publish_empty_text:'Введите текст публикации',
+	publish_success:'Публикация успешно опубликована&hellip;',
+	publish_success_link:'Публикация успешно опубликована: <a data-href="viz://@{account}/{block}/">ссылка</a>',
 };
 
+function publish(view){
+	let text=view.find('textarea[name="text"]').val();
+	text=text.trim();
+
+	if(''==text){
+		view.find('.submit-button-ring').removeClass('show');
+		view.find('.error').html(ltmp_arr.publish_empty_text);
+		view.find('.button').removeClass('disabled');
+		return;
+	}
+
+	viz.api.getAccounts([current_user],function(err,response){
+		if(err){
+			console.log(err);
+			view.find('.submit-button-ring').removeClass('show');
+			view.find('.error').html(ltmp_arr.gateway_error);
+			view.find('.button').removeClass('disabled');
+			return;
+		}
+		else{
+			if(typeof response[0] !== 'undefined'){
+				let previous=response[0].custom_sequence_block_num;
+				let new_object={};
+				if(previous>0){
+					new_object.p=previous;
+				}
+				if(app_version>1){
+					new_object.v=app_version;
+				}
+				//new_object.t='text';//optional, this is the default
+				//new_object.u=new Date().getTime() /1000 | 0;//for delayed publication
+
+				let data={};
+				data.text=text;
+
+				new_object.d=data;
+				let object_json=JSON.stringify(new_object);
+
+				viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
+					if(result){
+						console.log(result);
+						view.find('.submit-button-ring').removeClass('show');
+						view.find('.success').html(ltmp_arr.publish_success);
+						view.find('.button').removeClass('disabled');
+						setTimeout(function(){
+							viz.api.getAccounts([current_user],function(err,response){
+								if(typeof response[0] !== 'undefined'){
+									if(response[0].custom_sequence_block_num!=previous){
+										view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:response[0].custom_sequence_block_num}));
+									}
+								}
+							});
+						},1000)
+					}
+					else{
+						console.log(err);
+						view.find('.submit-button-ring').removeClass('show');
+						view.find('.error').html(ltmp_arr.gateway_error);
+						view.find('.button').removeClass('disabled');
+						return;
+					}
+				});
+			}
+			else{
+				console.log(err);
+				view.find('.submit-button-ring').removeClass('show');
+				view.find('.error').html(ltmp_arr.account_not_found);
+				view.find('.button').removeClass('disabled');
+				return;
+			}
+		}
+	});
+}
 function app_mouse(e){
 	if(!e)e=window.event;
 	var target=e.target || e.srcElement;
@@ -231,6 +310,18 @@ function app_mouse(e){
 		*/
 		view_path(href,{},true,false);
 		e.preventDefault();
+	}
+	if($(target).hasClass('publish-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+
+			let view=$(target).closest('.view');
+			view.find('.submit-button-ring').addClass('show');
+			view.find('.error').html('');
+			view.find('.success').html('');
+
+			publish(view);
+		}
 	}
 	if($(target).hasClass('save-profile-action')){
 		if(!$(target).hasClass('disabled')){
