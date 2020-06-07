@@ -351,3 +351,10 @@ div.avatar:hover .shadow{
 .profile .contacts a:last-child{
 	margin-right:0;
 }
+
+.js-copy{
+	display:block;
+	position:absolute;
+	top:-100px;
+	opacity:0;
+}

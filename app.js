@@ -4,7 +4,7 @@ var app_protocol='V';//V for Voice :)
 var api_gates=[
 	'https://node.viz.plus/',
 	'https://vizrpc.lexa.host/',
-	'https://viz-node.dpos.space/',
+//	'https://viz-node.dpos.space/',
 	'https://solox.world/',
 ];
 var default_api_gate=api_gates[0];
@@ -236,7 +236,7 @@ var ltmp_arr={
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
-	object_type_text_actions:'<a class="share">[поделиться]</a><a class="reply">[ответить]</a><a class="award">[наградить]</a><a class="copy-link">[скопировать ссылку]</a>',
+	object_type_text_actions:'<!--<a class="share">[поделиться]</a><a class="reply">[ответить]</a><a class="award">[наградить]</a>--><a class="copy-link" data-link="{link}">[копир.ссылку]</a>',
 	object_type_text_preview:`
 		<div class="object type-text-preview">
 			<div class="avatar-column"><div class="avatar"><a data-href="viz://{author}/"><div class="shadow"></div><img src="{avatar}"></a></div></div>
@@ -339,6 +339,20 @@ function app_mouse(e){
 		*/
 		view_path(href,{},true,false);
 		e.preventDefault();
+	}
+	if($(target).hasClass('header-link')){
+		let text=$(target).val();
+		$('.js-copy').val(text);
+		$('.js-copy')[0].select();
+		$('.js-copy')[0].setSelectionRange(0,99999);
+		document.execCommand("copy");
+	}
+	if($(target).hasClass('copy-link')){
+		let text=$(target).data('link');
+		$('.js-copy').val(text);
+		$('.js-copy')[0].select();
+		$('.js-copy')[0].setSelectionRange(0,99999);
+		document.execCommand("copy");
 	}
 	if($(target).hasClass('publish-action')){
 		if(!$(target).hasClass('disabled')){
@@ -945,12 +959,14 @@ function view_path(location,state,save_state,update){
 											text=escape_html(text);
 											text=fast_str_replace("\n",'<br>',text);
 
+											let link='viz://'+check_account+'/'+check_block+'/';
+
 											let object_view=ltmp(ltmp_arr.object_type_text,{
 												author:author,
 												nickname:nickname,
 												avatar:avatar,
 												text:item.d.text,
-												actions:'',
+												actions:ltmp(ltmp_arr.object_type_text_actions,{link:link}),
 												timestamp:item.timestamp,
 											});
 
