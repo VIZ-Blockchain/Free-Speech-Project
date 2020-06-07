@@ -191,6 +191,7 @@ var ltmp_arr={
 
 	search:'<a data-href="fsp:search">[поиск]</a>',
 	search_caption:'Поиск',
+	search_empty_input:'Введите адрес для поиска',
 
 	gateway_error:'Ошибка, попробуйте позже',
 	account_not_found:'Пользователь не найден',
@@ -330,15 +331,42 @@ function app_mouse(e){
 	var target=e.target || e.srcElement;
 	if(typeof $(target).attr('data-href') != 'undefined'){
 		var href=$(target).attr('data-href');
-		/*//change menu element state
-		if($(target).hasClass('menu-el')){
-			if('none'==$('.menu-list').css('float')){
-				$('.menu-list').css('display','none');
-			}
-		}
-		*/
 		view_path(href,{},true,false);
 		e.preventDefault();
+	}
+
+	if($(target).hasClass('preset-action')){
+		$('input[name="'+$(target).data('input')+'"]').val($(target).data('value'));
+	}
+	if($(target).hasClass('search-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+
+			let view=$(target).closest('.view');
+			view.find('.submit-button-ring').addClass('show');
+			view.find('.error').html('');
+			view.find('.success').html('');
+
+			let search=view.find('input[name="search"]').val();
+			search=search.trim();
+			if(''==search){
+				view.find('.error').html(ltmp_arr.search_empty_input);
+				$(target).removeClass('disabled');
+				view.find('.submit-button-ring').removeClass('show');
+				return;
+			}
+
+
+			if(-1!=search.indexOf('viz://')){
+				view_path(search,{},true,false);
+			}
+			else{
+				if('@'==search.substring(0,1)){
+					search=search.substring(1);
+				}
+				view_path('viz://@'+search+'/',{},true,false);
+			}
+		}
 	}
 	if($(target).hasClass('header-link')){
 		let text=$(target).val();
@@ -526,6 +554,23 @@ function save_profile(view){
 	});
 }
 
+function view_search(view,path_parts,query,title){
+	document.title=ltmp_arr.search_caption+' - '+title;
+	view.find('.header .caption').html(ltmp_arr.search_caption);
+
+	console.log(view.find('.button'));
+	view.find('.button').removeClass('disabled');
+	view.find('.submit-button-ring').removeClass('show');
+	view.find('.error').html('');
+	view.find('.success').html('');
+
+	view.find('input').val('');
+
+	$('.loader').css('display','none');
+	view.css('display','block');
+	view.find('input[name=search]')[0].focus();
+}
+
 function view_publish(view,path_parts,query,title){
 	document.title=ltmp_arr.publish_caption+' - '+title;
 	view.find('.header .caption').html(ltmp_arr.publish_caption);
@@ -543,7 +588,6 @@ function view_publish(view,path_parts,query,title){
 	view.find('.viz_account').html('@'+current_user);
 
 	$('.loader').css('display','none');
-
 	view.css('display','block');
 }
 
@@ -631,16 +675,6 @@ function view_account_settings(view,path_parts,query,title){
 
 	$('.loader').css('display','none');
 	view.css('display','block');
-}
-
-function view_search(view,path_parts,query,title){
-	document.title=ltmp_arr.search_caption+' - '+title;
-	view.find('.header .caption').html(ltmp_arr.search_caption);
-	view.find('input[name=search]').val('');
-	$('.loader').css('display','none');
-	view.css('display','block');
-	//focus working only after parent block is show up
-	view.find('input[name=search]')[0].focus();
 }
 
 function app_keyboard(e){
