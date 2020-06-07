@@ -416,6 +416,7 @@ function view_path(location,state,save_state,update){
 					check_account=check_account.toLowerCase();
 					check_account=check_account.trim();
 					preload_account={};
+					preload_object={};
 					viz.api.getAccounts([check_account],function(err,response){
 						if(err){
 							console.log(err);
@@ -450,6 +451,7 @@ function view_path(location,state,save_state,update){
 								view.css('display','block');
 							}
 							else{
+								preload_account=response[0];
 								let profile_view='';
 								let profile_obj={};
 								let profile_found=false;
@@ -485,9 +487,9 @@ function view_path(location,state,save_state,update){
 										profile_view+=ltmp(ltmp_arr.profile_contacts,{contacts:profile_contacts});
 									}
 								}
-
 								let profile='';
 								if(profile_found){
+									preload_object=profile_obj;
 									profile=ltmp(ltmp_arr.profile,{profile:profile_view});
 								}
 
