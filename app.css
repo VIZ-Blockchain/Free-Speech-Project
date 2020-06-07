@@ -343,6 +343,7 @@ div.avatar:hover .shadow{
 }
 .profile .contacts a{
 	margin:0 5px;
+	color:#000;
 }
 .profile .contacts a:last-child{
 	margin-right:0;

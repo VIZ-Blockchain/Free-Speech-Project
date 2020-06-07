@@ -211,6 +211,7 @@ var ltmp_arr={
 
 	edit_profile_link:'<a data-href="fsp:edit_profile">[изменить]</a>',
 	edit_profile_caption:'Настройка профиля',
+	edit_profile_saved:'Профиль сохранен',
 	new_object_link:'<a data-href="fsp:publish">[написать]</a>',
 };
 
@@ -228,6 +229,18 @@ function app_mouse(e){
 		*/
 		view_path(href,{},true,false);
 		e.preventDefault();
+	}
+	if($(target).hasClass('save-profile-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+
+			let view=$(target).closest('.view');
+			view.find('.submit-button-ring').addClass('show');
+			view.find('.error').html('');
+			view.find('.success').html('');
+
+			save_profile(view);
+		}
 	}
 	if($(target).hasClass('save-account-action')){
 		if(!$(target).hasClass('disabled')){
@@ -272,6 +285,109 @@ function app_mouse(e){
 		$(window)[0].scrollTo({behavior:'smooth',top:0});
 	}
 	*/
+}
+
+function save_profile(view){
+	let nickname=view.find('input[name="nickname"]').val();
+	nickname=nickname.trim();
+
+	let about=view.find('input[name="about"]').val();
+	about=about.trim();
+
+	let avatar=view.find('input[name="avatar"]').val();
+	avatar=avatar.trim();
+
+	let telegram=view.find('input[name="telegram"]').val();
+	telegram=telegram.trim();
+
+	let github=view.find('input[name="github"]').val();
+	github=github.trim();
+
+	viz.api.getAccounts([current_user],function(err,response){
+		if(err){
+			console.log(err);
+			view.find('.submit-button-ring').removeClass('show');
+			view.find('.error').html(ltmp_arr.gateway_error);
+			view.find('.button').removeClass('disabled');
+			return;
+		}
+		else{
+			if(typeof response[0] !== 'undefined'){
+				let json_metadata={};
+				if(''!=response[0].json_metadata){
+					json_metadata=JSON.parse(response[0].json_metadata);
+				}
+
+				if(typeof json_metadata.profile === 'undefined'){
+					json_metadata.profile={};
+				}
+
+				json_metadata.profile.nickname=nickname;
+				json_metadata.profile.about=about;
+				json_metadata.profile.avatar=avatar;
+
+				if(typeof json_metadata.profile.services === 'undefined'){
+					json_metadata.profile.services={};
+				}
+
+				if(''==telegram){
+					if(typeof json_metadata.profile.services.telegram !== 'undefined'){
+						delete json_metadata.profile.services.telegram;
+					}
+				}
+				else{
+					json_metadata.profile.services.telegram=telegram;
+				}
+
+				if(''==github){
+					if(typeof json_metadata.profile.services.github !== 'undefined'){
+						delete json_metadata.profile.services.github;
+					}
+				}
+				else{
+					json_metadata.profile.services.github=github;
+				}
+
+				if(Object.keys(json_metadata.profile.services).length==0){
+					delete json_metadata.profile.services;
+				}
+
+				if(''==json_metadata.profile.about){
+					delete json_metadata.profile.about;
+				}
+				if(''==json_metadata.profile.avatar){
+					delete json_metadata.profile.avatar;
+				}
+				if(''==json_metadata.profile.nickname){
+					delete json_metadata.profile.nickname;
+				}
+
+				let new_json_metadata=JSON.stringify(json_metadata);
+
+				viz.broadcast.accountMetadata(users[current_user].regular_key,current_user,new_json_metadata,function(err,result){
+					if(result){
+						view.find('.submit-button-ring').removeClass('show');
+						view.find('.success').html(ltmp_arr.edit_profile_saved);
+						view.find('.button').removeClass('disabled');
+					}
+					else{
+						console.log(err);
+						view.find('.submit-button-ring').removeClass('show');
+						view.find('.error').html(ltmp_arr.gateway_error);
+						view.find('.button').removeClass('disabled');
+						return;
+					}
+				});
+			}
+			else{
+				console.log(err);
+				view.find('.submit-button-ring').removeClass('show');
+				view.find('.error').html(ltmp_arr.account_not_found);
+				view.find('.button').removeClass('disabled');
+				return;
+			}
+		}
+	});
 }
 
 function view_edit_profile(view,path_parts,title){
