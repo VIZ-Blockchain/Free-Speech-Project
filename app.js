@@ -162,6 +162,13 @@ var level=0;
 var path='viz://';
 var search='';
 
+function ltmp(ltmp_str,ltmp_args){
+	for(ltmp_i in ltmp_args){
+		ltmp_str=ltmp_str.split('{'+ltmp_i+'}').join(ltmp_args[ltmp_i]);
+	}
+	return ltmp_str;
+}
+
 var ltmp_arr={
 	none:'<div class="none"><em>Ничего не найдено.</em></div>',
 	account_settings:'<a data-href="fsp:account_settings">[настройки]</a>',
@@ -170,6 +177,8 @@ var ltmp_arr={
 	account_seetings_empty_regular_key:'Введите регулярный ключ',
 	account_seetings_account_not_found:'Аккаунт не найден',
 	account_settings_saved:'Данные аккаунта сохранены',
+
+	view_profile:'<a data-href="viz://@{account}/">[профиль]</a>',
 
 	invalid_regular_key:'Предоставленный ключ недействителен',
 	not_found_regular_key:'Предоставленный ключ не подходит',
@@ -332,6 +341,9 @@ function view_path(location,state,save_state,update){
 		let view=$('.view[data-level="0"]');
 		let header='';
 		header+=ltmp_arr.account_settings;
+		if(''!=current_user){
+			header+=ltmp(ltmp_arr.view_profile,{account:current_user});
+		}
 		header+=ltmp_arr.search;
 		view.find('.header').html(header);
 		view.find('.objects').html(ltmp_arr.none);
