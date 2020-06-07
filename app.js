@@ -57,7 +57,6 @@ function select_best_gate(){
 		if('http'==protocol){
 			let xhr = new XMLHttpRequest();
 			xhr.overrideMimeType('text/plain');
-
 			xhr.open('GET',current_gate_url);
 			xhr.setRequestHeader('accept','application/json, text/plain, */*');
 			xhr.setRequestHeader('content-type','application/json');
@@ -79,6 +78,86 @@ function select_best_gate(){
 	}
 }
 
+var users={};
+var current_user='';
+var default_energy_step=500;//5.00%
+
+if(null!=localStorage.getItem('users')){
+	users=JSON.parse(localStorage.getItem('users'));
+}
+if(null!=localStorage.getItem('current_user')){
+	current_user=localStorage.getItem('current_user');
+}
+
+function save_session(){
+	let users_json=JSON.stringify(users);
+	localStorage.setItem('users',users_json);
+	localStorage.setItem('current_user',current_user);
+}
+
+function save_account_settings(view,login,regular_key,energy_step){
+	login=login.toLowerCase();
+	if('@'==login.substring(0,1)){
+		login=login.substring(1);
+	}
+	login=login.trim();
+	regular_key=regular_key.trim();
+	if(''==login){
+		view.find('.submit-button-ring').removeClass('show');
+		view.find('.error').html(ltmp_arr.account_seetings_empty_account);
+		view.find('.button').removeClass('disabled');
+		return;
+	}
+	if(''==regular_key){
+		view.find('.submit-button-ring').removeClass('show');
+		view.find('.error').html(ltmp_arr.account_seetings_empty_regular_key);
+		view.find('.button').removeClass('disabled');
+		return;
+	}
+	viz.api.getAccounts([login],function(err,response){
+		if(typeof response[0] !== 'undefined'){
+			let regular_valid=false;
+			for(regular_check in response[0].regular_authority.key_auths){
+				if(response[0].regular_authority.key_auths[regular_check][1]>=response[0].regular_authority.weight_threshold){
+					try{
+						if(viz.auth.wifIsValid(regular_key,response[0].regular_authority.key_auths[regular_check][0])){
+							regular_valid=true;
+						}
+					}
+					catch(e){
+						view.find('.submit-button-ring').removeClass('show');
+						view.find('.error').html(ltmp_arr.invalid_regular_key);
+						view.find('.button').removeClass('disabled');
+						return;
+					}
+				}
+			}
+			if(!regular_valid){
+				view.find('.submit-button-ring').removeClass('show');
+				view.find('.error').html(ltmp_arr.not_found_regular_key);
+				view.find('.button').removeClass('disabled');
+				return;
+			}
+			//clear users, maybe multi-account support in future
+			users={};
+			users[login]={'regular_key':regular_key,'energy_step':energy_step};
+			current_user=login;
+			save_session();
+
+			view.find('.submit-button-ring').removeClass('show');
+			view.find('.success').html(ltmp_arr.account_settings_saved);
+			view.find('.button').removeClass('disabled');
+		}
+		else{
+			console.log(err);
+			view.find('.submit-button-ring').removeClass('show');
+			view.find('.error').html(ltmp_arr.account_seetings_account_not_found);
+			view.find('.button').removeClass('disabled');
+			return;
+		}
+	});
+}
+
 var level=0;
 var path='viz://';
 var search='';
@@ -87,6 +166,13 @@ var ltmp_arr={
 	none:'<div class="none"><em>Ничего не найдено.</em></div>',
 	account_settings:'<a data-href="fsp:account_settings">[настройки]</a>',
 	account_settings_caption:'Настройки аккаунта',
+	account_seetings_empty_account:'Введите аккаунт',
+	account_seetings_empty_regular_key:'Введите регулярный ключ',
+	account_seetings_account_not_found:'Аккаунт не найден',
+	account_settings_saved:'Данные аккаунта сохранены',
+
+	invalid_regular_key:'Предоставленный ключ недействителен',
+	not_found_regular_key:'Предоставленный ключ не подходит',
 
 	search:'<a data-href="fsp:search">[поиск]</a>',
 	search_caption:'Поиск',
@@ -106,6 +192,20 @@ function app_mouse(e){
 		*/
 		view_path(href,{},true,false);
 		e.preventDefault();
+	}
+	if($(target).hasClass('save-account-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+
+			let view=$(target).closest('.view');
+			view.find('.submit-button-ring').addClass('show');
+			view.find('.error').html('');
+			view.find('.success').html('');
+
+			let viz_account=view.find('input[name="viz_account"]').val();
+			let viz_regular_key=view.find('input[name="viz_regular_key"]').val();
+			save_account_settings(view,viz_account,viz_regular_key,default_energy_step);
+		}
 	}
 	if($(target).hasClass('back-action')){
 		$('.loader').css('display','block');
@@ -141,6 +241,17 @@ function app_mouse(e){
 function view_account_settings(view,path_parts,title){
 	document.title=ltmp_arr.account_settings_caption+' - '+title;
 	view.find('.header .caption').html(ltmp_arr.account_settings_caption);
+
+	view.find('.button').removeClass('disabled');
+	view.find('.submit-button-ring').removeClass('show');
+	view.find('.error').html('');
+	view.find('.success').html('');
+
+	view.find('input').val('');
+
+	view.find('input[name=viz_account]').val(current_user);
+	view.find('input[name=viz_regular_key]').val(users[current_user].regular_key);
+
 	$('.loader').css('display','none');
 	view.css('display','block');
 }

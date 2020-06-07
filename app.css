@@ -279,6 +279,9 @@ div.avatar:hover .shadow{
 	vertical-align:middle;
 	margin-left:20px;
 }
+.submit-button-ring.show{
+	display:inline-block;
+}
 .submit-button-ring:after {
 	content:" ";
 	display:block;
