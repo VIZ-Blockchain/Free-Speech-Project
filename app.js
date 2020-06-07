@@ -213,6 +213,8 @@ var ltmp_arr={
 	edit_profile_caption:'Настройка профиля',
 	edit_profile_saved:'Профиль сохранен',
 	new_object_link:'<a data-href="fsp:publish">[написать]</a>',
+
+	publish_caption:'Публикация',
 };
 
 function app_mouse(e){
@@ -390,7 +392,28 @@ function save_profile(view){
 	});
 }
 
-function view_edit_profile(view,path_parts,title){
+function view_publish(view,path_parts,query,title){
+	document.title=ltmp_arr.publish_caption+' - '+title;
+	view.find('.header .caption').html(ltmp_arr.publish_caption);
+
+	view.find('.button').removeClass('disabled');
+	view.find('.submit-button-ring').removeClass('show');
+	view.find('.error').html('');
+	view.find('.success').html('');
+
+	view.find('input').val('');
+	view.find('textarea').val('');
+
+	view.find('.reply-addon').css('display','none');
+	view.find('.share-addon').css('display','none');
+	view.find('.viz_account').html('@'+current_user);
+
+	$('.loader').css('display','none');
+
+	view.css('display','block');
+}
+
+function view_edit_profile(view,path_parts,query,title){
 	document.title=ltmp_arr.edit_profile_caption+' - '+title;
 	view.find('.header .caption').html(ltmp_arr.edit_profile_caption);
 
@@ -458,7 +481,7 @@ function view_edit_profile(view,path_parts,title){
 	view.css('display','block');
 }
 
-function view_account_settings(view,path_parts,title){
+function view_account_settings(view,path_parts,query,title){
 	document.title=ltmp_arr.account_settings_caption+' - '+title;
 	view.find('.header .caption').html(ltmp_arr.account_settings_caption);
 
@@ -476,7 +499,7 @@ function view_account_settings(view,path_parts,title){
 	view.css('display','block');
 }
 
-function view_search(view,path_parts,title){
+function view_search(view,path_parts,query,title){
 	document.title=ltmp_arr.search_caption+' - '+title;
 	view.find('.header .caption').html(ltmp_arr.search_caption);
 	view.find('input[name=search]').val('');
@@ -584,7 +607,7 @@ function view_path(location,state,save_state,update){
 			//execute view_ function if exist to prepare page (load vars to input)
 			let current_view=path_parts[0].substring(('fsp:').length);
 			if(typeof window['view_'+current_view] === 'function'){
-				setTimeout(window['view_'+current_view],1,view,path_parts,title);
+				setTimeout(window['view_'+current_view],1,view,path_parts,query,title);
 			}
 			else{
 				$('.loader').css('display','none');
