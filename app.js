@@ -209,7 +209,8 @@ var ltmp_arr={
 	header_back_action:'<a class="back-action">[назад]</a>',
 	header_link:'<div class="link grow"><input type="text" class="header-link" value="{link}" disabled></div>',
 
-	edit_profile_link:'<a data-href="fsp:profile">[изменить]</a>',
+	edit_profile_link:'<a data-href="fsp:edit_profile">[изменить]</a>',
+	edit_profile_caption:'Настройка профиля',
 	new_object_link:'<a data-href="fsp:publish">[написать]</a>',
 };
 
@@ -271,6 +272,74 @@ function app_mouse(e){
 		$(window)[0].scrollTo({behavior:'smooth',top:0});
 	}
 	*/
+}
+
+function view_edit_profile(view,path_parts,title){
+	document.title=ltmp_arr.edit_profile_caption+' - '+title;
+	view.find('.header .caption').html(ltmp_arr.edit_profile_caption);
+
+	view.find('.button').removeClass('disabled');
+	view.find('.submit-button-ring').removeClass('show');
+	view.find('.error').html('');
+	view.find('.success').html('');
+	view.find('.viz_account').html('@'+current_user);
+
+	view.find('input').val('');
+	if(0<Object.keys(preload_object).length){
+		if(typeof preload_object.nickname != 'undefined'){
+			view.find('input[name=nickname]').val(preload_object.nickname);
+		}
+		if(typeof preload_object.about != 'undefined'){
+			view.find('input[name=about]').val(preload_object.about);
+		}
+		if(typeof preload_object.avatar != 'undefined'){
+			view.find('input[name=avatar]').val(preload_object.avatar);
+		}
+		if(typeof preload_object.telegram != 'undefined'){
+			view.find('input[name=telegram]').val(preload_object.telegram);
+		}
+		if(typeof preload_object.github != 'undefined'){
+			view.find('input[name=github]').val(preload_object.github);
+		}
+	}
+	else{
+		viz.api.getAccounts([current_user],function(err,response){
+			if(err){
+				view.find('.error').html(ltmp_arr.gateway_error);
+			}
+			else{
+				if(typeof response[0] == 'undefined'){
+					view.find('.error').html(ltmp_arr.account_not_found);
+				}
+				else{
+					let json_metadata={};
+					if(''!=response[0].json_metadata){
+						json_metadata=JSON.parse(response[0].json_metadata);
+					}
+
+					if(typeof json_metadata.profile.nickname != 'undefined'){
+						view.find('input[name=nickname]').val(escape_html(json_metadata.profile.nickname));
+					}
+					if(typeof json_metadata.profile.avatar != 'undefined'){
+						view.find('input[name=avatar]').val(escape_html(json_metadata.profile.avatar));
+					}
+					if(typeof json_metadata.profile.about != 'undefined'){
+						view.find('input[name=about]').val(escape_html(json_metadata.profile.about));
+					}
+					if(typeof json_metadata.profile.services != 'undefined'){
+						if(typeof json_metadata.profile.services.github != 'undefined'){
+							view.find('input[name=github]').val(escape_html(json_metadata.profile.services.github));
+						}
+						if(typeof json_metadata.profile.services.telegram != 'undefined'){
+							view.find('input[name=telegram]').val(escape_html(json_metadata.profile.services.telegram));
+						}
+					}
+				}
+			}
+		});
+	}
+	$('.loader').css('display','none');
+	view.css('display','block');
 }
 
 function view_account_settings(view,path_parts,title){
@@ -460,13 +529,13 @@ function view_path(location,state,save_state,update){
 									json_metadata=JSON.parse(response[0].json_metadata);
 								}
 
-								if(typeof json_metadata.profile.nickname){
+								if(typeof json_metadata.profile.nickname != 'undefined'){
 									profile_obj.nickname=escape_html(json_metadata.profile.nickname);
 								}
-								if(typeof json_metadata.profile.nickname){
+								if(typeof json_metadata.profile.avatar != 'undefined'){
 									profile_obj.avatar=escape_html(json_metadata.profile.avatar);
 								}
-								if(typeof json_metadata.profile.about){
+								if(typeof json_metadata.profile.about != 'undefined'){
 									profile_obj.about=escape_html(json_metadata.profile.about);
 									profile_view+=ltmp(ltmp_arr.profile_about,{about:profile_obj.about});
 									profile_found=true;
@@ -475,7 +544,7 @@ function view_path(location,state,save_state,update){
 								if(typeof json_metadata.profile.services != 'undefined'){
 									if(typeof json_metadata.profile.services.github != 'undefined'){
 										profile_obj.github=escape_html(json_metadata.profile.services.github);
-										profile_contacts+=ltmp(ltmp_arr.profile_contacts_telegram,{github:profile_obj.github});
+										profile_contacts+=ltmp(ltmp_arr.profile_contacts_github,{github:profile_obj.github});
 										profile_found=true;
 									}
 									if(typeof json_metadata.profile.services.telegram != 'undefined'){
