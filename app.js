@@ -174,6 +174,7 @@ function ltmp(ltmp_str,ltmp_args){
 
 var ltmp_arr={
 	none_notice:'<div class="none-notice"><em>Ничего не найдено.</em></div>',
+	load_more_end_notice:'<div class="load-more-end-notice"><em>Больше ничего не найдено.</em></div>',
 	error_notice:'<div class="error-notice"><em>{error}</em></div>',
 	loader_notice:'<div class="loader-notice"><span class="submit-button-ring"></span></div>',
 
@@ -226,9 +227,9 @@ var ltmp_arr={
 	publish_success_link:'Публикация успешно опубликована: <a data-href="viz://@{account}/{block}/">ссылка</a>',
 
 	object_type_text:`
-		<div class="object type-text">
+		<div class="object type-text" data-link="{link}">
 			<div class="author-view">
-				<div class="avatar-column"><div class="avatar"><a data-href="viz://{author}/"><div class="shadow"></div><img src="{avatar}"></a></div></div>
+				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 				<div class="author-column"><a data-href="viz://{author}/" class="profile-name">{nickname}</a><a data-href="viz://{author}/" class="profile-link">{author}</a></div>
 			</div>
 			<div class="object-column">
@@ -239,14 +240,14 @@ var ltmp_arr={
 		</div>`,
 	object_type_text_actions:'<!--<a class="share">[поделиться]</a><a class="reply">[ответить]</a><a class="award">[наградить]</a>--><a class="copy-link" data-link="{link}">[копир.ссылку]</a>',
 	object_type_text_preview:`
-		<div class="object type-text-preview">
-			<div class="avatar-column"><div class="avatar"><a data-href="viz://{author}/"><div class="shadow"></div><img src="{avatar}"></a></div></div>
+		<div class="object type-text-preview" data-link="{link}" data-previous="{previous}">
+			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">
-					<div class="author-column"><a class="profile-name">{nickname}</a><a class="profile-link">{author}</a><a data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
+					<div class="author-column"><a data-href="viz://{author}/" class="profile-name">{nickname}</a><a data-href="viz://{author}/" class="profile-link">{author}</a><a data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
 				</div>
 				{reply}
-				<div class="content-view">{text}</div>
+				<div class="content-view" data-href="{link}">{text}</div>
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
@@ -800,9 +801,9 @@ function view_path(location,state,save_state,update){
 							$('.view').css('display','none');
 							if(!update){
 								level++;
+								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
+								$('.content').append(new_view);
 							}
-							let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
-							$('.content').append(new_view);
 							let view=$('.view[data-level="'+level+'"]');
 							let header='';
 							header+=ltmp_arr.header_back_action;
@@ -818,9 +819,9 @@ function view_path(location,state,save_state,update){
 								$('.view').css('display','none');
 								if(!update){
 									level++;
+									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
+									$('.content').append(new_view);
 								}
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
-								$('.content').append(new_view);
 								let view=$('.view[data-level="'+level+'"]');
 								let header='';
 								header+=ltmp_arr.header_back_action;
@@ -877,9 +878,9 @@ function view_path(location,state,save_state,update){
 								$('.view').css('display','none');
 								if(!update){
 									level++;
+									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile});
+									$('.content').append(new_view);
 								}
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile});
-								$('.content').append(new_view);
 								let view=$('.view[data-level="'+level+'"]');
 								let header='';
 								header+=ltmp_arr.header_back_action;
@@ -892,6 +893,7 @@ function view_path(location,state,save_state,update){
 								view.find('.objects').html(ltmp_arr.loader_notice);
 								$('.loader').css('display','none');
 								view.css('display','block');
+								check_load_more();
 							}
 						}
 					});
@@ -992,33 +994,35 @@ function view_path(location,state,save_state,update){
 											view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
 										}
 										else{
-											console.log(item);
+											//console.log(item);
 											let objects='';
 
 											let text=item.d.text;
 											text=escape_html(text);
 											text=fast_str_replace("\n",'<br>',text);
 
-											let link='viz://'+check_account+'/'+check_block+'/';
+											let link='viz://@'+check_account+'/'+check_block+'/';
 
 											let object_view=ltmp(ltmp_arr.object_type_text,{
 												author:author,
+												link:link,
 												nickname:nickname,
 												avatar:avatar,
-												text:item.d.text,
+												text:text,
 												actions:ltmp(ltmp_arr.object_type_text_actions,{link:link}),
 												timestamp:item.timestamp,
 											});
 
 											objects+=object_view;
 											view.find('.objects').html(objects);
-											let timestamp=view.find('.objects .date-view').data('timestamp');
-											view.find('.objects .date-view .date').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),false,false,false));
-											view.find('.objects .date-view .time').html(show_time(timestamp*1000-(new Date().getTimezoneOffset()*60000)));
+											let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+											view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),false,false,false));
+											view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000-(new Date().getTimezoneOffset()*60000)));
 										}
 
 										$('.loader').css('display','none');
 										view.css('display','block');
+										check_load_more();
 									}
 								});
 							}
@@ -1144,6 +1148,87 @@ function escape_html(text) {
 	return text.replace(/[&<>"']/g,function(m){return map[m];});
 }
 
+function load_more_objects(indicator){
+	let check_account=preload_account.name;
+	let offset=preload_account.custom_sequence_block_num;
+	indicator.parent().find('.object').each(function(){
+		if(offset>parseInt($(this).data('previous'))){
+			offset=parseInt($(this).data('previous'));
+		}
+	});
+	//console.log(preload_object);
+
+	viz.api.getOpsInBlock(offset,false,function(err,response){
+		if(err){
+			indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
+		}
+		else{
+			let item=false;
+			for(let i in response){
+				let item_i=i;
+				if('custom'==response[item_i].op[0]){
+					if(app_protocol==response[item_i].op[1].id){
+						let op=response[item_i].op[1];
+						if(op.required_regular_auths.includes(check_account)){
+							item=JSON.parse(response[item_i].op[1].json);
+							item.timestamp=Date.parse(response[item_i].timestamp) / 1000 | 0;
+						}
+					}
+				}
+			}
+			if(false==item){
+				indicator.before(ltmp_arr.load_more_end_notice);
+				indicator.remove();
+			}
+			else{
+				console.log(item);
+				let objects='';
+
+				let text=item.d.text;
+				text=escape_html(text);
+				text=fast_str_replace("\n",'<br>',text);
+
+				let link='viz://@'+check_account+'/'+offset+'/';
+				let author='@'+preload_account.name;
+				let object_view=ltmp(ltmp_arr.object_type_text_preview,{
+					reply:'',
+					author:author,
+					nickname:preload_object.nickname,
+					avatar:preload_object.avatar,
+					text:item.d.text,
+					previous:item.p,
+					link:link,
+					actions:ltmp(ltmp_arr.object_type_text_actions,{link:link}),
+					timestamp:item.timestamp,
+				});
+				/*
+				*/
+				indicator.before(object_view);
+				let new_object=indicator.parent().find('.object[data-link="'+link+'"]');
+				let timestamp=new_object.find('.short-date-view').data('timestamp');
+				new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+				check_load_more();
+			}
+		}
+	});
+}
+
+function check_load_more(){
+	var scroll_top=window.pageYOffset;
+	var window_height=window.innerHeight;
+	//console.log(scroll_top,window_height)
+	let view=$('.view[data-level="'+level+'"]');
+	view.find('.loader-notice').each(function(){
+		var indicator=$(this);
+		if('1'!=indicator.data('busy')){
+			var offset=indicator.offset();
+			if((scroll_top+window_height)>(offset.top+(indicator.outerHeight()*0.7))){
+				load_more_objects(indicator);
+			}
+		}
+	});
+}
+
 $(window).on('hashchange',function(e){
 	e.preventDefault();
 	parse_fullpath();
@@ -1156,3 +1241,10 @@ view_path(path,{},false,false);
 document.addEventListener('click',app_mouse,false);
 document.addEventListener('tap',app_mouse,false);
 document.addEventListener('keyup',app_keyboard,false);
+
+document.addEventListener('scroll',function(){
+	check_load_more();
+});
+window.onresize=function(){
+	check_load_more();
+}
