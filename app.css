@@ -313,8 +313,14 @@ div.avatar:hover .shadow{
 .loader .submit-button-ring{
 	display:inline-block;
 }
-.none{
+.none-notice{
 	text-align:center;
 	padding:20vh 0;
 	font-size:20px;
+}
+.error-notice{
+	text-align:center;
+	padding:20vh 0;
+	font-size:20px;
+	color:#e90b0b;
 }

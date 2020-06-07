@@ -170,7 +170,9 @@ function ltmp(ltmp_str,ltmp_args){
 }
 
 var ltmp_arr={
-	none:'<div class="none"><em>Ничего не найдено.</em></div>',
+	none:'<div class="none-notice"><em>Ничего не найдено.</em></div>',
+	error:'<div class="error-notice"><em>{error}</em></div>',
+
 	account_settings:'<a data-href="fsp:account_settings">[настройки]</a>',
 	account_settings_caption:'Настройки аккаунта',
 	account_seetings_empty_account:'Введите аккаунт',
@@ -185,6 +187,21 @@ var ltmp_arr={
 
 	search:'<a data-href="fsp:search">[поиск]</a>',
 	search_caption:'Поиск',
+
+	gateway_error:'Ошибка, попробуйте позже',
+	account_not_found:'Пользователь не найден',
+
+	view:`
+		<div class="view" data-level="{level}" data-path="{path}" data-search="{search}">
+			<div class="header space-between"></div>
+			{tabs}
+			<div class="objects">
+			</div>
+		</div>`,
+	tabs:'<div class="tabs"></div>',
+
+	header_back_action:'<a class="back-action">[назад]</a>',
+	header_link:'<div class="link grow"><input type="text" class="header-link" value="{link}" disabled></div>',
 };
 
 function app_mouse(e){
@@ -303,6 +320,9 @@ function parse_fullpath(){
 	}
 }
 
+var preload_account={};
+var preload_object={};
+
 function view_path(location,state,save_state,update){
 	//save to history browser
 	save_state=typeof save_state==='undefined'?false:save_state;
@@ -366,6 +386,54 @@ function view_path(location,state,save_state,update){
 			else{
 				$('.loader').css('display','none');
 				view.css('display','block');
+			}
+		}
+		else{
+			if(''==path_parts[1]){
+				//not object
+				//check account link
+				if('@'==path_parts[0].substring(0,1)){
+					//preload account for view with +1 level
+					let check_account=path_parts[0].substring(1);
+					check_account=check_account.toLowerCase();
+					check_account=check_account.trim();
+					preload_account={};
+					viz.api.getAccounts([check_account],function(err,response){
+						if(err){
+							console.log(err);
+							$('.loader').css('display','block');
+							$('.view').css('display','none');
+							level++;
+							let new_view=ltmp(ltmp_arr.view,{level:level,path:location,search:search,tabs:ltmp_arr.tabs});
+							$('.content').append(new_view);
+							let view=$('.view[data-level="'+level+'"]');
+							let header='';
+							header+=ltmp_arr.header_back_action;
+							header+=ltmp(ltmp_arr.header_link,{link:location});
+							view.find('.header').html(header);
+							view.find('.objects').html(ltmp(ltmp_arr.error,{error:ltmp_arr.gateway_error}));
+							$('.loader').css('display','none');
+							view.css('display','block');
+						}
+						else{
+							if(typeof response[0] == 'undefined'){
+								$('.loader').css('display','block');
+								$('.view').css('display','none');
+								level++;
+								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,search:search,tabs:ltmp_arr.tabs});
+								$('.content').append(new_view);
+								let view=$('.view[data-level="'+level+'"]');
+								let header='';
+								header+=ltmp_arr.header_back_action;
+								header+=ltmp(ltmp_arr.header_link,{link:location});
+								view.find('.header').html(header);
+								view.find('.objects').html(ltmp(ltmp_arr.error,{error:ltmp_arr.account_not_found}));
+								$('.loader').css('display','none');
+								view.css('display','block');
+							}
+						}
+					});
+				}
 			}
 		}
 	}
