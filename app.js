@@ -6,6 +6,9 @@ var ltmp_arr={
 	none:'<div class="none"><em>Ничего не найдено.</em></div>',
 	account_settings:'<a data-href="fsp:account_settings">[настройки]</a>',
 	account_settings_caption:'Настройки аккаунта',
+
+	search:'<a data-href="fsp:search">[поиск]</a>',
+	search_caption:'Поиск',
 };
 function app_mouse(e){
 	if(!e)e=window.event;
@@ -59,6 +62,17 @@ function view_account_settings(view,path_parts,title){
 	$('.loader').css('display','none');
 	view.css('display','block');
 }
+
+function view_search(view,path_parts,title){
+	document.title=ltmp_arr.search_caption+' - '+title;
+	view.find('.header .caption').html(ltmp_arr.search_caption);
+	view.find('input[name=search]').val('');
+	$('.loader').css('display','none');
+	view.css('display','block');
+	//focus working only after parent block is show up
+	view.find('input[name=search]')[0].focus();
+}
+
 function app_keyboard(e){
 	if(!e)e=window.event;
 	var key=(e.charCode)?e.charCode:((e.keyCode)?e.keyCode:((e.which)?e.which:0));
@@ -125,6 +139,7 @@ function view_path(location,state,save_state,update){
 		let view=$('.view[data-level="0"]');
 		let header='';
 		header+=ltmp_arr.account_settings;
+		header+=ltmp_arr.search;
 		view.find('.header').html(header);
 		view.find('.objects').html(ltmp_arr.none);
 		level=0;

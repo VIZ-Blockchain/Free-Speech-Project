@@ -13,6 +13,7 @@
 <body class="light">
 <div class="content">
 	<div class="loader"><span class="submit-button-ring"></span></div>
+
 	<div class="view" data-path="fsp:account_settings">
 		<div class="header space-between">
 			<a class="back-action">[назад]</a>
@@ -35,7 +36,28 @@
 						-->
 						<p class="error save-account-error"></p>
 						<p class="success save-account-success"></p>
-						<p><a class="button account-save-account">Сохранить</a><span class="submit-button-ring"></span></p>
+						<p><a class="button save-account-action">Сохранить</a><span class="submit-button-ring"></span></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="view" data-path="fsp:search">
+		<div class="header space-between">
+			<a class="back-action">[назад]</a>
+			<div class="caption grow">&hellip;</div>
+		</div>
+		<div class="objects">
+			<div class="object type-text">
+				<div class="object-column">
+					<div class="content-view">
+						<p>Аккаунт или ссылка на объект:</p>
+						<p><input type="text" name="search" value=""></p>
+						<div class="input-addon">(например, @on1x или viz://@on1x/)</div>
+						<p class="error search-error"></p>
+						<p class="success search-success"></p>
+						<p><a class="button search-action">Поиск</a><span class="submit-button-ring"></span></p>
 					</div>
 				</div>
 			</div>
@@ -84,6 +106,8 @@
 			</div>
 		</div>
 	</div>
+
+
 
 	<div class="view" data-path="fsp:publish">
 		<div class="header space-between">
