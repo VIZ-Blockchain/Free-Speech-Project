@@ -313,6 +313,13 @@ div.avatar:hover .shadow{
 .loader .submit-button-ring{
 	display:inline-block;
 }
+.loader-notice{
+	text-align:center;
+	padding:20vh 0;
+}
+.loader-notice .submit-button-ring{
+	display:inline-block;
+}
 .none-notice{
 	text-align:center;
 	padding:20vh 0;
@@ -323,4 +330,20 @@ div.avatar:hover .shadow{
 	padding:20vh 0;
 	font-size:20px;
 	color:#e90b0b;
+}
+
+.profile{
+	padding:0 15px;
+	padding-bottom:10px;
+	margin-top:10px;
+	border-bottom:1px solid #ccd;
+}
+.profile .contacts{
+	text-align:right;
+}
+.profile .contacts a{
+	margin:0 5px;
+}
+.profile .contacts a:last-child{
+	margin-right:0;
 }

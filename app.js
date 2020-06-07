@@ -115,7 +115,7 @@ function save_account_settings(view,login,regular_key,energy_step){
 		return;
 	}
 	viz.api.getAccounts([login],function(err,response){
-		if(typeof response[0] !== 'undefined'){
+		if(typeof response[0] != 'undefined'){
 			let regular_valid=false;
 			for(regular_check in response[0].regular_authority.key_auths){
 				if(response[0].regular_authority.key_auths[regular_check][1]>=response[0].regular_authority.weight_threshold){
@@ -170,8 +170,9 @@ function ltmp(ltmp_str,ltmp_args){
 }
 
 var ltmp_arr={
-	none:'<div class="none-notice"><em>Ничего не найдено.</em></div>',
-	error:'<div class="error-notice"><em>{error}</em></div>',
+	none_notice:'<div class="none-notice"><em>Ничего не найдено.</em></div>',
+	error_notice:'<div class="error-notice"><em>{error}</em></div>',
+	loader_notice:'<div class="loader-notice"><span class="submit-button-ring"></span></div>',
 
 	account_settings:'<a data-href="fsp:account_settings">[настройки]</a>',
 	account_settings_caption:'Настройки аккаунта',
@@ -194,11 +195,16 @@ var ltmp_arr={
 	view:`
 		<div class="view" data-level="{level}" data-path="{path}" data-search="{search}">
 			<div class="header space-between"></div>
+			{profile}
 			{tabs}
-			<div class="objects">
-			</div>
+			<div class="objects"></div>
 		</div>`,
-	tabs:'<div class="tabs"></div>',
+	profile:'<div class="profile">{profile}</div>',
+	profile_about:'<div class="about">{about}</div>',
+	profile_contacts:'<div class="contacts">{contacts}</div>',
+	profile_contacts_github:'<a href="https://github.com/{github}" target="_blank" class="profile-contacts-github">[github]</a>',
+	profile_contacts_telegram:'<a href="tg://resolve?domain={telegram}" target="_blank" class="profile-contacts-telegram">[telegram]</a>',
+	tabs:'<div class="tabs">{tabs}</div>',
 
 	header_back_action:'<a class="back-action">[назад]</a>',
 	header_link:'<div class="link grow"><input type="text" class="header-link" value="{link}" disabled></div>',
@@ -366,7 +372,7 @@ function view_path(location,state,save_state,update){
 		}
 		header+=ltmp_arr.search;
 		view.find('.header').html(header);
-		view.find('.objects').html(ltmp_arr.none);
+		view.find('.objects').html(ltmp_arr.none_notice);
 		level=0;
 		$('.loader').css('display','none');
 		view.css('display','block');
@@ -404,14 +410,14 @@ function view_path(location,state,save_state,update){
 							$('.loader').css('display','block');
 							$('.view').css('display','none');
 							level++;
-							let new_view=ltmp(ltmp_arr.view,{level:level,path:location,search:search,tabs:ltmp_arr.tabs});
+							let new_view=ltmp(ltmp_arr.view,{level:level,path:location,search:search,tabs:'',profile:''});
 							$('.content').append(new_view);
 							let view=$('.view[data-level="'+level+'"]');
 							let header='';
 							header+=ltmp_arr.header_back_action;
 							header+=ltmp(ltmp_arr.header_link,{link:location});
 							view.find('.header').html(header);
-							view.find('.objects').html(ltmp(ltmp_arr.error,{error:ltmp_arr.gateway_error}));
+							view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.gateway_error}));
 							$('.loader').css('display','none');
 							view.css('display','block');
 						}
@@ -420,14 +426,71 @@ function view_path(location,state,save_state,update){
 								$('.loader').css('display','block');
 								$('.view').css('display','none');
 								level++;
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,search:search,tabs:ltmp_arr.tabs});
+								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,search:search,tabs:'',profile:''});
 								$('.content').append(new_view);
 								let view=$('.view[data-level="'+level+'"]');
 								let header='';
 								header+=ltmp_arr.header_back_action;
 								header+=ltmp(ltmp_arr.header_link,{link:location});
 								view.find('.header').html(header);
-								view.find('.objects').html(ltmp(ltmp_arr.error,{error:ltmp_arr.account_not_found}));
+								view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found}));
+								$('.loader').css('display','none');
+								view.css('display','block');
+							}
+							else{
+								let profile_view='';
+								let profile_obj={};
+								let profile_found=false;
+								let json_metadata={};
+								if(''!=response[0].json_metadata){
+									json_metadata=JSON.parse(response[0].json_metadata);
+								}
+
+								if(typeof json_metadata.profile.nickname){
+									profile_obj.nickname=escape_html(json_metadata.profile.nickname);
+								}
+								if(typeof json_metadata.profile.nickname){
+									profile_obj.avatar=escape_html(json_metadata.profile.avatar);
+								}
+								if(typeof json_metadata.profile.about){
+									profile_obj.about=escape_html(json_metadata.profile.about);
+									profile_view+=ltmp(ltmp_arr.profile_about,{about:profile_obj.about});
+									profile_found=true;
+								}
+								let profile_contacts='';
+								if(typeof json_metadata.profile.services != 'undefined'){
+									if(typeof json_metadata.profile.services.github != 'undefined'){
+										profile_obj.github=escape_html(json_metadata.profile.services.github);
+										profile_contacts+=ltmp(ltmp_arr.profile_contacts_telegram,{github:profile_obj.github});
+										profile_found=true;
+									}
+									if(typeof json_metadata.profile.services.telegram != 'undefined'){
+										profile_obj.telegram=escape_html(json_metadata.profile.services.telegram);
+										profile_contacts+=ltmp(ltmp_arr.profile_contacts_telegram,{telegram:profile_obj.telegram});
+										profile_found=true;
+									}
+									if(''!=profile_contacts){
+										profile_view+=ltmp(ltmp_arr.profile_contacts,{contacts:profile_contacts});
+									}
+								}
+
+								let profile='';
+								if(profile_found){
+									profile=ltmp(ltmp_arr.profile,{profile:profile_view});
+								}
+
+								$('.loader').css('display','block');
+								$('.view').css('display','none');
+								level++;
+								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,search:search,tabs:'',profile:profile});
+								console.log(new_view);
+								$('.content').append(new_view);
+								let view=$('.view[data-level="'+level+'"]');
+								let header='';
+								header+=ltmp_arr.header_back_action;
+								header+=ltmp(ltmp_arr.header_link,{link:location});
+								view.find('.header').html(header);
+								view.find('.objects').html(ltmp_arr.loader_notice);
 								$('.loader').css('display','none');
 								view.css('display','block');
 							}
