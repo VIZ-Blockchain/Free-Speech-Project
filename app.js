@@ -1178,8 +1178,6 @@ function load_more_objects(indicator){
 			offset=parseInt($(this).data('previous'));
 		}
 	});
-	//console.log(preload_object);
-
 	viz.api.getOpsInBlock(offset,false,function(err,response){
 		if(err){
 			indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
@@ -1223,12 +1221,11 @@ function load_more_objects(indicator){
 					actions:ltmp(ltmp_arr.object_type_text_actions,{link:link}),
 					timestamp:item.timestamp,
 				});
-				/*
-				*/
 				indicator.before(object_view);
 				let new_object=indicator.parent().find('.object[data-link="'+link+'"]');
 				let timestamp=new_object.find('.short-date-view').data('timestamp');
 				new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+				indicator.data('busy','0');
 				check_load_more();
 			}
 		}
@@ -1236,15 +1233,16 @@ function load_more_objects(indicator){
 }
 
 function check_load_more(){
-	var scroll_top=window.pageYOffset;
-	var window_height=window.innerHeight;
-	//console.log(scroll_top,window_height)
+	let scroll_top=window.pageYOffset;
+	let window_height=window.innerHeight;
 	let view=$('.view[data-level="'+level+'"]');
 	view.find('.loader-notice').each(function(){
-		var indicator=$(this);
+		let indicator=$(this);
+		console.log('check indicator busy:',indicator.data('busy'),indicator.attr('data-busy'));
 		if('1'!=indicator.data('busy')){
-			var offset=indicator.offset();
+			let offset=indicator.offset();
 			if((scroll_top+window_height)>(offset.top+(indicator.outerHeight()*0.7))){
+				indicator.data('busy','1');
 				load_more_objects(indicator);
 			}
 		}
