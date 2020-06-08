@@ -891,9 +891,15 @@ function view_path(location,state,save_state,update){
 										}
 									}
 								}
+								if(typeof profile_obj.nickname == 'undefined'){
+									profile_obj.nickname=preload_account.name;
+								}
+								if(typeof profile_obj.avatar == 'undefined'){
+									profile_obj.avatar='default.png';
+								}
 								let profile='';
+								preload_object=profile_obj;
 								if(profile_found){
-									preload_object=profile_obj;
 									profile=ltmp(ltmp_arr.profile,{profile:profile_view});
 								}
 
@@ -975,13 +981,14 @@ function view_path(location,state,save_state,update){
 								if(''!=response[0].json_metadata){
 									json_metadata=JSON.parse(response[0].json_metadata);
 								}
-
-								if(typeof json_metadata.profile.nickname != 'undefined'){
-									nickname=escape_html(json_metadata.profile.nickname);
-								}
-								if(typeof json_metadata.profile.avatar != 'undefined'){
-									if(0==json_metadata.profile.avatar.indexOf('https://')){
-										avatar=escape_html(json_metadata.profile.avatar);
+								if(typeof json_metadata.profile != 'undefined'){
+									if(typeof json_metadata.profile.nickname != 'undefined'){
+										nickname=escape_html(json_metadata.profile.nickname);
+									}
+									if(typeof json_metadata.profile.avatar != 'undefined'){
+										if(0==json_metadata.profile.avatar.indexOf('https://')){
+											avatar=escape_html(json_metadata.profile.avatar);
+										}
 									}
 								}
 
