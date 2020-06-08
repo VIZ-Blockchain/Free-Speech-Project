@@ -672,8 +672,10 @@ function view_account_settings(view,path_parts,query,title){
 
 	view.find('input').val('');
 
-	view.find('input[name=viz_account]').val(current_user);
-	view.find('input[name=viz_regular_key]').val(users[current_user].regular_key);
+	if(''!=current_user){
+		view.find('input[name=viz_account]').val(current_user);
+		view.find('input[name=viz_regular_key]').val(users[current_user].regular_key);
+	}
 
 	$('.loader').css('display','none');
 	view.css('display','block');
