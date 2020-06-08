@@ -1,5 +1,6 @@
 var app_version=1;
 var app_protocol='V';//V for Voice :)
+var storage_prefix='viz_voice_';
 
 var api_gates=[
 	'https://node.viz.plus/',
@@ -85,17 +86,17 @@ var users={};
 var current_user='';
 var default_energy_step=500;//5.00%
 
-if(null!=localStorage.getItem('users')){
-	users=JSON.parse(localStorage.getItem('users'));
+if(null!=localStorage.getItem(storage_prefix+'users')){
+	users=JSON.parse(localStorage.getItem(storage_prefix+'users'));
 }
-if(null!=localStorage.getItem('current_user')){
-	current_user=localStorage.getItem('current_user');
+if(null!=localStorage.getItem(storage_prefix+'current_user')){
+	current_user=localStorage.getItem(storage_prefix+'current_user');
 }
 
 function save_session(){
 	let users_json=JSON.stringify(users);
-	localStorage.setItem('users',users_json);
-	localStorage.setItem('current_user',current_user);
+	localStorage.setItem(storage_prefix+'users',users_json);
+	localStorage.setItem(storage_prefix+'current_user',current_user);
 }
 
 function save_account_settings(view,login,regular_key,energy_step){
