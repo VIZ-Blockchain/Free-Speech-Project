@@ -259,6 +259,15 @@ function publish(view){
 	let text=view.find('textarea[name="text"]').val();
 	text=text.trim();
 
+	let loop=false;
+	if(''!=view.find('input[name="loop"]').val()){
+		loop=parseInt(view.find('input[name="loop"]').val());
+		if(loop<=0){
+			loop=false;
+		}
+		console.log('publish with loop:',loop);
+	}
+
 	if(''==text){
 		view.find('.submit-button-ring').removeClass('show');
 		view.find('.error').html(ltmp_arr.publish_empty_text);
@@ -277,6 +286,11 @@ function publish(view){
 		else{
 			if(typeof response[0] !== 'undefined'){
 				let previous=response[0].custom_sequence_block_num;
+
+				if(loop){
+					previous=loop;
+				}
+
 				let new_object={};
 				if(previous>0){
 					new_object.p=previous;
@@ -307,7 +321,7 @@ function publish(view){
 									}
 								}
 							});
-						},1000)
+						},3000);
 					}
 					else{
 						console.log(err);
@@ -574,6 +588,7 @@ function view_search(view,path_parts,query,title){
 }
 
 function view_publish(view,path_parts,query,title){
+	console.log('view_publish',path_parts,query);
 	document.title=ltmp_arr.publish_caption+' - '+title;
 	view.find('.header .caption').html(ltmp_arr.publish_caption);
 
@@ -587,6 +602,10 @@ function view_publish(view,path_parts,query,title){
 
 	view.find('.reply-addon').css('display','none');
 	view.find('.share-addon').css('display','none');
+	view.find('.loop-addon').css('display','none');
+	if('loop'==query){
+		view.find('.loop-addon').css('display','block');
+	}
 	view.find('.viz_account').html('@'+current_user);
 
 	$('.loader').css('display','none');
