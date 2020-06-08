@@ -1193,7 +1193,7 @@ function load_more_objects(indicator){
 	});
 	if(find_objects){
 		//need to stop load more if no previous
-		if(offset==start_offset){
+		if((offset==start_offset)||(offset==0)){
 			indicator.before(ltmp_arr.load_more_end_notice);
 			indicator.remove();
 			return;
@@ -1230,6 +1230,11 @@ function load_more_objects(indicator){
 
 				let link='viz://@'+check_account+'/'+offset+'/';
 				let author='@'+preload_account.name;
+
+				if(typeof item.p == 'undefined'){
+					item.p=0;
+				}
+
 				let object_view=ltmp(ltmp_arr.object_type_text_preview,{
 					reply:'',
 					author:author,
