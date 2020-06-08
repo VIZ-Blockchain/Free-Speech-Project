@@ -1201,7 +1201,6 @@ function load_more_objects(indicator){
 				indicator.remove();
 			}
 			else{
-				console.log(item);
 				let objects='';
 
 				let text=item.d.text;
@@ -1215,7 +1214,7 @@ function load_more_objects(indicator){
 					author:author,
 					nickname:preload_object.nickname,
 					avatar:preload_object.avatar,
-					text:item.d.text,
+					text:text,
 					previous:item.p,
 					link:link,
 					actions:ltmp(ltmp_arr.object_type_text_actions,{link:link}),
@@ -1238,7 +1237,6 @@ function check_load_more(){
 	let view=$('.view[data-level="'+level+'"]');
 	view.find('.loader-notice').each(function(){
 		let indicator=$(this);
-		console.log('check indicator busy:',indicator.data('busy'),indicator.attr('data-busy'));
 		if('1'!=indicator.data('busy')){
 			let offset=indicator.offset();
 			if((scroll_top+window_height)>(offset.top+(indicator.outerHeight()*0.7))){
