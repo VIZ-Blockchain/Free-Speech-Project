@@ -942,9 +942,11 @@ function view_path(location,state,save_state,update){
 							console.log(err);
 							$('.loader').css('display','block');
 							$('.view').css('display','none');
-							level++;
-							let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
-							$('.content').append(new_view);
+							if(!update){
+								level++;
+								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
+								$('.content').append(new_view);
+							}
 							let view=$('.view[data-level="'+level+'"]');
 							let header='';
 							header+=ltmp_arr.header_back_action;
@@ -959,9 +961,11 @@ function view_path(location,state,save_state,update){
 							if(typeof response[0] == 'undefined'){
 								$('.loader').css('display','block');
 								$('.view').css('display','none');
-								level++;
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
-								$('.content').append(new_view);
+								if(!update){
+									level++;
+									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
+									$('.content').append(new_view);
+								}
 								let view=$('.view[data-level="'+level+'"]');
 								let header='';
 								header+=ltmp_arr.header_back_action;
@@ -991,10 +995,11 @@ function view_path(location,state,save_state,update){
 										}
 									}
 								}
-
-								level++;
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
-								$('.content').append(new_view);
+								if(!update){
+									level++;
+									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
+									$('.content').append(new_view);
+								}
 								let view=$('.view[data-level="'+level+'"]');
 								let header='';
 								header+=ltmp_arr.header_back_action;
