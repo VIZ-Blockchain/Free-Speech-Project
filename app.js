@@ -859,35 +859,36 @@ function view_path(location,state,save_state,update){
 								let profile_obj={};
 								let profile_found=false;
 								let json_metadata={};
+								let profile_contacts='';
 								if(''!=response[0].json_metadata){
 									json_metadata=JSON.parse(response[0].json_metadata);
 								}
-
-								if(typeof json_metadata.profile.nickname != 'undefined'){
-									profile_obj.nickname=escape_html(json_metadata.profile.nickname);
-								}
-								if(typeof json_metadata.profile.avatar != 'undefined'){
-									profile_obj.avatar=escape_html(json_metadata.profile.avatar);
-								}
-								if(typeof json_metadata.profile.about != 'undefined'){
-									profile_obj.about=escape_html(json_metadata.profile.about);
-									profile_view+=ltmp(ltmp_arr.profile_about,{about:profile_obj.about});
-									profile_found=true;
-								}
-								let profile_contacts='';
-								if(typeof json_metadata.profile.services != 'undefined'){
-									if(typeof json_metadata.profile.services.github != 'undefined'){
-										profile_obj.github=escape_html(json_metadata.profile.services.github);
-										profile_contacts+=ltmp(ltmp_arr.profile_contacts_github,{github:profile_obj.github});
+								if(typeof json_metadata.profile != 'undefined'){
+									if(typeof json_metadata.profile.nickname != 'undefined'){
+										profile_obj.nickname=escape_html(json_metadata.profile.nickname);
+									}
+									if(typeof json_metadata.profile.avatar != 'undefined'){
+										profile_obj.avatar=escape_html(json_metadata.profile.avatar);
+									}
+									if(typeof json_metadata.profile.about != 'undefined'){
+										profile_obj.about=escape_html(json_metadata.profile.about);
+										profile_view+=ltmp(ltmp_arr.profile_about,{about:profile_obj.about});
 										profile_found=true;
 									}
-									if(typeof json_metadata.profile.services.telegram != 'undefined'){
-										profile_obj.telegram=escape_html(json_metadata.profile.services.telegram);
-										profile_contacts+=ltmp(ltmp_arr.profile_contacts_telegram,{telegram:profile_obj.telegram});
-										profile_found=true;
-									}
-									if(''!=profile_contacts){
-										profile_view+=ltmp(ltmp_arr.profile_contacts,{contacts:profile_contacts});
+									if(typeof json_metadata.profile.services != 'undefined'){
+										if(typeof json_metadata.profile.services.github != 'undefined'){
+											profile_obj.github=escape_html(json_metadata.profile.services.github);
+											profile_contacts+=ltmp(ltmp_arr.profile_contacts_github,{github:profile_obj.github});
+											profile_found=true;
+										}
+										if(typeof json_metadata.profile.services.telegram != 'undefined'){
+											profile_obj.telegram=escape_html(json_metadata.profile.services.telegram);
+											profile_contacts+=ltmp(ltmp_arr.profile_contacts_telegram,{telegram:profile_obj.telegram});
+											profile_found=true;
+										}
+										if(''!=profile_contacts){
+											profile_view+=ltmp(ltmp_arr.profile_contacts,{contacts:profile_contacts});
+										}
 									}
 								}
 								let profile='';
