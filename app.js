@@ -1173,12 +1173,25 @@ function escape_html(text) {
 
 function load_more_objects(indicator){
 	let check_account=preload_account.name;
-	let offset=preload_account.custom_sequence_block_num;
+	let start_offset=preload_account.custom_sequence_block_num;
+	let offset=start_offset;
+	let find_objects=false;
+	if(0<indicator.parent().find('.object').length){
+		find_objects=true;
+	}
 	indicator.parent().find('.object').each(function(){
 		if(offset>parseInt($(this).data('previous'))){
 			offset=parseInt($(this).data('previous'));
 		}
 	});
+	if(find_objects){
+		//need to stop load more if no previous
+		if(offset==start_offset){
+			indicator.before(ltmp_arr.load_more_end_notice);
+			indicator.remove();
+			return;
+		}
+	}
 	viz.api.getOpsInBlock(offset,false,function(err,response){
 		if(err){
 			indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
