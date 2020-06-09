@@ -140,6 +140,10 @@ input,textarea{
 	margin:2px 0;
 	color:#596c7c;
 }
+.object.type-text .reply-view{
+	margin:0;
+	margin-top:10px;
+}
 .reply-view a{
 	color:#1c98e5;
 }

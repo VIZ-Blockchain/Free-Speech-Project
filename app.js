@@ -234,6 +234,7 @@ var ltmp_arr={
 				<div class="author-column"><a data-href="viz://{author}/" class="profile-name">{nickname}</a><a data-href="viz://{author}/" class="profile-link">{author}</a></div>
 			</div>
 			<div class="object-column">
+				{reply}
 				<div class="content-view">{text}</div>
 				<div class="date-view" data-timestamp="{timestamp}"><div class="time">&hellip;</div><div class="date">&hellip;</div></div>
 				<div class="actions-view">{actions}</div>
@@ -252,7 +253,8 @@ var ltmp_arr={
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
-	object_typ_text_reply:'<div class="reply-view">В ответ <a data-href="{link}">{link-name}</a></div>',
+	object_type_text_reply:'<div class="reply-view">В ответ <a data-href="{link}">{caption}</a></div>',
+	object_type_text_reply_external:'<div class="reply-view">Ответ на <a href="{link}" target="_blank">{caption}</a></div>',
 };
 
 function publish(view){
@@ -1051,7 +1053,39 @@ function view_path(location,state,save_state,update){
 
 											let link='viz://@'+check_account+'/'+check_block+'/';
 
+											let reply='';
+											if(typeof item.d.r != 'undefined'){
+												let reply_link=item.d.r;
+												//internal
+												if(0==reply_link.indexOf('viz://')){
+													reply_link=reply_link.toLowerCase();
+													reply_link=escape_html(reply_link);
+													let pattern = /@[a-z0-9_\.]*/g;
+													let reply_account=reply_link.match(pattern);
+													if(typeof reply_account[0] != 'undefined'){
+														reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
+													}
+												}
+												//external
+												if(0==reply_link.indexOf('https://')){
+													reply_link=reply_link.toLowerCase();
+													reply_link=escape_html(reply_link);
+													reply_caption=reply_link.substring(8);
+													reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
+													if(''!=reply_caption){
+														if(20<reply_caption.length){
+															reply_caption=reply_caption.substring(0,20)+'...';
+														}
+													}
+													else{
+														reply_caption='URL';
+													}
+													reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
+												}
+											}
+
 											let object_view=ltmp(ltmp_arr.object_type_text,{
+												reply:reply,
 												author:author,
 												link:link,
 												nickname:nickname,
@@ -1253,8 +1287,39 @@ function load_more_objects(indicator){
 					item.p=0;
 				}
 
+				let reply='';
+				if(typeof item.d.r != 'undefined'){
+					let reply_link=item.d.r;
+					//internal
+					if(0==reply_link.indexOf('viz://')){
+						reply_link=reply_link.toLowerCase();
+						reply_link=escape_html(reply_link);
+						let pattern = /@[a-z0-9_\.]*/g;
+						let reply_account=reply_link.match(pattern);
+						if(typeof reply_account[0] != 'undefined'){
+							reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
+						}
+					}
+					//external
+					if(0==reply_link.indexOf('https://')){
+						reply_link=reply_link.toLowerCase();
+						reply_link=escape_html(reply_link);
+						reply_caption=reply_link.substring(8);
+						reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
+						if(''!=reply_caption){
+							if(20<reply_caption.length){
+								reply_caption=reply_caption.substring(0,20)+'...';
+							}
+						}
+						else{
+							reply_caption='URL';
+						}
+						reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
+					}
+				}
+
 				let object_view=ltmp(ltmp_arr.object_type_text_preview,{
-					reply:'',
+					reply:reply,
 					author:author,
 					nickname:preload_object.nickname,
 					avatar:preload_object.avatar,
