@@ -1272,7 +1272,6 @@ function highlight_links(text){
 	//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
 	let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
 	let http_protocol_links=text.match(http_protocol_pattern);
-	console.log(http_protocol_links);
 	if(null!=http_protocol_links){
 		summary_links=summary_links.concat(http_protocol_links);
 	}
