@@ -268,6 +268,12 @@ function publish(view){
 		console.log('publish with loop:',loop);
 	}
 
+	let reply=false;
+	if(''!=view.find('input[name="reply"]').val()){
+		reply=view.find('input[name="reply"]').val();
+		console.log('publish with reply:',reply);
+	}
+
 	if(''==text){
 		view.find('.submit-button-ring').removeClass('show');
 		view.find('.error').html(ltmp_arr.publish_empty_text);
@@ -303,6 +309,9 @@ function publish(view){
 
 				let data={};
 				data.text=text;
+				if(false!=reply){
+					data.r=reply;
+				}
 
 				new_object.d=data;
 				let object_json=JSON.stringify(new_object);
@@ -390,6 +399,10 @@ function app_mouse(e){
 		$('.text-copy')[0].select();
 		$('.text-copy')[0].setSelectionRange(0,99999);
 		document.execCommand("copy");
+	}
+	if($(target).hasClass('reply-action')){
+		let link=$(target).closest('.object').data('link');
+		view_path('fsp:publish/reply/?'+link,{},true,false);
 	}
 	if($(target).hasClass('copy-link-action')){
 		let text=$(target).closest('.object').data('link');
@@ -606,6 +619,10 @@ function view_publish(view,path_parts,query,title){
 	if('loop'==query){
 		view.find('.loop-addon').css('display','block');
 	}
+	if('reply'==path_parts[1]){
+		view.find('.reply-addon').css('display','block');
+		view.find('.reply-addon input[name="reply"]').val(query);
+	}
 	view.find('.viz_account').html('@'+current_user);
 
 	$('.loader').css('display','none');
@@ -740,19 +757,15 @@ function view_path(location,state,save_state,update){
 	var title='Free Speech Project';
 
 	if(typeof state.path == 'undefined'){
+		//check query state
+		if(-1!=location.indexOf('?')){
+			query=location.substring(location.indexOf('?')+1);
+			location=location.substring(0,location.indexOf('?'));
+		}
 		if(-1!=location.indexOf('viz://')){
-			//check query state
-			if(-1!=location.indexOf('?')){
-				query=location.substring(location.indexOf('?')+1);
-				location=location.substring(0,location.indexOf('?'));
-			}
 			path_parts=location.substr(location.indexOf('viz://')+6).split('/');
 		}
 		else{
-			if(-1!=location.indexOf('?')){
-				query=location.substring(location.indexOf('?')+1);
-				location=location.substring(0,location.indexOf('?'));
-			}
 			path_parts=location.split('/');
 		}
 	}
