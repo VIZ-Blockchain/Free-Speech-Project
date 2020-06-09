@@ -1071,7 +1071,9 @@ function view_path(location,state,save_state,update){
 													reply_link=reply_link.toLowerCase();
 													reply_link=escape_html(reply_link);
 													reply_caption=reply_link.substring(8);
-													reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
+													if(-1!=reply_caption.indexOf('/')){
+														reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
+													}
 													if(''!=reply_caption){
 														if(20<reply_caption.length){
 															reply_caption=reply_caption.substring(0,20)+'...';
@@ -1305,7 +1307,9 @@ function load_more_objects(indicator){
 						reply_link=reply_link.toLowerCase();
 						reply_link=escape_html(reply_link);
 						reply_caption=reply_link.substring(8);
-						reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
+						if(-1!=reply_caption.indexOf('/')){
+							reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
+						}
 						if(''!=reply_caption){
 							if(20<reply_caption.length){
 								reply_caption=reply_caption.substring(0,20)+'...';
