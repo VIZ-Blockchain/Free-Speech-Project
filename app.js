@@ -239,7 +239,7 @@ var ltmp_arr={
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
-	object_type_text_actions:'<!--<a class="share">[поделиться]</a><a class="reply">[ответить]</a><a class="award">[наградить]</a>--><a class="copy-link" data-link="{link}">[копир.ссылку]</a>',
+	object_type_text_actions:'<!--<a class="share">[поделиться]</a><a class="award">[наградить]</a>--><a class="reply-action">[ответить]</a><a class="copy-link-action">[копир.ссылку]</a>',
 	object_type_text_preview:`
 		<div class="object type-text-preview" data-link="{link}" data-previous="{previous}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
@@ -386,16 +386,16 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('header-link')){
 		let text=$(target).val();
-		$('.js-copy').val(text);
-		$('.js-copy')[0].select();
-		$('.js-copy')[0].setSelectionRange(0,99999);
+		$('.text-copy').val(text);
+		$('.text-copy')[0].select();
+		$('.text-copy')[0].setSelectionRange(0,99999);
 		document.execCommand("copy");
 	}
-	if($(target).hasClass('copy-link')){
-		let text=$(target).data('link');
-		$('.js-copy').val(text);
-		$('.js-copy')[0].select();
-		$('.js-copy')[0].setSelectionRange(0,99999);
+	if($(target).hasClass('copy-link-action')){
+		let text=$(target).closest('.object').data('link');
+		$('.text-copy').val(text);
+		$('.text-copy')[0].select();
+		$('.text-copy')[0].setSelectionRange(0,99999);
 		document.execCommand("copy");
 	}
 	if($(target).hasClass('publish-action')){
