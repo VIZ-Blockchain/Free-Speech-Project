@@ -589,7 +589,6 @@ function view_search(view,path_parts,query,title){
 	document.title=ltmp_arr.search_caption+' - '+title;
 	view.find('.header .caption').html(ltmp_arr.search_caption);
 
-	console.log(view.find('.button'));
 	view.find('.button').removeClass('disabled');
 	view.find('.submit-button-ring').removeClass('show');
 	view.find('.error').html('');
@@ -1086,6 +1085,8 @@ function view_path(location,state,save_state,update){
 												}
 											}
 
+											text=highlight_links(text);
+
 											let object_view=ltmp(ltmp_arr.object_type_text,{
 												reply:reply,
 												author:author,
@@ -1232,7 +1233,71 @@ function escape_html(text) {
 	return text.replace(/[&<>"']/g,function(m){return map[m];});
 }
 
-function load_more_objects(indicator){
+function sort_by_length_asc(a,b){
+	return a.length - b.length;
+}
+function sort_by_length_desc(a,b){
+	return b.length - a.length;
+}
+function array_unique(arr) {
+	var seen = {};
+	return arr.filter(function(item,pos) {
+		return arr.indexOf(item) == pos;
+	});
+}
+
+function highlight_links(text){
+	let account_pattern = /@[a-z0-9_\.]*/g;
+	let summary_links=[];
+	let account_links=text.match(account_pattern);
+	if(null!=account_links){
+		summary_links=summary_links.concat(account_links);
+	}
+
+	let viz_protocol_pattern = /viz\:\/\/[@a-z0-9_\.\/]*/g;
+	let viz_protocol_links=text.match(viz_protocol_pattern);
+	if(null!=viz_protocol_links){
+		summary_links=summary_links.concat(viz_protocol_links);
+	}
+
+	//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
+	//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
+	let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
+	let http_protocol_links=text.match(http_protocol_pattern);
+	console.log(http_protocol_links);
+	if(null!=http_protocol_links){
+		summary_links=summary_links.concat(http_protocol_links);
+	}
+
+	summary_links=array_unique(summary_links);
+	summary_links.sort(sort_by_length_desc);
+
+	for(let i in summary_links){
+		let link_num=i;
+		let change_text=summary_links[link_num];
+		text=fast_str_replace(change_text,'<REPLACE_LINK_'+link_num+'>',text);
+	}
+
+	for(let i in summary_links){
+		let link_num=i;
+		let change_text=summary_links[link_num];
+		let new_text=change_text;
+		if('@'==change_text.substring(0,1)){
+			new_text='<a data-href="viz://'+change_text+'/">'+change_text+'</a>';
+		}
+		else
+		if('viz://'==change_text.substring(0,6)){
+			new_text='<a data-href="'+change_text+'">'+change_text.substring(6)+'</a>';
+		}
+		else{
+			new_text='<a href="'+change_text+'" target="_blank">'+change_text+'</a>';
+		}
+		text=fast_str_replace('<REPLACE_LINK_'+link_num+'>',new_text,text);
+	}
+
+	return text;
+}
+function load_more_objects(indicator,check_level){
 	let check_account=preload_account.name;
 	let start_offset=preload_account.custom_sequence_block_num;
 	let offset=start_offset;
@@ -1254,91 +1319,93 @@ function load_more_objects(indicator){
 		}
 	}
 	viz.api.getOpsInBlock(offset,false,function(err,response){
-		if(err){
-			indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
-		}
-		else{
-			let item=false;
-			for(let i in response){
-				let item_i=i;
-				if('custom'==response[item_i].op[0]){
-					if(app_protocol==response[item_i].op[1].id){
-						let op=response[item_i].op[1];
-						if(op.required_regular_auths.includes(check_account)){
-							item=JSON.parse(response[item_i].op[1].json);
-							item.timestamp=Date.parse(response[item_i].timestamp) / 1000 | 0;
-						}
-					}
-				}
-			}
-			if(false==item){
-				indicator.before(ltmp_arr.load_more_end_notice);
-				indicator.remove();
+		if(check_level==level){
+			if(err){
+				indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
 			}
 			else{
-				let objects='';
-
-				let text=item.d.text;
-				text=escape_html(text);
-				text=fast_str_replace("\n",'<br>',text);
-
-				let link='viz://@'+check_account+'/'+offset+'/';
-				let author='@'+preload_account.name;
-
-				if(typeof item.p == 'undefined'){
-					item.p=0;
-				}
-
-				let reply='';
-				if(typeof item.d.r != 'undefined'){
-					let reply_link=item.d.r;
-					//internal
-					if(0==reply_link.indexOf('viz://')){
-						reply_link=reply_link.toLowerCase();
-						reply_link=escape_html(reply_link);
-						let pattern = /@[a-z0-9_\.]*/g;
-						let reply_account=reply_link.match(pattern);
-						if(typeof reply_account[0] != 'undefined'){
-							reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
-						}
-					}
-					//external
-					if(0==reply_link.indexOf('https://')){
-						reply_link=reply_link.toLowerCase();
-						reply_link=escape_html(reply_link);
-						reply_caption=reply_link.substring(8);
-						if(-1!=reply_caption.indexOf('/')){
-							reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
-						}
-						if(''!=reply_caption){
-							if(20<reply_caption.length){
-								reply_caption=reply_caption.substring(0,20)+'...';
+				let item=false;
+				for(let i in response){
+					let item_i=i;
+					if('custom'==response[item_i].op[0]){
+						if(app_protocol==response[item_i].op[1].id){
+							let op=response[item_i].op[1];
+							if(op.required_regular_auths.includes(check_account)){
+								item=JSON.parse(response[item_i].op[1].json);
+								item.timestamp=Date.parse(response[item_i].timestamp) / 1000 | 0;
 							}
 						}
-						else{
-							reply_caption='URL';
-						}
-						reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
 					}
 				}
+				if(false==item){
+					indicator.before(ltmp_arr.load_more_end_notice);
+					indicator.remove();
+				}
+				else{
+					let objects='';
 
-				let object_view=ltmp(ltmp_arr.object_type_text_preview,{
-					reply:reply,
-					author:author,
-					nickname:preload_object.nickname,
-					avatar:preload_object.avatar,
-					text:text,
-					previous:item.p,
-					link:link,
-					actions:ltmp(ltmp_arr.object_type_text_actions,{link:link}),
-					timestamp:item.timestamp,
-				});
-				indicator.before(object_view);
-				let new_object=indicator.parent().find('.object[data-link="'+link+'"]');
-				let timestamp=new_object.find('.short-date-view').data('timestamp');
-				new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
-				indicator.data('busy','0');
-				check_load_more();
+					let text=item.d.text;
+					text=escape_html(text);
+					text=fast_str_replace("\n",'<br>',text);
+
+					let link='viz://@'+check_account+'/'+offset+'/';
+					let author='@'+preload_account.name;
+
+					if(typeof item.p == 'undefined'){
+						item.p=0;
+					}
+
+					let reply='';
+					if(typeof item.d.r != 'undefined'){
+						let reply_link=item.d.r;
+						//internal
+						if(0==reply_link.indexOf('viz://')){
+							reply_link=reply_link.toLowerCase();
+							reply_link=escape_html(reply_link);
+							let pattern = /@[a-z0-9_\.]*/g;
+							let reply_account=reply_link.match(pattern);
+							if(typeof reply_account[0] != 'undefined'){
+								reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
+							}
+						}
+						//external
+						if(0==reply_link.indexOf('https://')){
+							reply_link=reply_link.toLowerCase();
+							reply_link=escape_html(reply_link);
+							reply_caption=reply_link.substring(8);
+							if(-1!=reply_caption.indexOf('/')){
+								reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
+							}
+							if(''!=reply_caption){
+								if(20<reply_caption.length){
+									reply_caption=reply_caption.substring(0,20)+'...';
+								}
+							}
+							else{
+								reply_caption='URL';
+							}
+							reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
+						}
+					}
+
+					let object_view=ltmp(ltmp_arr.object_type_text_preview,{
+						reply:reply,
+						author:author,
+						nickname:preload_object.nickname,
+						avatar:preload_object.avatar,
+						text:text,
+						previous:item.p,
+						link:link,
+						actions:ltmp(ltmp_arr.object_type_text_actions,{link:link}),
+						timestamp:item.timestamp,
+					});
+					indicator.before(object_view);
+					let new_object=indicator.parent().find('.object[data-link="'+link+'"]');
+					let timestamp=new_object.find('.short-date-view').data('timestamp');
+					new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+					indicator.data('busy','0');
+					check_load_more();
+				}
 			}
 		}
 	});
@@ -1354,7 +1421,7 @@ function check_load_more(){
 			let offset=indicator.offset();
 			if((scroll_top+window_height)>(offset.top+(indicator.outerHeight()*0.7))){
 				indicator.data('busy','1');
-				load_more_objects(indicator);
+				load_more_objects(indicator,level);
 			}
 		}
 	});
