@@ -179,19 +179,19 @@ var ltmp_arr={
 	error_notice:'<div class="error-notice"><em>{error}</em></div>',
 	loader_notice:'<div class="loader-notice"><span class="submit-button-ring"></span></div>',
 
-	account_settings:'<a data-href="fsp:account_settings">[настройки]</a>',
+	account_settings:'<a tabindex="0" data-href="fsp:account_settings">[настройки]</a>',
 	account_settings_caption:'Настройки аккаунта',
 	account_seetings_empty_account:'Введите аккаунт',
 	account_seetings_empty_regular_key:'Введите регулярный ключ',
 	account_seetings_account_not_found:'Аккаунт не найден',
 	account_settings_saved:'Данные аккаунта сохранены',
 
-	view_profile:'<a data-href="viz://@{account}/">[профиль]</a>',
+	view_profile:'<a tabindex="0" data-href="viz://@{account}/">[профиль]</a>',
 
 	invalid_regular_key:'Предоставленный ключ недействителен',
 	not_found_regular_key:'Предоставленный ключ не подходит',
 
-	search:'<a data-href="fsp:search">[поиск]</a>',
+	search:'<a tabindex="0" data-href="fsp:search">[поиск]</a>',
 	search_caption:'Поиск',
 	search_empty_input:'Введите адрес для поиска',
 
@@ -214,24 +214,24 @@ var ltmp_arr={
 	profile_contacts_telegram:'<a href="tg://resolve?domain={telegram}" target="_blank" class="profile-contacts-telegram">[telegram]</a>',
 	tabs:'<div class="tabs">{tabs}</div>',
 
-	header_back_action:'<a class="back-action">[назад]</a>',
+	header_back_action:'<a tabindex="0" class="back-action">[назад]</a>',
 	header_link:'<div class="link grow"><input type="text" class="header-link" value="{link}" disabled></div>',
 
-	edit_profile_link:'<a data-href="fsp:edit_profile">[изменить]</a>',
+	edit_profile_link:'<a tabindex="0" data-href="fsp:edit_profile">[изменить]</a>',
 	edit_profile_caption:'Настройка профиля',
 	edit_profile_saved:'Профиль сохранен',
-	new_object_link:'<a data-href="fsp:publish">[написать]</a>',
+	new_object_link:'<a tabindex="0" data-href="fsp:publish">[написать]</a>',
 
 	publish_caption:'Публикация',
 	publish_empty_text:'Введите текст публикации',
 	publish_success:'Публикация успешно опубликована&hellip;',
-	publish_success_link:'Публикация успешно опубликована: <a data-href="viz://@{account}/{block}/">ссылка</a>',
+	publish_success_link:'Публикация успешно опубликована: <a tabindex="0" data-href="viz://@{account}/{block}/">ссылка</a>',
 
 	object_type_text:`
 		<div class="object type-text" data-link="{link}">
 			<div class="author-view">
 				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
-				<div class="author-column"><a data-href="viz://{author}/" class="profile-name">{nickname}</a><a data-href="viz://{author}/" class="profile-link">{author}</a></div>
+				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
 			</div>
 			<div class="object-column">
 				{reply}
@@ -240,21 +240,21 @@ var ltmp_arr={
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
-	object_type_text_actions:'<!--<a class="share">[поделиться]</a><a class="award">[наградить]</a>--><a class="reply-action">[ответить]</a><a class="copy-link-action">[копир.ссылку]</a>',
+	object_type_text_actions:'<!--<a tabindex="0" class="share">[поделиться]</a><a tabindex="0" class="award">[наградить]</a>--><a tabindex="0" class="reply-action">[ответить]</a><a tabindex="0" class="copy-link-action">[копир.ссылку]</a>',
 	object_type_text_preview:`
 		<div class="object type-text-preview" data-link="{link}" data-previous="{previous}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">
-					<div class="author-column"><a data-href="viz://{author}/" class="profile-name">{nickname}</a><a data-href="viz://{author}/" class="profile-link">{author}</a><a data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
+					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
 				</div>
 				{reply}
 				<div class="content-view" data-href="{link}">{text}</div>
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
-	object_type_text_reply:'<div class="reply-view">В ответ <a data-href="{link}">{caption}</a></div>',
-	object_type_text_reply_external:'<div class="reply-view">Ответ на <a href="{link}" target="_blank">{caption}</a></div>',
+	object_type_text_reply:'<div class="reply-view">В ответ <a tabindex="0" data-href="{link}">{caption}</a></div>',
+	object_type_text_reply_external:'<div class="reply-view">Ответ на <a tabindex="0" href="{link}" target="_blank">{caption}</a></div>',
 };
 
 function publish(view){
@@ -1283,11 +1283,11 @@ function highlight_links(text){
 		let change_text=summary_links[link_num];
 		let new_text=change_text;
 		if('@'==change_text.substring(0,1)){
-			new_text='<a data-href="viz://'+change_text+'/">'+change_text+'</a>';
+			new_text='<a tabindex="0" data-href="viz://'+change_text+'/">'+change_text+'</a>';
 		}
 		else
 		if('viz://'==change_text.substring(0,6)){
-			new_text='<a data-href="'+change_text+'">'+change_text.substring(6)+'</a>';
+			new_text='<a tabindex="0" data-href="'+change_text+'">'+change_text.substring(6)+'</a>';
 		}
 		else{
 			new_text='<a href="'+change_text+'" target="_blank">'+change_text+'</a>';
