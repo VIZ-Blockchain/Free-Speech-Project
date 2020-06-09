@@ -722,6 +722,14 @@ function app_keyboard(e){
 	if(!e)e=window.event;
 	var key=(e.charCode)?e.charCode:((e.keyCode)?e.keyCode:((e.which)?e.which:0));
 	let char=String.fromCharCode(key);
+	if(key==13){//enter
+		e.preventDefault();
+		document.activeElement.click();
+	}
+	if(key==32){//space
+		e.preventDefault();
+		document.activeElement.click();
+	}
 	//console.log(key,char);
 	/*
 	if(key==27){
