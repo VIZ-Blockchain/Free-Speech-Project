@@ -1067,7 +1067,7 @@ function view_path(location,state,save_state,update){
 												if(0==reply_link.indexOf('viz://')){
 													reply_link=reply_link.toLowerCase();
 													reply_link=escape_html(reply_link);
-													let pattern = /@[a-z0-9_\.]*/g;
+													let pattern = /@[a-z0-9\-\.]*/g;
 													let reply_account=reply_link.match(pattern);
 													if(typeof reply_account[0] != 'undefined'){
 														reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
@@ -1255,14 +1255,14 @@ function array_unique(arr) {
 }
 
 function highlight_links(text){
-	let account_pattern = /@[a-z0-9_\.]*/g;
+	let account_pattern = /@[a-z0-9\-\.]*/g;
 	let summary_links=[];
 	let account_links=text.match(account_pattern);
 	if(null!=account_links){
 		summary_links=summary_links.concat(account_links);
 	}
 
-	let viz_protocol_pattern = /viz\:\/\/[@a-z0-9_\.\/]*/g;
+	let viz_protocol_pattern = /viz\:\/\/[@a-z0-9\-\.\/]*/g;
 	let viz_protocol_links=text.match(viz_protocol_pattern);
 	if(null!=viz_protocol_links){
 		summary_links=summary_links.concat(viz_protocol_links);
@@ -1369,7 +1369,7 @@ function load_more_objects(indicator,check_level){
 						if(0==reply_link.indexOf('viz://')){
 							reply_link=reply_link.toLowerCase();
 							reply_link=escape_html(reply_link);
-							let pattern = /@[a-z0-9_\.]*/g;
+							let pattern = /@[a-z0-9\-\.]*/g;
 							let reply_account=reply_link.match(pattern);
 							if(typeof reply_account[0] != 'undefined'){
 								reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
