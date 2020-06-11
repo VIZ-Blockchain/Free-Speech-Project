@@ -3,8 +3,17 @@ body{
 	font-size:15px;
 	font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial;
 }
+hr{
+	height:1px;
+	border:0;
+	background:rgba(0,0,0,0.1);
+	margin:15px 0;
+	clear:both;
+	padding:0;
+}
 a{
 	cursor:pointer;
+	outline:none;
 }
 input,textarea{
 	outline:none;
@@ -17,6 +26,35 @@ input,textarea{
 	z-index:1;
 	position:relative;
 }
+.menu{
+	top:0;
+	position:fixed;
+	right:50%;
+	margin-right:300px;
+	padding:0 20px;
+	line-height:50px;
+	font-size:19px;
+	min-width:275px;
+}
+.menu .avatar{
+	display:inline-block;
+	vertical-align:middle;
+	margin-right:10px;
+}
+.menu .account{
+	display:inline-block;
+	vertical-align:middle;
+	line-height:15px;
+}
+.menu .account-name{
+	display:block;
+	font-size:18px;
+	font-weight:bold;
+}
+.menu .account-login{
+	color:#99a;
+	font-size:15px;
+}
 .view{
 	display:none;
 	width:598px;
@@ -25,12 +63,38 @@ input,textarea{
 	border-top:0;
 	border-bottom:0;
 }
+i.icon{
+	background:rgba(105, 187, 238, 0.0);
+	vertical-align:middle;
+	border-radius:50%;
+	display:inline-block;
+	height:35px;
+	width:35px;
+	text-align:center;
+	line-height:35px;
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+}
+i.icon svg{
+	pointer-events:none;
+}
+i.icon:hover{
+	background: rgba(105, 187, 238, 0.2);
+}
+i.icon.back svg{
+	margin:0;
+	margin-top:4px;
+	margin-left:-2px;
+}
 .header{
-	height:53px;
+	height:50px;
 	border-bottom:1px solid #ccd;
 	padding:0 15px;
 	font-size:20px;
-	line-height:50px;
+	line-height:40px;
 	display:flex;
 	flex-direction:row;
 	-webkit-box-pack:justify;
@@ -56,6 +120,7 @@ input,textarea{
 .header .caption{
 	margin-left:15px;
 	font-weight:bold;
+	line-height:45px;
 }
 .header .link{
 	padding:0 10px;
@@ -214,9 +279,24 @@ input,textarea{
 	box-shadow:0px 5px 15px rgba(0,0,0,0.1);
 	transition-duration:0.2s;
 	transition-property:background-color;
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
 }
 .button:hover{
 	background:#1a83c4;
+}
+.white-button{
+	background:#fff;
+	color:#bbb !important;
+	border:2px solid #eee;
+}
+.white-button:hover{
+	background:#fff;
+	color:#aaa !important;
+	border:2px solid #ccc;
 }
 .button.disabled{
 	opacity:0.5;
