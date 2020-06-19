@@ -191,10 +191,10 @@ function ltmp(ltmp_str,ltmp_args){
 }
 
 var ltmp_arr={
-	menu_session_empty:'<div class="avatar"><img src="default.png"></div><a data-href="fsp:account_settings">{caption}</a>',
+	menu_session_empty:'<div class="avatar"><img src="default.png"></div><a tabindex="0" data-href="fsp:account_settings">{caption}</a>',
 	menu_session_login:'Войти',
 	menu_session_error:'<span class="error">Ошибка</span>',
-	menu_session_account:'<div class="avatar"><div class="shadow" data-href="viz://{account}/"></div><img src="{avatar}"></div><div class="account"><a class="account-name" data-href="viz://{account}/">{nickname}</a><a class="account-login" data-href="viz://{account}/">{account}</a></div>',
+	menu_session_account:'<div class="avatar"><div class="shadow" data-href="viz://{account}/"></div><img src="{avatar}"></div><div class="account"><a class="account-name" tabindex="0" data-href="viz://{account}/">{nickname}</a><a class="account-login" tabindex="0" data-href="viz://{account}/">{account}</a></div>',
 
 	none_notice:'<div class="none-notice"><em>Ничего не найдено.</em></div>',
 	load_more_end_notice:'<div class="load-more-end-notice"><em>Больше ничего не найдено.</em></div>',
@@ -237,6 +237,8 @@ var ltmp_arr={
 	tabs:'<div class="tabs">{tabs}</div>',
 
 	icon_back:`<i class="icon back"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"></polyline></svg></i>`,
+	icon_reply:`<i class="icon reply"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path fill="none" d="M0 0h24v24H0z"/><path d="M14 22.5L11.2 19H6a1 1 0 0 1-1-1V7.103a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1h-5.2L14 22.5zm1.839-5.5H21V8.103H7V17H12.161L14 19.298 15.839 17zM2 2h17v2H3v11H1V3a1 1 0 0 1 1-1z"/></svg></i>`,
+	icon_copy_link:`<i class="icon copy_link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8.465,11.293c1.133-1.133,3.109-1.133,4.242,0L13.414,12l1.414-1.414l-0.707-0.707c-0.943-0.944-2.199-1.465-3.535-1.465 S7.994,8.935,7.051,9.879L4.929,12c-1.948,1.949-1.948,5.122,0,7.071c0.975,0.975,2.255,1.462,3.535,1.462 c1.281,0,2.562-0.487,3.536-1.462l0.707-0.707l-1.414-1.414l-0.707,0.707c-1.17,1.167-3.073,1.169-4.243,0 c-1.169-1.17-1.169-3.073,0-4.243L8.465,11.293z"/><path d="M12,4.929l-0.707,0.707l1.414,1.414l0.707-0.707c1.169-1.167,3.072-1.169,4.243,0c1.169,1.17,1.169,3.073,0,4.243 l-2.122,2.121c-1.133,1.133-3.109,1.133-4.242,0L10.586,12l-1.414,1.414l0.707,0.707c0.943,0.944,2.199,1.465,3.535,1.465 s2.592-0.521,3.535-1.465L19.071,12c1.948-1.949,1.948-5.122,0-7.071C17.121,2.979,13.948,2.98,12,4.929z"/></svg></i>`,
 	header_back_action:`<a tabindex="0" class="back-action" title="Назад">{icon}</a>`,
 	header_link:'<div class="link grow"><input type="text" class="header-link" value="{link}" disabled></div>',
 	header_caption:'<div class="caption grow">{caption}</div>',
@@ -264,7 +266,11 @@ var ltmp_arr={
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
-	object_type_text_actions:'<!--<a tabindex="0" class="share">[поделиться]</a><a tabindex="0" class="award">[наградить]</a>--><a tabindex="0" class="reply-action">[ответить]</a><a tabindex="0" class="copy-link-action">[копир.ссылку]</a>',
+	object_type_text_actions:`
+	<!--<a tabindex="0" class="share">[поделиться]</a>
+	<a tabindex="0" class="award">[наградить]</a>-->
+	<a tabindex="0" class="reply-action" title="Ответить">{icon_reply}</a>
+	<a tabindex="0" class="copy-link-action" title="Копировать ссылку">{icon_copy_link}</a>`,
 	object_type_text_preview:`
 		<div class="object type-text-preview" data-link="{link}" data-previous="{previous}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
@@ -415,6 +421,10 @@ function publish(view){
 function app_mouse(e){
 	if(!e)e=window.event;
 	var target=e.target || e.srcElement;
+	//go parent element, if event on icon
+	if($(target).hasClass('icon')){
+		target=$(target).parent();
+	}
 	if(typeof $(target).attr('data-href') != 'undefined'){
 		var href=$(target).attr('data-href');
 		view_path(href,{},true,false);
@@ -514,9 +524,6 @@ function app_mouse(e){
 			let viz_regular_key=view.find('input[name="viz_regular_key"]').val();
 			save_account_settings(view,viz_account,viz_regular_key,default_energy_step);
 		}
-	}
-	if($(target).hasClass('icon')){
-		target=$(target).parent();
 	}
 	if($(target).hasClass('back-action')){
 		$('.loader').css('display','block');
@@ -1181,7 +1188,11 @@ function view_path(location,state,save_state,update){
 												nickname:nickname,
 												avatar:avatar,
 												text:text,
-												actions:ltmp(ltmp_arr.object_type_text_actions,{link:link}),
+												actions:ltmp(ltmp_arr.object_type_text_actions,{
+													//link:link,
+													icon_reply:ltmp_arr.icon_reply,
+													icon_copy_link:ltmp_arr.icon_copy_link,
+												}),
 												timestamp:item.timestamp,
 											});
 
@@ -1482,7 +1493,11 @@ function load_more_objects(indicator,check_level){
 						text:text,
 						previous:item.p,
 						link:link,
-						actions:ltmp(ltmp_arr.object_type_text_actions,{link:link}),
+						actions:ltmp(ltmp_arr.object_type_text_actions,{
+							//link:link,
+							icon_reply:ltmp_arr.icon_reply,
+							icon_copy_link:ltmp_arr.icon_copy_link,
+						}),
 						timestamp:item.timestamp,
 					});
 					indicator.before(object_view);

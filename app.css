@@ -50,10 +50,18 @@ input,textarea{
 	display:block;
 	font-size:18px;
 	font-weight:bold;
+	text-overflow:ellipsis;
+    width:176px;
+    overflow:hidden;
+    white-space:nowrap;
 }
 .menu .account-login{
 	color:#99a;
 	font-size:15px;
+	text-overflow:ellipsis;
+    width:176px;
+    overflow:hidden;
+    white-space:nowrap;
 }
 .view{
 	display:none;
@@ -81,6 +89,9 @@ i.icon{
 i.icon svg{
 	pointer-events:none;
 }
+i.icon path{
+	pointer-events:none;
+}
 i.icon:hover{
 	background: rgba(105, 187, 238, 0.2);
 }
@@ -88,6 +99,16 @@ i.icon.back svg{
 	margin:0;
 	margin-top:4px;
 	margin-left:-2px;
+}
+i.icon.reply svg{
+	margin:0;
+	margin-top:6px;
+	margin-left:1px;
+}
+i.icon.copy_link svg{
+	margin:0;
+	margin-top:5px;
+	margin-left:-1px;
 }
 .header{
 	height:50px;
@@ -338,6 +359,7 @@ i.icon.back svg{
 .actions-view a{
 	flex-direction:column;
 	flex-basis:15%;
+	color:rgba(100,100,100,0.7);
 }
 .actions-view a:hover{
 	color:#1c98e5;
