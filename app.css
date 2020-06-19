@@ -114,22 +114,31 @@ i.icon.copy_link svg{
 i.icon.new_object svg{
 	margin:0;
 	margin-top:6px;
-	margin-left:0;
 }
 i.icon.edit_profile svg{
 	margin:0;
 	margin-top:6px;
-	margin-left:0;
 }
 i.icon.github svg{
 	margin:0;
 	margin-top:6px;
-	margin-left:0;
 }
 i.icon.telegram svg{
 	margin:0;
 	margin-top:6px;
 	margin-left:-2px;
+}
+i.icon.account_settings svg{
+	margin:0;
+	margin-top:6px;
+}
+i.icon.view_profile svg{
+	margin:0;
+	margin-top:6px;
+}
+i.icon.search svg{
+	margin:0;
+	margin-top:6px;
 }
 
 .header{
