@@ -71,6 +71,7 @@ input,textarea{
 	border-top:0;
 	border-bottom:0;
 }
+
 i.icon{
 	background:rgba(105, 187, 238, 0.0);
 	vertical-align:middle;
@@ -110,6 +111,27 @@ i.icon.copy_link svg{
 	margin-top:5px;
 	margin-left:-1px;
 }
+i.icon.new_object svg{
+	margin:0;
+	margin-top:6px;
+	margin-left:0;
+}
+i.icon.edit_profile svg{
+	margin:0;
+	margin-top:6px;
+	margin-left:0;
+}
+i.icon.github svg{
+	margin:0;
+	margin-top:6px;
+	margin-left:0;
+}
+i.icon.telegram svg{
+	margin:0;
+	margin-top:6px;
+	margin-left:-2px;
+}
+
 .header{
 	height:50px;
 	border-bottom:1px solid #ccd;
@@ -134,6 +156,15 @@ i.icon.copy_link svg{
 .header div,.header a{
 	flex-direction:column;
 	flex-basis:auto;
+}
+.header a{
+	margin:0 5px;
+}
+.header a:first-child{
+	margin-left:0;
+}
+.header a:last-child{
+	margin-right:0;
 }
 .header .grow{
 	flex-grow:1;
@@ -488,6 +519,9 @@ div.avatar:hover .shadow{
 }
 .profile .contacts a{
 	margin:0 5px;
+	color:rgba(100,100,100,0.7);
+}
+.profile .contacts a:hover{
 	color:#000;
 }
 .profile .contacts a:last-child{
