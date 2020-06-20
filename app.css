@@ -46,11 +46,18 @@ i.icon{
 	width:35px;
 	text-align:center;
 	line-height:35px;
+
 	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
 	-moz-transition:all 0.3s ease-out;  /* FF4+ */
 	-ms-transition:all 0.3s ease-out;  /* IE10 */
 	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
 	transition:all 0.3s ease-out;
+
+	user-select: none;
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-o-user-select: none;
 }
 i.icon svg{
 	pointer-events:none;
@@ -89,8 +96,8 @@ div.menu{
 	min-width:275px;
 }
 div.menu .session{
-	line-height: 55px;
-	height: 55px;
+	line-height:55px;
+	height:55px;
 }
 div.menu .session .avatar{
 	display:inline-block;
@@ -141,6 +148,9 @@ div.menu .primary a{
 div.menu .primary a.current{
 	color:#1c98e5;
 }
+div.menu .primary a span{
+	pointer-events:none;
+}
 div.menu .primary a .icon{
 	margin-right:10px;
 }
@@ -156,6 +166,42 @@ div.menu .primary a i.icon:hover{
 div.menu .primary a i.icon svg{
 	margin:0;
 	margin-top:4px;
+}
+
+div.menu.hidden{
+	display:none;
+}
+div.menu.short{
+	padding:0 20px;
+	min-width:50px;
+}
+div.menu.short .session{
+	text-align:center;
+}
+div.menu.short .session .account{
+	display:none;
+}
+div.menu.short .primary a span{
+	display:none;
+}
+div.menu.short .session .avatar{
+	margin-right:0;
+}
+
+div.menu.short .primary{
+	text-align:center;
+}
+div.menu.short .primary a{
+	padding:0;
+	text-align:center;
+	min-width:40px;
+	min-height:40px;
+}
+div.menu.short .primary a .icon{
+	margin-right:0;
+}
+div.menu.short .primary a .icon{
+	margin-right:0;
 }
 
 .header{

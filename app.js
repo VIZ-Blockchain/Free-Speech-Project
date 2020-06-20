@@ -203,7 +203,7 @@ var ltmp_arr={
 	error_notice:'<div class="error-notice"><em>{error}</em></div>',
 	loader_notice:'<div class="loader-notice"><span class="submit-button-ring"></span></div>',
 
-	toggle_menu:'<a tabindex="0" title="{title}">{icon}</a>',
+	toggle_menu:'<a tabindex="0" title="{title}" class="toggle-menu">{icon}</a>',
 	toggle_menu_title:'Переключить меню',
 
 	account_settings:'<a tabindex="0" data-href="fsp:account_settings" title="Настройки аккаунта">{icon_account_settings}</a>',
@@ -245,7 +245,7 @@ var ltmp_arr={
 		<div class="session"></div>
 		<div class="primary"></div>
 		<div class="secondary"></div>`,
-	menu_primary:`<div><a tabindex="0" data-href="{link}" class="{class}">{icon}{caption}</a></div>`,
+	menu_primary:`<div><a tabindex="0" data-href="{link}" class="{class}">{icon}<span>{caption}</span></a></div>`,
 	menu_feed:'Лента новостей',
 	menu_view_profile:'Профиль',
 	menu_app_settings:'Настройки',
@@ -468,6 +468,20 @@ function app_mouse(e){
 		var href=$(target).attr('data-href');
 		view_path(href,{},true,false);
 		e.preventDefault();
+	}
+	if($(target).hasClass('toggle-menu')){
+		if($('div.menu').hasClass('hidden')){
+			$('div.menu').removeClass('hidden');
+		}
+		else{
+			if($('div.menu').hasClass('short')){
+				$('div.menu').addClass('hidden');
+				$('div.menu').removeClass('short');
+			}
+			else{
+				$('div.menu').addClass('short');
+			}
+		}
 	}
 	if($(target).hasClass('preset-action')){
 		$('input[name="'+$(target).data('input')+'"]').val($(target).data('value'));
