@@ -245,7 +245,7 @@ var ltmp_arr={
 		<div class="session"></div>
 		<div class="primary"></div>
 		<div class="secondary"></div>`,
-	menu_primary:`<div><a data-href="{link}" class="{class}">{icon}{caption}</a></div>`,
+	menu_primary:`<div><a tabindex="0" data-href="{link}" class="{class}">{icon}{caption}</a></div>`,
 	menu_feed:'Лента новостей',
 	menu_view_profile:'Профиль',
 	menu_app_settings:'Настройки',
