@@ -18,6 +18,7 @@ a{
 input,textarea{
 	outline:none;
 }
+
 .content{
 	margin:0 auto;
 	width:600px;
@@ -26,48 +27,12 @@ input,textarea{
 	z-index:1;
 	position:relative;
 }
-.menu{
-	top:0;
-	position:fixed;
-	right:50%;
-	margin-right:300px;
-	padding:0 20px;
-	line-height:50px;
-	font-size:19px;
-	min-width:275px;
-}
-.menu .avatar{
-	display:inline-block;
-	vertical-align:middle;
-	margin-right:10px;
-}
-.menu .account{
-	display:inline-block;
-	vertical-align:middle;
-	line-height:15px;
-}
-.menu .account-name{
-	display:block;
-	font-size:18px;
-	font-weight:bold;
-	text-overflow:ellipsis;
-    width:176px;
-    overflow:hidden;
-    white-space:nowrap;
-}
-.menu .account-login{
-	color:#99a;
-	font-size:15px;
-	text-overflow:ellipsis;
-    width:176px;
-    overflow:hidden;
-    white-space:nowrap;
-}
+
 .view{
 	display:none;
 	width:598px;
 	min-height:100vh;
-	border:1px solid #ccd;
+	border:1px solid rgba(204, 204, 221, 0.6);
 	border-top:0;
 	border-bottom:0;
 }
@@ -89,6 +54,8 @@ i.icon{
 }
 i.icon svg{
 	pointer-events:none;
+	margin:0;
+	margin-top:6px;
 }
 i.icon path{
 	pointer-events:none;
@@ -97,57 +64,103 @@ i.icon:hover{
 	background: rgba(105, 187, 238, 0.2);
 }
 i.icon.back svg{
-	margin:0;
 	margin-top:4px;
 	margin-left:-2px;
 }
 i.icon.reply svg{
-	margin:0;
-	margin-top:6px;
 	margin-left:1px;
 }
 i.icon.copy_link svg{
-	margin:0;
 	margin-top:5px;
 	margin-left:-1px;
 }
-i.icon.new_object svg{
-	margin:0;
-	margin-top:6px;
-}
-i.icon.edit_profile svg{
-	margin:0;
-	margin-top:6px;
-}
-i.icon.github svg{
-	margin:0;
-	margin-top:6px;
-}
 i.icon.telegram svg{
-	margin:0;
-	margin-top:6px;
 	margin-left:-2px;
 }
-i.icon.account_settings svg{
-	margin:0;
-	margin-top:6px;
+
+div.menu{
+	top:0;
+	position:fixed;
+	right:50%;
+	margin-right:300px;
+	padding:0 20px;
+	line-height:50px;
+	font-size:19px;
+	min-width:275px;
 }
-i.icon.view_profile svg{
-	margin:0;
-	margin-top:6px;
+div.menu .session{
+	line-height: 55px;
+	height: 55px;
 }
-i.icon.search svg{
-	margin:0;
-	margin-top:6px;
+div.menu .session .avatar{
+	display:inline-block;
+	vertical-align:middle;
+	margin-right:10px;
 }
-i.icon.gem svg{
+div.menu .session .account{
+	display:inline-block;
+	vertical-align:middle;
+	line-height:15px;
+}
+div.menu .session .account-name{
+	display:block;
+	font-size:18px;
+	font-weight:bold;
+	text-overflow:ellipsis;
+    width:176px;
+    overflow:hidden;
+    white-space:nowrap;
+}
+div.menu .session .account-login{
+	color:#99a;
+	font-size:15px;
+	text-overflow:ellipsis;
+    width:176px;
+    overflow:hidden;
+    white-space:nowrap;
+}
+div.menu .primary{
+	padding-top:10px;
+}
+div.menu .primary a{
+	padding:0 20px;
+	padding-left:5px;
+	margin:10px 0;
+	font-weight:bold;
+	background:rgba(105, 187, 238, 0.0);
+	vertical-align:middle;
+	line-height:36px;
+	border-radius:25px;
+	display:inline-block;
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+}
+div.menu .primary a.current{
+	color:#1c98e5;
+}
+div.menu .primary a .icon{
+	margin-right:10px;
+}
+div.menu .primary a:hover{
+	background:rgba(105, 187, 238, 0.2);
+}
+div.menu .primary a i.icon{
+	background:none;
+}
+div.menu .primary a i.icon:hover{
+	background:none;
+}
+div.menu .primary a i.icon svg{
 	margin:0;
-	margin-top:6px;
+	margin-top:4px;
 }
 
 .header{
 	height:50px;
-	border-bottom:1px solid #ccd;
+	border-bottom:1px solid rgba(204, 204, 221, 0.6);
 	padding:0 15px;
 	font-size:20px;
 	line-height:40px;
@@ -206,7 +219,7 @@ i.icon.gem svg{
 	padding:0 15px;
 	padding-bottom:10px;
 	margin-top:10px;
-	border-bottom:1px solid #ccd;
+	border-bottom:1px solid rgba(204, 204, 221, 0.6);
 	color:#000;
 }
 .object.type-text .author-view{
@@ -487,7 +500,7 @@ div.avatar:hover .shadow{
 	padding:20vh 0;
 	width:598px;
 	height:100vh;
-	border:1px solid #ccd;
+	border:1px solid rgba(204, 204, 221, 0.6);
 	border-top:0;
 	border-bottom:0;
 }
@@ -525,7 +538,7 @@ div.avatar:hover .shadow{
 	padding:0 15px;
 	padding-bottom:10px;
 	margin-top:10px;
-	border-bottom:1px solid #ccd;
+	border-bottom:1px solid rgba(204, 204, 221, 0.6);
 }
 .profile .contacts{
 	text-align:right;
