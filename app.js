@@ -101,6 +101,9 @@ var default_settings={
 	activity_deep:50,
 	user_cache_ttl:10,
 	object_cache_ttl:10,
+	feed_subscribe_text:true,
+	feed_subscribe_replies:false,
+	feed_subscribe_shares:true,
 };
 var settings=default_settings;
 
@@ -108,51 +111,68 @@ if(null!=localStorage.getItem(storage_prefix+'settings')){
 	settings=JSON.parse(localStorage.getItem(storage_prefix+'settings'));
 }
 
-function save_settings(view){
-	view.find('.button').removeClass('disabled');
-	view.find('.submit-button-ring').removeClass('show');
-	view.find('.error').html('');
+function save_feed_settings(view){
+	let tab=view.find('.content-view[data-tab="feed"]');
+	tab.find('.button').removeClass('disabled');
+	tab.find('.submit-button-ring').removeClass('show');
+	tab.find('.error').html('');
 
-	settings.feed_size=parseInt(view.find('input[name="feed_size"]').val());
+	settings.feed_size=parseInt(tab.find('input[name="feed_size"]').val());
 	if(isNaN(settings.feed_size)){
 		settings.feed_size=default_settings.feed_size;
 	}
-	view.find('input[name="feed_size"]').val(settings.feed_size);
+	tab.find('input[name="feed_size"]').val(settings.feed_size);
 
-	settings.activity_size=parseInt(view.find('input[name="activity_size"]').val());
-	if(isNaN(settings.activity_size)){
-		settings.activity_size=default_settings.activity_size;
-	}
-	view.find('input[name="activity_size"]').val(settings.activity_size);
-
-	settings.activity_period=parseInt(view.find('input[name="activity_period"]').val());
-	if(isNaN(settings.activity_period)){
-		settings.activity_period=default_settings.activity_period;
-	}
-	view.find('input[name="activity_period"]').val(settings.activity_period);
-
-	settings.activity_deep=parseInt(view.find('input[name="activity_deep"]').val());
-	if(isNaN(settings.activity_deep)){
-		settings.activity_deep=default_settings.activity_deep;
-	}
-	view.find('input[name="activity_deep"]').val(settings.activity_deep);
-
-	settings.user_cache_ttl=parseInt(view.find('input[name="user_cache_ttl"]').val());
-	if(isNaN(settings.user_cache_ttl)){
-		settings.user_cache_ttl=default_settings.user_cache_ttl;
-	}
-	view.find('input[name="user_cache_ttl"]').val(settings.user_cache_ttl);
-
-	settings.object_cache_ttl=parseInt(view.find('input[name="object_cache_ttl"]').val());
-	if(isNaN(settings.object_cache_ttl)){
-		settings.object_cache_ttl=default_settings.object_cache_ttl;
-	}
-	view.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
+	settings.feed_subscribe_text=tab.find('input[name="feed_subscribe_text"]').prop("checked");
+	settings.feed_subscribe_replies=tab.find('input[name="feed_subscribe_replies"]').prop("checked");
+	settings.feed_subscribe_shares=tab.find('input[name="feed_subscribe_shares"]').prop("checked");
 
 	let settings_json=JSON.stringify(settings);
 	localStorage.setItem(storage_prefix+'settings',settings_json);
 
-	view.find('.success').html(ltmp_arr.app_settings_saved);
+	tab.find('.success').html(ltmp_arr.app_settings_saved);
+}
+
+function save_settings(view){
+	let tab=view.find('.content-view[data-tab="main"]');
+	tab.find('.button').removeClass('disabled');
+	tab.find('.submit-button-ring').removeClass('show');
+	tab.find('.error').html('');
+
+	settings.activity_size=parseInt(tab.find('input[name="activity_size"]').val());
+	if(isNaN(settings.activity_size)){
+		settings.activity_size=default_settings.activity_size;
+	}
+	tab.find('input[name="activity_size"]').val(settings.activity_size);
+
+	settings.activity_period=parseInt(tab.find('input[name="activity_period"]').val());
+	if(isNaN(settings.activity_period)){
+		settings.activity_period=default_settings.activity_period;
+	}
+	tab.find('input[name="activity_period"]').val(settings.activity_period);
+
+	settings.activity_deep=parseInt(tab.find('input[name="activity_deep"]').val());
+	if(isNaN(settings.activity_deep)){
+		settings.activity_deep=default_settings.activity_deep;
+	}
+	tab.find('input[name="activity_deep"]').val(settings.activity_deep);
+
+	settings.user_cache_ttl=parseInt(tab.find('input[name="user_cache_ttl"]').val());
+	if(isNaN(settings.user_cache_ttl)){
+		settings.user_cache_ttl=default_settings.user_cache_ttl;
+	}
+	tab.find('input[name="user_cache_ttl"]').val(settings.user_cache_ttl);
+
+	settings.object_cache_ttl=parseInt(tab.find('input[name="object_cache_ttl"]').val());
+	if(isNaN(settings.object_cache_ttl)){
+		settings.object_cache_ttl=default_settings.object_cache_ttl;
+	}
+	tab.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
+
+	let settings_json=JSON.stringify(settings);
+	localStorage.setItem(storage_prefix+'settings',settings_json);
+
+	tab.find('.success').html(ltmp_arr.app_settings_saved);
 }
 
 function reset_settings(view){
@@ -568,13 +588,25 @@ function app_mouse(e){
 	if($(target).hasClass('preset-action')){
 		$('input[name="'+$(target).data('input')+'"]').val($(target).data('value'));
 	}
+	if($(target).hasClass('save-feed-settings-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			let view=$(target).closest('.view');
+			let tab=view.find('.content-view[data-tab="feed"]');
+			tab.find('.submit-button-ring').addClass('show');
+			tab.find('.error').html('');
+			tab.find('.success').html('');
+			save_feed_settings(view);
+		}
+	}
 	if($(target).hasClass('save-settings-action')){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
 			let view=$(target).closest('.view');
-			view.find('.submit-button-ring').addClass('show');
-			view.find('.error').html('');
-			view.find('.success').html('');
+			let tab=view.find('.content-view[data-tab="main"]');
+			tab.find('.submit-button-ring').addClass('show');
+			tab.find('.error').html('');
+			tab.find('.success').html('');
 			save_settings(view);
 		}
 	}
@@ -582,9 +614,10 @@ function app_mouse(e){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
 			let view=$(target).closest('.view');
-			view.find('.submit-button-ring').addClass('show');
-			view.find('.error').html('');
-			view.find('.success').html('');
+			let tab=view.find('.content-view[data-tab="main"]');
+			tab.find('.submit-button-ring').addClass('show');
+			tab.find('.error').html('');
+			tab.find('.success').html('');
 			reset_settings(view);
 		}
 	}
@@ -971,7 +1004,17 @@ function view_app_settings(view,path_parts,query,title){
 		tab.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
 	}
 	if('feed'==current_tab){
+		tab.find('.button').removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+		tab.find('.error').html('');
+		tab.find('.success').html('');
+
+		$('input[type="checkbox"]').prop("checked",false)
+
 		tab.find('input[name="feed_size"]').val(settings.feed_size);
+		$('input[name="feed_subscribe_text"]').prop("checked",settings.feed_subscribe_text);
+		$('input[name="feed_subscribe_replies"]').prop("checked",settings.feed_subscribe_replies);
+		$('input[name="feed_subscribe_shares"]').prop("checked",settings.feed_subscribe_shares);
 	}
 
 	$('.loader').css('display','none');
