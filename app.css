@@ -369,6 +369,10 @@ div.menu.short .primary a .icon{
 .content-view p{
 	margin-bottom:5px;
 }
+.content-view label{
+	display:block;
+	margin:10px 0;
+}
 .content-view input{
 	width:100%;
 	font-size:15px;
@@ -376,6 +380,11 @@ div.menu.short .primary a .icon{
 	padding:5px 10px;
 	border:1px solid #ccd;
 	border-radius:15px;
+}
+.content-view input[type="checkbox"]{
+	transform:scale(1.3);
+	width:auto;
+	vertical-align:middle;
 }
 .content-view textarea{
 	width:100%;
@@ -473,7 +482,7 @@ div.menu.short .primary a .icon{
 	flex-direction:row;
 	-webkit-box-direction:normal;
 	-webkit-box-orient:horizontal;
-	justify-content:space-between;
+	justify-content:flex-start;
 	border-bottom:1px solid #dde;
 	margin-bottom:10px;
 }

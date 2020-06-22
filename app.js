@@ -290,6 +290,8 @@ var ltmp_arr={
 	app_settings_caption:'Настройки приложения',
 	app_settings_saved:'Настройки сохранены',
 	app_settings_reset:'Настройки сброшены',
+	app_settings_main_tab:'Общие',
+	app_settings_feed_tab:'Лента новостей',
 
 	view_profile:'<a tabindex="0" data-href="viz://@{account}/" title="Просмотреть профиль">{icon_view_profile}</a>',
 
@@ -318,6 +320,7 @@ var ltmp_arr={
 	profile_contacts_github:'<a href="https://github.com/{github}" target="_blank" class="profile-contacts-github" title="GitHub">{icon_github}</a>',
 	profile_contacts_telegram:'<a href="tg://resolve?domain={telegram}" target="_blank" class="profile-contacts-telegram" title="Telegram">{icon_telegram}</a>',
 	tabs:'<div class="tabs">{tabs}</div>',
+	tab:'<a tabindex="0" data-href="{link}" class="{class}">{caption}</a>',
 
 	menu_preset:`
 		<div class="session"></div>
@@ -940,19 +943,36 @@ function view_app_settings(view,path_parts,query,title){
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.app_settings_caption});
 	view.find('.header').html(header);
 
-	view.find('.button').removeClass('disabled');
-	view.find('.submit-button-ring').removeClass('show');
-	view.find('.error').html('');
-	view.find('.success').html('');
+	let current_tab='main';
+	if(typeof path_parts[1] != 'undefined'){
+		current_tab=path_parts[1];
+	}
+	let tabs='';
+	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:app_settings/main',class:('main'==current_tab?'current':''),caption:ltmp_arr.app_settings_main_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
+	view.find('.tabs').html(tabs);
 
-	view.find('input').val('');
+	view.find('.content-view').css('display','none');
+	view.find('.content-view[data-tab="'+current_tab+'"]').css('display','block');
 
-	view.find('input[name="feed_size"]').val(settings.feed_size);
-	view.find('input[name="activity_size"]').val(settings.activity_size);
-	view.find('input[name="activity_period"]').val(settings.activity_period);
-	view.find('input[name="activity_deep"]').val(settings.activity_deep);
-	view.find('input[name="user_cache_ttl"]').val(settings.user_cache_ttl);
-	view.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
+	let tab=view.find('.content-view[data-tab="'+current_tab+'"]');
+	if('main'==current_tab){
+		tab.find('.button').removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+		tab.find('.error').html('');
+		tab.find('.success').html('');
+
+		tab.find('input').val('');
+
+		tab.find('input[name="activity_size"]').val(settings.activity_size);
+		tab.find('input[name="activity_period"]').val(settings.activity_period);
+		tab.find('input[name="activity_deep"]').val(settings.activity_deep);
+		tab.find('input[name="user_cache_ttl"]').val(settings.user_cache_ttl);
+		tab.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
+	}
+	if('feed'==current_tab){
+		tab.find('input[name="feed_size"]').val(settings.feed_size);
+	}
 
 	$('.loader').css('display','none');
 	view.css('display','block');
