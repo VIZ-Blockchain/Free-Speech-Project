@@ -94,6 +94,79 @@ if(null!=localStorage.getItem(storage_prefix+'current_user')){
 	current_user=localStorage.getItem(storage_prefix+'current_user');
 }
 
+var default_settings={
+	feed_size:10000,
+	activity_size:0,
+	activity_period:30,
+	activity_deep:50,
+	user_cache_ttl:10,
+	object_cache_ttl:10,
+};
+var settings=default_settings;
+
+if(null!=localStorage.getItem(storage_prefix+'settings')){
+	settings=JSON.parse(localStorage.getItem(storage_prefix+'settings'));
+}
+
+function save_settings(view){
+	view.find('.button').removeClass('disabled');
+	view.find('.submit-button-ring').removeClass('show');
+	view.find('.error').html('');
+
+	settings.feed_size=parseInt(view.find('input[name="feed_size"]').val());
+	if(isNaN(settings.feed_size)){
+		settings.feed_size=default_settings.feed_size;
+	}
+	view.find('input[name="feed_size"]').val(settings.feed_size);
+
+	settings.activity_size=parseInt(view.find('input[name="activity_size"]').val());
+	if(isNaN(settings.activity_size)){
+		settings.activity_size=default_settings.activity_size;
+	}
+	view.find('input[name="activity_size"]').val(settings.activity_size);
+
+	settings.activity_period=parseInt(view.find('input[name="activity_period"]').val());
+	if(isNaN(settings.activity_period)){
+		settings.activity_period=default_settings.activity_period;
+	}
+	view.find('input[name="activity_period"]').val(settings.activity_period);
+
+	settings.activity_deep=parseInt(view.find('input[name="activity_deep"]').val());
+	if(isNaN(settings.activity_deep)){
+		settings.activity_deep=default_settings.activity_deep;
+	}
+	view.find('input[name="activity_deep"]').val(settings.activity_deep);
+
+	settings.user_cache_ttl=parseInt(view.find('input[name="user_cache_ttl"]').val());
+	if(isNaN(settings.user_cache_ttl)){
+		settings.user_cache_ttl=default_settings.user_cache_ttl;
+	}
+	view.find('input[name="user_cache_ttl"]').val(settings.user_cache_ttl);
+
+	settings.object_cache_ttl=parseInt(view.find('input[name="object_cache_ttl"]').val());
+	if(isNaN(settings.object_cache_ttl)){
+		settings.object_cache_ttl=default_settings.object_cache_ttl;
+	}
+	view.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
+
+	let settings_json=JSON.stringify(settings);
+	localStorage.setItem(storage_prefix+'settings',settings_json);
+
+	view.find('.success').html(ltmp_arr.app_settings_saved);
+}
+
+function reset_settings(view){
+	view.find('.button').removeClass('disabled');
+	view.find('.submit-button-ring').removeClass('show');
+	view.find('.error').html('');
+	view.find('.success').html(ltmp_arr.app_settings_reset);
+
+	view.find('input').val('');
+
+	settings=default_settings;
+	localStorage.removeItem(storage_prefix+'settings');
+}
+
 function save_session(){
 	let users_json=JSON.stringify(users);
 	localStorage.setItem(storage_prefix+'users',users_json);
@@ -104,7 +177,7 @@ function remove_session(view){
 	view.find('.button').removeClass('disabled');
 	view.find('.submit-button-ring').removeClass('show');
 	view.find('.error').html('');
-	view.find('.success').html('');
+	view.find('.success').html(ltmp_arr.account_settings_reset);
 
 	view.find('input').val('');
 
@@ -212,6 +285,7 @@ var ltmp_arr={
 	account_seetings_empty_regular_key:'Введите регулярный ключ',
 	account_seetings_account_not_found:'Аккаунт не найден',
 	account_settings_saved:'Данные аккаунта сохранены',
+	account_settings_reset:'Данные аккаунта удалены',
 
 	app_settings_caption:'Настройки приложения',
 	app_settings_saved:'Настройки сохранены',
@@ -490,6 +564,26 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('preset-action')){
 		$('input[name="'+$(target).data('input')+'"]').val($(target).data('value'));
+	}
+	if($(target).hasClass('save-settings-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			let view=$(target).closest('.view');
+			view.find('.submit-button-ring').addClass('show');
+			view.find('.error').html('');
+			view.find('.success').html('');
+			save_settings(view);
+		}
+	}
+	if($(target).hasClass('reset-settings-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			let view=$(target).closest('.view');
+			view.find('.submit-button-ring').addClass('show');
+			view.find('.error').html('');
+			view.find('.success').html('');
+			reset_settings(view);
+		}
 	}
 	if($(target).hasClass('search-action')){
 		if(!$(target).hasClass('disabled')){
@@ -853,10 +947,12 @@ function view_app_settings(view,path_parts,query,title){
 
 	view.find('input').val('');
 
-	if(''!=current_user){
-		view.find('input[name=viz_account]').val(current_user);
-		view.find('input[name=viz_regular_key]').val(users[current_user].regular_key);
-	}
+	view.find('input[name="feed_size"]').val(settings.feed_size);
+	view.find('input[name="activity_size"]').val(settings.activity_size);
+	view.find('input[name="activity_period"]').val(settings.activity_period);
+	view.find('input[name="activity_deep"]').val(settings.activity_deep);
+	view.find('input[name="user_cache_ttl"]').val(settings.user_cache_ttl);
+	view.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
 
 	$('.loader').css('display','none');
 	view.css('display','block');
