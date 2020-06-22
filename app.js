@@ -104,6 +104,7 @@ var default_settings={
 	feed_subscribe_text:true,
 	feed_subscribe_replies:false,
 	feed_subscribe_shares:true,
+	feed_subscribe_mentions:true,
 };
 var settings=default_settings;
 
@@ -126,6 +127,7 @@ function save_feed_settings(view){
 	settings.feed_subscribe_text=tab.find('input[name="feed_subscribe_text"]').prop("checked");
 	settings.feed_subscribe_replies=tab.find('input[name="feed_subscribe_replies"]').prop("checked");
 	settings.feed_subscribe_shares=tab.find('input[name="feed_subscribe_shares"]').prop("checked");
+	settings.feed_subscribe_mentions=tab.find('input[name="feed_subscribe_mentions"]').prop("checked");
 
 	let settings_json=JSON.stringify(settings);
 	localStorage.setItem(storage_prefix+'settings',settings_json);
@@ -1015,6 +1017,7 @@ function view_app_settings(view,path_parts,query,title){
 		$('input[name="feed_subscribe_text"]').prop("checked",settings.feed_subscribe_text);
 		$('input[name="feed_subscribe_replies"]').prop("checked",settings.feed_subscribe_replies);
 		$('input[name="feed_subscribe_shares"]').prop("checked",settings.feed_subscribe_shares);
+		$('input[name="feed_subscribe_mentions"]').prop("checked",settings.feed_subscribe_mentions);
 	}
 
 	$('.loader').css('display','none');
