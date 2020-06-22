@@ -11,7 +11,7 @@
 <script src="viz.min.js"></script>
 </head>
 <body class="light">
-<div class="menu short"></div>
+<div class="menu"></div>
 <div class="content">
 	<div class="loader"><span class="submit-button-ring"></span></div>
 	<div class="view" data-path="fsp:account_settings">
@@ -37,6 +37,46 @@
 						<p><a class="button save-account-action">Сохранить</a><span class="submit-button-ring"></span></p>
 						<hr>
 						<p><a class="button white-button remove-account-action">Очистить</a></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="view" data-path="fsp:app_settings">
+		<div class="header space-between">
+		</div>
+		<div class="objects">
+			<div class="object type-text">
+				<div class="object-column">
+					<div class="content-view">
+						<p>Максимальное количество записей в ленте новостей:</p>
+						<p><input type="text" name="feed_size" placeholder="10000" value=""></p>
+
+						<p>Максимальное количество хранимых записей пользователей:</p>
+						<p><input type="text" name="activity_size" placeholder="0 (без ограничений)" value=""></p>
+
+						<p>Частота загрузки активности пользователей:</p>
+						<p><input type="text" name="activity_period" placeholder="30" value=""></p>
+						<div class="input-addon">(в минутах после обновления)</div>
+
+						<p>Глубина загрузки активности пользователей:</p>
+						<p><input type="text" name="activity_deep" placeholder="50" value=""></p>
+						<div class="input-addon">(действует при активации обновления)</div>
+
+						<p>Длительность хранения кэша незнакомых пользователей:</p>
+						<p><input type="text" name="user_cache_ttl" placeholder="10" value=""></p>
+						<div class="input-addon">(в минутах после загрузки)</div>
+
+						<p>Длительность хранения записей незнакомых пользователей:</p>
+						<p><input type="text" name="user_cache_ttl" placeholder="10" value=""></p>
+						<div class="input-addon">(в минутах после загрузки)</div>
+
+						<p class="error save-settings-error"></p>
+						<p class="success save-settings-success"></p>
+						<p><a class="button save-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
+						<hr>
+						<p><a class="button white-button reset-settings-action">Сбросить</a></p>
 					</div>
 				</div>
 			</div>

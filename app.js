@@ -213,6 +213,10 @@ var ltmp_arr={
 	account_seetings_account_not_found:'Аккаунт не найден',
 	account_settings_saved:'Данные аккаунта сохранены',
 
+	app_settings_caption:'Настройки приложения',
+	app_settings_saved:'Настройки сохранены',
+	app_settings_reset:'Настройки сброшены',
+
 	view_profile:'<a tabindex="0" data-href="viz://@{account}/" title="Просмотреть профиль">{icon_view_profile}</a>',
 
 	invalid_regular_key:'Предоставленный ключ недействителен',
@@ -831,6 +835,29 @@ function view_edit_profile(view,path_parts,query,title){
 			}
 		});
 	}
+	$('.loader').css('display','none');
+	view.css('display','block');
+}
+
+function view_app_settings(view,path_parts,query,title){
+	document.title=ltmp_arr.app_settings_caption+' - '+title;
+	let header='';
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.app_settings_caption});
+	view.find('.header').html(header);
+
+	view.find('.button').removeClass('disabled');
+	view.find('.submit-button-ring').removeClass('show');
+	view.find('.error').html('');
+	view.find('.success').html('');
+
+	view.find('input').val('');
+
+	if(''!=current_user){
+		view.find('input[name=viz_account]').val(current_user);
+		view.find('input[name=viz_regular_key]').val(users[current_user].regular_key);
+	}
+
 	$('.loader').css('display','none');
 	view.css('display','block');
 }
