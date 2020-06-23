@@ -880,6 +880,131 @@ function app_mouse(e){
 	*/
 }
 
+function update_user_profile(account,callback){
+	viz.api.getAccounts([current_user],function(err,response){
+		if(err){
+			callback(true);
+		}
+		else{
+			if(typeof response[0] !== 'undefined'){
+				let profile_obj={};
+				let json_metadata={};
+				let profile_contacts='';
+				if(''!=response[0].json_metadata){
+					json_metadata=JSON.parse(response[0].json_metadata);
+				}
+				if(typeof json_metadata.profile != 'undefined'){
+					if(typeof json_metadata.profile.nickname != 'undefined'){
+						profile_obj.nickname=escape_html(json_metadata.profile.nickname);
+					}
+					if(typeof json_metadata.profile.avatar != 'undefined'){
+						profile_obj.avatar=escape_html(json_metadata.profile.avatar);
+					}
+					if(typeof json_metadata.profile.about != 'undefined'){
+						profile_obj.about=escape_html(json_metadata.profile.about);
+					}
+					if(typeof json_metadata.profile.services != 'undefined'){
+						if(typeof json_metadata.profile.services.github != 'undefined'){
+							profile_obj.github=escape_html(json_metadata.profile.services.github);
+						}
+						if(typeof json_metadata.profile.services.telegram != 'undefined'){
+							profile_obj.telegram=escape_html(json_metadata.profile.services.telegram);
+						}
+					}
+				}
+				if(typeof profile_obj.nickname == 'undefined'){
+					profile_obj.nickname=response[0].name;
+				}
+				if(typeof profile_obj.avatar == 'undefined'){
+					profile_obj.avatar='default.png';
+				}
+
+				let obj={
+					account:account,
+					update:parseInt(new Date().getTime()/1000),
+					profile:JSON.stringify(profile_obj),
+					status:0,
+				};
+
+				let t=db.transaction(['users'],'readwrite');
+				let q=t.objectStore('users');
+				let req=q.index('account').openCursor(IDBKeyRange.only(account),'next');
+
+				let result;
+				let find=false;
+				req.onsuccess=function(event){
+					let cur=event.target.result;
+					if(cur){
+						result=cur.value;
+						result.update=obj.update;
+						result.profile=obj.profile;
+						find=true;
+						update_req=cur.update(result);
+						update_req.onsuccess=function(e){
+							callback(false,result);
+						}
+						cur.continue();
+					}
+					else{
+						if(!find){
+							let add_t=db.transaction(['users'],'readwrite');
+							let add_q=add_t.objectStore('users');
+							add_q.add(obj);
+							add_t.commit();
+							add_t.oncomplete=function(e){
+								callback(false,obj);
+							}
+						}
+					}
+				};
+			}
+			else{
+				callback(true);
+			}
+		}
+	});
+}
+
+function get_user_profile(account,forced_update,callback){
+	forced_update=typeof forced_update==='undefined'?false:forced_update;
+
+	let result={};
+	let find=false;
+
+	if(forced_update){
+		update_user_profile(account,callback);
+	}
+	else{
+		let t=db.transaction(['users'],'readonly');
+		let q=t.objectStore('users');
+		let req=q.index('account').openCursor(IDBKeyRange.only(account),'next');
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				result=cur.value;
+				find=true;
+				cur.continue();
+			}
+			else{
+				if(find){
+					if(new Date().getTime() > new Date((result.update+settings.user_profile_ttl*60)*1000)){
+						console.log('need update profile (ttl): '+account);
+						update_user_profile(account,callback);
+					}
+					else{
+						console.log('don\'t need update profile (ttl): '+account);
+						callback(false,result);
+					}
+				}
+				else{
+					console.log('need update profile: '+account);
+					update_user_profile(account,callback);
+				}
+			}
+		};
+	}
+}
+
 function save_profile(view){
 	let nickname=view.find('input[name="nickname"]').val();
 	nickname=nickname.trim();
