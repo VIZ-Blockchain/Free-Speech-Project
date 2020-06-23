@@ -99,6 +99,7 @@ var default_settings={
 	activity_size:0,
 	activity_period:30,
 	activity_deep:50,
+	user_profile_ttl:60,
 	user_cache_ttl:10,
 	object_cache_ttl:10,
 	feed_subscribe_text:true,
@@ -285,6 +286,12 @@ function save_settings(view){
 		settings.activity_deep=default_settings.activity_deep;
 	}
 	tab.find('input[name="activity_deep"]').val(settings.activity_deep);
+
+	settings.user_profile_ttl=parseInt(tab.find('input[name="user_profile_ttl"]').val());
+	if(isNaN(settings.user_profile_ttl)){
+		settings.user_profile_ttl=default_settings.user_profile_ttl;
+	}
+	tab.find('input[name="user_profile_ttl"]').val(settings.user_profile_ttl);
 
 	settings.user_cache_ttl=parseInt(tab.find('input[name="user_cache_ttl"]').val());
 	if(isNaN(settings.user_cache_ttl)){
@@ -1129,6 +1136,7 @@ function view_app_settings(view,path_parts,query,title){
 		tab.find('input[name="activity_size"]').val(settings.activity_size);
 		tab.find('input[name="activity_period"]').val(settings.activity_period);
 		tab.find('input[name="activity_deep"]').val(settings.activity_deep);
+		tab.find('input[name="user_profile_ttl"]').val(settings.user_profile_ttl);
 		tab.find('input[name="user_cache_ttl"]').val(settings.user_cache_ttl);
 		tab.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
 	}
