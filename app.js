@@ -113,133 +113,6 @@ if(null!=localStorage.getItem(storage_prefix+'settings')){
 	settings=JSON.parse(localStorage.getItem(storage_prefix+'settings'));
 }
 
-function idb_error(e){
-	console.log('IDB error',e);
-}
-
-const idb=window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-const idbt=window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
-const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
-
-var db;
-var db_version=1;
-
-if(null!=localStorage.getItem(storage_prefix+'db_version')){
-	db_version=parseInt(localStorage.getItem(storage_prefix+'db_version'));
-}
-
-var users_table_diff=[];
-//test:
-//users_table_diff.push(["on1x",true]);
-//users_table_diff.push(["test.on1x",true]);
-//users_table_diff.push(["spamer",false]);
-
-//console.log(users_table_diff);
-//test:
-//increase_db_version();
-
-function increase_db_version(){
-	db_version++;
-	localStorage.setItem(storage_prefix+'db_version',db_version);
-	db.close();
-	load_db();
-}
-
-function load_db(){
-	var req=idb.open(storage_prefix+'social_network',db_version);
-	req.onerror=idb_error;
-	req.onblocked=idb_error;
-	req.onsuccess=function(event){
-		db=event.target.result;
-	};
-	req.onupgradeneeded=function(event){
-		console.log('onupgradeneeded!');
-		db=event.target.result;
-
-		if(!db.objectStoreNames.contains('users')){
-			items_table=db.createObjectStore('users',{keyPath:'id',autoIncrement:true});
-			items_table.createIndex('account','account',{unique:true});//account
-			items_table.createIndex('start','start',{unique:false});//start block num
-			items_table.createIndex('end','end',{unique:false});//end block num
-			items_table.createIndex('update','update',{unique:false});//last update time
-			items_table.createIndex('activity','activity',{unique:false});//last activity time
-			items_table.createIndex('status','status',{unique:false});//status: 0 - temp, 1 - subscribed, 2 - ignored
-		}
-		else{
-			//new index for users
-		}
-
-		if(!db.objectStoreNames.contains('replies')){
-			items_table=db.createObjectStore('replies',{keyPath:'id',autoIncrement:true});
-			items_table.createIndex('parent',['parent_account','parent_block'],{unique:false});//account
-			items_table.createIndex('block','block',{unique:false});//block num
-			items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
-		}
-		else{
-			//new index for replies
-		}
-
-		if(!db.objectStoreNames.contains('feed')){
-			items_table=db.createObjectStore('feed',{keyPath:'id',autoIncrement:true});
-			items_table.createIndex('object',['account','block'],{unique:false});//account
-			items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
-		}
-		else{
-			//new index for feed
-		}
-
-		for(let i in users_table_diff){
-			let check_user_table=users_table_diff[i];
-			if(check_user_table[1]){
-				if(!db.objectStoreNames.contains('objects_'+check_user_table[0])){
-					items_table=db.createObjectStore('objects_'+check_user_table[0],{keyPath:'id',autoIncrement:true});
-					items_table.createIndex('block','block',{unique:true});//block num
-					items_table.createIndex('previous','previous',{unique:false});//previous block num (may be loops)
-					items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
-					//items_table.createIndex('type','type',{unique:false});//need for new types (not only text)
-					items_table.createIndex('is_reply','is_reply',{unique:false});//true/false
-					items_table.createIndex('is_share','is_share',{unique:false});//true/false
-				}
-			}
-			if(!check_user_table[1]){
-				if(db.objectStoreNames.contains('objects_'+check_user_table[0])){
-					db.deleteObjectStore('objects_'+check_user_table[0]);
-				}
-			}
-		}
-
-		/*
-		//add
-		let t1=db.transaction(['users'],'readwrite');
-		let q1=t1.objectStore('users');
-		q1.add({'account':'on1x'});
-		q1.add({'account':'test'});
-		t1.commit();
-		t1.oncomplete=function(e){
-			//refresh view?
-		}*/
-		/*
-		//read
-		let t=db.transaction(['users'],'readonly');
-		let q=t.objectStore('users');
-		let req=q.index('account').openCursor(null,'next');
-		let result=[];
-		req.onsuccess=function(event){
-			let cur=event.target.result;
-			if(cur){
-				let obj=cur.value;
-				result.push(obj);
-				cur.continue();
-			}
-			else{
-				console.log(result);
-			}
-		};
-		*/
-	};
-}
-load_db();
-
 function save_feed_settings(view){
 	let tab=view.find('.content-view[data-tab="feed"]');
 	tab.find('.button').removeClass('disabled');
@@ -343,6 +216,137 @@ function remove_session(view){
 	localStorage.removeItem(storage_prefix+'current_user');
 	render_menu();
 	render_session();
+}
+
+var users_table_diff=[];
+//test:
+//users_table_diff.push(["on1x",true]);
+//users_table_diff.push(["test.on1x",true]);
+//users_table_diff.push(["spamer",false]);
+
+//console.log(users_table_diff);
+//test:
+//increase_db_version();
+
+function idb_error(e){
+	console.log('IDB error',e);
+}
+
+const idb=window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+const idbt=window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+
+var db;
+var db_version=1;
+
+if(null!=localStorage.getItem(storage_prefix+'db_version')){
+	db_version=parseInt(localStorage.getItem(storage_prefix+'db_version'));
+	load_db(function(){
+		main_app();
+	});
+}
+
+function increase_db_version(){
+	db_version++;
+	localStorage.setItem(storage_prefix+'db_version',db_version);
+	db.close();
+	load_db(()=>{});
+}
+
+function load_db(callback){
+	var req=idb.open(storage_prefix+'social_network',db_version);
+	req.onerror=idb_error;
+	req.onblocked=idb_error;
+	req.onsuccess=function(event){
+		console.log('onsuccess!');
+		db=event.target.result;
+		callback();
+	};
+	req.onupgradeneeded=function(event){
+		console.log('onupgradeneeded!');
+		db=event.target.result;
+
+		if(!db.objectStoreNames.contains('users')){
+			items_table=db.createObjectStore('users',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('account','account',{unique:true});//account
+			items_table.createIndex('start','start',{unique:false});//start block num
+			items_table.createIndex('end','end',{unique:false});//end block num
+			items_table.createIndex('update','update',{unique:false});//last update time
+			items_table.createIndex('activity','activity',{unique:false});//last activity time
+			items_table.createIndex('status','status',{unique:false});//status: 0 - temp, 1 - subscribed, 2 - ignored
+		}
+		else{
+			//new index for users
+		}
+
+		if(!db.objectStoreNames.contains('replies')){
+			items_table=db.createObjectStore('replies',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('parent',['parent_account','parent_block'],{unique:false});//account
+			items_table.createIndex('block','block',{unique:false});//block num
+			items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
+		}
+		else{
+			//new index for replies
+		}
+
+		if(!db.objectStoreNames.contains('feed')){
+			items_table=db.createObjectStore('feed',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('object',['account','block'],{unique:false});//account
+			items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
+		}
+		else{
+			//new index for feed
+		}
+
+		for(let i in users_table_diff){
+			let check_user_table=users_table_diff[i];
+			if(check_user_table[1]){
+				if(!db.objectStoreNames.contains('objects_'+check_user_table[0])){
+					items_table=db.createObjectStore('objects_'+check_user_table[0],{keyPath:'id',autoIncrement:true});
+					items_table.createIndex('block','block',{unique:true});//block num
+					items_table.createIndex('previous','previous',{unique:false});//previous block num (may be loops)
+					items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
+					//items_table.createIndex('type','type',{unique:false});//need for new types (not only text)
+					items_table.createIndex('is_reply','is_reply',{unique:false});//true/false
+					items_table.createIndex('is_share','is_share',{unique:false});//true/false
+				}
+			}
+			if(!check_user_table[1]){
+				if(db.objectStoreNames.contains('objects_'+check_user_table[0])){
+					db.deleteObjectStore('objects_'+check_user_table[0]);
+				}
+			}
+		}
+
+		/*
+		//add
+		let t1=db.transaction(['users'],'readwrite');
+		let q1=t1.objectStore('users');
+		q1.add({'account':'on1x'});
+		q1.add({'account':'test'});
+		t1.commit();
+		t1.oncomplete=function(e){
+			//refresh view?
+		}*/
+		/*
+		//read
+		let t=db.transaction(['users'],'readonly');
+		let q=t.objectStore('users');
+		let req=q.index('account').openCursor(null,'next');
+		let result=[];
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let obj=cur.value;
+				result.push(obj);
+				cur.continue();
+			}
+			else{
+				console.log(result);
+			}
+		};
+		*/
+	};
 }
 
 function save_account_settings(view,login,regular_key,energy_step){
@@ -921,6 +925,7 @@ function update_user_profile(account,callback){
 
 				let obj={
 					account:account,
+					start:response[0].custom_sequence_block_num,
 					update:parseInt(new Date().getTime()/1000),
 					profile:JSON.stringify(profile_obj),
 					status:0,
@@ -938,6 +943,7 @@ function update_user_profile(account,callback){
 						result=cur.value;
 						result.update=obj.update;
 						result.profile=obj.profile;
+						result.start=obj.start;
 						find=true;
 						update_req=cur.update(result);
 						update_req.onsuccess=function(e){
@@ -1173,21 +1179,21 @@ function view_edit_profile(view,path_parts,query,title){
 	view.find('.viz_account').html('@'+current_user);
 
 	view.find('input').val('');
-	if(0<Object.keys(preload_object).length){
-		if(typeof preload_object.nickname != 'undefined'){
-			view.find('input[name=nickname]').val(preload_object.nickname);
+	if(0<Object.keys(check_account_profile_obj).length){
+		if(typeof check_account_profile_obj.nickname != 'undefined'){
+			view.find('input[name=nickname]').val(check_account_profile_obj.nickname);
 		}
-		if(typeof preload_object.about != 'undefined'){
-			view.find('input[name=about]').val(preload_object.about);
+		if(typeof check_account_profile_obj.about != 'undefined'){
+			view.find('input[name=about]').val(check_account_profile_obj.about);
 		}
-		if(typeof preload_object.avatar != 'undefined'){
-			view.find('input[name=avatar]').val(preload_object.avatar);
+		if(typeof check_account_profile_obj.avatar != 'undefined'){
+			view.find('input[name=avatar]').val(check_account_profile_obj.avatar);
 		}
-		if(typeof preload_object.telegram != 'undefined'){
-			view.find('input[name=telegram]').val(preload_object.telegram);
+		if(typeof check_account_profile_obj.telegram != 'undefined'){
+			view.find('input[name=telegram]').val(check_account_profile_obj.telegram);
 		}
-		if(typeof preload_object.github != 'undefined'){
-			view.find('input[name=github]').val(preload_object.github);
+		if(typeof check_account_profile_obj.github != 'undefined'){
+			view.find('input[name=github]').val(check_account_profile_obj.github);
 		}
 	}
 	else{
@@ -1343,15 +1349,16 @@ function parse_fullpath(){
 	}
 }
 
-var preload_account={};
-var preload_object={};
+var path_parts;
+var check_account='';
+var check_account_obj={};
 
 function view_path(location,state,save_state,update){
 	//save to history browser
 	save_state=typeof save_state==='undefined'?false:save_state;
 	//update current level? not work now
 	update=typeof update==='undefined'?false:update;
-	var path_parts=[];
+	path_parts=[];
 	var title='Free Speech Project';
 
 	if(typeof state.path == 'undefined'){
@@ -1416,17 +1423,17 @@ function view_path(location,state,save_state,update){
 			}
 		}
 		else{
+			if('@'==path_parts[0].substring(0,1)){
+				check_account=path_parts[0].substring(1);
+				check_account=check_account.toLowerCase();
+				check_account=check_account.trim();
+			}
 			if(''==path_parts[1]){
 				//not object
 				//check account link
 				if('@'==path_parts[0].substring(0,1)){
 					//preload account for view with +1 level
-					let check_account=path_parts[0].substring(1);
-					check_account=check_account.toLowerCase();
-					check_account=check_account.trim();
-					preload_account={};
-					preload_object={};
-					viz.api.getAccounts([check_account],function(err,response){
+					get_user_profile(check_account,false,function(err,result){
 						if(err){
 							console.log(err);
 							$('.loader').css('display','block');
@@ -1446,94 +1453,54 @@ function view_path(location,state,save_state,update){
 							view.css('display','block');
 						}
 						else{
-							if(typeof response[0] == 'undefined'){
-								$('.loader').css('display','block');
-								$('.view').css('display','none');
-								if(!update){
-									level++;
-									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
-									$('.content').append(new_view);
-								}
-								let view=$('.view[data-level="'+level+'"]');
-								let header='';
-								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
-								header+=ltmp(ltmp_arr.header_link,{link:location});
-								view.find('.header').html(header);
-								view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found}));
-								$('.loader').css('display','none');
-								view.css('display','block');
-							}
-							else{
-								preload_account=response[0];
-								let profile_view='';
-								let profile_obj={};
-								let profile_found=false;
-								let json_metadata={};
-								let profile_contacts='';
-								if(''!=response[0].json_metadata){
-									json_metadata=JSON.parse(response[0].json_metadata);
-								}
-								if(typeof json_metadata.profile != 'undefined'){
-									if(typeof json_metadata.profile.nickname != 'undefined'){
-										profile_obj.nickname=escape_html(json_metadata.profile.nickname);
-									}
-									if(typeof json_metadata.profile.avatar != 'undefined'){
-										profile_obj.avatar=escape_html(json_metadata.profile.avatar);
-									}
-									if(typeof json_metadata.profile.about != 'undefined'){
-										profile_obj.about=escape_html(json_metadata.profile.about);
-										profile_view+=ltmp(ltmp_arr.profile_about,{about:profile_obj.about});
-										profile_found=true;
-									}
-									if(typeof json_metadata.profile.services != 'undefined'){
-										if(typeof json_metadata.profile.services.github != 'undefined'){
-											profile_obj.github=escape_html(json_metadata.profile.services.github);
-											profile_contacts+=ltmp(ltmp_arr.profile_contacts_github,{github:profile_obj.github,icon_github:ltmp_arr.icon_github});
-											profile_found=true;
-										}
-										if(typeof json_metadata.profile.services.telegram != 'undefined'){
-											profile_obj.telegram=escape_html(json_metadata.profile.services.telegram);
-											profile_contacts+=ltmp(ltmp_arr.profile_contacts_telegram,{telegram:profile_obj.telegram,icon_telegram:ltmp_arr.icon_telegram});
-											profile_found=true;
-										}
-										if(''!=profile_contacts){
-											profile_view+=ltmp(ltmp_arr.profile_contacts,{contacts:profile_contacts});
-										}
-									}
-								}
-								if(typeof profile_obj.nickname == 'undefined'){
-									profile_obj.nickname=preload_account.name;
-								}
-								if(typeof profile_obj.avatar == 'undefined'){
-									profile_obj.avatar='default.png';
-								}
-								let profile='';
-								preload_object=profile_obj;
-								if(profile_found){
-									profile=ltmp(ltmp_arr.profile,{profile:profile_view});
-								}
+							check_account_obj=result;
+							check_account_profile_obj=JSON.parse(result.profile);
+							let profile_view='';
+							let profile_found=false;
+							let json_metadata={};
+							let profile_contacts='';
 
-								$('.loader').css('display','block');
-								$('.view').css('display','none');
-								if(!update){
-									level++;
-									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile});
-									$('.content').append(new_view);
+							if(typeof check_account_profile_obj != 'undefined'){
+								if(typeof check_account_profile_obj.about != 'undefined'){
+									profile_view+=ltmp(ltmp_arr.profile_about,{about:check_account_profile_obj.about});
+									profile_found=true;
 								}
-								let view=$('.view[data-level="'+level+'"]');
-								let header='';
-								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
-								header+=ltmp(ltmp_arr.header_link,{link:location});
-								if(check_account==current_user){
-									header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
-									header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
+								if(typeof check_account_profile_obj.github != 'undefined'){
+									profile_contacts+=ltmp(ltmp_arr.profile_contacts_github,{github:check_account_profile_obj.github,icon_github:ltmp_arr.icon_github});
+									profile_found=true;
 								}
-								view.find('.header').html(header);
-								view.find('.objects').html(ltmp_arr.loader_notice);
-								$('.loader').css('display','none');
-								view.css('display','block');
-								check_load_more();
+								if(typeof check_account_profile_obj.telegram != 'undefined'){
+									profile_contacts+=ltmp(ltmp_arr.profile_contacts_telegram,{telegram:check_account_profile_obj.telegram,icon_telegram:ltmp_arr.icon_telegram});
+									profile_found=true;
+								}
+								if(''!=profile_contacts){
+									profile_view+=ltmp(ltmp_arr.profile_contacts,{contacts:profile_contacts});
+								}
 							}
+							let profile='';
+							if(profile_found){
+								profile=ltmp(ltmp_arr.profile,{profile:profile_view});
+							}
+							$('.loader').css('display','block');
+							$('.view').css('display','none');
+							if(!update){
+								level++;
+								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile});
+								$('.content').append(new_view);
+							}
+							let view=$('.view[data-level="'+level+'"]');
+							let header='';
+							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+							header+=ltmp(ltmp_arr.header_link,{link:location});
+							if(check_account==current_user){
+								header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
+								header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
+							}
+							view.find('.header').html(header);
+							view.find('.objects').html(ltmp_arr.loader_notice);
+							$('.loader').css('display','none');
+							view.css('display','block');
+							check_load_more();
 						}
 					});
 				}
@@ -1541,9 +1508,6 @@ function view_path(location,state,save_state,update){
 			else{
 				//only block in path parts
 				if(''==path_parts[2]){
-					let check_account=path_parts[0].substring(1);
-					check_account=check_account.toLowerCase();
-					check_account=check_account.trim();
 					let check_block=parseInt(path_parts[1]);
 					$('.loader').css('display','block');
 					$('.view').css('display','none');
@@ -1898,8 +1862,7 @@ function highlight_links(text){
 	return text;
 }
 function load_more_objects(indicator,check_level){
-	let check_account=preload_account.name;
-	let start_offset=preload_account.custom_sequence_block_num;
+	let start_offset=check_account_obj.start;
 	let offset=start_offset;
 	let find_objects=false;
 	if(0<indicator.parent().find('.object').length){
@@ -1949,7 +1912,7 @@ function load_more_objects(indicator,check_level){
 					text=fast_str_replace("\n",'<br>',text);
 
 					let link='viz://@'+check_account+'/'+offset+'/';
-					let author='@'+preload_account.name;
+					let author='@'+check_account;
 
 					if(typeof item.p == 'undefined'){
 						item.p=0;
@@ -1991,8 +1954,8 @@ function load_more_objects(indicator,check_level){
 					let object_view=ltmp(ltmp_arr.object_type_text_preview,{
 						reply:reply,
 						author:author,
-						nickname:preload_object.nickname,
-						avatar:preload_object.avatar,
+						nickname:check_account_profile_obj.nickname,
+						avatar:check_account_profile_obj.avatar,
 						text:text,
 						previous:item.p,
 						link:link,
@@ -2032,24 +1995,25 @@ function check_load_more(){
 	});
 }
 
-$(window).on('hashchange',function(e){
-	e.preventDefault();
+function main_app(){
 	parse_fullpath();
-	view_path(path,{},true,false);
-});
+	view_path(path,{},false,false);
+	render_menu();
+	render_session();
 
-parse_fullpath();
-view_path(path,{},false,false);
-render_menu();
-render_session();
+	document.addEventListener('click',app_mouse,false);
+	document.addEventListener('tap',app_mouse,false);
+	document.addEventListener('keyup',app_keyboard,false);
 
-document.addEventListener('click',app_mouse,false);
-document.addEventListener('tap',app_mouse,false);
-document.addEventListener('keyup',app_keyboard,false);
-
-document.addEventListener('scroll',function(){
-	check_load_more();
-});
-window.onresize=function(){
-	check_load_more();
+	document.addEventListener('scroll',function(){
+		check_load_more();
+	});
+	window.onresize=function(){
+		check_load_more();
+	};
+	window.onhashchange=function(e){
+		e.preventDefault();
+		parse_fullpath();
+		view_path(path,{},true,false);
+	};
 }
