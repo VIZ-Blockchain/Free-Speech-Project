@@ -112,6 +112,133 @@ if(null!=localStorage.getItem(storage_prefix+'settings')){
 	settings=JSON.parse(localStorage.getItem(storage_prefix+'settings'));
 }
 
+function idb_error(e){
+	console.log('IDB error',e);
+}
+
+const idb=window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+const idbt=window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+
+var db;
+var db_version=1;
+
+if(null!=localStorage.getItem(storage_prefix+'db_version')){
+	db_version=parseInt(localStorage.getItem(storage_prefix+'db_version'));
+}
+
+var users_table_diff=[];
+//test:
+//users_table_diff.push(["on1x",true]);
+//users_table_diff.push(["test.on1x",true]);
+//users_table_diff.push(["spamer",false]);
+
+//console.log(users_table_diff);
+//test:
+//increase_db_version();
+
+function increase_db_version(){
+	db_version++;
+	localStorage.setItem(storage_prefix+'db_version',db_version);
+	db.close();
+	load_db();
+}
+
+function load_db(){
+	var req=idb.open(storage_prefix+'social_network',db_version);
+	req.onerror=idb_error;
+	req.onblocked=idb_error;
+	req.onsuccess=function(event){
+		db=event.target.result;
+	};
+	req.onupgradeneeded=function(event){
+		console.log('onupgradeneeded!');
+		db=event.target.result;
+
+		if(!db.objectStoreNames.contains('users')){
+			items_table=db.createObjectStore('users',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('account','account',{unique:true});//account
+			items_table.createIndex('start','start',{unique:false});//start block num
+			items_table.createIndex('end','end',{unique:false});//end block num
+			items_table.createIndex('update','update',{unique:false});//last update time
+			items_table.createIndex('activity','activity',{unique:false});//last activity time
+			items_table.createIndex('status','status',{unique:false});//status: 0 - temp, 1 - subscribed, 2 - ignored
+		}
+		else{
+			//new index for users
+		}
+
+		if(!db.objectStoreNames.contains('replies')){
+			items_table=db.createObjectStore('replies',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('parent',['parent_account','parent_block'],{unique:false});//account
+			items_table.createIndex('block','block',{unique:false});//block num
+			items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
+		}
+		else{
+			//new index for replies
+		}
+
+		if(!db.objectStoreNames.contains('feed')){
+			items_table=db.createObjectStore('feed',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('object',['account','block'],{unique:false});//account
+			items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
+		}
+		else{
+			//new index for feed
+		}
+
+		for(let i in users_table_diff){
+			let check_user_table=users_table_diff[i];
+			if(check_user_table[1]){
+				if(!db.objectStoreNames.contains('objects_'+check_user_table[0])){
+					items_table=db.createObjectStore('objects_'+check_user_table[0],{keyPath:'id',autoIncrement:true});
+					items_table.createIndex('block','block',{unique:true});//block num
+					items_table.createIndex('previous','previous',{unique:false});//previous block num (may be loops)
+					items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
+					//items_table.createIndex('type','type',{unique:false});//need for new types (not only text)
+					items_table.createIndex('is_reply','is_reply',{unique:false});//true/false
+					items_table.createIndex('is_share','is_share',{unique:false});//true/false
+				}
+			}
+			if(!check_user_table[1]){
+				if(db.objectStoreNames.contains('objects_'+check_user_table[0])){
+					db.deleteObjectStore('objects_'+check_user_table[0]);
+				}
+			}
+		}
+
+		/*
+		//add
+		let t1=db.transaction(['users'],'readwrite');
+		let q1=t1.objectStore('users');
+		q1.add({'account':'on1x'});
+		q1.add({'account':'test'});
+		t1.commit();
+		t1.oncomplete=function(e){
+			//refresh view?
+		}*/
+		/*
+		//read
+		let t=db.transaction(['users'],'readonly');
+		let q=t.objectStore('users');
+		let req=q.index('account').openCursor(null,'next');
+		let result=[];
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let obj=cur.value;
+				result.push(obj);
+				cur.continue();
+			}
+			else{
+				console.log(result);
+			}
+		};
+		*/
+	};
+}
+load_db();
+
 function save_feed_settings(view){
 	let tab=view.find('.content-view[data-tab="feed"]');
 	tab.find('.button').removeClass('disabled');
