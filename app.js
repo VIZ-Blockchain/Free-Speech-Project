@@ -890,8 +890,9 @@ function app_mouse(e){
 }
 
 function update_user_profile(account,callback){
-	viz.api.getAccounts([current_user],function(err,response){
+	viz.api.getAccounts([account],function(err,response){
 		if(err){
+			console.log('viz api error:',err);
 			callback(true);
 		}
 		else{
@@ -970,6 +971,7 @@ function update_user_profile(account,callback){
 				};
 			}
 			else{
+				console.log('viz api error, undefined response:',response);
 				callback(true);
 			}
 		}
@@ -983,6 +985,7 @@ function get_user_profile(account,forced_update,callback){
 	let find=false;
 
 	if(forced_update){
+		console.log('forced_update profile: '+account);
 		update_user_profile(account,callback);
 	}
 	else{
