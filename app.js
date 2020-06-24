@@ -439,7 +439,7 @@ var ltmp_arr={
 	none_notice:'<div class="none-notice"><em>Лента новостей пока не работает, попробуйте поиск.<!--<br>Ничего не найдено.--></em></div>',
 	load_more_end_notice:'<div class="load-more-end-notice"><em>Больше ничего не найдено.</em></div>',
 	error_notice:'<div class="error-notice"><em>{error}</em></div>',
-	loader_notice:'<div class="loader-notice"><span class="submit-button-ring"></span></div>',
+	loader_notice:'<div class="loader-notice" data-account="{account}" data-block="{block}"><span class="submit-button-ring"></span></div>',
 
 	toggle_menu:'<a tabindex="0" title="{title}" class="toggle-menu">{icon}</a>',
 	toggle_menu_title:'Переключить меню',
@@ -1101,6 +1101,16 @@ function save_profile(view){
 						view.find('.submit-button-ring').removeClass('show');
 						view.find('.success').html(ltmp_arr.edit_profile_saved);
 						view.find('.button').removeClass('disabled');
+						setTimeout(function(){
+							get_user_profile(current_user,true,function(err,result){
+								if(err){
+									console.log('failed forced update after profile changes');
+								}
+								else{
+									console.log('successfully forced update after profile changes');
+								}
+							}
+						)},1000);
 					}
 					else{
 						console.log(err);
@@ -1187,61 +1197,33 @@ function view_edit_profile(view,path_parts,query,title){
 	view.find('.viz_account').html('@'+current_user);
 
 	view.find('input').val('');
-	if(0<Object.keys(check_account_profile_obj).length){
-		if(typeof check_account_profile_obj.nickname != 'undefined'){
-			view.find('input[name=nickname]').val(check_account_profile_obj.nickname);
+	get_user_profile(current_user,true,function(err,result){
+		if(err){
+			view.find('.error').html(ltmp_arr.gateway_error);
 		}
-		if(typeof check_account_profile_obj.about != 'undefined'){
-			view.find('input[name=about]').val(check_account_profile_obj.about);
-		}
-		if(typeof check_account_profile_obj.avatar != 'undefined'){
-			view.find('input[name=avatar]').val(check_account_profile_obj.avatar);
-		}
-		if(typeof check_account_profile_obj.telegram != 'undefined'){
-			view.find('input[name=telegram]').val(check_account_profile_obj.telegram);
-		}
-		if(typeof check_account_profile_obj.github != 'undefined'){
-			view.find('input[name=github]').val(check_account_profile_obj.github);
-		}
-	}
-	else{
-		viz.api.getAccounts([current_user],function(err,response){
-			if(err){
-				view.find('.error').html(ltmp_arr.gateway_error);
-			}
-			else{
-				if(typeof response[0] == 'undefined'){
-					view.find('.error').html(ltmp_arr.account_not_found);
+		else{
+			let profile=JSON.parse(result.profile);
+			if(0<Object.keys(profile).length){
+				if(typeof profile.nickname != 'undefined'){
+					view.find('input[name=nickname]').val(profile.nickname);
 				}
-				else{
-					let json_metadata={};
-					if(''!=response[0].json_metadata){
-						json_metadata=JSON.parse(response[0].json_metadata);
-					}
-
-					if(typeof json_metadata.profile.nickname != 'undefined'){
-						view.find('input[name=nickname]').val(escape_html(json_metadata.profile.nickname));
-					}
-					if(typeof json_metadata.profile.avatar != 'undefined'){
-						view.find('input[name=avatar]').val(escape_html(json_metadata.profile.avatar));
-					}
-					if(typeof json_metadata.profile.about != 'undefined'){
-						view.find('input[name=about]').val(escape_html(json_metadata.profile.about));
-					}
-					if(typeof json_metadata.profile.services != 'undefined'){
-						if(typeof json_metadata.profile.services.github != 'undefined'){
-							view.find('input[name=github]').val(escape_html(json_metadata.profile.services.github));
-						}
-						if(typeof json_metadata.profile.services.telegram != 'undefined'){
-							view.find('input[name=telegram]').val(escape_html(json_metadata.profile.services.telegram));
-						}
-					}
+				if(typeof profile.about != 'undefined'){
+					view.find('input[name=about]').val(profile.about);
+				}
+				if(typeof profile.avatar != 'undefined'){
+					view.find('input[name=avatar]').val(profile.avatar);
+				}
+				if(typeof profile.telegram != 'undefined'){
+					view.find('input[name=telegram]').val(profile.telegram);
+				}
+				if(typeof profile.github != 'undefined'){
+					view.find('input[name=github]').val(profile.github);
 				}
 			}
-		});
-	}
-	$('.loader').css('display','none');
-	view.css('display','block');
+		}
+		$('.loader').css('display','none');
+		view.css('display','block');
+	});
 }
 
 function view_app_settings(view,path_parts,query,title){
@@ -1359,7 +1341,6 @@ function parse_fullpath(){
 
 var path_parts;
 var check_account='';
-var check_account_obj={};
 
 function view_path(location,state,save_state,update){
 	//save to history browser
@@ -1461,39 +1442,38 @@ function view_path(location,state,save_state,update){
 							view.css('display','block');
 						}
 						else{
-							check_account_obj=result;
-							check_account_profile_obj=JSON.parse(result.profile);
+							let profile=JSON.parse(result.profile);
 							let profile_view='';
 							let profile_found=false;
 							let json_metadata={};
 							let profile_contacts='';
 
-							if(typeof check_account_profile_obj != 'undefined'){
-								if(typeof check_account_profile_obj.about != 'undefined'){
-									profile_view+=ltmp(ltmp_arr.profile_about,{about:check_account_profile_obj.about});
+							if(typeof profile != 'undefined'){
+								if(typeof profile.about != 'undefined'){
+									profile_view+=ltmp(ltmp_arr.profile_about,{about:profile.about});
 									profile_found=true;
 								}
-								if(typeof check_account_profile_obj.github != 'undefined'){
-									profile_contacts+=ltmp(ltmp_arr.profile_contacts_github,{github:check_account_profile_obj.github,icon_github:ltmp_arr.icon_github});
+								if(typeof profile.github != 'undefined'){
+									profile_contacts+=ltmp(ltmp_arr.profile_contacts_github,{github:profile.github,icon_github:ltmp_arr.icon_github});
 									profile_found=true;
 								}
-								if(typeof check_account_profile_obj.telegram != 'undefined'){
-									profile_contacts+=ltmp(ltmp_arr.profile_contacts_telegram,{telegram:check_account_profile_obj.telegram,icon_telegram:ltmp_arr.icon_telegram});
+								if(typeof profile.telegram != 'undefined'){
+									profile_contacts+=ltmp(ltmp_arr.profile_contacts_telegram,{telegram:profile.telegram,icon_telegram:ltmp_arr.icon_telegram});
 									profile_found=true;
 								}
 								if(''!=profile_contacts){
 									profile_view+=ltmp(ltmp_arr.profile_contacts,{contacts:profile_contacts});
 								}
 							}
-							let profile='';
+							let profile_section='';
 							if(profile_found){
-								profile=ltmp(ltmp_arr.profile,{profile:profile_view});
+								profile_section=ltmp(ltmp_arr.profile,{profile:profile_view});
 							}
 							$('.loader').css('display','block');
 							$('.view').css('display','none');
 							if(!update){
 								level++;
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile});
+								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile_section});
 								$('.content').append(new_view);
 							}
 							let view=$('.view[data-level="'+level+'"]');
@@ -1505,7 +1485,7 @@ function view_path(location,state,save_state,update){
 								header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
 							}
 							view.find('.header').html(header);
-							view.find('.objects').html(ltmp_arr.loader_notice);
+							view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:result.account,block:0}));
 							$('.loader').css('display','none');
 							view.css('display','block');
 							check_load_more();
@@ -1587,7 +1567,7 @@ function view_path(location,state,save_state,update){
 								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
 								header+=ltmp(ltmp_arr.header_link,{link:location});
 								view.find('.header').html(header);
-								view.find('.objects').html(ltmp_arr.loader_notice);
+								view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
 
 								viz.api.getOpsInBlock(check_block,false,function(err,response){
 									if(err){
@@ -1870,121 +1850,131 @@ function highlight_links(text){
 	return text;
 }
 function load_more_objects(indicator,check_level){
-	let start_offset=check_account_obj.start;
-	let offset=start_offset;
-	let find_objects=false;
-	if(0<indicator.parent().find('.object').length){
-		find_objects=true;
-	}
-	indicator.parent().find('.object').each(function(){
-		if(offset>parseInt($(this).data('previous'))){
-			offset=parseInt($(this).data('previous'));
-		}
-	});
-	if(find_objects){
-		//need to stop load more if no previous
-		if((offset==start_offset)||(offset==0)){
-			indicator.before(ltmp_arr.load_more_end_notice);
-			indicator.remove();
-			return;
-		}
-	}
-	viz.api.getOpsInBlock(offset,false,function(err,response){
-		if(check_level==level){
+	if(''!=indicator.data('account')){
+		let check_account=indicator.data('account');
+		get_user_profile(check_account,false,function(err,result){
 			if(err){
-				indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
+				indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found}));
+				indicator.remove();
+				return;
 			}
-			else{
-				let item=false;
-				for(let i in response){
-					let item_i=i;
-					if('custom'==response[item_i].op[0]){
-						if(app_protocol==response[item_i].op[1].id){
-							let op=response[item_i].op[1];
-							if(op.required_regular_auths.includes(check_account)){
-								item=JSON.parse(response[item_i].op[1].json);
-								item.timestamp=Date.parse(response[item_i].timestamp) / 1000 | 0;
-							}
-						}
-					}
+			let start_offset=result.start;
+			let offset=start_offset;
+			let find_objects=false;
+			if(0<indicator.parent().find('.object').length){
+				find_objects=true;
+			}
+			indicator.parent().find('.object').each(function(){
+				if(offset>parseInt($(this).data('previous'))){
+					offset=parseInt($(this).data('previous'));
 				}
-				if(false==item){
+			});
+			if(find_objects){
+				//need to stop load more if no previous
+				if((offset==start_offset)||(offset==0)){
 					indicator.before(ltmp_arr.load_more_end_notice);
 					indicator.remove();
-				}
-				else{
-					let objects='';
-
-					let text=item.d.text;
-					text=escape_html(text);
-					text=fast_str_replace("\n",'<br>',text);
-
-					let link='viz://@'+check_account+'/'+offset+'/';
-					let author='@'+check_account;
-
-					if(typeof item.p == 'undefined'){
-						item.p=0;
-					}
-
-					let reply='';
-					if(typeof item.d.r != 'undefined'){
-						let reply_link=item.d.r;
-						//internal
-						if(0==reply_link.indexOf('viz://')){
-							reply_link=reply_link.toLowerCase();
-							reply_link=escape_html(reply_link);
-							let pattern = /@[a-z0-9\-\.]*/g;
-							let reply_account=reply_link.match(pattern);
-							if(typeof reply_account[0] != 'undefined'){
-								reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
-							}
-						}
-						//external
-						if(0==reply_link.indexOf('https://')){
-							reply_link=reply_link.toLowerCase();
-							reply_link=escape_html(reply_link);
-							reply_caption=reply_link.substring(8);
-							if(-1!=reply_caption.indexOf('/')){
-								reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
-							}
-							if(''!=reply_caption){
-								if(20<reply_caption.length){
-									reply_caption=reply_caption.substring(0,20)+'...';
-								}
-							}
-							else{
-								reply_caption='URL';
-							}
-							reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
-						}
-					}
-
-					let object_view=ltmp(ltmp_arr.object_type_text_preview,{
-						reply:reply,
-						author:author,
-						nickname:check_account_profile_obj.nickname,
-						avatar:check_account_profile_obj.avatar,
-						text:text,
-						previous:item.p,
-						link:link,
-						actions:ltmp(ltmp_arr.object_type_text_actions,{
-							//link:link,
-							icon_reply:ltmp_arr.icon_reply,
-							icon_award:ltmp_arr.icon_gem,
-							icon_copy_link:ltmp_arr.icon_copy_link,
-						}),
-						timestamp:item.timestamp,
-					});
-					indicator.before(object_view);
-					let new_object=indicator.parent().find('.object[data-link="'+link+'"]');
-					let timestamp=new_object.find('.short-date-view').data('timestamp');
-					new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
-					indicator.data('busy','0');
-					check_load_more();
+					return;
 				}
 			}
-		}
-	});
+			viz.api.getOpsInBlock(offset,false,function(err,response){
+				if(check_level==level){
+					if(err){
+						indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
+					}
+					else{
+						let item=false;
+						for(let i in response){
+							let item_i=i;
+							if('custom'==response[item_i].op[0]){
+								if(app_protocol==response[item_i].op[1].id){
+									let op=response[item_i].op[1];
+									if(op.required_regular_auths.includes(check_account)){
+										item=JSON.parse(response[item_i].op[1].json);
+										item.timestamp=Date.parse(response[item_i].timestamp) / 1000 | 0;
+									}
+								}
+							}
+						}
+						if(false==item){
+							indicator.before(ltmp_arr.load_more_end_notice);
+							indicator.remove();
+						}
+						else{
+							let objects='';
+
+							let text=item.d.text;
+							text=escape_html(text);
+							text=fast_str_replace("\n",'<br>',text);
+
+							let link='viz://@'+check_account+'/'+offset+'/';
+							let author='@'+check_account;
+
+							if(typeof item.p == 'undefined'){
+								item.p=0;
+							}
+
+							let reply='';
+							if(typeof item.d.r != 'undefined'){
+								let reply_link=item.d.r;
+								//internal
+								if(0==reply_link.indexOf('viz://')){
+									reply_link=reply_link.toLowerCase();
+									reply_link=escape_html(reply_link);
+									let pattern = /@[a-z0-9\-\.]*/g;
+									let reply_account=reply_link.match(pattern);
+									if(typeof reply_account[0] != 'undefined'){
+										reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
+									}
+								}
+								//external
+								if(0==reply_link.indexOf('https://')){
+									reply_link=reply_link.toLowerCase();
+									reply_link=escape_html(reply_link);
+									reply_caption=reply_link.substring(8);
+									if(-1!=reply_caption.indexOf('/')){
+										reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
+									}
+									if(''!=reply_caption){
+										if(20<reply_caption.length){
+											reply_caption=reply_caption.substring(0,20)+'...';
+										}
+									}
+									else{
+										reply_caption='URL';
+									}
+									reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
+								}
+							}
+							let profile=JSON.parse(result.profile);
+							let object_view=ltmp(ltmp_arr.object_type_text_preview,{
+								reply:reply,
+								author:author,
+								nickname:profile.nickname,
+								avatar:profile.avatar,
+								text:text,
+								previous:item.p,
+								link:link,
+								actions:ltmp(ltmp_arr.object_type_text_actions,{
+									//link:link,
+									icon_reply:ltmp_arr.icon_reply,
+									icon_award:ltmp_arr.icon_gem,
+									icon_copy_link:ltmp_arr.icon_copy_link,
+								}),
+								timestamp:item.timestamp,
+							});
+							indicator.before(object_view);
+							let new_object=indicator.parent().find('.object[data-link="'+link+'"]');
+							let timestamp=new_object.find('.short-date-view').data('timestamp');
+							new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+							indicator.data('busy','0');
+							check_load_more();
+						}
+					}
+				}
+			});
+		});
+	}
 }
 
 function check_load_more(){
