@@ -245,6 +245,11 @@ if(null!=localStorage.getItem(storage_prefix+'db_version')){
 		main_app();
 	});
 }
+else{
+	load_db(function(){
+		main_app();
+	});
+}
 
 function increase_db_version(){
 	db_version++;
