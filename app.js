@@ -1675,51 +1675,27 @@ function view_path(location,state,save_state,update){
 							view.find('.header').html(header);
 							view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
 
-							viz.api.getOpsInBlock(check_block,false,function(err,response){
+							get_object(check_account,check_block,function(err,result){
 								if(err){
 									view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
 								}
 								else{
-									let item=false;
-									for(let i in response){
-										let item_i=i;
-										if('custom'==response[item_i].op[0]){
-											if(app_protocol==response[item_i].op[1].id){
-												let op=response[item_i].op[1];
-												if(op.required_regular_auths.includes(check_account)){
-													item=JSON.parse(response[item_i].op[1].json);
-													item.timestamp=Date.parse(response[item_i].timestamp) / 1000 | 0;
-												}
-											}
-										}
-									}
-									if(false==item){
-										view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
+									let objects='';
+
+									let text=result.data.d.text;
+									text=escape_html(text);
+									text=fast_str_replace("\n",'<br>',text);
+
+									let link='viz://@'+check_account+'/'+check_block+'/';
+
+									let reply='';
+									if(result.is_reply){
+										reply=ltmp(ltmp_arr.object_type_text_reply,{link:'viz://@'+result.parent_account+'/'+result.parent_block+'/',caption:'@'+result.parent_account});
 									}
 									else{
-										//console.log(item);
-										let objects='';
-
-										let text=item.d.text;
-										text=escape_html(text);
-										text=fast_str_replace("\n",'<br>',text);
-
-										let link='viz://@'+check_account+'/'+check_block+'/';
-
-										let reply='';
-										if(typeof item.d.r != 'undefined'){
-											let reply_link=item.d.r;
-											//internal
-											if(0==reply_link.indexOf('viz://')){
-												reply_link=reply_link.toLowerCase();
-												reply_link=escape_html(reply_link);
-												let pattern = /@[a-z0-9\-\.]*/g;
-												let reply_account=reply_link.match(pattern);
-												if(typeof reply_account[0] != 'undefined'){
-													reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
-												}
-											}
-											//external
+										if(typeof result.data.d.r != 'undefined'){
+											let reply_link=result.data.d.r;
+											//reply to external url
 											if(0==reply_link.indexOf('https://')){
 												reply_link=reply_link.toLowerCase();
 												reply_link=escape_html(reply_link);
@@ -1738,31 +1714,32 @@ function view_path(location,state,save_state,update){
 												reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
 											}
 										}
-
-										text=highlight_links(text);
-
-										let object_view=ltmp(ltmp_arr.object_type_text,{
-											reply:reply,
-											author:author,
-											link:link,
-											nickname:nickname,
-											avatar:avatar,
-											text:text,
-											actions:ltmp(ltmp_arr.object_type_text_actions,{
-												//link:link,
-												icon_reply:ltmp_arr.icon_reply,
-												icon_award:ltmp_arr.icon_gem,
-												icon_copy_link:ltmp_arr.icon_copy_link,
-											}),
-											timestamp:item.timestamp,
-										});
-
-										objects+=object_view;
-										view.find('.objects').html(objects);
-										let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
-										view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),false,false,false));
-										view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000-(new Date().getTimezoneOffset()*60000)));
 									}
+
+									text=highlight_links(text);
+
+									let object_view=ltmp(ltmp_arr.object_type_text,{
+										reply:reply,
+										author:author,
+										link:link,
+										nickname:nickname,
+										avatar:avatar,
+										text:text,
+										actions:ltmp(ltmp_arr.object_type_text_actions,{
+											//link:link,
+											icon_reply:ltmp_arr.icon_reply,
+											icon_award:ltmp_arr.icon_gem,
+											icon_copy_link:ltmp_arr.icon_copy_link,
+										}),
+										timestamp:result.data.timestamp,
+									});
+
+									objects+=object_view;
+									view.find('.objects').html(objects);
+									let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+									view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),false,false,false));
+									view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000-(new Date().getTimezoneOffset()*60000)));
+
 
 									$('.loader').css('display','none');
 									view.css('display','block');
