@@ -1023,6 +1023,7 @@ function parse_object(account,block,callback){
 					account:account,
 					block:block,
 					data:item,
+					is_reply:false,
 				};
 				if(reply){
 					obj.is_reply=true;
@@ -1959,57 +1960,41 @@ function load_more_objects(indicator,check_level){
 					return;
 				}
 			}
-			viz.api.getOpsInBlock(offset,false,function(err,response){
+			let account_profile=JSON.parse(result.profile);
+
+			get_object(check_account,offset,function(err,result){
 				if(check_level==level){
 					if(err){
-						indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
-					}
-					else{
-						let item=false;
-						for(let i in response){
-							let item_i=i;
-							if('custom'==response[item_i].op[0]){
-								if(app_protocol==response[item_i].op[1].id){
-									let op=response[item_i].op[1];
-									if(op.required_regular_auths.includes(check_account)){
-										item=JSON.parse(response[item_i].op[1].json);
-										item.timestamp=Date.parse(response[item_i].timestamp) / 1000 | 0;
-									}
-								}
-							}
+						if(1==result){
+							indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
 						}
-						if(false==item){
+						if(2==result){
 							indicator.before(ltmp_arr.load_more_end_notice);
 							indicator.remove();
 						}
+					}
+					else{
+						let objects='';
+
+						let text=result.data.d.text;
+						text=escape_html(text);
+						text=fast_str_replace("\n",'<br>',text);
+
+						let link='viz://@'+check_account+'/'+offset+'/';
+						let author='@'+check_account;
+
+						if(typeof result.data.p == 'undefined'){
+							result.data.p=0;
+						}
+
+						let reply='';
+						if(result.is_reply){
+							reply=ltmp(ltmp_arr.object_type_text_reply,{link:'viz://@'+result.parent_account+'/'+result.parent_block+'/',caption:'@'+result.parent_account});
+						}
 						else{
-							let objects='';
-
-							let text=item.d.text;
-							text=escape_html(text);
-							text=fast_str_replace("\n",'<br>',text);
-
-							let link='viz://@'+check_account+'/'+offset+'/';
-							let author='@'+check_account;
-
-							if(typeof item.p == 'undefined'){
-								item.p=0;
-							}
-
-							let reply='';
-							if(typeof item.d.r != 'undefined'){
-								let reply_link=item.d.r;
-								//internal
-								if(0==reply_link.indexOf('viz://')){
-									reply_link=reply_link.toLowerCase();
-									reply_link=escape_html(reply_link);
-									let pattern = /@[a-z0-9\-\.]*/g;
-									let reply_account=reply_link.match(pattern);
-									if(typeof reply_account[0] != 'undefined'){
-										reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
-									}
-								}
-								//external
+							if(typeof result.data.d.r != 'undefined'){
+								let reply_link=result.data.d.r;
+								//reply to external url
 								if(0==reply_link.indexOf('https://')){
 									reply_link=reply_link.toLowerCase();
 									reply_link=escape_html(reply_link);
@@ -2028,30 +2013,31 @@ function load_more_objects(indicator,check_level){
 									reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
 								}
 							}
-							let profile=JSON.parse(result.profile);
-							let object_view=ltmp(ltmp_arr.object_type_text_preview,{
-								reply:reply,
-								author:author,
-								nickname:profile.nickname,
-								avatar:profile.avatar,
-								text:text,
-								previous:item.p,
-								link:link,
-								actions:ltmp(ltmp_arr.object_type_text_actions,{
-									//link:link,
-									icon_reply:ltmp_arr.icon_reply,
-									icon_award:ltmp_arr.icon_gem,
-									icon_copy_link:ltmp_arr.icon_copy_link,
-								}),
-								timestamp:item.timestamp,
-							});
-							indicator.before(object_view);
-							let new_object=indicator.parent().find('.object[data-link="'+link+'"]');
-							let timestamp=new_object.find('.short-date-view').data('timestamp');
-							new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
-							indicator.data('busy','0');
-							check_load_more();
 						}
+
+						let object_view=ltmp(ltmp_arr.object_type_text_preview,{
+							reply:reply,
+							author:author,
+							nickname:account_profile.nickname,
+							avatar:account_profile.avatar,
+							text:text,
+							previous:result.data.p,
+							link:link,
+							actions:ltmp(ltmp_arr.object_type_text_actions,{
+								//link:link,
+								icon_reply:ltmp_arr.icon_reply,
+								icon_award:ltmp_arr.icon_gem,
+								icon_copy_link:ltmp_arr.icon_copy_link,
+							}),
+							timestamp:result.data.timestamp,
+						});
+
+						indicator.before(object_view);
+						let new_object=indicator.parent().find('.object[data-link="'+link+'"]');
+						let timestamp=new_object.find('.short-date-view').data('timestamp');
+						new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+						indicator.data('busy','0');
+						check_load_more();
 					}
 				}
 			});
