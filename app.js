@@ -286,9 +286,10 @@ function load_db(callback){
 
 		if(!db.objectStoreNames.contains('replies')){
 			items_table=db.createObjectStore('replies',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('object',['account','block'],{unique:false});//account
 			items_table.createIndex('parent',['parent_account','parent_block'],{unique:false});//account
-			items_table.createIndex('block','block',{unique:false});//block num
 			items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
+			items_table.createIndex('cache','cache',{unique:false});//cache boolean for cleanup
 		}
 		else{
 			//new index for replies
@@ -303,13 +304,23 @@ function load_db(callback){
 			//new index for feed
 		}
 
+		if(!db.objectStoreNames.contains('objects')){
+			items_table=db.createObjectStore('objects',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('object',['account','block'],{unique:true});//account
+			items_table.createIndex('time','time',{unique:false});//unixtime for stored objects
+			items_table.createIndex('is_reply','is_reply',{unique:false});//true/false
+			items_table.createIndex('is_share','is_share',{unique:false});//true/false
+		}
+		else{
+			//new index for objects cache
+		}
+
 		for(let i in users_table_diff){
 			let check_user_table=users_table_diff[i];
 			if(check_user_table[1]){
 				if(!db.objectStoreNames.contains('objects_'+check_user_table[0])){
 					items_table=db.createObjectStore('objects_'+check_user_table[0],{keyPath:'id',autoIncrement:true});
 					items_table.createIndex('block','block',{unique:true});//block num
-					items_table.createIndex('previous','previous',{unique:false});//previous block num (may be loops)
 					items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
 					//items_table.createIndex('type','type',{unique:false});//need for new types (not only text)
 					items_table.createIndex('is_reply','is_reply',{unique:false});//true/false
@@ -958,6 +969,152 @@ function update_user_profile(account,callback){
 			}
 		}
 	});
+}
+
+function parse_object(account,block,callback){
+	let result={};
+	viz.api.getOpsInBlock(block,false,function(err,response){
+		if(err){
+			callback(true,1);//api error or block not found
+		}
+		else{
+			let item=false;
+			for(let i in response){
+				let item_i=i;
+				if('custom'==response[item_i].op[0]){
+					if(app_protocol==response[item_i].op[1].id){
+						let op=response[item_i].op[1];
+						if(op.required_regular_auths.includes(account)){
+							item=JSON.parse(response[item_i].op[1].json);
+							item.timestamp=Date.parse(response[item_i].timestamp) / 1000 | 0;
+						}
+					}
+				}
+			}
+			if(false==item){
+				callback(true,2);//item not found
+			}
+			else{
+				let reply=false;
+
+				let parent_account=false;
+				let parent_block=false;
+				if(typeof item.d.r != 'undefined'){
+					let reply_link=item.d.r;
+					//internal
+					if(0==reply_link.indexOf('viz://')){
+						reply_link=reply_link.toLowerCase();
+						reply_link=escape_html(reply_link);
+						let pattern = /@[a-z0-9\-\.]*/g;
+						let reply_account=reply_link.match(pattern);
+						if(typeof reply_account[0] != 'undefined'){
+							let pattern_block = /\/([0-9]*)\//g;
+							let reply_block=reply_link.match(pattern_block);
+							console.log(reply_block);
+							if(typeof reply_block[1] != 'undefined'){
+								reply=true;
+								parent_account=reply_account[0].substr(1);
+								parent_block=parseInt(fast_str_replace('/','',reply_block[1]));
+							}
+						}
+					}
+				}
+				let obj={
+					account:account,
+					block:block,
+					data:item,
+				};
+				if(reply){
+					obj.is_reply=true;
+					obj.parent_account=parent_account;
+					obj.parent_block=parent_block;
+				}
+				obj.time=new Date().getTime() / 1000 | 0;//unixtime
+				console.log(obj);
+
+				let t=db.transaction(['objects'],'readwrite');
+				let q=t.objectStore('objects');
+				let req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
+
+				let result;
+				let find=false;
+				req.onsuccess=function(event){
+					let cur=event.target.result;
+					if(cur){
+						result=cur.value;
+						result.time=obj.time;
+						find=true;
+						update_req=cur.update(result);
+						update_req.onsuccess=function(e){
+							callback(false,result);
+						}
+						cur.continue();
+					}
+					else{
+						if(!find){
+							let add_t=db.transaction(['objects'],'readwrite');
+							let add_q=add_t.objectStore('objects');
+							add_q.add(obj);
+							add_t.commit();
+							add_t.oncomplete=function(e){
+								if(reply){
+									let reply_add_t=db.transaction(['replies'],'readwrite');
+									let reply_add_q=reply_add_t.objectStore('replies');
+									let reply_obj={
+										account:account,
+										block:block,
+										parent_account:parent_account,
+										parent_block:parent_block,
+										time:new Date().getTime() / 1000 | 0,
+										cache:true,
+									};
+									reply_add_q.add(reply_obj);
+									reply_add_t.commit();
+									reply_add_t.oncomplete=function(e){
+										callback(false,obj);
+									};
+								}
+								else{
+									callback(false,obj);
+								}
+							};
+						}
+					}
+				};
+			}
+		}
+	});
+}
+
+function get_object(account,block,callback){
+	let result={};
+	let find=false;
+
+	//check individual table
+	if(!db.objectStoreNames.contains('objects_'+account)){
+		//look on cache
+		let t=db.transaction(['objects'],'readonly');
+		let q=t.objectStore('objects');
+		let req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				result=cur.value;
+				find=true;
+				cur.continue();
+			}
+			else{
+				if(find){
+					console.log('find in objects cache: '+account+' '+block);
+					callback(false,result);
+				}
+				else{
+					console.log('need parse object: '+account+' '+block);
+					parse_object(account,block,callback);
+				}
+			}
+		};
+	}
 }
 
 function get_user_profile(account,forced_update,callback){
