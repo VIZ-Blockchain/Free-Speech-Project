@@ -485,6 +485,7 @@ var ltmp_arr={
 
 	gateway_error:'Ошибка, попробуйте позже',
 	account_not_found:'Пользователь не найден',
+	object_not_found:'Объект не найден',
 	block_not_found:'Блок не найден, попробуйте позже',
 	data_not_found:'Данные не найдены, попробуйте позже',
 
@@ -515,14 +516,16 @@ var ltmp_arr={
 
 	icon_back:`<i class="icon back"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></i>`,
 	icon_gem:`<i class="icon gem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6.3499998 6.3500002" height="24" width="24" fill="none" stroke="currentColor" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"><path d="m 1.019418,1.20416 1.108597,0.36953 m 4.0648556,0.86224 -0.8622424,-1.23177 m -5.17345221,1.23177 3.07943611,3.07944 2.9562585,-3.07944 -1.6013069,0.49271 -1.3549516,2.58673 -1.4781293,-2.58673 -1.60130681,-0.49271 0.86224211,-1.23177 1.2317745,-0.36953 h 1.8476616 l 1.231774,0.36953 -1.1085967,0.36953 H 2.128015 l -0.3695322,1.35495 h 2.8330809 l -0.3695322,-1.35495"/></svg></i>`,
-	icon_reply:`<i class="icon reply"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path fill="none" d="M0 0h24v24H0z"/><path d="M14 22.5L11.2 19H6a1 1 0 0 1-1-1V7.103a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1h-5.2L14 22.5zm1.839-5.5H21V8.103H7V17H12.161L14 19.298 15.839 17zM2 2h17v2H3v11H1V3a1 1 0 0 1 1-1z"/></svg></i>`,
+	icon_reply:`<i class="icon reply"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M14 22.5L11.2 19H6a1 1 0 0 1-1-1V7.103a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1h-5.2L14 22.5zm1.839-5.5H21V8.103H7V17H12.161L14 19.298 15.839 17zM2 2h17v2H3v11H1V3a1 1 0 0 1 1-1z"/></svg></i>`,
+	icon_share:`<i class="icon share"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M3,12c0,1.654,1.346,3,3,3c0.794,0,1.512-0.315,2.049-0.82l5.991,3.424C14.022,17.734,14,17.864,14,18c0,1.654,1.346,3,3,3 s3-1.346,3-3s-1.346-3-3-3c-0.794,0-1.512,0.315-2.049,0.82L8.96,12.397C8.978,12.266,9,12.136,9,12s-0.022-0.266-0.04-0.397 l5.991-3.423C15.488,8.685,16.206,9,17,9c1.654,0,3-1.346,3-3s-1.346-3-3-3s-3,1.346-3,3c0,0.136,0.022,0.266,0.04,0.397 L8.049,9.82C7.512,9.315,6.794,9,6,9C4.346,9,3,10.346,3,12z"/></svg></i>`,
+
 	icon_copy_link:`<i class="icon copy_link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8.465,11.293c1.133-1.133,3.109-1.133,4.242,0L13.414,12l1.414-1.414l-0.707-0.707c-0.943-0.944-2.199-1.465-3.535-1.465 S7.994,8.935,7.051,9.879L4.929,12c-1.948,1.949-1.948,5.122,0,7.071c0.975,0.975,2.255,1.462,3.535,1.462 c1.281,0,2.562-0.487,3.536-1.462l0.707-0.707l-1.414-1.414l-0.707,0.707c-1.17,1.167-3.073,1.169-4.243,0 c-1.169-1.17-1.169-3.073,0-4.243L8.465,11.293z"/><path d="M12,4.929l-0.707,0.707l1.414,1.414l0.707-0.707c1.169-1.167,3.072-1.169,4.243,0c1.169,1.17,1.169,3.073,0,4.243 l-2.122,2.121c-1.133,1.133-3.109,1.133-4.242,0L10.586,12l-1.414,1.414l0.707,0.707c0.943,0.944,2.199,1.465,3.535,1.465 s2.592-0.521,3.535-1.465L19.071,12c1.948-1.949,1.948-5.122,0-7.071C17.121,2.979,13.948,2.98,12,4.929z"/></svg></i>`,
 	icon_new_object:`<i class="icon new_object"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M3,16c0,1.103,0.897,2,2,2h3.586L12,21.414L15.414,18H19c1.103,0,2-0.897,2-2V4c0-1.103-0.897-2-2-2H5C3.897,2,3,2.897,3,4 V16z M5,4h14v12h-4.414L12,18.586L9.414,16H5V4z"/><path d="M11 14L13 14 13 11 16 11 16 9 13 9 13 6 11 6 11 9 8 9 8 11 11 11z"/></svg></i>`,
-	icon_edit_profile:`<i class="icon edit_profile"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 14v2a6 6 0 0 0-6 6H4a8 8 0 0 1 8-8zm0-1c-3.315 0-6-2.685-6-6s2.685-6 6-6 6 2.685 6 6-2.685 6-6 6zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm2.595 7.812a3.51 3.51 0 0 1 0-1.623l-.992-.573 1-1.732.992.573A3.496 3.496 0 0 1 17 14.645V13.5h2v1.145c.532.158 1.012.44 1.405.812l.992-.573 1 1.732-.992.573a3.51 3.51 0 0 1 0 1.622l.992.573-1 1.732-.992-.573a3.496 3.496 0 0 1-1.405.812V22.5h-2v-1.145a3.496 3.496 0 0 1-1.405-.812l-.992.573-1-1.732.992-.572zM18 19.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></i>`,
+	icon_edit_profile:`<i class="icon edit_profile"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M12 14v2a6 6 0 0 0-6 6H4a8 8 0 0 1 8-8zm0-1c-3.315 0-6-2.685-6-6s2.685-6 6-6 6 2.685 6 6-2.685 6-6 6zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm2.595 7.812a3.51 3.51 0 0 1 0-1.623l-.992-.573 1-1.732.992.573A3.496 3.496 0 0 1 17 14.645V13.5h2v1.145c.532.158 1.012.44 1.405.812l.992-.573 1 1.732-.992.573a3.51 3.51 0 0 1 0 1.622l.992.573-1 1.732-.992-.573a3.496 3.496 0 0 1-1.405.812V22.5h-2v-1.145a3.496 3.496 0 0 1-1.405-.812l-.992.573-1-1.732.992-.572zM18 19.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></i>`,
 	icon_github:`<i class="icon github"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M12.026,2c-5.509,0-9.974,4.465-9.974,9.974c0,4.406,2.857,8.145,6.821,9.465 c0.499,0.09,0.679-0.217,0.679-0.481c0-0.237-0.008-0.865-0.011-1.696c-2.775,0.602-3.361-1.338-3.361-1.338 c-0.452-1.152-1.107-1.459-1.107-1.459c-0.905-0.619,0.069-0.605,0.069-0.605c1.002,0.07,1.527,1.028,1.527,1.028 c0.89,1.524,2.336,1.084,2.902,0.829c0.091-0.645,0.351-1.085,0.635-1.334c-2.214-0.251-4.542-1.107-4.542-4.93 c0-1.087,0.389-1.979,1.024-2.675c-0.101-0.253-0.446-1.268,0.099-2.64c0,0,0.837-0.269,2.742,1.021 c0.798-0.221,1.649-0.332,2.496-0.336c0.849,0.004,1.701,0.115,2.496,0.336c1.906-1.291,2.742-1.021,2.742-1.021 c0.545,1.372,0.203,2.387,0.099,2.64c0.64,0.696,1.024,1.587,1.024,2.675c0,3.833-2.33,4.675-4.552,4.922 c0.355,0.308,0.675,0.916,0.675,1.846c0,1.334-0.012,2.41-0.012,2.737c0,0.267,0.178,0.577,0.687,0.479 C19.146,20.115,22,16.379,22,11.974C22,6.465,17.535,2,12.026,2z"/></svg></i>`,
 	icon_telegram:`<i class="icon telegram"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20.665,3.717l-17.73,6.837c-1.21,0.486-1.203,1.161-0.222,1.462l4.552,1.42l10.532-6.645 c0.498-0.303,0.953-0.14,0.579,0.192l-8.533,7.701l0,0l0,0H9.841l0.002,0.001l-0.314,4.692c0.46,0,0.663-0.211,0.921-0.46 l2.211-2.15l4.599,3.397c0.848,0.467,1.457,0.227,1.668-0.785l3.019-14.228C22.256,3.912,21.474,3.351,20.665,3.717z"/></svg></i>`,
-	icon_account_settings:`<i class="icon account_settings"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path fill="none" d="M0 0h24v24H0z"/><path d="M3.783 2.826L12 1l8.217 1.826a1 1 0 0 1 .783.976v9.987a6 6 0 0 1-2.672 4.992L12 23l-6.328-4.219A6 6 0 0 1 3 13.79V3.802a1 1 0 0 1 .783-.976zM5 4.604v9.185a4 4 0 0 0 1.781 3.328L12 20.597l5.219-3.48A4 4 0 0 0 19 13.79V4.604L12 3.05 5 4.604zM12 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm-4.473 5a4.5 4.5 0 0 1 8.946 0H7.527z"/></svg></i>`,
-	icon_view_profile:`<i class="icon view_profile"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path fill="none" d="M0 0h24v24H0z"/><path d="M4 22a8 8 0 1 1 16 0h-2a6 6 0 1 0-12 0H4zm8-9c-3.315 0-6-2.685-6-6s2.685-6 6-6 6 2.685 6 6-2.685 6-6 6zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z"/></svg></i>`,
+	icon_account_settings:`<i class="icon account_settings"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3.783 2.826L12 1l8.217 1.826a1 1 0 0 1 .783.976v9.987a6 6 0 0 1-2.672 4.992L12 23l-6.328-4.219A6 6 0 0 1 3 13.79V3.802a1 1 0 0 1 .783-.976zM5 4.604v9.185a4 4 0 0 0 1.781 3.328L12 20.597l5.219-3.48A4 4 0 0 0 19 13.79V4.604L12 3.05 5 4.604zM12 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm-4.473 5a4.5 4.5 0 0 1 8.946 0H7.527z"/></svg></i>`,
+	icon_view_profile:`<i class="icon view_profile"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M4 22a8 8 0 1 1 16 0h-2a6 6 0 1 0-12 0H4zm8-9c-3.315 0-6-2.685-6-6s2.685-6 6-6 6 2.685 6 6-2.685 6-6 6zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z"/></svg></i>`,
 	icon_search:`<i class="icon search"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.023,16.977c-0.513-0.488-1.004-0.997-1.367-1.384c-0.372-0.378-0.596-0.653-0.596-0.653l-2.8-1.337 C15.34,12.37,16,10.763,16,9c0-3.859-3.14-7-7-7S2,5.141,2,9s3.14,7,7,7c1.763,0,3.37-0.66,4.603-1.739l1.337,2.8 c0,0,0.275,0.224,0.653,0.596c0.387,0.363,0.896,0.854,1.384,1.367c0.494,0.506,0.988,1.012,1.358,1.392 c0.362,0.388,0.604,0.646,0.604,0.646l2.121-2.121c0,0-0.258-0.242-0.646-0.604C20.035,17.965,19.529,17.471,19.023,16.977z M9,14 c-2.757,0-5-2.243-5-5s2.243-5,5-5s5,2.243,5,5S11.757,14,9,14z"/></svg></i>`,
 	icon_feed:`<i class="icon feed"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.875,3H4.125C2.953,3,2,3.897,2,5v14c0,1.103,0.953,2,2.125,2h15.75C21.047,21,22,20.103,22,19V5 C22,3.897,21.047,3,19.875,3z M19.875,19H4.125c-0.057,0-0.096-0.016-0.113-0.016c-0.007,0-0.011,0.002-0.012,0.008L3.988,5.046 C3.995,5.036,4.04,5,4.125,5h15.75C19.954,5.001,19.997,5.028,20,5.008l0.012,13.946C20.005,18.964,19.96,19,19.875,19z"/><path d="M6 7H12V13H6zM13 15L6 15 6 17 13 17 14 17 18 17 18 15 14 15zM14 11H18V13H14zM14 7H18V9H14z"/></svg></i>`,
 	icon_settings:`<i class="icon settings"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></i>`,
@@ -557,10 +560,15 @@ var ltmp_arr={
 			</div>
 		</div>`,
 	object_type_text_actions:`
-	<!--<a tabindex="0" class="share">[поделиться]</a>-->
 	<a tabindex="0" class="reply-action" title="Комментировать">{icon_reply}</a>
+	<a tabindex="0" class="share-action" title="Поделиться">{icon_share}</a>
 	<!--<a tabindex="0" class="award" title="Наградить">{icon_award}</a>-->
 	<a tabindex="0" class="copy-link-action" title="Копировать ссылку">{icon_copy_link}</a>`,
+	object_type_text_loading:`<div class="object type-text-loading" data-link="{link}" data-previous="{previous}">{context}</div>`,
+	object_type_text_share:`
+	<div class="share-view"><a tabindex="0" data-href="{link}">{caption}</a> поделился:{comment}</div>
+	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
+	object_type_text_share_comment:` <div class="comment-view">{comment}</div>`,
 	object_type_text_preview:`
 		<div class="object type-text-preview" data-link="{link}" data-previous="{previous}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
@@ -569,6 +577,17 @@ var ltmp_arr={
 					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
 				</div>
 				{reply}
+				<div class="content-view" data-href="{link}">{text}</div>
+				<div class="actions-view">{actions}</div>
+			</div>
+		</div>`,
+	object_type_text_share_preview:`
+		<div class="object type-text-preview" data-link="{link}">
+			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
+			<div class="object-column">
+				<div class="author-view">
+					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
+				</div>
 				<div class="content-view" data-href="{link}">{text}</div>
 				<div class="actions-view">{actions}</div>
 			</div>
@@ -625,11 +644,21 @@ function publish(view){
 		console.log('publish with reply:',reply);
 	}
 
-	if(''==text){
-		view.find('.submit-button-ring').removeClass('show');
-		view.find('.error').html(ltmp_arr.publish_empty_text);
-		view.find('.button').removeClass('disabled');
-		return;
+	let share=false;
+	if(''!=view.find('input[name="share"]').val()){
+		text=view.find('input[name="comment"]').val();
+		text=text.trim();
+		share=view.find('input[name="share"]').val();
+		console.log('publish with share:',reply);
+	}
+
+	if(!share){
+		if(''==text){
+			view.find('.submit-button-ring').removeClass('show');
+			view.find('.error').html(ltmp_arr.publish_empty_text);
+			view.find('.button').removeClass('disabled');
+			return;
+		}
 	}
 
 	viz.api.getAccounts([current_user],function(err,response){
@@ -663,6 +692,10 @@ function publish(view){
 				if(false!=reply){
 					data.r=reply;
 				}
+				else
+				if(false!=share){
+					data.s=share;
+				}
 
 				new_object.d=data;
 				let object_json=JSON.stringify(new_object);
@@ -674,9 +707,9 @@ function publish(view){
 						view.find('.success').html(ltmp_arr.publish_success);
 						view.find('.button').removeClass('disabled');
 						setTimeout(function(){
-							viz.api.getAccounts([current_user],function(err,response){
-								if(typeof response[0] !== 'undefined'){
-									if(response[0].custom_sequence_block_num!=previous){
+							get_user(current_user,true,function(err,result){
+								if(!err){
+									if(result.start!=previous){
 										view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:response[0].custom_sequence_block_num}));
 									}
 								}
@@ -804,6 +837,10 @@ function app_mouse(e){
 	if($(target).hasClass('reply-action')){
 		let link=$(target).closest('.object').data('link');
 		view_path('fsp:publish/reply/?'+link,{},true,false);
+	}
+	if($(target).hasClass('share-action')){
+		let link=$(target).closest('.object').data('link');
+		view_path('fsp:publish/share/?'+link,{},true,false);
 	}
 	if($(target).hasClass('copy-link-action')){
 		let text=$(target).closest('.object').data('link');
@@ -1003,6 +1040,7 @@ function parse_object(account,block,callback){
 			}
 			else{
 				let reply=false;
+				let share=false;
 
 				let parent_account=false;
 				let parent_block=false;
@@ -1017,11 +1055,30 @@ function parse_object(account,block,callback){
 						if(typeof reply_account[0] != 'undefined'){
 							let pattern_block = /\/([0-9]*)\//g;
 							let reply_block=reply_link.match(pattern_block);
-							console.log(reply_block);
 							if(typeof reply_block[1] != 'undefined'){
 								reply=true;
 								parent_account=reply_account[0].substr(1);
 								parent_block=parseInt(fast_str_replace('/','',reply_block[1]));
+							}
+						}
+					}
+				}
+				else
+				if(typeof item.d.s != 'undefined'){
+					let share_link=item.d.s;
+					//internal
+					if(0==share_link.indexOf('viz://')){
+						share_link=share_link.toLowerCase();
+						share_link=escape_html(share_link);
+						let pattern = /@[a-z0-9\-\.]*/g;
+						let share_account=share_link.match(pattern);
+						if(typeof share_account[0] != 'undefined'){
+							let pattern_block = /\/([0-9]*)\//g;
+							let share_block=share_link.match(pattern_block);
+							if(typeof share_block[1] != 'undefined'){
+								share=true;
+								parent_account=share_account[0].substr(1);
+								parent_block=parseInt(fast_str_replace('/','',share_block[1]));
 							}
 						}
 					}
@@ -1031,9 +1088,15 @@ function parse_object(account,block,callback){
 					block:block,
 					data:item,
 					is_reply:false,
+					is_share:false,
 				};
 				if(reply){
 					obj.is_reply=true;
+					obj.parent_account=parent_account;
+					obj.parent_block=parent_block;
+				}
+				if(share){
+					obj.is_share=true;
 					obj.parent_account=parent_account;
 					obj.parent_block=parent_block;
 				}
@@ -1318,15 +1381,32 @@ function view_publish(view,path_parts,query,title){
 	view.find('input').val('');
 	view.find('textarea').val('');
 
+	view.find('.text-addon').css('display','none');
+	view.find('.comment-addon').css('display','none');
 	view.find('.reply-addon').css('display','none');
 	view.find('.share-addon').css('display','none');
+	view.find('.share-addon input[name="share"]').removeAttr('disabled');
 	view.find('.loop-addon').css('display','none');
 	if('loop'==query){
 		view.find('.loop-addon').css('display','block');
 	}
 	if('reply'==path_parts[1]){
+		view.find('.text-addon').css('display','block');
+		setTimeout(function(){view.find('.text-addon textarea')[0].focus();},100);
 		view.find('.reply-addon').css('display','block');
 		view.find('.reply-addon input[name="reply"]').val(query);
+	}
+	else
+	if('share'==path_parts[1]){
+		view.find('.comment-addon').css('display','block');
+		setTimeout(function(){view.find('.comment-addon input')[0].focus();},100);
+		view.find('.share-addon').css('display','block');
+		view.find('.share-addon input[name="share"]').val(query);
+		view.find('.share-addon input[name="share"]').attr('disabled','disabled');
+	}
+	else{
+		view.find('.text-addon').css('display','block');
+		setTimeout(function(){view.find('.text-addon textarea')[0].focus();},100);
 	}
 	view.find('.viz_account').html('@'+current_user);
 
@@ -1892,57 +1972,203 @@ function render_object(user,object,type){
 	let render='';
 	let profile=JSON.parse(user.profile);
 	if('default'==type){
-		let text=object.data.d.text;
-		text=escape_html(text);
-		text=fast_str_replace("\n",'<br>',text);
+		if(object.is_share){
+			let text='';
+			if(typeof object.data.d.text !== 'undefined'){
+				text=object.data.d.text;
+				text=escape_html(text);
+			}
 
-		let reply='';
-		if(object.is_reply){
-			reply=ltmp(ltmp_arr.object_type_text_reply,{link:'viz://@'+object.parent_account+'/'+object.parent_block+'/',caption:'@'+object.parent_account});
-		}
-		else{
-			if(typeof object.data.d.r != 'undefined'){
-				let reply_link=object.data.d.r;
-				//reply to external url
-				if(0==reply_link.indexOf('https://')){
-					reply_link=reply_link.toLowerCase();
-					reply_link=escape_html(reply_link);
-					reply_caption=reply_link.substring(8);
-					if(-1!=reply_caption.indexOf('/')){
-						reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
-					}
-					if(''!=reply_caption){
-						if(20<reply_caption.length){
-							reply_caption=reply_caption.substring(0,20)+'...';
-						}
+			let current_link='viz://@'+user.account+'/'+object.block+'/';
+			let current_level=level;
+			render=ltmp(ltmp_arr.object_type_text_loading,{
+				previous:object.data.p,
+				link:current_link,
+				context:ltmp(ltmp_arr.object_type_text_share,{
+					link:'viz://@'+user.account+'/',
+					caption:'@'+user.account,
+					comment:ltmp(ltmp_arr.object_type_text_share_comment,{comment:text})
+				}),
+			});
+			setTimeout(function(){
+				let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"] .load-content');
+				get_user(object.parent_account,false,function(err,sub_user){
+					if(err){
+						let sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found});
+						load_content.html(sub_render);
 					}
 					else{
-						reply_caption='URL';
+						get_object(object.parent_account,object.parent_block,function(err,sub_object){
+							let sub_render='';
+							if(err){
+								sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_not_found});
+							}
+							else{
+								sub_render=render_object(sub_user,sub_object,'share-preview');
+							}
+							load_content.html(sub_render);
+							let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
+							let timestamp=new_object.find('.short-date-view').data('timestamp');
+							new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+						});
 					}
-					reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
+				});
+			},500);
+		}
+		else{
+			let text=object.data.d.text;
+			text=escape_html(text);
+			text=fast_str_replace("\n",'<br>',text);
+
+			let reply='';
+			if(object.is_reply){
+				reply=ltmp(ltmp_arr.object_type_text_reply,{link:'viz://@'+object.parent_account+'/'+object.parent_block+'/',caption:'@'+object.parent_account});
+			}
+			else{
+				if(typeof object.data.d.r != 'undefined'){
+					let reply_link=object.data.d.r;
+					//reply to external url
+					if(0==reply_link.indexOf('https://')){
+						reply_link=reply_link.toLowerCase();
+						reply_link=escape_html(reply_link);
+						reply_caption=reply_link.substring(8);
+						if(-1!=reply_caption.indexOf('/')){
+							reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
+						}
+						if(''!=reply_caption){
+							if(20<reply_caption.length){
+								reply_caption=reply_caption.substring(0,20)+'...';
+							}
+						}
+						else{
+							reply_caption='URL';
+						}
+						reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
+					}
 				}
 			}
+
+			text=highlight_links(text);
+
+			render=ltmp(ltmp_arr.object_type_text,{
+				reply:reply,
+				author:'@'+user.account,
+				link:'viz://@'+user.account+'/'+object.block+'/',
+				nickname:profile.nickname,
+				avatar:profile.avatar,
+				text:text,
+				actions:ltmp(ltmp_arr.object_type_text_actions,{
+					//link:link,
+					icon_reply:ltmp_arr.icon_reply,
+					icon_share:ltmp_arr.icon_share,
+					icon_award:ltmp_arr.icon_gem,
+					icon_copy_link:ltmp_arr.icon_copy_link,
+				}),
+				timestamp:object.data.timestamp,
+			});
 		}
-
-		text=highlight_links(text);
-
-		render=ltmp(ltmp_arr.object_type_text,{
-			reply:reply,
-			author:'@'+user.account,
-			link:'viz://@'+user.account+'/'+object.block+'/',
-			nickname:profile.nickname,
-			avatar:profile.avatar,
-			text:text,
-			actions:ltmp(ltmp_arr.object_type_text_actions,{
-				//link:link,
-				icon_reply:ltmp_arr.icon_reply,
-				icon_award:ltmp_arr.icon_gem,
-				icon_copy_link:ltmp_arr.icon_copy_link,
-			}),
-			timestamp:object.data.timestamp,
-		});
 	}
 	if('preview'==type){
+		if(object.is_share){
+			let text='';
+			if(typeof object.data.d.text !== 'undefined'){
+				text=object.data.d.text;
+				text=escape_html(text);
+			}
+
+			let current_link='viz://@'+user.account+'/'+object.block+'/';
+			let current_level=level;
+			render=ltmp(ltmp_arr.object_type_text_loading,{
+				previous:object.data.p,
+				link:current_link,
+				context:ltmp(ltmp_arr.object_type_text_share,{
+					link:'viz://@'+user.account+'/',
+					caption:'@'+user.account,
+					comment:ltmp(ltmp_arr.object_type_text_share_comment,{comment:text})
+				}),
+			});
+			setTimeout(function(){
+				let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"] .load-content');
+				get_user(object.parent_account,false,function(err,sub_user){
+					if(err){
+						let sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found});
+						load_content.html(sub_render);
+					}
+					else{
+						get_object(object.parent_account,object.parent_block,function(err,sub_object){
+							let sub_render='';
+							if(err){
+								sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_not_found});
+							}
+							else{
+								sub_render=render_object(sub_user,sub_object,'share-preview');
+							}
+							load_content.html(sub_render);
+							let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
+							let timestamp=new_object.find('.short-date-view').data('timestamp');
+							new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+						});
+					}
+				});
+			},500);
+		}
+		else{
+			let text=object.data.d.text;
+			text=escape_html(text);
+			text=fast_str_replace("\n",'<br>',text);
+
+			if(typeof object.data.p == 'undefined'){
+				object.data.p=0;
+			}
+
+			let reply='';
+			if(object.is_reply){
+				reply=ltmp(ltmp_arr.object_type_text_reply,{link:'viz://@'+object.parent_account+'/'+object.parent_block+'/',caption:'@'+object.parent_account});
+			}
+			else{
+				if(typeof object.data.d.r != 'undefined'){
+					let reply_link=object.data.d.r;
+					//reply to external url
+					if(0==reply_link.indexOf('https://')){
+						reply_link=reply_link.toLowerCase();
+						reply_link=escape_html(reply_link);
+						reply_caption=reply_link.substring(8);
+						if(-1!=reply_caption.indexOf('/')){
+							reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
+						}
+						if(''!=reply_caption){
+							if(20<reply_caption.length){
+								reply_caption=reply_caption.substring(0,20)+'...';
+							}
+						}
+						else{
+							reply_caption='URL';
+						}
+						reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
+					}
+				}
+			}
+
+			render=ltmp(ltmp_arr.object_type_text_preview,{
+				reply:reply,
+				author:'@'+user.account,
+				nickname:profile.nickname,
+				avatar:profile.avatar,
+				text:text,
+				previous:object.data.p,
+				link:'viz://@'+user.account+'/'+object.block+'/',
+				actions:ltmp(ltmp_arr.object_type_text_actions,{
+					//link:link,
+					icon_reply:ltmp_arr.icon_reply,
+					icon_share:ltmp_arr.icon_share,
+					icon_award:ltmp_arr.icon_gem,
+					icon_copy_link:ltmp_arr.icon_copy_link,
+				}),
+				timestamp:object.data.timestamp,
+			});
+		}
+	}
+	if('share-preview'==type){
 		let text=object.data.d.text;
 		text=escape_html(text);
 		text=fast_str_replace("\n",'<br>',text);
@@ -1979,17 +2205,16 @@ function render_object(user,object,type){
 			}
 		}
 
-		render=ltmp(ltmp_arr.object_type_text_preview,{
-			reply:reply,
+		render=ltmp(ltmp_arr.object_type_text_share_preview,{
 			author:'@'+user.account,
 			nickname:profile.nickname,
 			avatar:profile.avatar,
 			text:text,
-			previous:object.data.p,
 			link:'viz://@'+user.account+'/'+object.block+'/',
 			actions:ltmp(ltmp_arr.object_type_text_actions,{
 				//link:link,
 				icon_reply:ltmp_arr.icon_reply,
+				icon_share:ltmp_arr.icon_share,
 				icon_award:ltmp_arr.icon_gem,
 				icon_copy_link:ltmp_arr.icon_copy_link,
 			}),
