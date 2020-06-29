@@ -575,28 +575,10 @@ function render_menu(){
 
 function render_session(){
 	if(current_user){
-		viz.api.getAccounts([current_user],function(err,response){
+		get_user_profile(current_user,false,function(err,result){
 			if(!err){
-				if(typeof response[0] != 'undefined'){
-					let account='@'+response[0].name;
-					let nickname=response[0].name;
-					let avatar='default.png';
-					let json_metadata={};
-					if(''!=response[0].json_metadata){
-						json_metadata=JSON.parse(response[0].json_metadata);
-					}
-					if(typeof json_metadata.profile != 'undefined'){
-						if(typeof json_metadata.profile.nickname != 'undefined'){
-							nickname=escape_html(json_metadata.profile.nickname);
-						}
-						if(typeof json_metadata.profile.avatar != 'undefined'){
-							if(0==json_metadata.profile.avatar.indexOf('https://')){
-								avatar=escape_html(json_metadata.profile.avatar);
-							}
-						}
-					}
-					$('div.menu .session').html(ltmp(ltmp_arr.menu_session_account,{'account':account,'nickname':nickname,'avatar':avatar}));
-				}
+				profile=JSON.parse(result.profile);
+				$('div.menu .session').html(ltmp(ltmp_arr.menu_session_account,{'account':result.account,'nickname':profile.nickname,'avatar':profile.avatar}));
 			}
 			else{
 				$('div.menu .session').html(ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_error}));
@@ -893,7 +875,7 @@ function update_user_profile(account,callback){
 	viz.api.getAccounts([account],function(err,response){
 		if(err){
 			console.log('viz api error:',err);
-			callback(true);
+			callback(true,false);
 		}
 		else{
 			if(typeof response[0] !== 'undefined'){
@@ -1499,7 +1481,7 @@ function view_path(location,state,save_state,update){
 					let check_block=parseInt(path_parts[1]);
 					$('.loader').css('display','block');
 					$('.view').css('display','none');
-					viz.api.getAccounts([check_account],function(err,response){
+					get_user_profile(check_account,false,function(err,result){
 						if(err){
 							console.log(err);
 							$('.loader').css('display','block');
@@ -1520,150 +1502,116 @@ function view_path(location,state,save_state,update){
 							view.css('display','block');
 						}
 						else{
-							if(typeof response[0] == 'undefined'){
-								$('.loader').css('display','block');
-								$('.view').css('display','none');
-								if(!update){
-									level++;
-									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
-									$('.content').append(new_view);
-								}
-								let view=$('.view[data-level="'+level+'"]');
-								let header='';
-								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
-								header+=ltmp(ltmp_arr.header_link,{link:location});
-								view.find('.header').html(header);
-								view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found}));
-
-								$('.loader').css('display','none');
-								view.css('display','block');
+							let author='@'+result.account;
+							let profile=JSON.parse(result.profile);
+							let nickname=profile.nickname;
+							let avatar=profile.avatar;
+							if(!update){
+								level++;
+								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
+								$('.content').append(new_view);
 							}
-							else{
-								let account=response[0];
-								let author='@'+account.name;
-								let nickname=account.name;
-								let avatar='default.png';
-								let json_metadata={};
-								if(''!=response[0].json_metadata){
-									json_metadata=JSON.parse(response[0].json_metadata);
+							let view=$('.view[data-level="'+level+'"]');
+							let header='';
+							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+							header+=ltmp(ltmp_arr.header_link,{link:location});
+							view.find('.header').html(header);
+							view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
+
+							viz.api.getOpsInBlock(check_block,false,function(err,response){
+								if(err){
+									view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
 								}
-								if(typeof json_metadata.profile != 'undefined'){
-									if(typeof json_metadata.profile.nickname != 'undefined'){
-										nickname=escape_html(json_metadata.profile.nickname);
-									}
-									if(typeof json_metadata.profile.avatar != 'undefined'){
-										if(0==json_metadata.profile.avatar.indexOf('https://')){
-											avatar=escape_html(json_metadata.profile.avatar);
+								else{
+									let item=false;
+									for(let i in response){
+										let item_i=i;
+										if('custom'==response[item_i].op[0]){
+											if(app_protocol==response[item_i].op[1].id){
+												let op=response[item_i].op[1];
+												if(op.required_regular_auths.includes(check_account)){
+													item=JSON.parse(response[item_i].op[1].json);
+													item.timestamp=Date.parse(response[item_i].timestamp) / 1000 | 0;
+												}
+											}
 										}
 									}
-								}
-								if(!update){
-									level++;
-									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
-									$('.content').append(new_view);
-								}
-								let view=$('.view[data-level="'+level+'"]');
-								let header='';
-								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
-								header+=ltmp(ltmp_arr.header_link,{link:location});
-								view.find('.header').html(header);
-								view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
-
-								viz.api.getOpsInBlock(check_block,false,function(err,response){
-									if(err){
+									if(false==item){
 										view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
 									}
 									else{
-										let item=false;
-										for(let i in response){
-											let item_i=i;
-											if('custom'==response[item_i].op[0]){
-												if(app_protocol==response[item_i].op[1].id){
-													let op=response[item_i].op[1];
-													if(op.required_regular_auths.includes(check_account)){
-														item=JSON.parse(response[item_i].op[1].json);
-														item.timestamp=Date.parse(response[item_i].timestamp) / 1000 | 0;
-													}
+										//console.log(item);
+										let objects='';
+
+										let text=item.d.text;
+										text=escape_html(text);
+										text=fast_str_replace("\n",'<br>',text);
+
+										let link='viz://@'+check_account+'/'+check_block+'/';
+
+										let reply='';
+										if(typeof item.d.r != 'undefined'){
+											let reply_link=item.d.r;
+											//internal
+											if(0==reply_link.indexOf('viz://')){
+												reply_link=reply_link.toLowerCase();
+												reply_link=escape_html(reply_link);
+												let pattern = /@[a-z0-9\-\.]*/g;
+												let reply_account=reply_link.match(pattern);
+												if(typeof reply_account[0] != 'undefined'){
+													reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
 												}
 											}
-										}
-										if(false==item){
-											view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
-										}
-										else{
-											//console.log(item);
-											let objects='';
-
-											let text=item.d.text;
-											text=escape_html(text);
-											text=fast_str_replace("\n",'<br>',text);
-
-											let link='viz://@'+check_account+'/'+check_block+'/';
-
-											let reply='';
-											if(typeof item.d.r != 'undefined'){
-												let reply_link=item.d.r;
-												//internal
-												if(0==reply_link.indexOf('viz://')){
-													reply_link=reply_link.toLowerCase();
-													reply_link=escape_html(reply_link);
-													let pattern = /@[a-z0-9\-\.]*/g;
-													let reply_account=reply_link.match(pattern);
-													if(typeof reply_account[0] != 'undefined'){
-														reply=ltmp(ltmp_arr.object_type_text_reply,{link:reply_link,caption:reply_account[0]});
+											//external
+											if(0==reply_link.indexOf('https://')){
+												reply_link=reply_link.toLowerCase();
+												reply_link=escape_html(reply_link);
+												reply_caption=reply_link.substring(8);
+												if(-1!=reply_caption.indexOf('/')){
+													reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
+												}
+												if(''!=reply_caption){
+													if(20<reply_caption.length){
+														reply_caption=reply_caption.substring(0,20)+'...';
 													}
 												}
-												//external
-												if(0==reply_link.indexOf('https://')){
-													reply_link=reply_link.toLowerCase();
-													reply_link=escape_html(reply_link);
-													reply_caption=reply_link.substring(8);
-													if(-1!=reply_caption.indexOf('/')){
-														reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
-													}
-													if(''!=reply_caption){
-														if(20<reply_caption.length){
-															reply_caption=reply_caption.substring(0,20)+'...';
-														}
-													}
-													else{
-														reply_caption='URL';
-													}
-													reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
+												else{
+													reply_caption='URL';
 												}
+												reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
 											}
-
-											text=highlight_links(text);
-
-											let object_view=ltmp(ltmp_arr.object_type_text,{
-												reply:reply,
-												author:author,
-												link:link,
-												nickname:nickname,
-												avatar:avatar,
-												text:text,
-												actions:ltmp(ltmp_arr.object_type_text_actions,{
-													//link:link,
-													icon_reply:ltmp_arr.icon_reply,
-													icon_award:ltmp_arr.icon_gem,
-													icon_copy_link:ltmp_arr.icon_copy_link,
-												}),
-												timestamp:item.timestamp,
-											});
-
-											objects+=object_view;
-											view.find('.objects').html(objects);
-											let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
-											view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),false,false,false));
-											view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000-(new Date().getTimezoneOffset()*60000)));
 										}
 
-										$('.loader').css('display','none');
-										view.css('display','block');
-										check_load_more();
+										text=highlight_links(text);
+
+										let object_view=ltmp(ltmp_arr.object_type_text,{
+											reply:reply,
+											author:author,
+											link:link,
+											nickname:nickname,
+											avatar:avatar,
+											text:text,
+											actions:ltmp(ltmp_arr.object_type_text_actions,{
+												//link:link,
+												icon_reply:ltmp_arr.icon_reply,
+												icon_award:ltmp_arr.icon_gem,
+												icon_copy_link:ltmp_arr.icon_copy_link,
+											}),
+											timestamp:item.timestamp,
+										});
+
+										objects+=object_view;
+										view.find('.objects').html(objects);
+										let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+										view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),false,false,false));
+										view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000-(new Date().getTimezoneOffset()*60000)));
 									}
-								});
-							}
+
+									$('.loader').css('display','none');
+									view.css('display','block');
+									check_load_more();
+								}
+							});
 						}
 					});
 				}
