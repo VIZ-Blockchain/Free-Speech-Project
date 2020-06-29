@@ -2,6 +2,11 @@ var app_version=1;
 var app_protocol='V';//V for Voice :)
 var storage_prefix='viz_voice_';
 
+var is_safari=navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
+			navigator.userAgent &&
+			navigator.userAgent.indexOf('CriOS') == -1 &&
+			navigator.userAgent.indexOf('FxiOS') == -1;
+
 var api_gates=[
 	'https://node.viz.plus/',
 	//'https://viz.lexai.host/',
@@ -955,7 +960,9 @@ function update_user_profile(account,callback){
 							let add_t=db.transaction(['users'],'readwrite');
 							let add_q=add_t.objectStore('users');
 							add_q.add(obj);
-							add_t.commit();
+							if(!is_safari){
+								add_t.commit();
+							}
 							add_t.oncomplete=function(e){
 								callback(false,obj);
 							}
@@ -1056,7 +1063,9 @@ function parse_object(account,block,callback){
 							let add_t=db.transaction(['objects'],'readwrite');
 							let add_q=add_t.objectStore('objects');
 							add_q.add(obj);
-							add_t.commit();
+							if(!is_safari){
+								add_t.commit();
+							}
 							add_t.oncomplete=function(e){
 								if(reply){
 									let reply_add_t=db.transaction(['replies'],'readwrite');
@@ -1070,7 +1079,9 @@ function parse_object(account,block,callback){
 										cache:true,
 									};
 									reply_add_q.add(reply_obj);
-									reply_add_t.commit();
+									if(!is_safari){
+										reply_add_t.commit();
+									}
 									reply_add_t.oncomplete=function(e){
 										callback(false,obj);
 									};
