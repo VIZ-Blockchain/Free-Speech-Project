@@ -275,6 +275,7 @@ function load_db(callback){
 	req.onupgradeneeded=function(event){
 		console.log('onupgradeneeded!');
 		db=event.target.result;
+		let update_trx = event.target.transaction;
 
 		if(!db.objectStoreNames.contains('users')){
 			items_table=db.createObjectStore('users',{keyPath:'id',autoIncrement:true});
@@ -297,6 +298,7 @@ function load_db(callback){
 			items_table.createIndex('cache','cache',{unique:false});//cache boolean for cleanup
 		}
 		else{
+			//items_table=update_trx.objectStore('replies');
 			//new index for replies
 		}
 
@@ -1159,6 +1161,32 @@ function parse_object(account,block,callback){
 			}
 		}
 	});
+}
+
+function get_replies(object_account,object_block,callback){
+	let replies=[];
+	let t=db.transaction(['replies'],'readonly');
+	let q=t.objectStore('replies');
+	let req=q.index('parent').openCursor(IDBKeyRange.only([object_account,parseInt(object_block)]),'next');
+	let find=0;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			replies.push(cur.value);
+			find++;
+			cur.continue();
+		}
+		else{
+			if(find){
+				console.log('find replies in objects cache: '+find);
+				callback(false,replies);
+			}
+			else{
+				console.log('no replies was found');
+				callback(true,1);
+			}
+		}
+	};
 }
 
 function get_object(account,block,callback){
