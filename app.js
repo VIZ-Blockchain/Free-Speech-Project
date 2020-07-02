@@ -543,8 +543,8 @@ var ltmp_arr={
 
 	publish_caption:'Публикация',
 	publish_empty_text:'Введите текст публикации',
-	publish_success:'Публикация успешно опубликована&hellip;',
-	publish_success_link:'Публикация успешно опубликована: <a tabindex="0" data-href="viz://@{account}/{block}/">ссылка</a>',
+	publish_success:'Запись успешно опубликована&hellip;',
+	publish_success_link:'Запись успешно опубликована: <a tabindex="0" data-href="viz://@{account}/{block}/">ссылка</a>',
 
 	object_type_text:`
 		<div class="object type-text" data-link="{link}">
