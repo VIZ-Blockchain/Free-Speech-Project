@@ -261,6 +261,7 @@ div.menu.short .primary a .icon{
 	color:#1c98e5;
 }
 .objects .object{
+	position:relative;
 	display:block;
 	padding:10px 15px;
 	border-bottom:1px solid rgba(204, 204, 221, 0.6);
@@ -381,6 +382,45 @@ div.menu.short .primary a .icon{
 	display:block;
 	margin:10px 0;
 	font-size:20px;
+}
+.branch{
+	border-bottom:1px solid rgba(204, 204, 221, 0.6);
+}
+.objects .branch .object.type-text-preview{
+	border-bottom:0;
+}
+.load-nested-replies-action{
+	display:block;
+	padding:10px 15px;
+	color:#1c98e5;
+	border-bottom:5px solid rgba(204, 204, 221, 0.5);
+
+	background:rgba(28, 152, 229, 0);
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+}
+.load-nested-replies-action:hover{
+	background:rgba(28, 152, 229, 0.05);
+}
+.branch-line{
+	display:block;
+	background:rgba(204, 204, 221, 0.5);
+	width:3px;
+	position:absolute;
+	top:65px;
+	bottom:0px;
+	left:calc(15px + 49px/2 + 3px);
+}
+.branch-more{
+	display:inline-block;
+	text-align:center;
+	color:rgba(204, 204, 221, 0.6);
+	width:59px;
+	font-size:18px;
+	font-weight:bold;
 }
 .object.type-text-preview .content-view[data-href]{
 	max-height: 30vh;

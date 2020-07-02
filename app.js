@@ -596,6 +596,7 @@ var ltmp_arr={
 		</div>`,
 	object_type_text_reply_loading:`<div class="object type-text-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
 	object_type_text_reply:`
+		<div class="branch">
 		<div class="object type-text-preview" data-link="{link}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
@@ -605,7 +606,12 @@ var ltmp_arr={
 				<div class="content-view" data-href="{link}">{text}</div>
 				<div class="actions-view">{actions}</div>
 			</div>
-		</div>`,
+		</div>
+		<div class="nested-replies"></div>
+		</div>
+		`,
+	object_type_text_reply_nested_count:'<a tabindex="0" class="load-nested-replies-action"><div class="branch-more">&bull;</div>Количество ответов: <span class="nested-replies-count">{count}</span></a>',
+	object_type_text_reply_branch_line:'<div class="branch-line"></div>',
 	object_type_text_reply_internal:'<div class="reply-view">В ответ <a tabindex="0" data-href="{link}">{caption}</a></div>',
 	object_type_text_reply_external:'<div class="reply-view">Ответ на <a tabindex="0" href="{link}" target="_blank">{caption}</a></div>',
 };
@@ -2253,6 +2259,9 @@ function render_object(user,object,type){
 		},500);
 	}
 	if('reply-view'==type){
+		let current_link='viz://@'+user.account+'/'+object.block+'/';
+		let current_level=level;
+
 		let text=object.data.d.text;
 		text=escape_html(text);
 		text=fast_str_replace("\n",'<br>',text);
@@ -2265,7 +2274,7 @@ function render_object(user,object,type){
 			nickname:profile.nickname,
 			avatar:profile.avatar,
 			text:text,
-			link:'viz://@'+user.account+'/'+object.block+'/',
+			link:current_link,
 			actions:ltmp(ltmp_arr.object_type_text_actions,{
 				//link:link,
 				icon_reply:ltmp_arr.icon_reply,
@@ -2275,6 +2284,28 @@ function render_object(user,object,type){
 			}),
 			timestamp:object.data.timestamp,
 		});
+		setTimeout(function(){
+			let branch_line=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"] .avatar-column');
+			let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"] .nested-replies');
+			let t=db.transaction(['replies'],'readonly');
+			let q=t.objectStore('replies');
+			let req=q.index('parent').openCursor(IDBKeyRange.only([user.account,parseInt(object.block)]),'next');
+			let find_replies=0;
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					find_replies++;
+					cur.continue();
+				}
+				else{
+					if(find_replies>0){
+						console.log('find nested replies in objects cache: '+find_replies);
+						load_content.html(ltmp(ltmp_arr.object_type_text_reply_nested_count,{count:find_replies}));
+						branch_line.append(ltmp_arr.object_type_text_reply_branch_line);
+					}
+				}
+			};
+		},500);
 	}
 	if('share-preview'==type){
 		let text=object.data.d.text;
