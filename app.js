@@ -256,11 +256,14 @@ else{
 	});
 }
 
-function increase_db_version(){
+function increase_db_version(callback){
+	if(typeof callback === 'undefined'){
+		callback=function(){};
+	}
 	db_version++;
 	localStorage.setItem(storage_prefix+'db_version',db_version);
 	db.close();
-	load_db(()=>{});
+	load_db(()=>{callback();});
 }
 
 function load_db(callback){
@@ -314,11 +317,13 @@ function load_db(callback){
 		if(!db.objectStoreNames.contains('objects')){
 			items_table=db.createObjectStore('objects',{keyPath:'id',autoIncrement:true});
 			items_table.createIndex('object',['account','block'],{unique:true});//account
+			items_table.createIndex('account','account',{unique:false});
 			items_table.createIndex('time','time',{unique:false});//unixtime for stored objects
 			items_table.createIndex('is_reply','is_reply',{unique:false});//true/false
 			items_table.createIndex('is_share','is_share',{unique:false});//true/false
 		}
 		else{
+			//items_table=update_trx.objectStore('objects');
 			//new index for objects cache
 		}
 
@@ -340,6 +345,7 @@ function load_db(callback){
 				}
 			}
 		}
+		users_table_diff=[];
 
 		/*
 		//add
@@ -533,11 +539,21 @@ var ltmp_arr={
 	icon_settings:`<i class="icon settings"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></i>`,
 	icon_menu:`<i class="icon menu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="23" height="23" stroke="none" fill="currentColor"><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></svg></i>`,
 	icon_close:`<i class="icon close"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round" fill="currentColor"><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"/></svg></i>`,
+	icon_subscribed:`<i class="icon subscribed"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20.294 8.292L15.994 12.584 14.702 11.292 13.288 12.706 15.994 15.41 21.706 9.708zM4 8c0 2.28 1.72 4 4 4s4-1.72 4-4-1.72-4-4-4S4 5.72 4 8zM10 8c0 1.178-.822 2-2 2S6 9.178 6 8s.822-2 2-2S10 6.822 10 8zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
+	icon_ignore:`<i class="icon ignore"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.706 15.706L17.999 13.413 20.293 15.707 21.707 14.293 19.414 12 21.707 9.707 20.293 8.293 18 10.586 15.707 8.293 14.293 9.707 16.585 11.999 14.292 14.292zM12 8c0-2.28-1.72-4-4-4S4 5.72 4 8s1.72 4 4 4S12 10.28 12 8zM6 8c0-1.178.822-2 2-2s2 .822 2 2-.822 2-2 2S6 9.178 6 8zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
+	icon_subscribe:`<i class="icon subscribe"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 8L17 8 17 11 14 11 14 13 17 13 17 16 19 16 19 13 22 13 22 11 19 11zM4 8c0 2.28 1.72 4 4 4s4-1.72 4-4-1.72-4-4-4S4 5.72 4 8zM10 8c0 1.178-.822 2-2 2S6 9.178 6 8s.822-2 2-2S10 6.822 10 8zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
+	icon_unsubscribe:`<i class="icon unsubscribe"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14 11H22V13H14zM8 4C5.72 4 4 5.72 4 8s1.72 4 4 4 4-1.72 4-4S10.28 4 8 4zM8 10c-1.178 0-2-.822-2-2s.822-2 2-2 2 .822 2 2S9.178 10 8 10zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
 
 	header_back_action:`<a tabindex="0" class="back-action" title="Назад">{icon}</a>`,
 	header_link:'<div class="link grow"><input type="text" class="header-link" value="{link}" disabled></div>',
 	header_caption:'<div class="caption grow">{caption}</div>',
 
+	user_actions_open:'<div class="user-actions" data-user="{user}">',
+	user_actions_close:'</div>',
+	subscribe_link:'<a tabindex="0" class="subscribe-action" title="Подписаться на пользователя">{icon}</a>',
+	unsubscribe_link:'<a tabindex="0" class="unsubscribe-action" title="Отписаться от пользователя">{icon}</a>',
+	ignore_link:'<a tabindex="0" class="ignore-action" title="Игнорировать пользователя">{icon}</a>',
+	subscribed_link:'<a tabindex="0" class="subscribed-action" title="Вы подписаны на пользователя">{icon}</a>',
 	edit_profile_link:'<a tabindex="0" data-href="fsp:edit_profile" title="Изменить профиль">{icon_edit_profile}</a>',
 	edit_profile_caption:'Настройка профиля',
 	edit_profile_saved:'Профиль сохранен',
@@ -755,6 +771,103 @@ function publish(view){
 		}
 	});
 }
+
+function subscribe(el){
+	let actions=$(el).closest('.user-actions');
+	let check_user=actions.data('user');
+	let render='';
+
+	users_table_diff.push([check_user,true]);
+	increase_db_version(function(){
+		if(!db.objectStoreNames.contains('objects_'+check_user)){
+			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+			//render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+		}
+		else{
+			render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
+			render+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
+
+			//move from objects to user objects
+			let t,q,req;
+			t=db.transaction(['objects'],'readwrite');
+			q=t.objectStore('objects');
+			req=q.index('account').openCursor(IDBKeyRange.only(check_user),'next');
+
+			let result=[];
+			let find=false;
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					result.push(cur.value);
+					update_req=cur.delete(result);
+					cur.continue();
+				}
+				else{
+					for(let i in result){
+						let item_i=result[i];
+						let add_t,add_q;
+						add_t=db.transaction(['objects_'+check_user],'readwrite');
+						add_q=add_t.objectStore('objects_'+check_user);
+						add_q.add(item_i);
+						if(!is_safari){
+							add_t.commit();
+						}
+					}
+				}
+			};
+		}
+		actions.html(render);
+	});
+}
+
+function unsubscribe(el){
+	let actions=$(el).closest('.user-actions');
+	let check_user=actions.data('user');
+	let render='';
+
+	//move from objects to user objects
+	let t,q,req;
+	t=db.transaction(['objects_'+check_user],'readwrite');
+	q=t.objectStore('objects_'+check_user);
+	req=q.index('block').openCursor(null,'next');
+
+	let result=[];
+	let find=false;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			result.push(cur.value);
+			update_req=cur.delete(result);
+			cur.continue();
+		}
+		else{
+			for(let i in result){
+				let item_i=result[i];
+				let add_t,add_q;
+				add_t=db.transaction(['objects'],'readwrite');
+				add_q=add_t.objectStore('objects');
+				add_q.add(item_i);
+				if(!is_safari){
+					add_t.commit();
+				}
+			}
+			users_table_diff.push([check_user,false]);
+			increase_db_version(function(){
+				if(!db.objectStoreNames.contains('objects_'+check_user)){
+					render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+					//render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+				}
+				else{
+					render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
+					render+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
+				}
+				actions.html(render);
+			});
+		}
+	};
+
+}
+
 function app_mouse(e){
 	if(!e)e=window.event;
 	var target=e.target || e.srcElement;
@@ -783,6 +896,18 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('preset-action')){
 		$('input[name="'+$(target).data('input')+'"]').val($(target).data('value'));
+	}
+	if($(target).hasClass('subscribe-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			subscribe(target);
+		}
+	}
+	if($(target).hasClass('unsubscribe-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			unsubscribe(target);
+		}
 	}
 	if($(target).hasClass('load-nested-replies-action')){
 		if(!$(target).hasClass('disabled')){
@@ -1129,9 +1254,17 @@ function parse_object(account,block,callback){
 				obj.time=new Date().getTime() / 1000 | 0;//unixtime
 				console.log(obj);
 
-				let t=db.transaction(['objects'],'readwrite');
-				let q=t.objectStore('objects');
-				let req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
+				let t,q,req;
+				if(!db.objectStoreNames.contains('objects_'+account)){
+					t=db.transaction(['objects'],'readwrite');
+					q=t.objectStore('objects');
+					req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
+				}
+				else{
+					t=db.transaction(['objects_'+account],'readwrite');
+					q=t.objectStore('objects_'+account);
+					req=q.index('block').openCursor(IDBKeyRange.only(block),'next');
+				}
 
 				let result;
 				let find=false;
@@ -1149,8 +1282,15 @@ function parse_object(account,block,callback){
 					}
 					else{
 						if(!find){
-							let add_t=db.transaction(['objects'],'readwrite');
-							let add_q=add_t.objectStore('objects');
+							let add_t,add_q;
+							if(!db.objectStoreNames.contains('objects_'+account)){
+								add_t=db.transaction(['objects'],'readwrite');
+								add_q=add_t.objectStore('objects');
+							}
+							else{
+								add_t=db.transaction(['objects_'+account],'readwrite');
+								add_q=add_t.objectStore('objects_'+account);
+							}
 							add_q.add(obj);
 							if(!is_safari){
 								add_t.commit();
@@ -1270,6 +1410,29 @@ function get_object(account,block,callback){
 				}
 				else{
 					console.log('need parse object: '+account+' '+block);
+					parse_object(account,block,callback);
+				}
+			}
+		};
+	}
+	else{
+		let t=db.transaction(['objects_'+account],'readonly');
+		let q=t.objectStore('objects_'+account);
+		let req=q.index('block').openCursor(IDBKeyRange.only(block),'next');
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				result=cur.value;
+				find=true;
+				cur.continue();
+			}
+			else{
+				if(find){
+					console.log('find in user objects cache: '+account+' '+block);
+					callback(false,result);
+				}
+				else{
+					console.log('need parse user object: '+account+' '+block);
 					parse_object(account,block,callback);
 				}
 			}
@@ -1799,6 +1962,18 @@ function view_path(location,state,save_state,update){
 							if(check_account==current_user){
 								header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
 								header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
+							}
+							else{
+								header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
+								if(!db.objectStoreNames.contains('objects_'+check_account)){
+									header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+									//header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+								}
+								else{
+									header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
+									header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
+								}
+								header+=ltmp_arr.user_actions_close;
 							}
 							view.find('.header').html(header);
 							view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:result.account,block:0}));
