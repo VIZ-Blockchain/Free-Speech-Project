@@ -784,6 +784,12 @@ function app_mouse(e){
 	if($(target).hasClass('preset-action')){
 		$('input[name="'+$(target).data('input')+'"]').val($(target).data('value'));
 	}
+	if($(target).hasClass('load-nested-replies-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			load_nested_replies(target);
+		}
+	}
 	if($(target).hasClass('save-feed-settings-action')){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
@@ -1179,6 +1185,39 @@ function parse_object(account,block,callback){
 			}
 		}
 	});
+}
+
+function load_nested_replies(el){
+	let link=$(el).closest('.branch').find('.object').data('link');
+	let nest=$(el).closest('.nested-replies');
+	let parent_account=false;
+	let parent_block=false;
+	if(0==link.indexOf('viz://')){
+		link=link.toLowerCase();
+		link=escape_html(link);
+		let pattern = /@[a-z0-9\-\.]*/g;
+		let link_account=link.match(pattern);
+		if(typeof link_account[0] != 'undefined'){
+			let pattern_block = /\/([0-9]*)\//g;
+			let link_block=link.match(pattern_block);
+			if(typeof link_block[1] != 'undefined'){
+				reply=true;
+				parent_account=link_account[0].substr(1);
+				parent_block=parseInt(fast_str_replace('/','',link_block[1]));
+			}
+		}
+	}
+	if(parent_account){
+		get_replies(parent_account,parent_block,function(err,replies_result){
+			nest.html('');
+			for(let i in replies_result){
+				let reply_object=replies_result[i];
+				let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+				reply_render=render_object(reply_object.account,reply_object.block,'reply');
+				nest.append(reply_render);
+			}
+		});
+	}
 }
 
 function get_replies(object_account,object_block,callback){
