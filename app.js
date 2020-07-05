@@ -216,22 +216,32 @@ function remove_session(view){
 	view.find('input').val('');
 
 	users={};
+	if(current_user){
+		users_table_diff.push([current_user,false]);
+
+		let update_t=db.transaction(['users'],'readwrite');
+		let update_q=update_t.objectStore('users');
+		let update_req=update_q.index('account').openCursor(IDBKeyRange.only(current_user),'next');
+		update_req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let item=cur.value;
+				item.status=0;
+				cur.update(item);
+				cur.continue();
+			}
+		};
+	}
 	current_user='';
 	localStorage.removeItem(storage_prefix+'users');
 	localStorage.removeItem(storage_prefix+'current_user');
-	render_menu();
-	render_session();
+	increase_db_version(function(){
+		render_menu();
+		render_session();
+	});
 }
 
 var users_table_diff=[];
-//test:
-//users_table_diff.push(["on1x",true]);
-//users_table_diff.push(["test.on1x",true]);
-//users_table_diff.push(["spamer",false]);
-
-//console.log(users_table_diff);
-//test:
-//increase_db_version();
 
 function idb_error(e){
 	console.log('IDB error',e);
@@ -257,7 +267,7 @@ else{
 }
 
 function increase_db_version(callback){
-	if(typeof callback === 'undefined'){
+	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
 	db_version++;
@@ -325,6 +335,11 @@ function load_db(callback){
 		else{
 			//items_table=update_trx.objectStore('objects');
 			//new index for objects cache
+		}
+		if(current_user){
+			if(!db.objectStoreNames.contains('objects_'+current_user)){
+				users_table_diff.push([current_user,true]);
+			}
 		}
 		for(let i in users_table_diff){
 			let check_user_table=users_table_diff[i];
@@ -426,12 +441,17 @@ function save_account_settings(view,login,regular_key,energy_step){
 			users[login]={'regular_key':regular_key,'energy_step':energy_step};
 			current_user=login;
 			save_session();
-			render_menu();
-			render_session();
+			users_table_diff.push([current_user,true]);
+			increase_db_version(function(){
+				get_user(current_user,true,function(){
+					render_menu();
+					render_session();
 
-			view.find('.submit-button-ring').removeClass('show');
-			view.find('.success').html(ltmp_arr.account_settings_saved);
-			view.find('.button').removeClass('disabled');
+					view.find('.submit-button-ring').removeClass('show');
+					view.find('.success').html(ltmp_arr.account_settings_saved);
+					view.find('.button').removeClass('disabled');
+				});
+			});
 		}
 		else{
 			console.log(err);
@@ -1152,6 +1172,10 @@ function update_user_profile(account,callback){
 					status:0,
 				};
 
+				if(db.objectStoreNames.contains('objects_'+account)){
+					obj.status=1;
+				}
+
 				let t=db.transaction(['users'],'readwrite');
 				let q=t.objectStore('users');
 				let req=q.index('account').openCursor(IDBKeyRange.only(account),'next');
@@ -1165,6 +1189,7 @@ function update_user_profile(account,callback){
 						result.update=obj.update;
 						result.profile=obj.profile;
 						result.start=obj.start;
+						result.status=obj.status;
 						find=true;
 						update_req=cur.update(result);
 						update_req.onsuccess=function(e){
