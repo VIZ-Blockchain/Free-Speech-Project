@@ -1246,7 +1246,6 @@ function feed_load_result(result,account,block,next_offset,end_offset,limit,call
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
-	result.push(block);
 	let end=false;
 	if(0==limit){
 		end=true;
@@ -1274,6 +1273,42 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 			}
 			else{
 				next_offset=0;
+			}
+			let feed=false;
+			if(settings.feed_subscribe_text){
+				if(!object_result.is_reply){
+					if(!object_result.is_share){
+						feed=true;
+					}
+				}
+			}
+			if(settings.feed_subscribe_shares){
+				if(object_result.is_share){
+					feed=true;
+				}
+			}
+			if(settings.feed_subscribe_replies){
+				if(object_result.is_reply){
+					feed=true;
+				}
+			}
+			else{
+				if(object_result.is_reply){
+					feed=false;
+					if(object_result.parent_account==current_user){
+						feed=true;
+					}
+				}
+			}
+			if(settings.feed_subscribe_mentions){
+				if(typeof object_result.data.d.text !== 'undefined'){
+					if(-1!=object_result.data.d.text.indexOf('@'+current_user)){//mention
+						feed=true;
+					}
+				}
+			}
+			if(feed){
+				result.push(object_result.block);
 			}
 			feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
 		}
