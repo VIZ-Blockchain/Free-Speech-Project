@@ -9,8 +9,9 @@ var is_safari=navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
 
 var api_gates=[
 	'https://node.viz.plus/',
-	//'https://viz.lexai.host/',
-	'https://vizrpc.lexa.host/',
+	'https://node.viz.cx/',
+	'https://viz.lexai.host/',
+	'https://vizrpc.lexai.host/',
 	'https://viz-node.dpos.space/',
 	'https://solox.world/',
 ];
