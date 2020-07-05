@@ -841,6 +841,9 @@ function subscribe(el){
 							add_t.commit();
 						}
 					}
+					if(settings.feed_load_by_subscribe){
+						feed_load(check_user,false,function(err,result){console.log('feed load by subscribe',err,result);});
+					}
 				}
 			};
 
@@ -1234,8 +1237,10 @@ function feed_load_final(result,account,callback){
 	}
 	let time=new Date().getTime() / 1000 | 0;
 	let count=0;
+	console.log(result);
 	for(let i in result){
-		feed_add(account,result[i],time);
+		let block=result[i];
+		feed_add(account,block,time);
 		count++;
 		time--;//for right sorting from newest to oldest
 	}
@@ -1274,41 +1279,43 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 			else{
 				next_offset=0;
 			}
-			let feed=false;
-			if(settings.feed_subscribe_text){
-				if(!object_result.is_reply){
-					if(!object_result.is_share){
+			if(object_result.account!=current_user){
+				let feed=false;
+				if(settings.feed_subscribe_text){
+					if(!object_result.is_reply){
+						if(!object_result.is_share){
+							feed=true;
+						}
+					}
+				}
+				if(settings.feed_subscribe_shares){
+					if(object_result.is_share){
 						feed=true;
 					}
 				}
-			}
-			if(settings.feed_subscribe_shares){
-				if(object_result.is_share){
-					feed=true;
-				}
-			}
-			if(settings.feed_subscribe_replies){
-				if(object_result.is_reply){
-					feed=true;
-				}
-			}
-			else{
-				if(object_result.is_reply){
-					feed=false;
-					if(object_result.parent_account==current_user){
+				if(settings.feed_subscribe_replies){
+					if(object_result.is_reply){
 						feed=true;
 					}
 				}
-			}
-			if(settings.feed_subscribe_mentions){
-				if(typeof object_result.data.d.text !== 'undefined'){
-					if(-1!=object_result.data.d.text.indexOf('@'+current_user)){//mention
-						feed=true;
+				else{
+					if(object_result.is_reply){
+						feed=false;
+						if(object_result.parent_account==current_user){
+							feed=true;
+						}
 					}
 				}
-			}
-			if(feed){
-				result.push(object_result.block);
+				if(settings.feed_subscribe_mentions){
+					if(typeof object_result.data.d.text !== 'undefined'){
+						if(-1!=object_result.data.d.text.indexOf('@'+current_user)){//mention
+							feed=true;
+						}
+					}
+				}
+				if(feed){
+					result.push(object_result.block);
+				}
 			}
 			feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
 		}
@@ -1340,20 +1347,7 @@ function feed_load(account,limit,callback){
 			let start_offset=user_result.start;
 			offset=start_offset;
 			if(offset>end_offset){
-				get_object(account,offset,function(err,object_result){
-					if(err){
-						callback(err,object_result);
-					}
-					else{
-						if(typeof object_result.data.p !== 'undefined'){
-							offset=object_result.data.p;
-						}
-						else{
-							offset=0;
-						}
-						feed_load_result(result,account,object_result.block,offset,end_offset,(limit-1),callback);
-					}
-				});
+				feed_load_more(result,account,offset,end_offset,limit,callback);
 			}
 			else{
 				callback(false,false);
@@ -1513,41 +1507,43 @@ function parse_object(account,block,callback){
 							}
 							if(settings.feed_load_by_surf){
 								if(db.objectStoreNames.contains('objects_'+account)){
-									let feed=false;
-									if(settings.feed_subscribe_text){
-										if(!reply){
-											if(!share){
+									if(account!=current_user){
+										let feed=false;
+										if(settings.feed_subscribe_text){
+											if(!reply){
+												if(!share){
+													feed=true;
+												}
+											}
+										}
+										if(settings.feed_subscribe_shares){
+											if(share){
 												feed=true;
 											}
 										}
-									}
-									if(settings.feed_subscribe_shares){
-										if(share){
-											feed=true;
-										}
-									}
-									if(settings.feed_subscribe_replies){
-										if(reply){
-											feed=true;
-										}
-									}
-									else{
-										if(reply){
-											feed=false;
-											if(parent_account==current_user){
+										if(settings.feed_subscribe_replies){
+											if(reply){
 												feed=true;
 											}
 										}
-									}
-									if(settings.feed_subscribe_mentions){
-										if(typeof obj.data.d.text !== 'undefined'){
-											if(-1!=obj.data.d.text.indexOf('@'+current_user)){//mention
-												feed=true;
+										else{
+											if(reply){
+												feed=false;
+												if(parent_account==current_user){
+													feed=true;
+												}
 											}
 										}
-									}
-									if(feed){
-										feed_add(account,block);
+										if(settings.feed_subscribe_mentions){
+											if(typeof obj.data.d.text !== 'undefined'){
+												if(-1!=obj.data.d.text.indexOf('@'+current_user)){//mention
+													feed=true;
+												}
+											}
+										}
+										if(feed){
+											feed_add(account,block);
+										}
 									}
 								}
 							}
