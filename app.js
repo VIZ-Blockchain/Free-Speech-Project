@@ -1228,7 +1228,106 @@ function update_user_profile(account,callback){
 	});
 }
 
-function feed_add(account,block,callback){
+function feed_load_final(result,account,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	let time=new Date().getTime() / 1000 | 0;
+	let count=0;
+	for(let i in result){
+		feed_add(account,result[i],time);
+		count++;
+		time--;//for right sorting from newest to oldest
+	}
+	setTimeout(function(){callback(false,{account:account,items:count})},100);
+}
+
+function feed_load_result(result,account,block,next_offset,end_offset,limit,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	result.push(block);
+	let end=false;
+	if(0==limit){
+		end=true;
+	}
+	if(end_offset>=next_offset){
+		end=true;
+	}
+	if(end){
+		feed_load_final(result,account,callback);
+	}
+	else{
+		//recursive feed_load_more
+		feed_load_more(result,account,next_offset,end_offset,limit,callback);
+	}
+}
+
+function feed_load_more(result,account,next_offset,end_offset,limit,callback){
+	get_object(account,next_offset,function(err,object_result){
+		if(err){
+			feed_load_final(result,account,callback);
+		}
+		else{
+			if(typeof object_result.data.p !== 'undefined'){
+				next_offset=object_result.data.p;
+			}
+			else{
+				next_offset=0;
+			}
+			feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
+		}
+	});
+}
+
+function feed_load(account,limit,callback){
+	limit=limit===false?settings.activity_deep:limit;
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	let result=[];
+
+	let end_offset=0;
+	let offset=0;
+
+	let t=db.transaction(['objects_'+account],'readonly');
+	let q=t.objectStore('objects_'+account);
+	let req=q.index('block').openCursor(null,'prev');
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			end_offset=cur.value.block;
+		}
+		get_user(account,true,function(err,user_result){
+			if(err){
+				callback(err,0);
+			}
+			let start_offset=user_result.start;
+			offset=start_offset;
+			if(offset>end_offset){
+				get_object(account,offset,function(err,object_result){
+					if(err){
+						callback(err,object_result);
+					}
+					else{
+						if(typeof object_result.data.p !== 'undefined'){
+							offset=object_result.data.p;
+						}
+						else{
+							offset=0;
+						}
+						feed_load_result(result,account,object_result.block,offset,end_offset,(limit-1),callback);
+					}
+				});
+			}
+			else{
+				callback(false,false);
+			}
+		});
+	};
+}
+
+function feed_add(account,block,time,callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
@@ -1237,7 +1336,7 @@ function feed_add(account,block,callback){
 	let obj={
 		account:account,
 		block:block,
-		time:new Date().getTime() / 1000 | 0,
+		time:(time?time:(new Date().getTime() / 1000 | 0)),
 	};
 	add_q.add(obj);
 	if(!is_safari){
