@@ -1469,6 +1469,80 @@ function get_object(account,block,callback){
 	}
 }
 
+function clear_objects_cache(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	let t,q,req;
+	t=db.transaction(['objects'],'readwrite');
+	q=t.objectStore('objects');
+	let time_bound=new Date().getTime() / 1000 | 0;
+	time_bound-=settings.object_cache_ttl*60;
+	req=q.index('time').openCursor(IDBKeyRange.upperBound(time_bound),'next');
+
+	let result=[];
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			result.push([cur.value.account,cur.value.block]);
+			cur.delete();
+			cur.continue();
+		}
+		else{
+			for(let i in result){
+				let item_i=result[i];
+				let remove_t,remove_q;
+				remove_t=db.transaction(['replies'],'readwrite');
+				remove_q=remove_t.objectStore('replies');
+				remove_req=remove_q.index('object').openCursor(IDBKeyRange.only([item_i[0],item_i[1]]),'next');
+				remove_req.onsuccess=function(event){
+					let cur=event.target.result;
+					if(cur){
+						cur.delete();
+						cur.continue();
+					}
+				}
+			}
+			setTimeout(function(){callback()},100);
+		}
+	};
+}
+function clear_users_cache(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	let t,q,req;
+	t=db.transaction(['users'],'readwrite');
+	q=t.objectStore('users');
+	let time_bound=new Date().getTime() / 1000 | 0;
+	time_bound-=settings.user_cache_ttl*60;
+	req=q.index('update').openCursor(IDBKeyRange.upperBound(time_bound),'next');
+
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			if(0==cur.value.status){//deleting only temporary users
+				cur.delete();
+				cur.continue();
+			}
+		}
+		else{
+			setTimeout(function(){callback()},100);
+		}
+	};
+}
+
+var clear_cache_timer=0;
+function clear_cache(){
+	console.log('clear cache trigger');
+	clearTimeout(clear_cache_timer);
+	clear_objects_cache(function(){
+		clear_users_cache(function(){
+			clear_cache_timer=setTimeout(function(){clear_cache()},300000);//5min
+		});
+	});
+}
+
 function get_user(account,forced_update,callback){
 	forced_update=typeof forced_update==='undefined'?false:forced_update;
 
@@ -2678,6 +2752,7 @@ function check_load_more(){
 }
 
 function main_app(){
+	clear_cache();
 	parse_fullpath();
 	view_path(path,{},false,false);
 	render_menu();
