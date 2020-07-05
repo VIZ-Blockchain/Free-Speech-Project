@@ -326,9 +326,9 @@ function load_db(callback){
 			//items_table=update_trx.objectStore('objects');
 			//new index for objects cache
 		}
-
 		for(let i in users_table_diff){
 			let check_user_table=users_table_diff[i];
+			console.log('users diff:',check_user_table);
 			if(check_user_table[1]){
 				if(!db.objectStoreNames.contains('objects_'+check_user_table[0])){
 					items_table=db.createObjectStore('objects_'+check_user_table[0],{keyPath:'id',autoIncrement:true});
@@ -815,6 +815,20 @@ function subscribe(el){
 					}
 				}
 			};
+
+			//update user status
+			let update_t=db.transaction(['users'],'readwrite');
+			let update_q=update_t.objectStore('users');
+			let update_req=update_q.index('account').openCursor(IDBKeyRange.only(check_user),'next');
+			update_req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					let item=cur.value;
+					item.status=1;
+					cur.update(item);
+					cur.continue();
+				}
+			};
 		}
 		actions.html(render);
 	});
@@ -852,20 +866,35 @@ function unsubscribe(el){
 				}
 			}
 			users_table_diff.push([check_user,false]);
-			increase_db_version(function(){
-				if(!db.objectStoreNames.contains('objects_'+check_user)){
-					render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-					//render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
-				}
-				else{
-					render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
-					render+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
-				}
-				actions.html(render);
-			});
+			setTimeout(function(){
+				increase_db_version(function(){
+					if(!db.objectStoreNames.contains('objects_'+check_user)){
+						render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+						//render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+					}
+					else{
+						render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
+						render+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
+					}
+					actions.html(render);
+				});
+			},100);
 		}
 	};
 
+	//update user status
+	let update_t=db.transaction(['users'],'readwrite');
+	let update_q=update_t.objectStore('users');
+	let update_req=update_q.index('account').openCursor(IDBKeyRange.only(check_user),'next');
+	update_req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let item=cur.value;
+			item.status=0;
+			cur.update(item);
+			cur.continue();
+		}
+	};
 }
 
 function app_mouse(e){
