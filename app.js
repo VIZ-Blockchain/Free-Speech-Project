@@ -112,6 +112,9 @@ var default_settings={
 	feed_subscribe_replies:false,
 	feed_subscribe_shares:true,
 	feed_subscribe_mentions:true,
+	feed_load_by_timer:true,
+	feed_load_by_subscribe:false,
+	feed_load_by_surf:false,
 };
 var settings=default_settings;
 
@@ -135,6 +138,10 @@ function save_feed_settings(view){
 	settings.feed_subscribe_replies=tab.find('input[name="feed_subscribe_replies"]').prop("checked");
 	settings.feed_subscribe_shares=tab.find('input[name="feed_subscribe_shares"]').prop("checked");
 	settings.feed_subscribe_mentions=tab.find('input[name="feed_subscribe_mentions"]').prop("checked");
+
+	settings.feed_load_by_timer=tab.find('input[name="feed_load_by_timer"]').prop("checked");
+	settings.feed_load_by_subscribe=tab.find('input[name="feed_load_by_subscribe"]').prop("checked");
+	settings.feed_load_by_surf=tab.find('input[name="feed_load_by_surf"]').prop("checked");
 
 	let settings_json=JSON.stringify(settings);
 	localStorage.setItem(storage_prefix+'settings',settings_json);
@@ -1221,6 +1228,26 @@ function update_user_profile(account,callback){
 	});
 }
 
+function feed_add(account,block,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	let add_t=db.transaction(['feed'],'readwrite');
+	let add_q=add_t.objectStore('feed');
+	let obj={
+		account:account,
+		block:block,
+		time:new Date().getTime() / 1000 | 0,
+	};
+	add_q.add(obj);
+	if(!is_safari){
+		add_t.commit();
+	}
+	add_t.oncomplete=function(e){
+		callback(false,obj);
+	};
+}
+
 function parse_object(account,block,callback){
 	let result={};
 	viz.api.getOpsInBlock(block,false,function(err,response){
@@ -1349,6 +1376,46 @@ function parse_object(account,block,callback){
 							add_q.add(obj);
 							if(!is_safari){
 								add_t.commit();
+							}
+							if(settings.feed_load_by_surf){
+								if(db.objectStoreNames.contains('objects_'+account)){
+									let feed=false;
+									if(settings.feed_subscribe_text){
+										if(!reply){
+											if(!share){
+												feed=true;
+											}
+										}
+									}
+									if(settings.feed_subscribe_shares){
+										if(share){
+											feed=true;
+										}
+									}
+									if(settings.feed_subscribe_replies){
+										if(reply){
+											feed=true;
+										}
+									}
+									else{
+										if(reply){
+											feed=false;
+											if(parent_account==current_user){
+												feed=true;
+											}
+										}
+									}
+									if(settings.feed_subscribe_mentions){
+										if(typeof obj.data.d.text !== 'undefined'){
+											if(-1!=obj.data.d.text.indexOf('@'+current_user)){//mention
+												feed=true;
+											}
+										}
+									}
+									if(feed){
+										feed_add(account,block);
+									}
+								}
 							}
 							add_t.oncomplete=function(e){
 								if(reply){
@@ -1882,6 +1949,10 @@ function view_app_settings(view,path_parts,query,title){
 		$('input[name="feed_subscribe_replies"]').prop("checked",settings.feed_subscribe_replies);
 		$('input[name="feed_subscribe_shares"]').prop("checked",settings.feed_subscribe_shares);
 		$('input[name="feed_subscribe_mentions"]').prop("checked",settings.feed_subscribe_mentions);
+
+		$('input[name="feed_load_by_timer"]').prop("checked",settings.feed_load_by_timer);
+		$('input[name="feed_load_by_subscribe"]').prop("checked",settings.feed_load_by_subscribe);
+		$('input[name="feed_load_by_surf"]').prop("checked",settings.feed_load_by_surf);
 	}
 
 	$('.loader').css('display','none');
