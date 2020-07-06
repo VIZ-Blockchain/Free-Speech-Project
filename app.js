@@ -487,6 +487,7 @@ var ltmp_arr={
 	menu_session_account:'<div class="avatar"><div class="shadow" data-href="viz://@{account}/"></div><img src="{avatar}"></div><div class="account"><a class="account-name" tabindex="0" data-href="viz://@{account}/">{nickname}</a><a class="account-login" tabindex="0" data-href="viz://@{account}/">{account}</a></div>',
 
 	none_notice:'<div class="none-notice"><em>Лента новостей пока не работает, попробуйте поиск.<!--<br>Ничего не найдено.--></em></div>',
+	feed_end_notice:'<div class="none-notice"><em>Конец ленты новостей.</em></div>',
 	load_more_end_notice:'<div class="load-more-end-notice"><em>Больше ничего не найдено.</em></div>',
 	error_notice:'<div class="error-notice"><em>{error}</em></div>',
 	loader_notice:'<div class="loader-notice" data-account="{account}" data-block="{block}"><span class="submit-button-ring"></span></div>',
@@ -656,6 +657,9 @@ var ltmp_arr={
 	object_type_text_reply_branch_line:'<div class="branch-line"></div>',
 	object_type_text_reply_internal:'<div class="reply-view">В ответ <a tabindex="0" data-href="{link}">{caption}</a></div>',
 	object_type_text_reply_external:'<div class="reply-view">Ответ на <a tabindex="0" href="{link}" target="_blank">{caption}</a></div>',
+
+	new_objects:'<a class="new-objects load-new-objects-action" data-items="0">&hellip;</a>',
+	feed_new_objects:'Показать новые обновления: {items}',
 };
 
 function render_menu(){
@@ -1232,7 +1236,7 @@ function feed_load_final(result,account,callback){
 		callback=function(){};
 	}
 	let count=0;
-	console.log(result);
+	console.log('feed_load_final',result);
 	for(let i in result){
 		let item=result[i];
 		feed_add(account,item.block,item.time);
@@ -1749,6 +1753,73 @@ function clear_users_cache(callback){
 	};
 }
 
+function update_feed_result(result){
+	let view=$('.view[data-level="0"]');
+	let new_objects=view.find('.objects .new-objects');
+	let items=new_objects.data('items');
+	if(false!==result){
+		items+=result.items;
+		new_objects.data('items',items);
+	}
+	if(0==items){
+		new_objects.removeClass('show');
+	}
+	else{
+		new_objects.html(ltmp(ltmp_arr.feed_new_objects,{items:new_objects.data('items')}));
+		new_objects.addClass('show');
+	}
+}
+
+function update_feed_subscribes(callback){
+	let t=db.transaction(['users'],'readwrite');
+	let q=t.objectStore('users');
+	let req=q.index('status').openCursor(IDBKeyRange.only(1),'next');
+	let list=[];
+	let delay=0;
+	let delay_step=500;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let item=cur.value;
+			list.push(item.account);
+			item.activity=new Date().getTime() /1000 | 0;
+			cur.update(item);
+			cur.continue();
+		}
+		else{
+			for(let i in list){
+				let account=list[i];
+				if(account!=current_user){
+					setTimeout(function(){
+						feed_load(account,false,function(err,result){
+							console.log('feed_load from update_feed_subscribes',err,result);
+							if(!err){
+								update_feed_result(result);
+							}
+						});
+					},delay);
+					delay+=delay_step;
+				}
+			}
+			callback();
+		}
+	};
+}
+
+var update_feed_timer=0;
+function update_feed(){
+	clearTimeout(update_feed_timer);
+	if(settings.feed_load_by_timer){
+		console.log('update feed trigger');
+		update_feed_subscribes(function(){
+			update_feed_timer=setTimeout(function(){update_feed()},60000);//1min
+		});
+	}
+	else{
+		update_feed_timer=setTimeout(function(){update_feed()},60000);//1min
+	}
+}
+
 var clear_cache_timer=0;
 function clear_cache(){
 	console.log('clear cache trigger');
@@ -2191,7 +2262,7 @@ function view_path(location,state,save_state,update){
 		header+=ltmp(ltmp_arr.toggle_menu,{title:ltmp_arr.toggle_menu_title,icon:ltmp_arr.icon_menu});
 		header+=ltmp(ltmp_arr.search,{icon_search:ltmp_arr.icon_search});
 		view.find('.header').html(header);
-		view.find('.objects').html(ltmp_arr.none_notice);
+		view.find('.objects').html(ltmp_arr.new_objects+ltmp_arr.feed_end_notice);
 		level=0;
 		$('.loader').css('display','none');
 		view.css('display','block');
@@ -2973,6 +3044,7 @@ function check_load_more(){
 
 function main_app(){
 	clear_cache();
+	update_feed();
 	parse_fullpath();
 	view_path(path,{},false,false);
 	render_menu();

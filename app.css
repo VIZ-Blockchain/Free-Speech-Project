@@ -405,6 +405,26 @@ div.menu.short .primary a .icon{
 .load-nested-replies-action:hover{
 	background:rgba(28, 152, 229, 0.05);
 }
+.new-objects{
+	text-align:center;
+	display:none;
+	padding:10px 15px;
+	color:#1c98e5;
+	border-bottom:5px solid rgba(204, 204, 221, 0.5);
+
+	background:rgba(28, 152, 229, 0);
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+}
+.new-objects.show{
+	display:block;
+}
+.new-objects:hover{
+	background:rgba(28, 152, 229, 0.05);
+}
 .branch-line{
 	display:block;
 	background:rgba(204, 204, 221, 0.5);
