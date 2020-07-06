@@ -487,10 +487,11 @@ var ltmp_arr={
 	menu_session_account:'<div class="avatar"><div class="shadow" data-href="viz://@{account}/"></div><img src="{avatar}"></div><div class="account"><a class="account-name" tabindex="0" data-href="viz://@{account}/">{nickname}</a><a class="account-login" tabindex="0" data-href="viz://@{account}/">{account}</a></div>',
 
 	none_notice:'<div class="none-notice"><em>Лента новостей пока не работает, попробуйте поиск.<!--<br>Ничего не найдено.--></em></div>',
-	feed_end_notice:'<div class="none-notice"><em>Конец ленты новостей.</em></div>',
+	feed_end_notice:'<div class="load-more-end-notice"><em>Конец ленты новостей.</em></div>',
 	load_more_end_notice:'<div class="load-more-end-notice"><em>Больше ничего не найдено.</em></div>',
 	error_notice:'<div class="error-notice"><em>{error}</em></div>',
 	loader_notice:'<div class="loader-notice" data-account="{account}" data-block="{block}"><span class="submit-button-ring"></span></div>',
+	feed_loader_notice:'<div class="loader-notice" data-time="{time}"><span class="submit-button-ring"></span></div>',
 
 	toggle_menu:'<a tabindex="0" title="{title}" class="toggle-menu">{icon}</a>',
 	toggle_menu_title:'Переключить меню',
@@ -637,7 +638,7 @@ var ltmp_arr={
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
-	object_type_text_reply_loading:`<div class="object type-text-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
+	object_type_text_loading:`<div class="object type-text-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
 	object_type_text_reply:`
 		<div class="branch">
 		<div class="object type-text-preview" data-link="{link}">
@@ -2262,10 +2263,11 @@ function view_path(location,state,save_state,update){
 		header+=ltmp(ltmp_arr.toggle_menu,{title:ltmp_arr.toggle_menu_title,icon:ltmp_arr.icon_menu});
 		header+=ltmp(ltmp_arr.search,{icon_search:ltmp_arr.icon_search});
 		view.find('.header').html(header);
-		view.find('.objects').html(ltmp_arr.new_objects+ltmp_arr.feed_end_notice);
+		view.find('.objects').html(ltmp(ltmp_arr.new_objects+ltmp_arr.feed_loader_notice,{time:0}));
 		level=0;
 		$('.loader').css('display','none');
 		view.css('display','block');
+		check_load_more();
 	}
 	else{
 		if(0==path_parts[0].indexOf('fsp:')){
@@ -2834,10 +2836,42 @@ function render_object(user,object,type){
 			});
 		}
 	}
+	if('feed'==type){
+		let current_link='viz://@'+user+'/'+object+'/';
+		let current_level=level;
+		render=ltmp(ltmp_arr.object_type_text_loading,{
+			link:current_link,
+		});
+		console.log(render);
+		setTimeout(function(){
+			let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"] .load-content');
+			get_user(user,false,function(err,sub_user){
+				if(err){
+					let sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found});
+					load_content.html(sub_render);
+				}
+				else{
+					get_object(user,object,function(err,sub_object){
+						let sub_render='';
+						if(err){
+							sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_not_found});
+						}
+						else{
+							sub_render=render_object(sub_user,sub_object,'preview');
+						}
+						load_content.html(sub_render);
+						let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
+						let timestamp=new_object.find('.short-date-view').data('timestamp');
+						new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+					});
+				}
+			});
+		},500);
+	}
 	if('reply'==type){
 		let current_link='viz://@'+user+'/'+object+'/';
 		let current_level=level;
-		render=ltmp(ltmp_arr.object_type_text_reply_loading,{
+		render=ltmp(ltmp_arr.object_type_text_loading,{
 			link:current_link,
 		});
 		console.log(render);
@@ -2972,6 +3006,62 @@ function render_object(user,object,type){
 }
 
 function load_more_objects(indicator,check_level){
+	//feed
+	console.log('load_more_objects indicator',indicator,typeof indicator.data('time'),indicator.data('time'));
+	if(typeof indicator.data('time') !== 'undefined'){
+		let update_t=db.transaction(['feed'],'readonly');
+		let update_q=update_t.objectStore('feed');
+		let feed_time=parseInt(indicator.data('time'));
+		let same_time=0;
+		let objects=[];
+		let update_req;
+		let check_level=level;
+		if(0==feed_time){
+			update_req=update_q.index('time').openCursor(null,'prev');
+		}
+		else{
+			update_req=update_q.index('time').openCursor(IDBKeyRange.upperBound(feed_time,true),'prev');
+		}
+		update_req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let item=cur.value;
+				//console.log(item);
+				if(0==same_time){
+					same_time=item.time;
+				}
+				if(same_time==item.time){
+					objects.push(item);
+					cur.continue();
+				}
+				else{
+					cur.continue(-1);
+				}
+			}
+			else{
+				console.log('load_more_objects end cursor',objects);
+				if(0==objects.length){
+					indicator.before(ltmp_arr.feed_end_notice);
+					indicator.remove();
+					return;
+				}
+				else{
+					for(let i in objects){
+						if(check_level==level){
+							let object=objects[i];
+							let object_view=render_object(object.account,object.block,'feed');
+							indicator.before(object_view);
+						}
+					}
+					indicator.data('time',same_time);
+					indicator.data('busy','0');
+					check_load_more();
+				}
+			}
+		};
+	}
+	//account profile
+	if(typeof indicator.data('account') !== 'undefined')
 	if(''!=indicator.data('account')){
 		let check_account=indicator.data('account');
 		get_user(check_account,false,function(err,user_result){
