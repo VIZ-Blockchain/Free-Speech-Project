@@ -283,6 +283,23 @@ div.menu.short .primary a .icon{
 	border-bottom:1px solid rgba(204, 204, 221, 0.6);
 	color:#000;
 }
+
+.objects .object.type-text-wait-loading{
+	border-bottom:none;
+	padding:0;
+	margin-top:0;
+	display: flex;
+	flex-direction:column;
+	-webkit-box-direction: normal;
+	-webkit-box-orient: horizontal;
+}
+.objects .object.type-text-wait-loading .load-placeholder{
+	text-align:center;
+	display:block;
+	padding:10px 15px;
+	border-bottom:1px solid rgba(204, 204, 221, 0.6);
+	color:#000;
+}
 .objects .object.type-text-preview:hover{
 	background:rgba(28, 152, 229, 0);
 	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */

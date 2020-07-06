@@ -611,6 +611,7 @@ var ltmp_arr={
 	<!--<a tabindex="0" class="award" title="Наградить">{icon_award}</a>-->
 	<a tabindex="0" class="copy-link-action" title="Копировать ссылку">{icon_copy_link}</a>`,
 	object_type_text_loading:`<div class="object type-text-loading" data-link="{link}" data-previous="{previous}">{context}</div>`,
+	object_type_text_wait_loading:`<div class="object type-text-wait-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
 	object_type_text_share:`
 	<div class="share-view"><a tabindex="0" data-href="{link}">{caption}</a> поделился:{comment}</div>
 	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
@@ -638,7 +639,6 @@ var ltmp_arr={
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
-	object_type_text_loading:`<div class="object type-text-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
 	object_type_text_reply:`
 		<div class="branch">
 		<div class="object type-text-preview" data-link="{link}">
@@ -659,7 +659,7 @@ var ltmp_arr={
 	object_type_text_reply_internal:'<div class="reply-view">В ответ <a tabindex="0" data-href="{link}">{caption}</a></div>',
 	object_type_text_reply_external:'<div class="reply-view">Ответ на <a tabindex="0" href="{link}" target="_blank">{caption}</a></div>',
 
-	new_objects:'<a class="new-objects load-new-objects-action" data-items="0">&hellip;</a>',
+	new_objects:'<a class="new-objects load-new-objects-action show" data-items="0">&hellip;</a>',
 	feed_new_objects:'Показать новые обновления: {items}',
 };
 
@@ -929,6 +929,54 @@ function unsubscribe(el){
 	};
 }
 
+function load_new_objects(el){
+	let indicator=$(el);
+	let feed_time=0;
+	if(typeof indicator.closest('.objects').data('feed-time') !== 'undefined'){
+		feed_time=parseInt(indicator.closest('.objects').data('feed-time'));
+	}
+	let update_t=db.transaction(['feed'],'readonly');
+	let update_q=update_t.objectStore('feed');
+	let new_feed_time=0;
+	let objects=[];
+	let update_req;
+	let check_level=level;
+	if(0==feed_time){
+		update_req=update_q.index('time').openCursor(null,'prev');
+	}
+	else{
+		update_req=update_q.index('time').openCursor(IDBKeyRange.lowerBound(feed_time,true),'prev');
+	}
+	update_req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let item=cur.value;
+			if(0==new_feed_time){
+				new_feed_time=item.time;
+				indicator.closest('.objects').data('feed-time',new_feed_time);
+			}
+			objects.push(item);
+			cur.continue();
+		}
+		else{
+			console.log('load_new_objects end cursor',objects);
+			for(let i in objects){
+				if(check_level==level){
+					let object=objects[i];
+					let object_view=render_object(object.account,object.block,'feed');
+					indicator.before(object_view);
+				}
+			}
+		}
+	};
+	setTimeout(function(){
+		$(window)[0].scrollTo({behavior:'smooth',top:(indicator.offset().top>400?indicator.offset().top-100:indicator.offset().top)});
+		indicator.data('items',0);
+		indicator.removeClass('show');
+		indicator.removeClass('disabled');
+	},100);
+}
+
 function app_mouse(e){
 	if(!e)e=window.event;
 	var target=e.target || e.srcElement;
@@ -968,6 +1016,12 @@ function app_mouse(e){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
 			unsubscribe(target);
+		}
+	}
+	if($(target).hasClass('load-new-objects-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			load_new_objects(target);
 		}
 	}
 	if($(target).hasClass('load-nested-replies-action')){
@@ -2659,7 +2713,7 @@ function render_object(user,object,type){
 				}),
 			});
 			setTimeout(function(){
-				let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"] .load-content');
+				let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"].type-text-loading .load-content');
 				get_user(object.parent_account,false,function(err,sub_user){
 					if(err){
 						let sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found});
@@ -2756,7 +2810,7 @@ function render_object(user,object,type){
 				}),
 			});
 			setTimeout(function(){
-				let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"] .load-content');
+				let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"].type-text-loading .load-content');
 				get_user(object.parent_account,false,function(err,sub_user){
 					if(err){
 						let sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found});
@@ -2839,12 +2893,12 @@ function render_object(user,object,type){
 	if('feed'==type){
 		let current_link='viz://@'+user+'/'+object+'/';
 		let current_level=level;
-		render=ltmp(ltmp_arr.object_type_text_loading,{
+		render=ltmp(ltmp_arr.object_type_text_wait_loading,{
 			link:current_link,
 		});
 		console.log(render);
 		setTimeout(function(){
-			let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"] .load-content');
+			let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"].type-text-wait-loading .load-content');
 			get_user(user,false,function(err,sub_user){
 				if(err){
 					let sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found});
@@ -2866,12 +2920,12 @@ function render_object(user,object,type){
 					});
 				}
 			});
-		},500);
+		},50);
 	}
 	if('reply'==type){
 		let current_link='viz://@'+user+'/'+object+'/';
 		let current_level=level;
-		render=ltmp(ltmp_arr.object_type_text_loading,{
+		render=ltmp(ltmp_arr.object_type_text_wait_loading,{
 			link:current_link,
 		});
 		console.log(render);
@@ -3028,6 +3082,7 @@ function load_more_objects(indicator,check_level){
 				let item=cur.value;
 				//console.log(item);
 				if(0==same_time){
+					indicator.closest('.objects').data('feed-time',item.time)
 					same_time=item.time;
 				}
 				if(same_time==item.time){
