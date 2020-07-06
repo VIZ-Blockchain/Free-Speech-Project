@@ -659,7 +659,7 @@ var ltmp_arr={
 	object_type_text_reply_internal:'<div class="reply-view">В ответ <a tabindex="0" data-href="{link}">{caption}</a></div>',
 	object_type_text_reply_external:'<div class="reply-view">Ответ на <a tabindex="0" href="{link}" target="_blank">{caption}</a></div>',
 
-	new_objects:'<a class="new-objects load-new-objects-action show" data-items="0">&hellip;</a>',
+	new_objects:'<a class="new-objects load-new-objects-action" data-items="0">&hellip;</a>',
 	feed_new_objects:'Показать новые обновления: {items}',
 };
 
