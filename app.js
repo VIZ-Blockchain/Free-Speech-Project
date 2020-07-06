@@ -113,7 +113,6 @@ var default_settings={
 	feed_subscribe_shares:true,
 	feed_subscribe_mentions:true,
 	feed_load_by_timer:true,
-	feed_load_by_subscribe:false,
 	feed_load_by_surf:false,
 };
 var settings=default_settings;
@@ -140,7 +139,6 @@ function save_feed_settings(view){
 	settings.feed_subscribe_mentions=tab.find('input[name="feed_subscribe_mentions"]').prop("checked");
 
 	settings.feed_load_by_timer=tab.find('input[name="feed_load_by_timer"]').prop("checked");
-	settings.feed_load_by_subscribe=tab.find('input[name="feed_load_by_subscribe"]').prop("checked");
 	settings.feed_load_by_surf=tab.find('input[name="feed_load_by_surf"]').prop("checked");
 
 	let settings_json=JSON.stringify(settings);
@@ -841,9 +839,7 @@ function subscribe(el){
 							add_t.commit();
 						}
 					}
-					if(settings.feed_load_by_subscribe){
-						feed_load(check_user,false,function(err,result){console.log('feed load by subscribe',err,result);});
-					}
+					feed_load(check_user,false,function(err,result){console.log('feed load by subscribe',err,result);});
 				}
 			};
 
@@ -2079,7 +2075,6 @@ function view_app_settings(view,path_parts,query,title){
 		$('input[name="feed_subscribe_mentions"]').prop("checked",settings.feed_subscribe_mentions);
 
 		$('input[name="feed_load_by_timer"]').prop("checked",settings.feed_load_by_timer);
-		$('input[name="feed_load_by_subscribe"]').prop("checked",settings.feed_load_by_subscribe);
 		$('input[name="feed_load_by_surf"]').prop("checked",settings.feed_load_by_surf);
 	}
 
