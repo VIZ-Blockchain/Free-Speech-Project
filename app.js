@@ -1235,14 +1235,12 @@ function feed_load_final(result,account,callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
-	let time=new Date().getTime() / 1000 | 0;
 	let count=0;
 	console.log(result);
 	for(let i in result){
-		let block=result[i];
-		feed_add(account,block,time);
+		let item=result[i];
+		feed_add(account,item.block,item.time);
 		count++;
-		time--;//for right sorting from newest to oldest
 	}
 	setTimeout(function(){callback(false,{account:account,items:count})},100);
 }
@@ -1314,7 +1312,7 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 					}
 				}
 				if(feed){
-					result.push(object_result.block);
+					result.push({block:object_result.block,time:object_result.data.timestamp});
 				}
 			}
 			feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
