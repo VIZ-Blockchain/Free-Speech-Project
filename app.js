@@ -1883,6 +1883,53 @@ function update_feed(){
 	}
 }
 
+function clear_users_objects(){
+	if(0<settings.activity_size){
+		let t=db.transaction(['users'],'readwrite');
+		let q=t.objectStore('users');
+		let req=q.index('status').openCursor(IDBKeyRange.only(1),'next');
+		let users=[];
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				users.push(cur.value.account);
+				cur.continue();
+			}
+			else{
+				for(let i in users){
+					let account=users[i];
+					if(account!=current_user){
+						let user_t=db.transaction(['objects_'+account],'readwrite');
+						let user_q=user_t.objectStore('objects_'+account);
+						let user_req=user_q.index('block').openCursor(null,'prev');
+						let offset=false;
+						let count=0;
+						user_req.onsuccess=function(event){
+							let cur=event.target.result;
+							if(cur){
+								if(!offset){
+									offset=true;
+									cur.advance(settings.activity_size-1);
+								}
+								else{
+									cur.delete();
+									count++;
+									cur.continue();
+								}
+							}
+							else{
+								if(0<count){
+									console.log('clear_users_objects',account,count);
+								}
+							}
+						};
+					}
+				}
+			}
+		};
+	}
+}
+
 function clear_feed(){
 	let t=db.transaction(['feed'],'readwrite');
 	let q=t.objectStore('feed');
@@ -1892,8 +1939,8 @@ function clear_feed(){
 	req.onsuccess=function(event){
 		let cur=event.target.result;
 		if(cur){
-			let item=cur.value;
 			if(!offset){
+				offset=true;
 				cur.advance(settings.feed_size-1);
 			}
 			else{
@@ -3225,6 +3272,7 @@ function check_load_more(){
 
 function main_app(){
 	clear_feed();
+	clear_users_objects();
 	clear_cache();
 	update_feed();
 	parse_fullpath();
