@@ -976,6 +976,7 @@ function load_new_objects(el){
 	setTimeout(function(){
 		$(window)[0].scrollTo({behavior:'smooth',top:(indicator.offset().top>400?indicator.offset().top-100:indicator.offset().top)});
 		indicator.data('items',0);
+		indicator.insertBefore(indicator.closest('.objects').find('.object:first-child'));
 		indicator.removeClass('show');
 		indicator.removeClass('disabled');
 	},100);
