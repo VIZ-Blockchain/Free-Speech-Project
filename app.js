@@ -777,7 +777,11 @@ function publish(view){
 							get_user(current_user,true,function(err,result){
 								if(!err){
 									if(result.start!=previous){
-										view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:response[0].custom_sequence_block_num}));
+										get_object(current_user,result.start,function(err,object_result){
+											if(!err){
+												view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:result.start}));
+											}
+										});
 									}
 								}
 							});
@@ -1832,13 +1836,16 @@ function update_feed_subscribes(callback){
 	let list=[];
 	let delay=0;
 	let delay_step=500;
+	let check_activity=(new Date().getTime() /1000 | 0) - settings.activity_period*60;
 	req.onsuccess=function(event){
 		let cur=event.target.result;
 		if(cur){
 			let item=cur.value;
-			list.push(item.account);
-			item.activity=new Date().getTime() /1000 | 0;
-			cur.update(item);
+			if(item.activity<check_activity){
+				list.push(item.account);
+				item.activity=new Date().getTime() /1000 | 0;
+				cur.update(item);
+			}
 			cur.continue();
 		}
 		else{
@@ -3067,6 +3074,7 @@ function load_more_objects(indicator,check_level){
 		let update_q=update_t.objectStore('feed');
 		let feed_time=parseInt(indicator.data('time'));
 		let same_time=0;
+		console.log('load_more_objects objects feed-time:',same_time);
 		let objects=[];
 		let update_req;
 		let check_level=level;
@@ -3082,7 +3090,9 @@ function load_more_objects(indicator,check_level){
 				let item=cur.value;
 				//console.log(item);
 				if(0==same_time){
-					indicator.closest('.objects').data('feed-time',item.time)
+					if(typeof indicator.closest('.objects').data('feed-time') === 'undefined'){
+						indicator.closest('.objects').data('feed-time',item.time);
+					}
 					same_time=item.time;
 				}
 				if(same_time==item.time){
