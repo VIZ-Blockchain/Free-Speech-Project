@@ -1883,6 +1883,31 @@ function update_feed(){
 	}
 }
 
+function clear_feed(){
+	let t=db.transaction(['feed'],'readwrite');
+	let q=t.objectStore('feed');
+	let req=q.index('time').openCursor(null,'prev');
+	let offset=false;
+	let count=0;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let item=cur.value;
+			if(!offset){
+				cur.advance(settings.feed_size-1);
+			}
+			else{
+				cur.delete();
+				count++;
+				cur.continue();
+			}
+		}
+		else{
+			console.log('clear feed',count);
+		}
+	};
+}
+
 var clear_cache_timer=0;
 function clear_cache(){
 	console.log('clear cache trigger');
@@ -3199,6 +3224,7 @@ function check_load_more(){
 }
 
 function main_app(){
+	clear_feed();
 	clear_cache();
 	update_feed();
 	parse_fullpath();
