@@ -84,6 +84,9 @@ i.icon.copy_link svg{
 i.icon.telegram svg{
 	margin-left:-2px;
 }
+i.icon.copy svg{
+	margin-top:7px;
+}
 
 div.menu{
 	top:0;
@@ -249,13 +252,52 @@ div.menu.short .primary a .icon{
 .header .link{
 	padding:0 10px;
 }
-.header .link input{
+.header-link-wrapper{
+	position: relative;
+	top:8px;
+	height:35px;
 	width:100%;
 	font-size:15px;
-	line-height:20px;
+	line-height:24px;
 	padding:5px 10px;
 	border:1px solid #ccd;
-	border-radius:15px;
+	border-radius:18px;
+	overflow:hidden;
+}
+.header-link{
+	width:100%;
+	font-size:15px;
+	line-height:24px;
+	padding:5px 12px;
+	margin:0;
+	border:0;
+	border-radius:0;
+	position:absolute;
+	left:0;
+	top:0;
+	z-index:3;
+}
+.header-link-icons{
+	position:absolute;
+	right:0;
+	top:-2px;
+	z-index:4;
+	color:rgba(180,180,180,1.0);
+}
+.header-link-icons i.icon{
+	cursor:pointer;
+	outline:none;
+}
+.header-link-icons i.icon.copy{
+	color:rgba(180,180,180,0.6);
+}
+.header-link-icons i.icon:hover{
+	background:rgba(105, 187, 238, 0.0);
+	color:rgba(28,152,229,1.0);
+}
+.header-link-icons i.icon.success{
+	background:rgba(105, 187, 238, 0.0);
+	color:rgba(38, 196, 9, 0.8);
 }
 .header a{
 	color:#1c98e5;

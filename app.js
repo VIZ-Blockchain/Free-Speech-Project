@@ -523,7 +523,7 @@ var ltmp_arr={
 	account_not_found:'Пользователь не найден',
 	object_not_found:'Объект не найден',
 	block_not_found:'Блок не найден, попробуйте позже',
-	data_not_found:'Данные не найдены, попробуйте позже',
+	data_not_found:'Данные не найдены',
 
 	view:`
 		<div class="view" data-level="{level}" data-path="{path}" data-query="{query}">
@@ -573,7 +573,10 @@ var ltmp_arr={
 	icon_unsubscribe:`<i class="icon unsubscribe"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14 11H22V13H14zM8 4C5.72 4 4 5.72 4 8s1.72 4 4 4 4-1.72 4-4S10.28 4 8 4zM8 10c-1.178 0-2-.822-2-2s.822-2 2-2 2 .822 2 2S9.178 10 8 10zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
 
 	header_back_action:`<a tabindex="0" class="back-action" title="Назад">{icon}</a>`,
-	header_link:'<div class="link grow"><input type="text" class="header-link" value="{link}" disabled></div>',
+	header_link:'<div class="link grow"><div class="header-link-wrapper"><input type="text" class="header-link" value="{link}"><div class="header-link-icons">{icons}</div></div></div>',
+	header_link_icons:`
+		<i tabindex="0" class="icon copy icon-copy-action" title="Копировать адрес"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20,2H10C8.897,2,8,2.897,8,4v4H4c-1.103,0-2,0.897-2,2v10c0,1.103,0.897,2,2,2h10c1.103,0,2-0.897,2-2v-4h4 c1.103,0,2-0.897,2-2V4C22,2.897,21.103,2,20,2z M4,20V10h10l0.002,10H4z M20,14h-4v-4c0-1.103-0.897-2-2-2h-4V4h10V14z"/></svg></i>
+		<i tabindex="0" class="icon search icon-search-action" title="Перейти"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.023,16.977c-0.513-0.488-1.004-0.997-1.367-1.384c-0.372-0.378-0.596-0.653-0.596-0.653l-2.8-1.337 C15.34,12.37,16,10.763,16,9c0-3.859-3.14-7-7-7S2,5.141,2,9s3.14,7,7,7c1.763,0,3.37-0.66,4.603-1.739l1.337,2.8 c0,0,0.275,0.224,0.653,0.596c0.387,0.363,0.896,0.854,1.384,1.367c0.494,0.506,0.988,1.012,1.358,1.392 c0.362,0.388,0.604,0.646,0.604,0.646l2.121-2.121c0,0-0.258-0.242-0.646-0.604C20.035,17.965,19.529,17.471,19.023,16.977z M9,14 c-2.757,0-5-2.243-5-5s2.243-5,5-5s5,2.243,5,5S11.757,14,9,14z"/></svg></i>`,
 	header_caption:'<div class="caption grow">{caption}</div>',
 
 	user_actions_open:'<div class="user-actions" data-user="{user}">',
@@ -982,9 +985,59 @@ function load_new_objects(el){
 	},100);
 }
 
+var address_bar_blur=function(event){
+	$(event.target).removeClass('focused');
+	$(event.target)[0].removeEventListener('blur',address_bar_blur);
+};
+
 function app_mouse(e){
 	if(!e)e=window.event;
 	var target=e.target || e.srcElement;
+	//add header link element input behaviour to select all text on first focus
+	if($(target).hasClass('header-link')){
+		if(!$(target).hasClass('focused')){
+			//not for main feed view
+			if('viz://'!=$(target).val()){
+				$(target)[0].select();
+				$(target)[0].setSelectionRange(0,99999);
+				$(target).addClass('focused');
+				$(target)[0].addEventListener('blur',address_bar_blur,false);
+			}
+		}
+	}
+	//active icons first
+	if($(target).hasClass('icon-copy-action')){
+		let icon=$(target);
+		icon.addClass('success');
+		let view=$(target).closest('.view');
+		$('.text-copy').val(view.find('.header-link').val());
+		$('.text-copy')[0].select();
+		$('.text-copy')[0].setSelectionRange(0,99999);
+		document.execCommand("copy");
+		setTimeout(function(){icon.removeClass('success');},4000);
+	}
+	if($(target).hasClass('icon-search-action')){
+		if(!$(target).hasClass('success')){
+			$(target).addClass('success');
+			let view=$(target).closest('.view');
+			let search=view.find('.header-link').val();
+			if(''!=search){
+				if(-1!=search.indexOf('viz://')){
+					view_path(search,{},true,false);
+				}
+				else{
+					if('@'==search.substring(0,1)){
+						search=search.substring(1);
+					}
+					view_path('viz://@'+search+'/',{},true,false);
+				}
+			}
+			else{
+				view_path('viz://',{},true,false);
+			}
+			e.preventDefault();
+		}
+	}
 	//go parent element, if event on icon
 	if($(target).hasClass('icon')){
 		target=$(target).parent();
@@ -1086,7 +1139,6 @@ function app_mouse(e){
 				return;
 			}
 
-
 			if(-1!=search.indexOf('viz://')){
 				view_path(search,{},true,false);
 			}
@@ -1098,6 +1150,7 @@ function app_mouse(e){
 			}
 		}
 	}
+	/*
 	if($(target).hasClass('header-link')){
 		let text=$(target).val();
 		$('.text-copy').val(text);
@@ -1105,6 +1158,7 @@ function app_mouse(e){
 		$('.text-copy')[0].setSelectionRange(0,99999);
 		document.execCommand("copy");
 	}
+	*/
 	if($(target).hasClass('reply-action')){
 		let link=$(target).closest('.object').data('link');
 		view_path('fsp:publish/reply/?'+link,{},true,false);
@@ -2317,7 +2371,27 @@ function app_keyboard(e){
 	let char=String.fromCharCode(key);
 	if(key==13){//enter
 		e.preventDefault();
-		document.activeElement.click();
+		if($(document.activeElement).hasClass('header-link')){
+			let search=$(document.activeElement).val();
+			search=search.trim();
+			if(''!=search){
+				if(-1!=search.indexOf('viz://')){
+					view_path(search,{},true,false);
+				}
+				else{
+					if('@'==search.substring(0,1)){
+						search=search.substring(1);
+					}
+					view_path('viz://@'+search+'/',{},true,false);
+				}
+			}
+			else{
+				view_path('viz://',{},true,false);
+			}
+		}
+		else{
+			document.activeElement.click();
+		}
 	}
 	if(key==32){//space
 		e.preventDefault();
@@ -2395,7 +2469,7 @@ function view_path(location,state,save_state,update){
 		let view=$('.view[data-level="0"]');
 		let header='';
 		header+=ltmp(ltmp_arr.toggle_menu,{title:ltmp_arr.toggle_menu_title,icon:ltmp_arr.icon_menu});
-		header+=ltmp(ltmp_arr.search,{icon_search:ltmp_arr.icon_search});
+		header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 		view.find('.header').html(header);
 		view.find('.objects').html(ltmp(ltmp_arr.new_objects+ltmp_arr.feed_loader_notice,{time:0}));
 		level=0;
@@ -2444,7 +2518,7 @@ function view_path(location,state,save_state,update){
 							let view=$('.view[data-level="'+level+'"]');
 							let header='';
 							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
-							header+=ltmp(ltmp_arr.header_link,{link:location});
+							header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 							view.find('.header').html(header);
 							view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.gateway_error}));
 							$('.loader').css('display','none');
@@ -2488,7 +2562,7 @@ function view_path(location,state,save_state,update){
 							let view=$('.view[data-level="'+level+'"]');
 							let header='';
 							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
-							header+=ltmp(ltmp_arr.header_link,{link:location});
+							header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 							if(check_account==current_user){
 								header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
 								header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
@@ -2518,70 +2592,105 @@ function view_path(location,state,save_state,update){
 				//only block in path parts
 				if(''==path_parts[2]){
 					let check_block=parseInt(path_parts[1]);
-					$('.loader').css('display','block');
-					$('.view').css('display','none');
-					get_user(check_account,false,function(err,user_result){
-						if(err){
-							console.log(err);
-							$('.loader').css('display','block');
-							$('.view').css('display','none');
-							if(!update){
-								level++;
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
-								$('.content').append(new_view);
-							}
-							let view=$('.view[data-level="'+level+'"]');
-							let header='';
-							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
-							header+=ltmp(ltmp_arr.header_link,{link:location});
-							view.find('.header').html(header);
-							view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.gateway_error}));
-
-							$('.loader').css('display','none');
-							view.css('display','block');
-						}
-						else{
-							if(!update){
-								level++;
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
-								$('.content').append(new_view);
-							}
-							let view=$('.view[data-level="'+level+'"]');
-							let header='';
-							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
-							header+=ltmp(ltmp_arr.header_link,{link:location});
-							view.find('.header').html(header);
-							view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
-
-							get_object(check_account,check_block,function(err,object_result){
-								if(err){
-									view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
+					if(isNaN(check_block)){
+						level++;
+						let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
+						$('.content').append(new_view);
+						let view=$('.view[data-level="'+level+'"]');
+						let header='';
+						header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+						header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+						view.find('.header').html(header);
+						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
+						$('.loader').css('display','none');
+						view.css('display','block');
+					}
+					else{
+						$('.loader').css('display','block');
+						$('.view').css('display','none');
+						get_user(check_account,false,function(err,user_result){
+							if(err){
+								console.log(err);
+								$('.loader').css('display','block');
+								$('.view').css('display','none');
+								if(!update){
+									level++;
+									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
+									$('.content').append(new_view);
 								}
-								else{
-									let object_view=render_object(user_result,object_result);
-									let link='viz://@'+user_result.account+'/'+object_result.block+'/';
+								let view=$('.view[data-level="'+level+'"]');
+								let header='';
+								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+								view.find('.header').html(header);
+								view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.gateway_error}));
 
-									view.find('.objects').html(object_view);
-									let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
-									view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),false,false,false));
-									view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000-(new Date().getTimezoneOffset()*60000)));
+								$('.loader').css('display','none');
+								view.css('display','block');
+							}
+							else{
+								if(!update){
+									level++;
+									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
+									$('.content').append(new_view);
+								}
+								let view=$('.view[data-level="'+level+'"]');
+								let header='';
+								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+								view.find('.header').html(header);
+								view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
 
-									get_replies(user_result.account,object_result.block,function(err,replies_result){
-										for(let i in replies_result){
-											let reply_object=replies_result[i];
-											let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
-											reply_render=render_object(reply_object.account,reply_object.block,'reply');
-											view.find('.objects').append(reply_render);
+								get_object(check_account,check_block,function(err,object_result){
+									if(err){
+										if(1==object_result){//block not found
+											view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
 										}
-									});
+										if(2==object_result){//item not found
+											view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
+										}
+										$('.loader').css('display','none');
+										view.css('display','block');
+									}
+									else{
+										let object_view=render_object(user_result,object_result);
+										let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 
-									$('.loader').css('display','none');
-									view.css('display','block');
-									check_load_more();
-								}
-							});
-						}
-					});
+										view.find('.objects').html(object_view);
+										let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+										view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),false,false,false));
+										view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000-(new Date().getTimezoneOffset()*60000)));
+
+										get_replies(user_result.account,object_result.block,function(err,replies_result){
+											for(let i in replies_result){
+												let reply_object=replies_result[i];
+												let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+												reply_render=render_object(reply_object.account,reply_object.block,'reply');
+												view.find('.objects').append(reply_render);
+											}
+										});
+
+										$('.loader').css('display','none');
+										view.css('display','block');
+										check_load_more();
+									}
+								});
+							}
+						});
+					}
+				}
+				else{
+					level++;
+					let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
+					$('.content').append(new_view);
+					let view=$('.view[data-level="'+level+'"]');
+					let header='';
+					header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+					header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+					view.find('.header').html(header);
+					view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
+					$('.loader').css('display','none');
+					view.css('display','block');
 				}
 			}
 		}
