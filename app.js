@@ -485,6 +485,11 @@ var ltmp_arr={
 	notify_title:'<div class="title">{caption}</div>',
 	notify_text:'<div class="text">{text}</div>',
 	notify_link:'<a tabindex="0" data-href="{link}" class="close-notify-action">{text}</a>',
+	notify_arr:{
+		new_reply:'Новый ответ от @{account}',
+		new_share:'Репост от @{account}',
+		new_mention:'Упоминание от @{account}',
+	},
 
 	menu_session_empty:'<div class="avatar"><img src="default.png"></div><a tabindex="0" data-href="fsp:account_settings">{caption}</a>',
 	menu_session_login:'Войти',
@@ -1479,6 +1484,14 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 				if(settings.feed_subscribe_shares){
 					if(object_result.is_share){
 						feed=true;
+						if(object_result.parent_account==current_user){
+							let link='viz://@'+object_result.account+'/'+object_result.block+'/';
+							let share_text='';
+							if(typeof object_result.data.d.text !== 'udnefined'){
+								share_text=object_result.data.d.text;
+							}
+							add_notify(ltmp(ltmp_arr.notify_arr.new_share,{account:object_result.account}),share_text,link);
+						}
 					}
 				}
 				if(settings.feed_subscribe_replies){
@@ -1490,6 +1503,9 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 					if(object_result.is_reply){
 						feed=false;
 						if(object_result.parent_account==current_user){
+							let link='viz://@'+object_result.account+'/'+object_result.block+'/';
+							let reply_text=object_result.data.d.text;
+							add_notify(ltmp(ltmp_arr.notify_arr.new_reply,{account:object_result.account}),reply_text,link);
 							feed=true;
 						}
 					}
@@ -1497,6 +1513,9 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 				if(settings.feed_subscribe_mentions){
 					if(typeof object_result.data.d.text !== 'undefined'){
 						if(-1!=object_result.data.d.text.indexOf('@'+current_user)){//mention
+							let link='viz://@'+object_result.account+'/'+object_result.block+'/';
+							let reply_text=object_result.data.d.text;
+							add_notify(ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
 							feed=true;
 						}
 					}

@@ -349,9 +349,19 @@ div.menu.short .primary a .icon{
 	pointer-events:none;
 }
 .notifications .notify-wrapper .notify .text{
+	display:inline-block;
+	overflow:hidden;
+	max-width:460px;
+	text-overflow:ellipsis;
+	white-space:nowrap;
 	pointer-events:none;
 }
 .notifications .notify-wrapper .notify a{
+	display:inline-block;
+	overflow:hidden;
+	max-width:460px;
+	text-overflow:ellipsis;
+	white-space:nowrap;
 	color:#1c98e5;
 }
 .objects .object{
