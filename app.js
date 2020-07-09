@@ -24,6 +24,8 @@ viz.config.set('websocket',default_api_gate);
 
 select_best_gate();
 
+var dgp={};
+
 function update_api_gate(value=false){
 	if(false==value){
 		api_gate=api_gates[best_gate];
@@ -54,9 +56,16 @@ function select_best_gate(){
 				latency=new Date().getTime() - latency_start;
 				if(best_gate!=current_gate){
 					if((best_gate_latency>latency)||(best_gate==-1)){
-						best_gate=current_gate;
-						best_gate_latency=latency;
-						update_api_gate();
+						try{
+							let json=JSON.parse(event.data);
+							dgp=json.result;
+							best_gate=current_gate;
+							best_gate_latency=latency;
+							update_api_gate();
+						}
+						catch(e){
+							console.log('select_best_gate node error',current_gate_url,e);
+						}
 					}
 				}
 				socket.close();
@@ -68,7 +77,7 @@ function select_best_gate(){
 		if('http'==protocol){
 			let xhr = new XMLHttpRequest();
 			xhr.overrideMimeType('text/plain');
-			xhr.open('GET',current_gate_url);
+			xhr.open('POST',current_gate_url);
 			xhr.setRequestHeader('accept','application/json, text/plain, */*');
 			xhr.setRequestHeader('content-type','application/json');
 			xhr.onreadystatechange = function() {
@@ -77,9 +86,16 @@ function select_best_gate(){
 					console.log('check node',current_gate_url,'latency: ',latency);
 					if(best_gate!=current_gate){
 						if((best_gate_latency>latency)||(best_gate==-1)){
-							best_gate=current_gate;
-							best_gate_latency=latency;
-							update_api_gate();
+							try{
+								let json=JSON.parse(xhr.response);
+								dgp=json.result;
+								best_gate=current_gate;
+								best_gate_latency=latency;
+								update_api_gate();
+							}
+							catch(e){
+								console.log('select_best_gate node error',current_gate_url,e);
+							}
 						}
 					}
 				}
@@ -3183,7 +3199,6 @@ function render_object(user,object,type){
 		render=ltmp(ltmp_arr.object_type_text_wait_loading,{
 			link:current_link,
 		});
-		console.log(render);
 		setTimeout(function(){
 			let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"].type-text-wait-loading .load-content');
 			get_user(user,false,function(err,sub_user){
