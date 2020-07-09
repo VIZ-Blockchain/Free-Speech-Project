@@ -105,6 +105,20 @@ function select_best_gate(){
 	}
 }
 
+var dgp_timer=0;
+function update_dgp(auto=false){
+	viz.api.getDynamicGlobalProperties(function(err,response){
+		if(response){
+			dgp=response;
+		}
+	});
+	setTimeout(function(){if(0==Object.keys(dgp).length){select_best_gate();}},5000);//5sec after request
+	if(auto){
+		clearTimeout(dgp_timer);
+		dgp_timer=setTimeout(function(){update_dgp(true);},120000);//2min
+	}
+}
+
 var users={};
 var current_user='';
 var default_energy_step=500;//5.00%
@@ -3501,6 +3515,10 @@ function main_app(){
 	view_path(path,{},false,false);
 	render_menu();
 	render_session();
+	setTimeout(function(){
+		update_dgp(true);
+	},10000);//10sec for re-check selected api gate
+
 
 	document.addEventListener('click',app_mouse,false);
 	document.addEventListener('tap',app_mouse,false);
