@@ -2510,6 +2510,9 @@ function view_path(location,state,save_state,update){
 
 	if(typeof state.path == 'undefined'){
 		//check query state
+		if('/'!=location.substr(-1)){
+			location+='/';
+		}
 		if(-1!=location.indexOf('?')){
 			query=location.substring(location.indexOf('?')+1);
 			location=location.substring(0,location.indexOf('?'));
