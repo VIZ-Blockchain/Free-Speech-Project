@@ -144,6 +144,8 @@ var default_settings={
 	feed_subscribe_mentions:true,
 	feed_load_by_timer:true,
 	feed_load_by_surf:false,
+	energy:100,
+	silent_award:false,
 };
 var settings=default_settings;
 
@@ -516,6 +518,10 @@ var ltmp_arr={
 	notify_text:'<div class="text">{text}</div>',
 	notify_link:'<a tabindex="0" data-href="{link}" class="close-notify-action">{text}</a>',
 	notify_arr:{
+		error:'Ошибка',
+		award_success:'Вы наградили @{account}',
+		award_info:'≈{amount}Ƶ [{percent}]',
+		award_error:'Ошибка при награждении @{account}',
 		new_reply:'Новый ответ от @{account}',
 		new_share:'Репост от @{account}',
 		new_mention:'Упоминание от @{account}',
@@ -651,7 +657,7 @@ var ltmp_arr={
 	object_type_text_actions:`
 	<a tabindex="0" class="reply-action" title="Комментировать">{icon_reply}</a>
 	<a tabindex="0" class="share-action" title="Поделиться">{icon_share}</a>
-	<!--<a tabindex="0" class="award" title="Наградить">{icon_award}</a>-->
+	<a tabindex="0" class="award-action" title="Наградить">{icon_award}</a>
 	<a tabindex="0" class="copy-link-action" title="Копировать ссылку">{icon_copy_link}</a>`,
 	object_type_text_loading:`<div class="object type-text-loading" data-link="{link}" data-previous="{previous}">{context}</div>`,
 	object_type_text_wait_loading:`<div class="object type-text-wait-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
@@ -732,6 +738,81 @@ function render_session(){
 	}
 	else{
 		$('div.menu .session').html(ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_login}));
+	}
+}
+
+function award(link,callback){
+	if(0==link.indexOf('viz://')){
+		let account='';
+		link=link.toLowerCase();
+		link=escape_html(link);
+		let pattern = /@[a-z0-9\-\.]*/g;
+		let link_account=link.match(pattern);
+		if(typeof link_account[0] != 'undefined'){
+			account=link_account[0].substr(1);
+			let beneficiaries_list=[];
+			let energy=settings.energy;
+			let memo=link;
+			if(settings.silent_award){
+				memo='';
+			}
+			let predicted_amount=0;
+			let new_energy=0;
+			viz.api.getAccounts([current_user],function(err,response){
+				if(err){
+					console.log(err,response);
+					callback(false);
+				}
+				else{
+					if(typeof response[0] === 'undefined'){
+						console.log(err,response);
+						callback(false);
+					}
+					else{
+						let data=response[0];
+
+						let vesting_shares=parseFloat(data.vesting_shares);
+						let delegated_vesting_shares=parseFloat(data.delegated_vesting_shares);
+						let received_vesting_shares=parseFloat(data.received_vesting_shares);
+						let effective_vesting_shares=vesting_shares + received_vesting_shares - delegated_vesting_shares;
+
+						let last_vote_time=Date.parse(data.last_vote_time);
+						let delta_time=parseInt((new Date().getTime() - last_vote_time+(new Date().getTimezoneOffset()*60000))/1000);
+						let current_energy=data.energy;
+						let new_energy=parseInt(current_energy+(delta_time*10000/432000));//CHAIN_ENERGY_REGENERATION_SECONDS 5 days
+						if(new_energy>10000){
+							new_energy=10000;
+						}
+						new_energy-=energy;
+						let effective_vesting_shares_int=parseInt(effective_vesting_shares*1000000);//to int shares
+						let current_rshares=parseInt(effective_vesting_shares_int*energy/10000);
+						let total_reward_shares=parseInt(dgp.total_reward_shares);
+						total_reward_shares+=current_rshares;
+						let total_reward_fund=parseInt(parseFloat(dgp.total_reward_fund)*1000);//to int tokens
+						let predicted_reward=(total_reward_fund*current_rshares)/total_reward_shares;
+						predicted_reward=predicted_reward*0.9995;//decrease expectations 0.005%
+						predicted_reward=Math.ceil(predicted_reward)/1000;//to float tokens
+						if(isNaN(predicted_reward)){
+							predicted_reward=0;
+						}
+						viz.broadcast.award(users[current_user].regular_key,current_user,account,energy,0,memo,beneficiaries_list,function(err,result){
+							if(!err){
+								add_notify(
+									ltmp(ltmp_arr.notify_arr.award_success,{account:account}),
+									ltmp(ltmp_arr.notify_arr.award_info,{amount:predicted_reward,percent:(new_energy/100)+'%'})
+								);
+								callback(true);
+							}
+							else{
+								add_notify('',ltmp(ltmp_arr.notify_arr.award_error,{account:account}));
+								console.log(err);
+								callback(false);
+							}
+						});
+					}
+				}
+			});
+		}
 	}
 }
 
@@ -1277,6 +1358,14 @@ function app_mouse(e){
 	if($(target).hasClass('share-action')){
 		let link=$(target).closest('.object').data('link');
 		view_path('fsp:publish/share/?'+link,{},true,false);
+	}
+	if($(target).hasClass('award-action')){
+		let link=$(target).closest('.object').data('link');
+		award(link,function(result){
+			if(result){
+				$(target).addClass('success');
+			}
+		});
 	}
 	if($(target).hasClass('copy-link-action')){
 		let text=$(target).closest('.object').data('link');
@@ -2418,7 +2507,7 @@ function view_app_settings(view,path_parts,query,title){
 	view.find('.header').html(header);
 
 	let current_tab='main';
-	if(typeof path_parts[1] != 'undefined'){
+	if((typeof path_parts[1] != 'undefined')&&(''!=path_parts[1])){
 		current_tab=path_parts[1];
 	}
 	let tabs='';
