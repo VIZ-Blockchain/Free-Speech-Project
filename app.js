@@ -714,7 +714,7 @@ var ltmp_arr={
 	fast_publish:`
 	<div class="fast-publish-wrapper">
 		<div class="avatar"><img src="{avatar}"></div>
-		<div class="button fast-publish-action">{button}</div>
+		<div tabindex="0" class="button fast-publish-action" title="Опубликовать">{button}</div>
 		<textarea name="text" placeholder="Что нового?"></textarea>
 	</div>`,
 };
