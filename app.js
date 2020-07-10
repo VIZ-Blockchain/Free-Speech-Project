@@ -2691,7 +2691,12 @@ function view_path(location,state,save_state,update){
 
 	console.log('location: '+location,path_parts,'query: '+query);
 	$('div.menu .primary div a').removeClass('current');
-	$('div.menu .primary div a[data-href="'+location+'"]').addClass('current');
+	if(0<$('div.menu .primary div a[data-href="'+path_parts[0]+'"]').length){
+		$('div.menu .primary div a[data-href="'+path_parts[0]+'"]').addClass('current');
+	}
+	else{
+		$('div.menu .primary div a[data-href="'+location+'"]').addClass('current');
+	}
 
 	if(''==path_parts[0]){
 		$('.loader').css('display','block');
@@ -3614,9 +3619,9 @@ function main_app(){
 	clear_cache();
 	update_feed();
 	parse_fullpath();
-	view_path(path,{},false,false);
 	render_menu();
 	render_session();
+	view_path(path,{},false,false);
 	setTimeout(function(){
 		update_dgp(true);
 	},10000);//10sec for re-check selected api gate
