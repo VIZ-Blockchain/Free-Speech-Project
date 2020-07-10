@@ -712,6 +712,13 @@ var ltmp_arr={
 	feed_new_objects:'Показать новые обновления: {items}',
 };
 
+var menu_status='full';
+if(null!=localStorage.getItem(storage_prefix+'menu_status')){
+	menu_status=localStorage.getItem(storage_prefix+'menu_status');
+}
+if('full'!=menu_status){
+	$('div.menu').addClass(menu_status);
+}
 function render_menu(){
 	$('div.menu').html(ltmp_arr.menu_preset);
 	let primary_menu='';
@@ -1242,14 +1249,20 @@ function app_mouse(e){
 	if($(target).hasClass('toggle-menu')){
 		if($('div.menu').hasClass('hidden')){
 			$('div.menu').removeClass('hidden');
+			menu_status='full';
+			localStorage.setItem(storage_prefix+'menu_status',menu_status);
 		}
 		else{
 			if($('div.menu').hasClass('short')){
 				$('div.menu').addClass('hidden');
 				$('div.menu').removeClass('short');
+				menu_status='hidden';
+				localStorage.setItem(storage_prefix+'menu_status',menu_status);
 			}
 			else{
 				$('div.menu').addClass('short');
+				menu_status='short';
+				localStorage.setItem(storage_prefix+'menu_status',menu_status);
 			}
 		}
 	}
