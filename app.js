@@ -833,62 +833,69 @@ function award(link,callback){
 function fast_publish(view){
 	let text=view.find('.fast-publish-wrapper textarea[name="text"]').val();
 	text=text.trim();
-	viz.api.getAccounts([current_user],function(err,response){
-		if(err){
-			add_notify(ltmp_arr.gateway_error);
-			return;
-		}
-		else{
-			if(typeof response[0] !== 'undefined'){
-				let previous=response[0].custom_sequence_block_num;
-				let new_object={};
-				if(previous>0){
-					new_object.p=previous;
-				}
-				if(app_version>1){
-					new_object.v=app_version;
-				}
-				//new_object.t='text';//optional, this is the default
-				//new_object.u=new Date().getTime() /1000 | 0;//for delayed publication
-
-				let data={};
-				data.text=text;
-
-				new_object.d=data;
-				let object_json=JSON.stringify(new_object);
-
-				viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
-					if(result){
-						console.log(result);
-						setTimeout(function(){
-							get_user(current_user,true,function(err,result){
-								if(!err){
-									if(result.start!=previous){
-										get_object(current_user,result.start,function(err,object_result){
-											if(!err){
-												view_path('viz://@'+current_user+'/'+result.start+'/',{},true,false);
-											}
-										});
-									}
-								}
-							});
-						},3000);
-					}
-					else{
-						console.log(err);
-						add_notify(ltmp_arr.gateway_error);
-						return;
-					}
-				});
-
-			}
-			else{
-				console.log(err);
-				add_notify(ltmp_arr.account_not_found);
+	if(text){
+		viz.api.getAccounts([current_user],function(err,response){
+			if(err){
+				add_notify('',ltmp_arr.gateway_error);
 				return;
 			}
-		}
-	});
+			else{
+				if(typeof response[0] !== 'undefined'){
+					let previous=response[0].custom_sequence_block_num;
+					let new_object={};
+					if(previous>0){
+						new_object.p=previous;
+					}
+					if(app_version>1){
+						new_object.v=app_version;
+					}
+					//new_object.t='text';//optional, this is the default
+					//new_object.u=new Date().getTime() /1000 | 0;//for delayed publication
+
+					let data={};
+					data.text=text;
+
+					new_object.d=data;
+					let object_json=JSON.stringify(new_object);
+
+					viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
+						if(result){
+							console.log(result);
+							setTimeout(function(){
+								get_user(current_user,true,function(err,result){
+									if(!err){
+										if(result.start!=previous){
+											get_object(current_user,result.start,function(err,object_result){
+												if(!err){
+													view_path('viz://@'+current_user+'/'+result.start+'/',{},true,false);
+												}
+											});
+										}
+									}
+								});
+							},3000);
+						}
+						else{
+							console.log(err);
+							add_notify('',ltmp_arr.gateway_error);
+							return;
+						}
+					});
+
+				}
+				else{
+					console.log(err);
+					add_notify('',ltmp_arr.account_not_found);
+					return;
+				}
+			}
+		});
+	}
+	else{
+		view.find('.fast-publish-wrapper textarea[name="text"]')[0].focus();
+		view.find('.fast-publish-wrapper .button').removeClass('disabled');
+		add_notify('',ltmp_arr.publish_empty_text);
+	}
 }
 
 function publish(view){
