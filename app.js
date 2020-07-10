@@ -710,6 +710,13 @@ var ltmp_arr={
 
 	new_objects:'<a class="new-objects load-new-objects-action" data-items="0">&hellip;</a>',
 	feed_new_objects:'Показать новые обновления: {items}',
+
+	fast_publish:`
+	<div class="fast-publish-wrapper">
+		<div class="avatar"><img src="{avatar}"></div>
+		<div class="button fast-publish-action">{button}</div>
+		<textarea name="text" placeholder="Что нового?"></textarea>
+	</div>`,
 };
 
 var menu_status='full';
@@ -821,6 +828,67 @@ function award(link,callback){
 			});
 		}
 	}
+}
+
+function fast_publish(view){
+	let text=view.find('.fast-publish-wrapper textarea[name="text"]').val();
+	text=text.trim();
+	viz.api.getAccounts([current_user],function(err,response){
+		if(err){
+			add_notify(ltmp_arr.gateway_error);
+			return;
+		}
+		else{
+			if(typeof response[0] !== 'undefined'){
+				let previous=response[0].custom_sequence_block_num;
+				let new_object={};
+				if(previous>0){
+					new_object.p=previous;
+				}
+				if(app_version>1){
+					new_object.v=app_version;
+				}
+				//new_object.t='text';//optional, this is the default
+				//new_object.u=new Date().getTime() /1000 | 0;//for delayed publication
+
+				let data={};
+				data.text=text;
+
+				new_object.d=data;
+				let object_json=JSON.stringify(new_object);
+
+				viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
+					if(result){
+						console.log(result);
+						setTimeout(function(){
+							get_user(current_user,true,function(err,result){
+								if(!err){
+									if(result.start!=previous){
+										get_object(current_user,result.start,function(err,object_result){
+											if(!err){
+												view_path('viz://@'+current_user+'/'+result.start+'/',{},true,false);
+											}
+										});
+									}
+								}
+							});
+						},3000);
+					}
+					else{
+						console.log(err);
+						add_notify(ltmp_arr.gateway_error);
+						return;
+					}
+				});
+
+			}
+			else{
+				console.log(err);
+				add_notify(ltmp_arr.account_not_found);
+				return;
+			}
+		}
+	});
 }
 
 function publish(view){
@@ -1386,6 +1454,13 @@ function app_mouse(e){
 		$('.text-copy')[0].select();
 		$('.text-copy')[0].setSelectionRange(0,99999);
 		document.execCommand("copy");
+	}
+	if($(target).hasClass('fast-publish-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			let view=$(target).closest('.view');
+			fast_publish(view);
+		}
 	}
 	if($(target).hasClass('publish-action')){
 		if(!$(target).hasClass('disabled')){
@@ -2706,6 +2781,18 @@ function view_path(location,state,save_state,update){
 		header+=ltmp(ltmp_arr.toggle_menu,{title:ltmp_arr.toggle_menu_title,icon:ltmp_arr.icon_menu});
 		header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 		view.find('.header').html(header);
+		if(0<view.find('.fast-publish-wrapper').length){
+			view.find('.fast-publish-wrapper textarea').val('');
+			view.find('.fast-publish-wrapper .button').removeClass('disabled');
+		}
+		else{
+			get_user(current_user,false,function(err,result){
+				if(!err){
+					let profile=JSON.parse(result.profile);
+					view.find('.objects').before(ltmp(ltmp_arr.fast_publish,{avatar:profile.avatar,button:ltmp_arr.icon_new_object}));
+				}
+			});
+		}
 		view.find('.objects').html(ltmp(ltmp_arr.new_objects+ltmp_arr.feed_loader_notice,{time:0}));
 		level=0;
 		$('.loader').css('display','none');

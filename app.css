@@ -17,6 +17,7 @@ a{
 }
 input,textarea{
 	outline:none;
+	font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial;
 }
 
 .content{
@@ -507,6 +508,61 @@ div.menu.short .primary a .icon{
 	display:block;
 	margin:10px 0;
 	font-size:20px;
+}
+.fast-publish-wrapper{
+	position:relative;
+	border-bottom:1px solid rgba(204, 204, 221, 0.6);
+	height:auto;
+}
+.fast-publish-wrapper .avatar{
+	position:absolute;
+	left:15px;
+	margin-top:10px;
+}
+.fast-publish-wrapper .button{
+	position:absolute;
+	padding:7px;
+	right:15px;
+	bottom:15px;
+	cursor:pointer;
+	outline:none;
+}
+.fast-publish-wrapper .button.disabled{
+	opacity:0.4;
+}
+.fast-publish-wrapper .button i.icon:hover{
+	background:none;
+}
+.fast-publish-wrapper textarea{
+	display:block;
+	border:0;
+
+	height:100%;
+	min-width:100%;
+	max-width:100%;
+	min-height:15vh;
+	max-height:80vh;
+	font-size:18px;
+	line-height:22px;
+	padding:15px 80px;
+
+	width:100%;
+	border-bottom:9px solid rgba(204, 204, 221, 0.5);
+	margin:0;
+
+	scrollbar-width: thin;
+}
+.fast-publish-wrapper textarea::-webkit-scrollbar{
+	width:10px;
+}
+.fast-publish-wrapper textarea::-webkit-scrollbar-track{
+	background:rgba(200, 200, 220, 0.3);
+}
+.fast-publish-wrapper textarea::-webkit-scrollbar-thumb{
+	background:rgba(200, 200, 220, 1.0);
+}
+.fast-publish-wrapper textarea::-webkit-scrollbar-thumb:hover{
+	background:rgba(150, 150, 150, 1.0);
 }
 .branch{
 	border-bottom:1px solid rgba(204, 204, 221, 0.6);
