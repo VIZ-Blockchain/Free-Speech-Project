@@ -314,6 +314,12 @@ function increase_db_version(callback){
 	load_db(()=>{callback();});
 }
 
+function full_reset_db(){
+	idb.deleteDatabase(storage_prefix+'social_network');
+	db.close();
+	load_db(()=>{document.location.reload(true);});
+}
+
 function load_db(callback){
 	var req=idb.open(storage_prefix+'social_network',db_version);
 	req.onerror=idb_error;
