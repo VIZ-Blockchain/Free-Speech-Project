@@ -133,7 +133,7 @@ if(null!=localStorage.getItem(storage_prefix+'current_user')){
 var default_settings={
 	feed_size:10000,
 	activity_size:0,
-	activity_period:30,
+	activity_period:5,
 	activity_deep:50,
 	user_profile_ttl:60,
 	user_cache_ttl:10,
@@ -2200,6 +2200,9 @@ function update_feed_result(result){
 }
 
 function update_feed_subscribes(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
 	let t=db.transaction(['users'],'readwrite');
 	let q=t.objectStore('users');
 	let req=q.index('status').openCursor(IDBKeyRange.only(1),'next');
@@ -2211,6 +2214,9 @@ function update_feed_subscribes(callback){
 		let cur=event.target.result;
 		if(cur){
 			let item=cur.value;
+			if(typeof item.activity === 'undefined'){
+				item.activity=0;
+			}
 			if(item.activity<check_activity){
 				list.push(item.account);
 				item.activity=new Date().getTime() /1000 | 0;
