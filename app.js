@@ -529,7 +529,7 @@ function ltmp(ltmp_str,ltmp_args){
 }
 
 var ltmp_arr={
-	notify:'<div class="notify-wrapper{addon}" data-id="{id}"><div class="notify">{context}</div></div>',
+	notify:'<div class="notify-wrapper{addon}" data-id="{id}"><div class="notify" aria-live="polite">{context}</div></div>',
 	notify_title:'<div class="title">{caption}</div>',
 	notify_text:'<div class="text">{text}</div>',
 	notify_link:'<a tabindex="0" data-href="{link}" class="close-notify-action">{text}</a>',
