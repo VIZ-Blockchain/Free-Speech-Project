@@ -2789,6 +2789,13 @@ function view_path(location,state,save_state,update){
 	if(''==path_parts[0]){
 		$('.loader').css('display','block');
 		$('.view').css('display','none');
+		$('.view').each(function(i,el){
+			if(typeof $(el).data('level')!=='undefined'){
+				if(0!=$(el).data('level')){
+					$(el).remove();//remove other levels
+				}
+			}
+		});
 		let view=$('.view[data-level="0"]');
 		let header='';
 		header+=ltmp(ltmp_arr.toggle_menu,{title:ltmp_arr.toggle_menu_title,icon:ltmp_arr.icon_menu});
