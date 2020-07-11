@@ -151,6 +151,11 @@ var settings=default_settings;
 
 if(null!=localStorage.getItem(storage_prefix+'settings')){
 	settings=JSON.parse(localStorage.getItem(storage_prefix+'settings'));
+	for(let i in default_settings){
+		if(typeof settings[i]==='undefined'){
+			settings[i]=default_settings[i];
+		}
+	}
 }
 
 function save_feed_settings(view){
@@ -172,6 +177,11 @@ function save_feed_settings(view){
 
 	settings.feed_load_by_timer=tab.find('input[name="feed_load_by_timer"]').prop("checked");
 	settings.feed_load_by_surf=tab.find('input[name="feed_load_by_surf"]').prop("checked");
+
+	let energy_str=tab.find('input[name="energy"]').val();
+	energy_str=fast_str_replace(',','.',energy_str);
+	settings.energy=parseInt(parseFloat(energy_str)*100);
+	settings.silent_award=tab.find('input[name="silent_award"]').prop("checked");
 
 	let settings_json=JSON.stringify(settings);
 	localStorage.setItem(storage_prefix+'settings',settings_json);
@@ -2641,6 +2651,9 @@ function view_app_settings(view,path_parts,query,title){
 		tab.find('input[name="user_profile_ttl"]').val(settings.user_profile_ttl);
 		tab.find('input[name="user_cache_ttl"]').val(settings.user_cache_ttl);
 		tab.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
+
+		tab.find('input[name="energy"]').val(settings.energy/100);
+		$('input[name="silent_award"]').prop("checked",settings.silent_award);
 	}
 	if('feed'==current_tab){
 		tab.find('.button').removeClass('disabled');
