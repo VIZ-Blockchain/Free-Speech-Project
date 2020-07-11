@@ -716,6 +716,7 @@ var ltmp_arr={
 
 	new_objects:'<a class="new-objects load-new-objects-action" data-items="0">&hellip;</a>',
 	feed_new_objects:'Показать новые обновления: {items}',
+	feed_no_new_objects:'Новых обновлений нет',
 
 	fast_publish:`
 	<div class="fast-publish-wrapper">
@@ -1188,6 +1189,7 @@ function load_new_objects(el){
 	setTimeout(function(){
 		$(window)[0].scrollTo({behavior:'smooth',top:(indicator.offset().top>400?indicator.offset().top-100:indicator.offset().top)});
 		indicator.data('items',0);
+		indicator.html(ltmp_arr.feed_no_new_objects);
 		indicator.insertBefore(indicator.closest('.objects').find('.object:first-child'));
 		indicator.removeClass('show');
 		indicator.removeClass('disabled');
@@ -2230,7 +2232,6 @@ function update_feed_subscribes(callback){
 				if(account!=current_user){
 					setTimeout(function(){
 						feed_load(account,false,function(err,result){
-							console.log('feed_load from update_feed_subscribes',err,result);
 							if(!err){
 								update_feed_result(result);
 							}
