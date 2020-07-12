@@ -1158,14 +1158,15 @@ function unsubscribe(el){
 
 function load_new_objects(el){
 	let indicator=$(el);
+	let objects=indicator.closest('.objects');
 	let feed_time=0;
-	if(typeof indicator.closest('.objects').data('feed-time') !== 'undefined'){
-		feed_time=parseInt(indicator.closest('.objects').data('feed-time'));
+	if(typeof objects.data('feed-time') !== 'undefined'){
+		feed_time=parseInt(objects.data('feed-time'));
 	}
 	let update_t=db.transaction(['feed'],'readonly');
 	let update_q=update_t.objectStore('feed');
 	let new_feed_time=0;
-	let objects=[];
+	let new_objects=[];
 	let update_req;
 	let check_level=level;
 	if(0==feed_time){
@@ -1180,30 +1181,30 @@ function load_new_objects(el){
 			let item=cur.value;
 			if(0==new_feed_time){
 				new_feed_time=item.time;
-				indicator.closest('.objects').data('feed-time',new_feed_time);
+				objects.data('feed-time',new_feed_time);
 			}
-			objects.push(item);
+			new_objects.push(item);
 			cur.continue();
 		}
 		else{
-			console.log('load_new_objects end cursor',objects);
-			for(let i in objects){
+			console.log('load_new_objects end cursor',new_objects);
+			for(let i in new_objects){
 				if(check_level==level){
-					let object=objects[i];
+					let object=new_objects[i];
 					let object_view=render_object(object.account,object.block,'feed');
 					indicator.before(object_view);
 				}
 			}
+			setTimeout(function(){
+				$(window)[0].scrollTo({behavior:'smooth',top:(indicator.offset().top>400?indicator.offset().top-100:indicator.offset().top)});
+				indicator.data('items',0);
+				indicator.html(ltmp_arr.feed_no_new_objects);
+				indicator.insertBefore(objects.find('.object:first-child')[0]);
+				indicator.removeClass('show');
+				indicator.removeClass('disabled');
+			},200);
 		}
 	};
-	setTimeout(function(){
-		$(window)[0].scrollTo({behavior:'smooth',top:(indicator.offset().top>400?indicator.offset().top-100:indicator.offset().top)});
-		indicator.data('items',0);
-		indicator.html(ltmp_arr.feed_no_new_objects);
-		indicator.insertBefore(indicator.closest('.objects').find('.object:first-child'));
-		indicator.removeClass('show');
-		indicator.removeClass('disabled');
-	},100);
 }
 
 var address_bar_blur=function(event){
