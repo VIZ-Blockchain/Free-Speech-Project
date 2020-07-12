@@ -178,11 +178,6 @@ function save_feed_settings(view){
 	settings.feed_load_by_timer=tab.find('input[name="feed_load_by_timer"]').prop("checked");
 	settings.feed_load_by_surf=tab.find('input[name="feed_load_by_surf"]').prop("checked");
 
-	let energy_str=tab.find('input[name="energy"]').val();
-	energy_str=fast_str_replace(',','.',energy_str);
-	settings.energy=parseInt(parseFloat(energy_str)*100);
-	settings.silent_award=tab.find('input[name="silent_award"]').prop("checked");
-
 	let settings_json=JSON.stringify(settings);
 	localStorage.setItem(storage_prefix+'settings',settings_json);
 
@@ -230,6 +225,11 @@ function save_settings(view){
 		settings.object_cache_ttl=default_settings.object_cache_ttl;
 	}
 	tab.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
+
+	let energy_str=tab.find('input[name="energy"]').val();
+	energy_str=fast_str_replace(',','.',energy_str);
+	settings.energy=parseInt(parseFloat(energy_str)*100);
+	settings.silent_award=tab.find('input[name="silent_award"]').prop("checked");
 
 	let settings_json=JSON.stringify(settings);
 	localStorage.setItem(storage_prefix+'settings',settings_json);
