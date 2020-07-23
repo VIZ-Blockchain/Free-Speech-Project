@@ -928,7 +928,7 @@ div.avatar:hover .shadow{
 	top:-100px;
 	opacity:0;
 }
-@media only screen and (min-width:600px) and (max-width:1200px){
+@media only screen and (min-width:751px) and (max-width:1200px){
 	body{
 		font-size:16px;
 	}
@@ -953,13 +953,18 @@ div.avatar:hover .shadow{
 		font-size:14px;
 	}
 }
-@media only screen and (min-width:0) and (max-width:600px){
+@media only screen and (min-width:0) and (max-width:750px){
 	body{
 		font-size:18px;
 	}
+	.content{
+		width:100vw;
+		min-width:auto;
+		max-width:600px;
+		margin:0;
+	}
 	.view{
-		min-width:600px;
-		border:0;
+		width:100vw;
 	}
 	.header{
 		height:60px;
@@ -992,7 +997,7 @@ div.avatar:hover .shadow{
 		margin:0;
 		padding:0;
 		line-height:50px;
-		min-width:600px;
+		width:100vw;
 		z-index:10;
 		background:#fff;
 		min-height:100vh;
@@ -1026,5 +1031,10 @@ div.avatar:hover .shadow{
 		left:15px;
 		top:-1px;
 		color:#1c98e5;
+	}
+}
+@media only screen and (min-width:0) and (max-width:600px){
+	.view{
+		border:0;
 	}
 }
