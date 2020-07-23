@@ -928,7 +928,31 @@ div.avatar:hover .shadow{
 	top:-100px;
 	opacity:0;
 }
-
+@media only screen and (min-width:600px) and (max-width:1200px){
+	body{
+		font-size:16px;
+	}
+	.header{
+		height:60px;
+		line-height:52px;
+	}
+	.header .caption{
+		line-height:58px;
+	}
+	.header-link-wrapper{
+		top:14px;
+	}
+	.header-link{
+		font-size:16px;
+		line-height:20px;
+	}
+	.content-view input{
+		font-size:16px;
+	}
+	.input-addon{
+		font-size:14px;
+	}
+}
 @media only screen and (min-width:0) and (max-width:600px){
 	body{
 		font-size:18px;
@@ -957,7 +981,6 @@ div.avatar:hover .shadow{
 	}
 	.input-addon{
 		font-size:16px;
-		margin-bottom:10px;
 	}
 	div.menu{
 		display:none;
