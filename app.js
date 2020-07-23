@@ -6,6 +6,7 @@ var is_safari=navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
 			navigator.userAgent &&
 			navigator.userAgent.indexOf('CriOS') == -1 &&
 			navigator.userAgent.indexOf('FxiOS') == -1;
+var is_firefox=navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 
 var api_gates=[
 	'https://node.viz.plus/',
@@ -1069,7 +1070,9 @@ function subscribe(el){
 						add_q=add_t.objectStore('objects_'+check_user);
 						add_q.add(item_i);
 						if(!is_safari){
-							add_t.commit();
+							if(!is_firefox){
+								add_t.commit();
+							}
 						}
 					}
 					feed_load(check_user,false,function(err,result){console.log('feed load by subscribe',err,result);});
@@ -1122,7 +1125,9 @@ function unsubscribe(el){
 				add_q=add_t.objectStore('objects');
 				add_q.add(item_i);
 				if(!is_safari){
-					add_t.commit();
+					if(!is_firefox){
+						add_t.commit();
+					}
 				}
 			}
 			users_table_diff.push([check_user,false]);
@@ -1685,7 +1690,9 @@ function update_user_profile(account,callback){
 							let add_q=add_t.objectStore('users');
 							add_q.add(obj);
 							if(!is_safari){
-								add_t.commit();
+								if(!is_firefox){
+									add_t.commit();
+								}
 							}
 							add_t.oncomplete=function(e){
 								callback(false,obj);
@@ -1852,7 +1859,9 @@ function feed_add(account,block,time,callback){
 	};
 	add_q.add(obj);
 	if(!is_safari){
-		add_t.commit();
+		if(!is_firefox){
+			add_t.commit();
+		}
 	}
 	add_t.oncomplete=function(e){
 		callback(false,obj);
@@ -1986,7 +1995,9 @@ function parse_object(account,block,callback){
 							}
 							add_q.add(obj);
 							if(!is_safari){
-								add_t.commit();
+								if(!is_firefox){
+									add_t.commit();
+								}
 							}
 							if(settings.feed_load_by_surf){
 								if(db.objectStoreNames.contains('objects_'+account)){
@@ -2044,7 +2055,9 @@ function parse_object(account,block,callback){
 									};
 									reply_add_q.add(reply_obj);
 									if(!is_safari){
-										reply_add_t.commit();
+										if(!is_firefox){
+											reply_add_t.commit();
+										}
 									}
 									reply_add_t.oncomplete=function(e){
 										callback(false,obj);
