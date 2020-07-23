@@ -632,6 +632,7 @@ div.menu.short .primary a .icon{
 	text-overflow: ellipsis;
 	cursor:pointer;
 	position:relative;
+	word-break:break-all;
 }
 .object.type-text-preview .content-view[data-href]:before{
 	content:'';
