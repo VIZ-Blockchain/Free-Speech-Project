@@ -3769,7 +3769,14 @@ function is_mobile(){
 	return (window.innerWidth<=600);
 }
 
+function change_viewport(){
+	var width=document.documentElement.clientWidth * window.devicePixelRatio;
+	viewport=document.querySelector("meta[name=viewport]");
+	viewport.setAttribute('content','width=' + width + ', initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+}
+
 function main_app(){
+	change_viewport();
 	clear_feed();
 	clear_users_objects();
 	clear_cache();
