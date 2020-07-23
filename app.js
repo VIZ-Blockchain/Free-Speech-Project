@@ -756,14 +756,15 @@ function render_menu(){
 }
 
 function render_session(){
+	let toggle_menu=ltmp(ltmp_arr.toggle_menu,{title:ltmp_arr.toggle_menu_title,icon:ltmp_arr.icon_menu});
 	if(current_user){
 		get_user(current_user,false,function(err,result){
 			if(!err){
 				profile=JSON.parse(result.profile);
-				$('div.menu .session').html(ltmp(ltmp_arr.menu_session_account,{'account':result.account,'nickname':profile.nickname,'avatar':profile.avatar}));
+				$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_account,{'account':result.account,'nickname':profile.nickname,'avatar':profile.avatar}));
 			}
 			else{
-				$('div.menu .session').html(ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_error}));
+				$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_error}));
 			}
 		});
 	}
@@ -1341,22 +1342,37 @@ function app_mouse(e){
 		setTimeout(function(){wrapper.remove();},1000);
 	}
 	if($(target).hasClass('toggle-menu')){
-		if($('div.menu').hasClass('hidden')){
+		if(is_mobile()){
+			clearTimeout(mobile_hide_menu_timer);
 			$('div.menu').removeClass('hidden');
-			menu_status='full';
-			localStorage.setItem(storage_prefix+'menu_status',menu_status);
+			$('div.menu').removeClass('short');
+			if($('div.menu').hasClass('show')){
+				$('body').removeClass('noscroll');
+				$('div.menu').removeClass('show');
+			}
+			else{
+				$('div.menu').addClass('show');
+				$('body').addClass('noscroll');
+			}
 		}
 		else{
-			if($('div.menu').hasClass('short')){
-				$('div.menu').addClass('hidden');
-				$('div.menu').removeClass('short');
-				menu_status='hidden';
+			if($('div.menu').hasClass('hidden')){
+				$('div.menu').removeClass('hidden');
+				menu_status='full';
 				localStorage.setItem(storage_prefix+'menu_status',menu_status);
 			}
 			else{
-				$('div.menu').addClass('short');
-				menu_status='short';
-				localStorage.setItem(storage_prefix+'menu_status',menu_status);
+				if($('div.menu').hasClass('short')){
+					$('div.menu').addClass('hidden');
+					$('div.menu').removeClass('short');
+					menu_status='hidden';
+					localStorage.setItem(storage_prefix+'menu_status',menu_status);
+				}
+				else{
+					$('div.menu').addClass('short');
+					menu_status='short';
+					localStorage.setItem(storage_prefix+'menu_status',menu_status);
+				}
 			}
 		}
 	}
@@ -2760,7 +2776,15 @@ function parse_fullpath(){
 var path_parts;
 var check_account='';
 
+var mobile_hide_menu_timer=0;
 function view_path(location,state,save_state,update){
+	if(is_mobile()){
+		clearTimeout(mobile_hide_menu_timer);
+		mobile_hide_menu_timer=setTimeout(function(){
+			$('body').removeClass('noscroll');
+			$('div.menu').removeClass('show');
+		},500);
+	}
 	//save to history browser
 	save_state=typeof save_state==='undefined'?false:save_state;
 	//update current level? not work now
@@ -3739,6 +3763,10 @@ function check_load_more(){
 			}
 		}
 	});
+}
+
+function is_mobile(){
+	return (window.innerWidth<=600);
 }
 
 function main_app(){
