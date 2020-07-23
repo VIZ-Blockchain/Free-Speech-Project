@@ -1441,6 +1441,17 @@ function app_mouse(e){
 			save_settings(view);
 		}
 	}
+	if($(target).hasClass('reset-database-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			let view=$(target).closest('.view');
+			let tab=view.find('.content-view[data-tab="main"]');
+			tab.find('.submit-button-ring').addClass('show');
+			tab.find('.error').html('');
+			tab.find('.success').html('');
+			full_reset_db();
+		}
+	}
 	if($(target).hasClass('reset-settings-action')){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
