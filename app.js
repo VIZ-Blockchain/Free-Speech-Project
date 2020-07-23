@@ -3766,14 +3766,14 @@ function check_load_more(){
 }
 
 function is_mobile(){
-	return (window.innerWidth<=600);
+	return ((window.innerWidth*window.devicePixelRatio)<=600);
 }
 
 function change_viewport(){
 	var width=document.documentElement.clientWidth*window.devicePixelRatio;
 	viewport=document.querySelector('meta[name=viewport]');
 	viewport.setAttribute('content','width='+width+', initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-	document.documentElement.style.transform='scale( 1 / window.devicePixelRatio )';
+	document.documentElement.style.transform='scale( 1 / '+window.devicePixelRatio+' )';
 	document.documentElement.style.transformOrigin='top left';
 }
 
