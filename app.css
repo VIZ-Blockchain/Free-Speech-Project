@@ -1,7 +1,12 @@
 body{
 	background:#fff;
+	color:#000;
 	font-size:15px;
 	font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial;
+}
+body.night{
+	background:#14202c;
+	color:#fff;
 }
 body.noscroll{
 	overflow:hidden;
@@ -22,6 +27,10 @@ input,textarea{
 	outline:none;
 	font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial;
 }
+body.night input,body.night textarea{
+	background:#14202c;
+	color:#fff;
+}
 
 .content{
 	margin:0 auto;
@@ -36,7 +45,7 @@ input,textarea{
 	display:none;
 	width:598px;
 	min-height:100vh;
-	border:1px solid rgba(204, 204, 221, 0.6);
+	border:1px solid rgba(204, 204, 221, 0.5);
 	border-top:0;
 	border-bottom:0;
 }
@@ -50,6 +59,9 @@ i.icon{
 	width:35px;
 	text-align:center;
 	line-height:35px;
+	outline:none;
+	-webkit-tap-highlight-color:rgba(0,0,0,0);
+	-webkit-tap-highlight-color:transparent;
 
 	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
 	-moz-transition:all 0.3s ease-out;  /* FF4+ */
@@ -106,6 +118,16 @@ div.menu{
 	font-size:19px;
 	min-width:275px;
 }
+div.menu a,.header a{
+	-webkit-touch-callout:none;
+	-webkit-user-select:none;
+	-khtml-user-select:none;
+	-moz-user-select:none;
+	-ms-user-select:none;
+	user-select:none;
+	-webkit-tap-highlight-color:rgba(0,0,0,0);
+	-webkit-tap-highlight-color:transparent;
+}
 div.menu .toggle-menu{
 	display:none;
 }
@@ -133,7 +155,7 @@ div.menu .session .account-name{
     white-space:nowrap;
 }
 div.menu .session .account-login{
-	color:#99a;
+	color:rgba(165, 180, 192, 0.7);
 	text-overflow:ellipsis;
     width:176px;
     overflow:hidden;
@@ -272,7 +294,7 @@ div.menu.short .primary a .icon{
 	width:100%;
 	line-height:24px;
 	padding:5px 10px;
-	border:1px solid #ccd;
+	border:1px solid rgba(204, 204, 221, 0.5);
 	border-radius:18px;
 	overflow:hidden;
 }
@@ -355,6 +377,9 @@ div.menu.short .primary a .icon{
 	cursor:pointer;
 	outline:0;
 }
+body.night .notifications .notify-wrapper .notify{
+	background-color:#14202c;
+}
 .notifications .notify-wrapper .notify .title{
 	font-weight:bold;
 	pointer-events:none;
@@ -379,8 +404,11 @@ div.menu.short .primary a .icon{
 	position:relative;
 	display:block;
 	padding:10px 15px;
-	border-bottom:1px solid rgba(204, 204, 221, 0.6);
+	border-bottom:1px solid rgba(204, 204, 221, 0.5);
 	color:#000;
+}
+body.night .objects .object{
+	color:#fff;
 }
 .objects .object.type-text-loading{
 	border-bottom:none;
@@ -460,15 +488,21 @@ div.menu.short .primary a .icon{
 	font-weight:bold;
 }
 .author-column .profile-link{
-	color:#99a;
+	color:rgba(96, 112, 124, 0.7);
 	margin-left:5px;
+}
+body.night .author-column .profile-link{
+	color:rgba(165, 180, 192, 0.7);
 }
 .author-column .short-date-view::before{
 	content:"·";
 	margin:0 5px;
 }
 .author-column .short-date-view{
-	color:#99a;
+	color:rgba(96, 112, 124, 0.7);
+}
+body.night .author-column .short-date-view{
+	color:rgba(165, 180, 192, 0.7);
 }
 .object.type-text-preview .object-column{
 	flex-direction:column;
@@ -485,7 +519,10 @@ div.menu.short .primary a .icon{
 }
 .reply-view{
 	margin:2px 0;
-	color:#596c7c;
+	color:rgba(96, 112, 124, 0.7);
+}
+body.night .reply-view{
+	color:rgba(165, 180, 192, 0.7);
 }
 .object.type-text .reply-view{
 	margin:0;
@@ -498,7 +535,10 @@ div.menu.short .primary a .icon{
 	margin: 0 15px;
 	margin-top: 10px;
 	margin-bottom: 5px;
-	color:#596c7c;
+	color:rgba(96, 112, 124, 0.7);
+}
+body.night .share-view{
+	color:rgba(165, 180, 192, 0.7);
 }
 .object.type-text .share-view{
 	margin:0;
@@ -670,6 +710,25 @@ div.menu.short .primary a .icon{
 .object.type-text .content-view a{
 	color:#1c98e5;
 }
+body.night .object.type-text-preview .content-view[data-href]:before{
+	background:-moz-linear-gradient(top, rgba(20, 32, 44, 0) 0%, #14202c 100%);
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(20, 32, 44, 0)), color-stop(100%, #14202c));
+	background:-webkit-linear-gradient(top, rgba(20, 32, 44, 0) 0%, #14202c 100%);
+	background:-o-linear-gradient(top, rgba(20, 32, 44, 0) 0%, #14202c 100%);
+	background:-ms-linear-gradient(top, rgba(20, 32, 44, 0) 0%, #14202c 100%);
+	background:linear-gradient(top, rgba(20, 32, 44, 0) 0%, #14202c 100%);
+}
+body.night .object.type-text-preview:hover .content-view[data-href]:before{
+	background:-moz-linear-gradient(top, rgba(20, 38, 54, 0) 0%, rgb(20, 38, 54) 100%);
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(20, 38, 54, 0)), color-stop(100%, rgb(20, 38, 54)));
+	background:-webkit-linear-gradient(top, rgba(20, 38, 54, 0) 0%, rgb(20, 38, 54) 100%);
+	background:-o-linear-gradient(top, rgba(20, 38, 54, 0) 0%, rgb(20, 38, 54) 100%);
+	background:-ms-linear-gradient(top, rgba(20, 38, 54, 0) 0%, rgb(20, 38, 54) 100%);
+	background:linear-gradient(top, rgba(20, 38, 54, 0) 0%, rgb(20, 38, 54) 100%);
+}
+body.night .object.type-text .content-view a{
+	color:#1c98e5;
+}
 .content-view p{
 	margin-bottom:5px;
 }
@@ -681,7 +740,7 @@ div.menu.short .primary a .icon{
 	width:100%;
 	line-height:20px;
 	padding:5px 10px;
-	border:1px solid #ccd;
+	border:1px solid rgba(165, 180, 192, 0.7);
 	border-radius:15px;
 }
 .content-view input[type="checkbox"]{
@@ -694,7 +753,7 @@ div.menu.short .primary a .icon{
 	height:30vh;
 	line-height:20px;
 	padding:5px 10px;
-	border:1px solid #ccd;
+	border:1px solid rgba(165, 180, 192, 0.7);
 	border-radius:15px;
 }
 .input-addon{
@@ -723,21 +782,34 @@ div.menu.short .primary a .icon{
 .button:hover{
 	background:#1a83c4;
 }
-.white-button{
+.neutral-button{
 	background:#fff;
 	color:#bbb !important;
 	border:2px solid #eee;
 }
-.white-button:hover{
+.neutral-button:hover{
 	background:#fff;
 	color:#aaa !important;
 	border:2px solid #ccc;
+}
+body.night .neutral-button{
+	background:#101520;
+	color:#666 !important;
+	border:2px solid #111;
+}
+body.night .neutral-button:hover{
+	background:#101520;
+	color:#bbb !important;
+	border:2px solid #222;
 }
 .button.disabled{
 	opacity:0.5;
 }
 .error{
-	color:#e90b0b;
+	color:rgba(96, 112, 124, 0.7);
+}
+body.night .error{
+	color:rgba(165, 180, 192, 0.7);
 }
 .success{
 	color:#1a83c4;
@@ -746,7 +818,7 @@ div.menu.short .primary a .icon{
 	text-decoration:underline;
 }
 .object.type-text .date-view{
-	color:#99a;
+	color:rgba(165, 180, 192, 0.7);
 	font-size:18px;
 	margin:5px 0;
 }
@@ -764,7 +836,7 @@ div.menu.short .primary a .icon{
 	-webkit-box-direction:normal;
 	-webkit-box-orient:horizontal;
 	justify-content:space-between;
-	border-top:1px solid #dde;
+	border-top:1px solid rgba(204, 204, 221, 0.5);
 	margin:10px 0;
 	padding-top:10px;
 }
@@ -783,7 +855,7 @@ div.menu.short .primary a .icon{
 	-webkit-box-direction:normal;
 	-webkit-box-orient:horizontal;
 	justify-content:flex-start;
-	border-bottom:1px solid #dde;
+	border-bottom:1px solid rgba(204, 204, 221, 0.5);
 	margin-bottom:10px;
 	overflow-x:auto;
 }
@@ -857,6 +929,10 @@ div.avatar:hover .shadow{
 	border-color:rgba(0, 0, 0, 0.3) transparent rgba(0, 0, 0, 0.3) transparent;
 	animation:ring 1.5s linear infinite;
 }
+body.night .submit-button-ring:after {
+	border:5px solid #000;
+	border-color:rgba(255, 255, 255, 0.3) transparent rgba(255, 255, 255, 0.3) transparent;
+}
 
 .loading-ring{
 	display:inline-block;
@@ -875,6 +951,11 @@ div.avatar:hover .shadow{
 	border-color:rgba(0, 0, 0, 0.3) transparent rgba(0, 0, 0, 0.3) transparent;
 	animation:ring 1.5s linear infinite;
 }
+body.night .loading-ring:after {
+	border:5px solid #000;
+	border-color:rgba(255, 255, 255, 0.3) transparent rgba(255, 255, 255, 0.3) transparent;
+}
+
 @keyframes ring {
 	0% {
 		transform: rotate(0deg);
@@ -911,14 +992,33 @@ div.avatar:hover .shadow{
 .load-more-end-notice{
 	text-align:center;
 	padding:10vh 0;
-	color:#888;
+	color:rgba(96, 112, 124, 0.7);
 	line-height:50px;
+}
+body.night .load-more-end-notice{
+	color:rgba(165, 180, 192, 0.7);
 }
 .error-notice{
 	text-align:center;
 	padding:20vh 0;
 	font-size:20px;
-	color:#e90b0b;
+	color:rgba(96, 112, 124, 0.7);
+}
+body.night .error-notice{
+	color:rgba(165, 180, 192, 0.7);
+}
+div.menu .secondary{
+	position:fixed;
+	bottom:0;
+	margin:10px;
+	font-size:14px;
+	color:rgba(96, 112, 124, 0.5);
+}
+body.night div.menu .secondary{
+	color:rgba(165, 180, 192, 0.5);
+}
+div.menu .secondary a{
+	text-decoration:underline;
 }
 
 .profile{
@@ -1021,6 +1121,9 @@ div.avatar:hover .shadow{
 		background:#fff;
 		min-height:100vh;
 	}
+	body.night div.menu{
+		background:#14202c;
+	}
 	div.menu.show{
 		display:block;
 	}
@@ -1034,7 +1137,7 @@ div.avatar:hover .shadow{
 		padding:0;
 		text-align:center;
 		overflow-y:scroll;
-		height:calc(100vh - 75px);/* minus session height */
+		height:calc(100vh - 75px - 60px);/* minus session height and secondary menu height */
 	}
 	div.menu .primary div{
 		text-align:center;
