@@ -143,8 +143,8 @@ var default_settings={
 	feed_subscribe_replies:false,
 	feed_subscribe_shares:true,
 	feed_subscribe_mentions:true,
-	feed_load_by_timer:true,
-	feed_load_by_surf:false,
+	//feed_load_by_timer:true,
+	//feed_load_by_surf:false,
 	energy:100,
 	silent_award:false,
 };
@@ -176,8 +176,8 @@ function save_feed_settings(view){
 	settings.feed_subscribe_shares=tab.find('input[name="feed_subscribe_shares"]').prop("checked");
 	settings.feed_subscribe_mentions=tab.find('input[name="feed_subscribe_mentions"]').prop("checked");
 
-	settings.feed_load_by_timer=tab.find('input[name="feed_load_by_timer"]').prop("checked");
-	settings.feed_load_by_surf=tab.find('input[name="feed_load_by_surf"]').prop("checked");
+	//settings.feed_load_by_timer=tab.find('input[name="feed_load_by_timer"]').prop("checked");
+	//settings.feed_load_by_surf=tab.find('input[name="feed_load_by_surf"]').prop("checked");
 
 	let settings_json=JSON.stringify(settings);
 	localStorage.setItem(storage_prefix+'settings',settings_json);
@@ -1999,45 +1999,44 @@ function parse_object(account,block,callback){
 									add_t.commit();
 								}
 							}
-							if(settings.feed_load_by_surf){
-								if(db.objectStoreNames.contains('objects_'+account)){
-									if(account!=current_user){
-										let feed=false;
-										if(settings.feed_subscribe_text){
-											if(!reply){
-												if(!share){
-													feed=true;
-												}
-											}
-										}
-										if(settings.feed_subscribe_shares){
-											if(share){
+							//if(settings.feed_load_by_surf){}
+							if(db.objectStoreNames.contains('objects_'+account)){
+								if(account!=current_user){
+									let feed=false;
+									if(settings.feed_subscribe_text){
+										if(!reply){
+											if(!share){
 												feed=true;
 											}
 										}
-										if(settings.feed_subscribe_replies){
-											if(reply){
+									}
+									if(settings.feed_subscribe_shares){
+										if(share){
+											feed=true;
+										}
+									}
+									if(settings.feed_subscribe_replies){
+										if(reply){
+											feed=true;
+										}
+									}
+									else{
+										if(reply){
+											feed=false;
+											if(parent_account==current_user){
 												feed=true;
 											}
 										}
-										else{
-											if(reply){
-												feed=false;
-												if(parent_account==current_user){
-													feed=true;
-												}
+									}
+									if(settings.feed_subscribe_mentions){
+										if(typeof obj.data.d.text !== 'undefined'){
+											if(-1!=obj.data.d.text.indexOf('@'+current_user)){//mention
+												feed=true;
 											}
 										}
-										if(settings.feed_subscribe_mentions){
-											if(typeof obj.data.d.text !== 'undefined'){
-												if(-1!=obj.data.d.text.indexOf('@'+current_user)){//mention
-													feed=true;
-												}
-											}
-										}
-										if(feed){
-											feed_add(account,block);
-										}
+									}
+									if(feed){
+										feed_add(account,block);
 									}
 								}
 							}
@@ -2315,15 +2314,11 @@ function update_feed_subscribes(callback){
 var update_feed_timer=0;
 function update_feed(){
 	clearTimeout(update_feed_timer);
-	if(settings.feed_load_by_timer){
-		console.log('update feed trigger');
-		update_feed_subscribes(function(){
-			update_feed_timer=setTimeout(function(){update_feed()},60000);//1min
-		});
-	}
-	else{
+	//if(settings.feed_load_by_timer){}
+	console.log('update feed trigger');
+	update_feed_subscribes(function(){
 		update_feed_timer=setTimeout(function(){update_feed()},60000);//1min
-	}
+	});
 }
 
 function clear_users_objects(){
@@ -2726,8 +2721,8 @@ function view_app_settings(view,path_parts,query,title){
 		$('input[name="feed_subscribe_shares"]').prop("checked",settings.feed_subscribe_shares);
 		$('input[name="feed_subscribe_mentions"]').prop("checked",settings.feed_subscribe_mentions);
 
-		$('input[name="feed_load_by_timer"]').prop("checked",settings.feed_load_by_timer);
-		$('input[name="feed_load_by_surf"]').prop("checked",settings.feed_load_by_surf);
+		//$('input[name="feed_load_by_timer"]').prop("checked",settings.feed_load_by_timer);
+		//$('input[name="feed_load_by_surf"]').prop("checked",settings.feed_load_by_surf);
 	}
 
 	$('.loader').css('display','none');
