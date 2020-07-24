@@ -258,6 +258,9 @@ div.menu.short .primary a .icon{
 	margin-left:15px;
 	font-weight:bold;
 	line-height:45px;
+	height:50px;
+	overflow:hidden;
+	word-break:break-all;
 }
 .header .link{
 	padding:0 10px;
@@ -782,13 +785,28 @@ div.menu.short .primary a .icon{
 	justify-content:flex-start;
 	border-bottom:1px solid #dde;
 	margin-bottom:10px;
+	overflow-x:auto;
+}
+.tabs::-webkit-scrollbar{
+	width:2px;
+	height:2px;
+}
+.tabs::-webkit-scrollbar-track{
+	background:rgba(200, 200, 220, 0.3);
+}
+.tabs::-webkit-scrollbar-thumb{
+	background:rgba(200, 200, 220, 1.0);
+}
+.tabs::-webkit-scrollbar-thumb:hover{
+	background:rgba(150, 150, 150, 1.0);
 }
 .tabs a{
 	display:inline-block;
 	text-align:center;
 	flex-direction:column;
 	flex-basis:25%;
-	padding:10px 0;
+	padding:14px 8px;
+	white-space:nowrap;
 }
 .tabs a:hover{
 	color:#1c98e5;
