@@ -155,11 +155,14 @@ div.menu .session .account-name{
     white-space:nowrap;
 }
 div.menu .session .account-login{
-	color:rgba(165, 180, 192, 0.7);
+	color:rgba(96, 112, 124, 0.7);
 	text-overflow:ellipsis;
     width:176px;
     overflow:hidden;
     white-space:nowrap;
+}
+body.night div.menu .session .account-login{
+	color:rgba(165, 180, 192, 0.7);
 }
 div.menu .primary{
 	padding-top:10px;
