@@ -2051,16 +2051,16 @@ function parse_object(account,block,callback){
 					account:account,
 					block:block,
 					data:item,
-					is_reply:false,
-					is_share:false,
+					is_reply:0,
+					is_share:0,
 				};
 				if(reply){
-					obj.is_reply=true;
+					obj.is_reply=1;
 					obj.parent_account=parent_account;
 					obj.parent_block=parent_block;
 				}
 				if(share){
-					obj.is_share=true;
+					obj.is_share=1;
 					obj.parent_account=parent_account;
 					obj.parent_block=parent_block;
 				}
