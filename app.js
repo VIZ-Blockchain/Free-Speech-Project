@@ -1851,6 +1851,7 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 			}
 			if(object_result.account!=current_user){
 				let feed=false;
+				let check_ignore=false;
 				if(settings.feed_subscribe_text){
 					if(!object_result.is_reply){
 						if(!object_result.is_share){
@@ -1869,11 +1870,15 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 							}
 							add_notify(ltmp(ltmp_arr.notify_arr.new_share,{account:object_result.account}),share_text,link);
 						}
+						else{
+							check_ignore=object_result.parent_account;
+						}
 					}
 				}
 				if(settings.feed_subscribe_replies){
 					if(object_result.is_reply){
 						feed=true;
+						check_ignore=object_result.parent_account;
 					}
 				}
 				else{
@@ -1898,10 +1903,22 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 					}
 				}
 				if(feed){
-					result.push({block:object_result.block,time:object_result.data.timestamp});
+					if(!check_ignore){
+						result.push({block:object_result.block,time:object_result.data.timestamp});
+						feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
+					}
+					else{
+						get_user(check_ignore,false,function(check_err,check_result){
+							if(!check_err){
+								if(2!=check_result.status){//not ignored
+									result.push({block:object_result.block,time:object_result.data.timestamp});
+								}
+							}
+							feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
+						});
+					}
 				}
 			}
-			feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
 		}
 	});
 }
