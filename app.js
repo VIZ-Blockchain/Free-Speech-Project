@@ -636,10 +636,11 @@ var ltmp_arr={
 	icon_settings:`<i class="icon settings"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></i>`,
 	icon_menu:`<i class="icon menu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="23" height="23" stroke="none" fill="currentColor"><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></svg></i>`,
 	icon_close:`<i class="icon close"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" stroke="none" fill="currentColor"><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"/></svg></i>`,
-	icon_subscribed:`<i class="icon subscribed"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20.294 8.292L15.994 12.584 14.702 11.292 13.288 12.706 15.994 15.41 21.706 9.708zM4 8c0 2.28 1.72 4 4 4s4-1.72 4-4-1.72-4-4-4S4 5.72 4 8zM10 8c0 1.178-.822 2-2 2S6 9.178 6 8s.822-2 2-2S10 6.822 10 8zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
-	icon_ignore:`<i class="icon ignore"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.706 15.706L17.999 13.413 20.293 15.707 21.707 14.293 19.414 12 21.707 9.707 20.293 8.293 18 10.586 15.707 8.293 14.293 9.707 16.585 11.999 14.292 14.292zM12 8c0-2.28-1.72-4-4-4S4 5.72 4 8s1.72 4 4 4S12 10.28 12 8zM6 8c0-1.178.822-2 2-2s2 .822 2 2-.822 2-2 2S6 9.178 6 8zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
 	icon_subscribe:`<i class="icon subscribe"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 8L17 8 17 11 14 11 14 13 17 13 17 16 19 16 19 13 22 13 22 11 19 11zM4 8c0 2.28 1.72 4 4 4s4-1.72 4-4-1.72-4-4-4S4 5.72 4 8zM10 8c0 1.178-.822 2-2 2S6 9.178 6 8s.822-2 2-2S10 6.822 10 8zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
+	icon_subscribed:`<i class="icon subscribed"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20.294 8.292L15.994 12.584 14.702 11.292 13.288 12.706 15.994 15.41 21.706 9.708zM4 8c0 2.28 1.72 4 4 4s4-1.72 4-4-1.72-4-4-4S4 5.72 4 8zM10 8c0 1.178-.822 2-2 2S6 9.178 6 8s.822-2 2-2S10 6.822 10 8zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
 	icon_unsubscribe:`<i class="icon unsubscribe"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M14 11H22V13H14zM8 4C5.72 4 4 5.72 4 8s1.72 4 4 4 4-1.72 4-4S10.28 4 8 4zM8 10c-1.178 0-2-.822-2-2s.822-2 2-2 2 .822 2 2S9.178 10 8 10zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
+	icon_ignore:`<i class="icon ignore"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.706 15.706L17.999 13.413 20.293 15.707 21.707 14.293 19.414 12 21.707 9.707 20.293 8.293 18 10.586 15.707 8.293 14.293 9.707 16.585 11.999 14.292 14.292zM12 8c0-2.28-1.72-4-4-4S4 5.72 4 8s1.72 4 4 4S12 10.28 12 8zM6 8c0-1.178.822-2 2-2s2 .822 2 2-.822 2-2 2S6 9.178 6 8zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
+	icon_ignored:`<i class="icon ignore"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.706 15.706L17.999 13.413 20.293 15.707 21.707 14.293 19.414 12 21.707 9.707 20.293 8.293 18 10.586 15.707 8.293 14.293 9.707 16.585 11.999 14.292 14.292zM12 8c0-2.28-1.72-4-4-4S4 5.72 4 8s1.72 4 4 4S12 10.28 12 8zM6 8c0-1.178.822-2 2-2s2 .822 2 2-.822 2-2 2S6 9.178 6 8zM4 18c0-1.654 1.346-3 3-3h2c1.654 0 3 1.346 3 3v1h2v-1c0-2.757-2.243-5-5-5H7c-2.757 0-5 2.243-5 5v1h2V18z"/></svg></i>`,
 
 	header_back_action:`<a tabindex="0" class="back-action" title="Назад">{icon}</a>`,
 	header_link:'<div class="link grow"><div class="header-link-wrapper"><input type="text" class="header-link" value="{link}"><div class="header-link-icons">{icons}</div></div></div>',
@@ -651,9 +652,11 @@ var ltmp_arr={
 	user_actions_open:'<div class="user-actions" data-user="{user}">',
 	user_actions_close:'</div>',
 	subscribe_link:'<a tabindex="0" class="subscribe-action" title="Подписаться на пользователя">{icon}</a>',
+	subscribed_link:'<a tabindex="0" class="subscribed-action" title="Вы подписаны на пользователя">{icon}</a>',
 	unsubscribe_link:'<a tabindex="0" class="unsubscribe-action" title="Отписаться от пользователя">{icon}</a>',
 	ignore_link:'<a tabindex="0" class="ignore-action" title="Игнорировать пользователя">{icon}</a>',
-	subscribed_link:'<a tabindex="0" class="subscribed-action" title="Вы подписаны на пользователя">{icon}</a>',
+	ignored_link:'<a tabindex="0" class="ignored-action" title="Вы игнорируете пользователя">{icon}</a>',
+	unignore_link:'<a tabindex="0" class="unignore-action" title="Прекратить игнорировать пользователя">{icon}</a>',
 	edit_profile_link:'<a tabindex="0" data-href="fsp:edit_profile" title="Изменить профиль">{icon_edit_profile}</a>',
 	edit_profile_caption:'Настройка профиля',
 	edit_profile_saved:'Профиль сохранен',
@@ -1040,6 +1043,70 @@ function publish(view){
 	});
 }
 
+function ignore(el){
+	let actions=$(el).closest('.user-actions');
+	let check_user=actions.data('user');
+	let render='';
+
+	let t,q,req;
+	t=db.transaction(['feed'],'readwrite');
+	q=t.objectStore('feed');
+	req=q.index('object').openCursor(IDBKeyRange.lowerBound([check_user,0]),'next');
+	req.onsuccess=function(event){
+		console.log(event);
+		let cur=event.target.result;
+		if(cur){
+			cur.delete();
+			cur.continue();
+		}
+		else{
+			//update user status
+			let update_t=db.transaction(['users'],'readwrite');
+			let update_q=update_t.objectStore('users');
+			let update_req=update_q.index('account').openCursor(IDBKeyRange.only(check_user),'next');
+			update_req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					let item=cur.value;
+					item.status=2;
+					cur.update(item);
+					cur.continue();
+				}
+				else{
+					render+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
+					render+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+					actions.html(render);
+				}
+			};
+		}
+	};
+}
+
+function unignore(el){
+	let actions=$(el).closest('.user-actions');
+	let check_user=actions.data('user');
+	let render='';
+
+	//update user status
+	let update_t=db.transaction(['users'],'readwrite');
+	let update_q=update_t.objectStore('users');
+	let update_req=update_q.index('account').openCursor(IDBKeyRange.only(check_user),'next');
+	update_req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let item=cur.value;
+			item.status=0;
+			cur.update(item);
+			cur.continue();
+		}
+		else{
+			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+			render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+			actions.html(render);
+		}
+	};
+}
+
 function subscribe(el){
 	let actions=$(el).closest('.user-actions');
 	let check_user=actions.data('user');
@@ -1049,7 +1116,7 @@ function subscribe(el){
 	increase_db_version(function(){
 		if(!db.objectStoreNames.contains('objects_'+check_user)){
 			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-			//render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+			render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
 		}
 		else{
 			render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
@@ -1067,7 +1134,7 @@ function subscribe(el){
 				let cur=event.target.result;
 				if(cur){
 					result.push(cur.value);
-					update_req=cur.delete(result);
+					update_req=cur.delete();
 					cur.continue();
 				}
 				else{
@@ -1122,7 +1189,7 @@ function unsubscribe(el){
 		let cur=event.target.result;
 		if(cur){
 			result.push(cur.value);
-			update_req=cur.delete(result);
+			update_req=cur.delete();
 			cur.continue();
 		}
 		else{
@@ -1143,7 +1210,7 @@ function unsubscribe(el){
 				increase_db_version(function(){
 					if(!db.objectStoreNames.contains('objects_'+check_user)){
 						render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-						//render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+						render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
 					}
 					else{
 						render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
@@ -1425,6 +1492,18 @@ function app_mouse(e){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
 			unsubscribe(target);
+		}
+	}
+	if($(target).hasClass('ignore-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			ignore(target);
+		}
+	}
+	if($(target).hasClass('unignore-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			unignore(target);
 		}
 	}
 	if($(target).hasClass('load-new-objects-action')){
@@ -3009,8 +3088,14 @@ function view_path(location,state,save_state,update){
 							else{
 								header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
 								if(!db.objectStoreNames.contains('objects_'+check_account)){
-									header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-									//header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+									if(2==result.status){
+										header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
+										header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+									}
+									else{
+										header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+										header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+									}
 								}
 								else{
 									header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
