@@ -118,7 +118,7 @@ div.menu{
 	font-size:19px;
 	min-width:275px;
 }
-div.menu a,.header a{
+div.menu a,.header a,.actions-view a,.tabs a,.contacts a,.fast-publish-action{
 	-webkit-touch-callout:none;
 	-webkit-user-select:none;
 	-khtml-user-select:none;
