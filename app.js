@@ -307,7 +307,7 @@ const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRa
 
 var db;
 var db_version=1;
-var global_db_version=1;
+var global_db_version=2;
 var need_update_db_version=false;
 var local_global_db_version=localStorage.getItem(storage_prefix+'global_db_version');
 if((null===local_global_db_version)&&(global_db_version>local_global_db_version)){
@@ -400,6 +400,14 @@ function load_db(callback){
 		if(!db.objectStoreNames.contains('notifications')){
 			items_table=db.createObjectStore('notifications',{keyPath:'id',autoIncrement:true});
 			items_table.createIndex('status','status',{unique:false});//status: 0 - unreaded, 1 - readed
+		}
+		else{
+			//new index for feed
+		}
+
+		if(!db.objectStoreNames.contains('awards')){
+			items_table=db.createObjectStore('awards',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('object',['account','block'],{unique:false});//account
 		}
 		else{
 			//new index for feed
@@ -809,75 +817,116 @@ function render_session(){
 function award(link,callback){
 	if(0==link.indexOf('viz://')){
 		let account='';
+		let block=0;
 		link=link.toLowerCase();
 		link=escape_html(link);
 		let pattern = /@[a-z0-9\-\.]*/g;
 		let link_account=link.match(pattern);
 		if(typeof link_account[0] != 'undefined'){
 			account=link_account[0].substr(1);
-			let beneficiaries_list=[];
-			let energy=settings.energy;
-			let memo=link;
-			if(settings.silent_award){
-				memo='';
-			}
-			let predicted_amount=0;
-			let new_energy=0;
-			viz.api.getAccounts([current_user],function(err,response){
-				if(err){
-					console.log(err,response);
-					callback(false);
+			let pattern_block = /\/([0-9]*)\//g;
+			let link_block=link.match(pattern_block);
+			if(typeof link_block[1] != 'undefined'){
+				block=parseInt(fast_str_replace('/','',link_block[1]));
+				let beneficiaries_list=[];
+				let energy=settings.energy;
+				let memo=link;
+				if(settings.silent_award){
+					memo='';
 				}
-				else{
-					if(typeof response[0] === 'undefined'){
+				let predicted_amount=0;
+				let new_energy=0;
+				viz.api.getAccounts([current_user],function(err,response){
+					if(err){
 						console.log(err,response);
 						callback(false);
 					}
 					else{
-						let data=response[0];
-
-						let vesting_shares=parseFloat(data.vesting_shares);
-						let delegated_vesting_shares=parseFloat(data.delegated_vesting_shares);
-						let received_vesting_shares=parseFloat(data.received_vesting_shares);
-						let effective_vesting_shares=vesting_shares + received_vesting_shares - delegated_vesting_shares;
-
-						let last_vote_time=Date.parse(data.last_vote_time);
-						let delta_time=parseInt((new Date().getTime() - last_vote_time+(new Date().getTimezoneOffset()*60000))/1000);
-						let current_energy=data.energy;
-						let new_energy=parseInt(current_energy+(delta_time*10000/432000));//CHAIN_ENERGY_REGENERATION_SECONDS 5 days
-						if(new_energy>10000){
-							new_energy=10000;
+						if(typeof response[0] === 'undefined'){
+							console.log(err,response);
+							callback(false);
 						}
-						new_energy-=energy;
-						let effective_vesting_shares_int=parseInt(effective_vesting_shares*1000000);//to int shares
-						let current_rshares=parseInt(effective_vesting_shares_int*energy/10000);
-						let total_reward_shares=parseInt(dgp.total_reward_shares);
-						total_reward_shares+=current_rshares;
-						let total_reward_fund=parseInt(parseFloat(dgp.total_reward_fund)*1000);//to int tokens
-						let predicted_reward=(total_reward_fund*current_rshares)/total_reward_shares;
-						predicted_reward=predicted_reward*0.9995;//decrease expectations 0.005%
-						predicted_reward=Math.ceil(predicted_reward)/1000;//to float tokens
-						if(isNaN(predicted_reward)){
-							predicted_reward=0;
+						else{
+							let data=response[0];
+
+							let vesting_shares=parseFloat(data.vesting_shares);
+							let delegated_vesting_shares=parseFloat(data.delegated_vesting_shares);
+							let received_vesting_shares=parseFloat(data.received_vesting_shares);
+							let effective_vesting_shares=vesting_shares + received_vesting_shares - delegated_vesting_shares;
+
+							let last_vote_time=Date.parse(data.last_vote_time);
+							let delta_time=parseInt((new Date().getTime() - last_vote_time+(new Date().getTimezoneOffset()*60000))/1000);
+							let current_energy=data.energy;
+							let new_energy=parseInt(current_energy+(delta_time*10000/432000));//CHAIN_ENERGY_REGENERATION_SECONDS 5 days
+							if(new_energy>10000){
+								new_energy=10000;
+							}
+							new_energy-=energy;
+							let effective_vesting_shares_int=parseInt(effective_vesting_shares*1000000);//to int shares
+							let current_rshares=parseInt(effective_vesting_shares_int*energy/10000);
+							let total_reward_shares=parseInt(dgp.total_reward_shares);
+							total_reward_shares+=current_rshares;
+							let total_reward_fund=parseInt(parseFloat(dgp.total_reward_fund)*1000);//to int tokens
+							let predicted_reward=(total_reward_fund*current_rshares)/total_reward_shares;
+							predicted_reward=predicted_reward*0.9995;//decrease expectations 0.005%
+							predicted_reward=Math.ceil(predicted_reward)/1000;//to float tokens
+							if(isNaN(predicted_reward)){
+								predicted_reward=0;
+							}
+							viz.broadcast.award(users[current_user].regular_key,current_user,account,energy,0,memo,beneficiaries_list,function(err,result){
+								if(!err){
+									add_notify(
+										false,
+										ltmp(ltmp_arr.notify_arr.award_success,{account:account}),
+										ltmp(ltmp_arr.notify_arr.award_info,{amount:predicted_reward,percent:(new_energy/100)+'%'})
+									);
+
+									//store awards item
+									let read_t=db.transaction(['awards'],'readwrite');
+									let read_q=read_t.objectStore('awards');
+									let req=read_q.index('object').openCursor(IDBKeyRange.lowerBound([account,block]),'next');
+									let find=false;
+									let obj={
+										account:account,
+										block:block,
+										amount:0
+									};
+									req.onsuccess=function(event){
+										let cur=event.target.result;
+										if(cur){
+											let obj=cur.value;
+											find=true;
+											obj.amount+=predicted_reward;
+											cur.update(obj);
+											cur.continue();
+										}
+										else{
+											if(!find){
+												let add_t=db.transaction(['awards'],'readwrite');
+												let add_q=add_t.objectStore('awards');
+												obj.amount+=predicted_reward;
+												add_q.add(obj);
+												if(!is_safari){
+													if(!is_firefox){
+														add_t.commit();
+													}
+												}
+											}
+										}
+									};
+
+									callback(true);
+								}
+								else{
+									add_notify(false,'',ltmp(ltmp_arr.notify_arr.award_error,{account:account}));
+									console.log(err);
+									callback(false);
+								}
+							});
 						}
-						viz.broadcast.award(users[current_user].regular_key,current_user,account,energy,0,memo,beneficiaries_list,function(err,result){
-							if(!err){
-								add_notify(
-									false,
-									ltmp(ltmp_arr.notify_arr.award_success,{account:account}),
-									ltmp(ltmp_arr.notify_arr.award_info,{amount:predicted_reward,percent:(new_energy/100)+'%'})
-								);
-								callback(true);
-							}
-							else{
-								add_notify(false,'',ltmp(ltmp_arr.notify_arr.award_error,{account:account}));
-								console.log(err);
-								callback(false);
-							}
-						});
 					}
-				}
-			});
+				});
+			}
 		}
 	}
 }
