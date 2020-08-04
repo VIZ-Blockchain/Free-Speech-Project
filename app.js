@@ -884,7 +884,7 @@ function award(link,callback){
 									//store awards item
 									let read_t=db.transaction(['awards'],'readwrite');
 									let read_q=read_t.objectStore('awards');
-									let req=read_q.index('object').openCursor(IDBKeyRange.lowerBound([account,block]),'next');
+									let req=read_q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
 									let find=false;
 									let obj={
 										account:account,
@@ -3526,6 +3526,33 @@ function highlight_links(text){
 	return text;
 }
 
+function check_object_award(account,block){
+	if(typeof account == 'undefined'){
+		return;
+	}
+	if(typeof block == 'undefined'){
+		return;
+	}
+	let t=db.transaction(['awards'],'readonly');
+	let q=t.objectStore('awards');
+	let req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
+	let result=false;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			result=cur.value;
+			cur.continue();
+		}
+		else{
+			if(false!==result){
+				let current_link='viz://@'+account+'/'+block+'/';
+				let actions=$('.view[data-level="'+level+'"] .objects .object[data-link="'+current_link+'"] .actions-view')[0];
+				$(actions).find('.award-action').addClass('success');
+			}
+		}
+	};
+}
+
 function render_object(user,object,type){
 	type=typeof type==='undefined'?'default':type;
 	let render='';
@@ -3895,6 +3922,7 @@ function render_object(user,object,type){
 			timestamp:object.data.timestamp,
 		});
 	}
+	setTimeout(function(){check_object_award(user.account,object.block)},100);
 	return render;
 }
 
