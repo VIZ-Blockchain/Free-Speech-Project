@@ -578,6 +578,8 @@ var ltmp_arr={
 		new_mention:'Упоминание от @{account}',
 	},
 
+	awarded_amount:'Награждено на {amount} Ƶ',
+
 	menu_session_empty:'<div class="avatar"><img src="default.png"></div><a tabindex="0" data-href="fsp:account_settings">{caption}</a>',
 	menu_session_login:'Войти',
 	menu_session_error:'<span class="error">Ошибка</span>',
@@ -814,121 +816,106 @@ function render_session(){
 	}
 }
 
-function award(link,callback){
-	if(0==link.indexOf('viz://')){
-		let account='';
-		let block=0;
-		link=link.toLowerCase();
-		link=escape_html(link);
-		let pattern = /@[a-z0-9\-\.]*/g;
-		let link_account=link.match(pattern);
-		if(typeof link_account[0] != 'undefined'){
-			account=link_account[0].substr(1);
-			let pattern_block = /\/([0-9]*)\//g;
-			let link_block=link.match(pattern_block);
-			if(typeof link_block[1] != 'undefined'){
-				block=parseInt(fast_str_replace('/','',link_block[1]));
-				let beneficiaries_list=[];
-				let energy=settings.energy;
-				let memo=link;
-				if(settings.silent_award){
-					memo='';
+function award(account,block,callback){
+	let link='viz://@'+account+'/'+block+'/';
+	let beneficiaries_list=[];
+	let energy=settings.energy;
+	let memo=link;
+	if(settings.silent_award){
+		memo='';
+	}
+	let predicted_amount=0;
+	let new_energy=0;
+	viz.api.getAccounts([current_user],function(err,response){
+		if(err){
+			console.log(err,response);
+			callback(false);
+		}
+		else{
+			if(typeof response[0] === 'undefined'){
+				console.log(err,response);
+				callback(false);
+			}
+			else{
+				let data=response[0];
+
+				let vesting_shares=parseFloat(data.vesting_shares);
+				let delegated_vesting_shares=parseFloat(data.delegated_vesting_shares);
+				let received_vesting_shares=parseFloat(data.received_vesting_shares);
+				let effective_vesting_shares=vesting_shares + received_vesting_shares - delegated_vesting_shares;
+
+				let last_vote_time=Date.parse(data.last_vote_time);
+				let delta_time=parseInt((new Date().getTime() - last_vote_time+(new Date().getTimezoneOffset()*60000))/1000);
+				let current_energy=data.energy;
+				let new_energy=parseInt(current_energy+(delta_time*10000/432000));//CHAIN_ENERGY_REGENERATION_SECONDS 5 days
+				if(new_energy>10000){
+					new_energy=10000;
 				}
-				let predicted_amount=0;
-				let new_energy=0;
-				viz.api.getAccounts([current_user],function(err,response){
-					if(err){
-						console.log(err,response);
-						callback(false);
+				new_energy-=energy;
+				let effective_vesting_shares_int=parseInt(effective_vesting_shares*1000000);//to int shares
+				let current_rshares=parseInt(effective_vesting_shares_int*energy/10000);
+				let total_reward_shares=parseInt(dgp.total_reward_shares);
+				total_reward_shares+=current_rshares;
+				let total_reward_fund=parseInt(parseFloat(dgp.total_reward_fund)*1000);//to int tokens
+				let predicted_reward=(total_reward_fund*current_rshares)/total_reward_shares;
+				predicted_reward=predicted_reward*0.9995;//decrease expectations 0.005%
+				predicted_reward=Math.ceil(predicted_reward)/1000;//to float tokens
+				if(isNaN(predicted_reward)){
+					predicted_reward=0;
+				}
+				viz.broadcast.award(users[current_user].regular_key,current_user,account,energy,0,memo,beneficiaries_list,function(err,result){
+					if(!err){
+						add_notify(
+							false,
+							ltmp(ltmp_arr.notify_arr.award_success,{account:account}),
+							ltmp(ltmp_arr.notify_arr.award_info,{amount:predicted_reward,percent:(new_energy/100)+'%'})
+						);
+
+						//store awards item
+						let read_t=db.transaction(['awards'],'readwrite');
+						let read_q=read_t.objectStore('awards');
+						let req=read_q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
+						let find=false;
+						let obj={
+							account:account,
+							block:block,
+							amount:0
+						};
+						req.onsuccess=function(event){
+							let cur=event.target.result;
+							if(cur){
+								let obj=cur.value;
+								find=true;
+								obj.amount+=predicted_reward;
+								cur.update(obj);
+								cur.continue();
+							}
+							else{
+								if(!find){
+									let add_t=db.transaction(['awards'],'readwrite');
+									let add_q=add_t.objectStore('awards');
+									obj.amount+=predicted_reward;
+									add_q.add(obj);
+									if(!is_safari){
+										if(!is_firefox){
+											add_t.commit();
+										}
+									}
+								}
+							}
+						};
+
+						callback(true);
 					}
 					else{
-						if(typeof response[0] === 'undefined'){
-							console.log(err,response);
-							callback(false);
-						}
-						else{
-							let data=response[0];
-
-							let vesting_shares=parseFloat(data.vesting_shares);
-							let delegated_vesting_shares=parseFloat(data.delegated_vesting_shares);
-							let received_vesting_shares=parseFloat(data.received_vesting_shares);
-							let effective_vesting_shares=vesting_shares + received_vesting_shares - delegated_vesting_shares;
-
-							let last_vote_time=Date.parse(data.last_vote_time);
-							let delta_time=parseInt((new Date().getTime() - last_vote_time+(new Date().getTimezoneOffset()*60000))/1000);
-							let current_energy=data.energy;
-							let new_energy=parseInt(current_energy+(delta_time*10000/432000));//CHAIN_ENERGY_REGENERATION_SECONDS 5 days
-							if(new_energy>10000){
-								new_energy=10000;
-							}
-							new_energy-=energy;
-							let effective_vesting_shares_int=parseInt(effective_vesting_shares*1000000);//to int shares
-							let current_rshares=parseInt(effective_vesting_shares_int*energy/10000);
-							let total_reward_shares=parseInt(dgp.total_reward_shares);
-							total_reward_shares+=current_rshares;
-							let total_reward_fund=parseInt(parseFloat(dgp.total_reward_fund)*1000);//to int tokens
-							let predicted_reward=(total_reward_fund*current_rshares)/total_reward_shares;
-							predicted_reward=predicted_reward*0.9995;//decrease expectations 0.005%
-							predicted_reward=Math.ceil(predicted_reward)/1000;//to float tokens
-							if(isNaN(predicted_reward)){
-								predicted_reward=0;
-							}
-							viz.broadcast.award(users[current_user].regular_key,current_user,account,energy,0,memo,beneficiaries_list,function(err,result){
-								if(!err){
-									add_notify(
-										false,
-										ltmp(ltmp_arr.notify_arr.award_success,{account:account}),
-										ltmp(ltmp_arr.notify_arr.award_info,{amount:predicted_reward,percent:(new_energy/100)+'%'})
-									);
-
-									//store awards item
-									let read_t=db.transaction(['awards'],'readwrite');
-									let read_q=read_t.objectStore('awards');
-									let req=read_q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
-									let find=false;
-									let obj={
-										account:account,
-										block:block,
-										amount:0
-									};
-									req.onsuccess=function(event){
-										let cur=event.target.result;
-										if(cur){
-											let obj=cur.value;
-											find=true;
-											obj.amount+=predicted_reward;
-											cur.update(obj);
-											cur.continue();
-										}
-										else{
-											if(!find){
-												let add_t=db.transaction(['awards'],'readwrite');
-												let add_q=add_t.objectStore('awards');
-												obj.amount+=predicted_reward;
-												add_q.add(obj);
-												if(!is_safari){
-													if(!is_firefox){
-														add_t.commit();
-													}
-												}
-											}
-										}
-									};
-
-									callback(true);
-								}
-								else{
-									add_notify(false,'',ltmp(ltmp_arr.notify_arr.award_error,{account:account}));
-									console.log(err);
-									callback(false);
-								}
-							});
-						}
+						add_notify(false,'',ltmp(ltmp_arr.notify_arr.award_error,{account:account}));
+						console.log(err);
+						callback(false);
 					}
 				});
 			}
 		}
-	}
+	});
 }
 
 function fast_publish(view){
@@ -1720,11 +1707,27 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('award-action')){
 		let link=$(target).closest('.object').data('link');
-		award(link,function(result){
-			if(result){
-				$(target).addClass('success');
+		if(0==link.indexOf('viz://')){
+			let account='';
+			let block=0;
+			link=link.toLowerCase();
+			link=escape_html(link);
+			let pattern = /@[a-z0-9\-\.]*/g;
+			let link_account=link.match(pattern);
+			if(typeof link_account[0] != 'undefined'){
+				account=link_account[0].substr(1);
+				let pattern_block = /\/([0-9]*)\//g;
+				let link_block=link.match(pattern_block);
+				if(typeof link_block[1] != 'undefined'){
+					block=parseInt(fast_str_replace('/','',link_block[1]));
+					award(account,block,function(result){
+						if(result){
+							setTimeout(function(){check_object_award(account,block)},100);
+						}
+					});
+				}
 			}
-		});
+		}
 	}
 	if($(target).hasClass('copy-link-action')){
 		let text=$(target).closest('.object').data('link');
@@ -3548,6 +3551,7 @@ function check_object_award(account,block){
 				let current_link='viz://@'+account+'/'+block+'/';
 				let actions=$('.view[data-level="'+level+'"] .objects .object[data-link="'+current_link+'"] .actions-view')[0];
 				$(actions).find('.award-action').addClass('success');
+				$(actions).find('.award-action').prop('title',ltmp(ltmp_arr.awarded_amount,{amount:result.amount}));
 			}
 		}
 	};
