@@ -1805,6 +1805,7 @@ function app_mouse(e){
 				need_update=(true==$('.view[data-path="'+path_parts[0]+'"]').data('update'));
 			}
 		}
+		//console.log('—— back action —— ','level: '+level,'need_update: '+need_update);
 
 		level--;
 		path='viz://';
@@ -1818,6 +1819,7 @@ function app_mouse(e){
 				query=$('.view[data-level="'+level+'"]').data('query');
 			}
 		}
+		//console.log('—— back action —— ','path: '+path);
 		//trigger view_path with update prop
 		view_path(path,{},true,need_update);
 	}
@@ -3086,6 +3088,7 @@ function view_path(location,state,save_state,update){
 			location=location.substring(0,location.indexOf('?'));
 		}
 		if(-1!=location.indexOf('viz://')){
+			path=location;
 			path_parts=location.substr(location.indexOf('viz://')+6).split('/');
 		}
 		else{
@@ -3143,7 +3146,14 @@ function view_path(location,state,save_state,update){
 				}
 			});
 		}
-		view.find('.objects').html(ltmp(ltmp_arr.new_objects+ltmp_arr.feed_loader_notice,{time:0}));
+		let clear=view.data('clear');
+		if(clear){
+			update=true;
+			view.data('clear',false);
+		}
+		if(update){
+			view.find('.objects').html(ltmp(ltmp_arr.new_objects+ltmp_arr.feed_loader_notice,{time:0}));
+		}
 		path='viz://';
 		level=0;
 		$('.loader').css('display','none');
@@ -3227,10 +3237,25 @@ function view_path(location,state,save_state,update){
 							}
 							$('.loader').css('display','block');
 							$('.view').css('display','none');
+							let new_level=true;
 							if(!update){
+								if(level==0){
+									new_level=true;
+								}
+								else{
+									if(path!=$('.view[data-level="'+level+'"]').data('path')){
+										new_level=true;
+									}
+									else{
+										new_level=false;
+									}
+								}
+							}
+							if(new_level){
 								level++;
 								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile_section});
 								$('.content').append(new_view);
+								update=true;
 							}
 							let view=$('.view[data-level="'+level+'"]');
 							let header='';
@@ -3259,7 +3284,9 @@ function view_path(location,state,save_state,update){
 								header+=ltmp_arr.user_actions_close;
 							}
 							view.find('.header').html(header);
-							view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:result.account,block:0}));
+							if(update){
+								view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:result.account,block:0}));
+							}
 							$('.loader').css('display','none');
 							view.css('display','block');
 							check_load_more();
@@ -3308,52 +3335,74 @@ function view_path(location,state,save_state,update){
 								view.css('display','block');
 							}
 							else{
+								let new_level=true;
 								if(!update){
+									if(level==0){
+										new_level=true;
+									}
+									else{
+										if(path!=$('.view[data-level="'+level+'"]').data('path')){
+											new_level=true;
+										}
+										else{
+											new_level=false;
+										}
+									}
+								}
+								if(new_level){
 									level++;
 									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
 									$('.content').append(new_view);
+									update=true;
 								}
 								let view=$('.view[data-level="'+level+'"]');
 								let header='';
 								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
 								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 								view.find('.header').html(header);
-								view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
+								if(update){
+									view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
 
-								get_object(check_account,check_block,function(err,object_result){
-									if(err){
-										if(1==object_result){//block not found
-											view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
-										}
-										if(2==object_result){//item not found
-											view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
-										}
-										$('.loader').css('display','none');
-										view.css('display','block');
-									}
-									else{
-										let object_view=render_object(user_result,object_result);
-										let link='viz://@'+user_result.account+'/'+object_result.block+'/';
-
-										view.find('.objects').html(object_view);
-										let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
-										view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),false,false,false));
-										view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000-(new Date().getTimezoneOffset()*60000)));
-
-										get_replies(user_result.account,object_result.block,function(err,replies_result){
-											for(let i in replies_result){
-												let reply_object=replies_result[i];
-												let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
-												reply_render=render_object(reply_object.account,reply_object.block,'reply');
-												view.find('.objects').append(reply_render);
+									get_object(check_account,check_block,function(err,object_result){
+										if(err){
+											if(1==object_result){//block not found
+												view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
 											}
-										});
+											if(2==object_result){//item not found
+												view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
+											}
+											$('.loader').css('display','none');
+											view.css('display','block');
+										}
+										else{
+											let object_view=render_object(user_result,object_result);
+											let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 
-										$('.loader').css('display','none');
-										view.css('display','block');
-										check_load_more();
-									}
-								});
+											view.find('.objects').html(object_view);
+											let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+											view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),false,false,false));
+											view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000-(new Date().getTimezoneOffset()*60000)));
+
+											get_replies(user_result.account,object_result.block,function(err,replies_result){
+												for(let i in replies_result){
+													let reply_object=replies_result[i];
+													let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+													reply_render=render_object(reply_object.account,reply_object.block,'reply');
+													view.find('.objects').append(reply_render);
+												}
+											});
+
+											$('.loader').css('display','none');
+											view.css('display','block');
+											check_load_more();
+										}
+									});
+								}
+								else{
+									$('.loader').css('display','none');
+									view.css('display','block');
+									check_load_more();
+								}
 							}
 						});
 					}
