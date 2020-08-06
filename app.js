@@ -591,6 +591,7 @@ var ltmp_arr={
 	error_notice:'<div class="error-notice"><em>{error}</em></div>',
 	loader_notice:'<div class="loader-notice" data-account="{account}" data-block="{block}"><span class="submit-button-ring"></span></div>',
 	feed_loader_notice:'<div class="loader-notice" data-time="{time}"><span class="submit-button-ring"></span></div>',
+	awards_loader_notice:'<div class="loader-notice" data-awards-id="{id}"><span class="submit-button-ring"></span></div>',
 
 	toggle_menu:'<a tabindex="0" title="{title}" class="toggle-menu">{icon}</a>',
 	toggle_menu_title:'Переключить меню',
@@ -603,6 +604,7 @@ var ltmp_arr={
 	account_settings_saved:'Данные аккаунта сохранены',
 	account_settings_reset:'Данные аккаунта удалены',
 
+	awards_caption:'Награждения',
 	app_settings_caption:'Настройки приложения',
 	app_settings_saved:'Настройки сохранены',
 	app_settings_reset:'Настройки сброшены',
@@ -646,6 +648,7 @@ var ltmp_arr={
 	menu_primary:`<div><a tabindex="0" data-href="{link}" class="{class}">{icon}<span>{caption}</span></a></div>`,
 	menu_feed:'Лента новостей',
 	menu_view_profile:'Профиль',
+	menu_awards:'Награждения',
 	menu_app_settings:'Настройки',
 	menu_account_settings:'Аккаунт',
 	menu_secondary:`Тема: <a class="theme-action" rel="light">день</a>, <a class="theme-action" rel="night">ночь</a>`,
@@ -789,6 +792,7 @@ function render_menu(){
 	let primary_menu='';
 	if(current_user){
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://',class:(path=='viz://'?'current':''),icon:ltmp_arr.icon_feed,caption:ltmp_arr.menu_feed});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:awards',class:(path=='fsp:awards'?'current':''),icon:ltmp_arr.icon_gem,caption:ltmp_arr.menu_awards});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://@'+current_user+'/',class:(path=='viz://@'+current_user+'/'?'current':''),icon:ltmp_arr.icon_view_profile,caption:ltmp_arr.menu_view_profile});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:app_settings',class:(path=='fsp:app_settings'?'current':''),icon:ltmp_arr.icon_settings,caption:ltmp_arr.menu_app_settings});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:account_settings',class:(path=='fsp:account_settings'?'current':''),icon:ltmp_arr.icon_account_settings,caption:ltmp_arr.menu_account_settings});
@@ -824,7 +828,6 @@ function award(account,block,callback){
 	if(settings.silent_award){
 		memo='';
 	}
-	let predicted_amount=0;
 	let new_energy=0;
 	viz.api.getAccounts([current_user],function(err,response){
 		if(err){
@@ -887,6 +890,7 @@ function award(account,block,callback){
 								let obj=cur.value;
 								find=true;
 								obj.amount+=predicted_reward;
+								obj.amount=Math.ceil(obj.amount*1000)/1000;
 								cur.update(obj);
 								cur.continue();
 							}
@@ -1791,7 +1795,7 @@ function app_mouse(e){
 		$('.loader').css('display','block');
 		$('.view').css('display','none');
 
-		if(0<$('.view[data-level="'+level+'"]').length){
+		if(0<$('.view[data-level="'+level+'"]').length){//if not service view
 			$('.view[data-level="'+level+'"]').remove();
 		}
 
@@ -2895,6 +2899,18 @@ function view_edit_profile(view,path_parts,query,title){
 	});
 }
 
+function view_awards(view,path_parts,query,title){
+	document.title=ltmp_arr.awards_caption+' - '+title;
+	let header='';
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.awards_caption});
+	view.find('.header').html(header);
+	view.find('.objects').html(ltmp(ltmp_arr.awards_loader_notice,{id:0}));
+
+	$('.loader').css('display','none');
+	view.css('display','block');
+	check_load_more();
+}
 function view_app_settings(view,path_parts,query,title){
 	document.title=ltmp_arr.app_settings_caption+' - '+title;
 	let header='';
@@ -3066,6 +3082,7 @@ function view_path(location,state,save_state,update){
 			path_parts=location.substr(location.indexOf('viz://')+6).split('/');
 		}
 		else{
+			path=location;
 			path_parts=location.split('/');
 		}
 	}
@@ -3120,6 +3137,7 @@ function view_path(location,state,save_state,update){
 			});
 		}
 		view.find('.objects').html(ltmp(ltmp_arr.new_objects+ltmp_arr.feed_loader_notice,{time:0}));
+		path='viz://';
 		level=0;
 		$('.loader').css('display','none');
 		view.css('display','block');
@@ -3549,7 +3567,12 @@ function check_object_award(account,block){
 		else{
 			if(false!==result){
 				let current_link='viz://@'+account+'/'+block+'/';
-				let actions=$('.view[data-level="'+level+'"] .objects .object[data-link="'+current_link+'"] .actions-view')[0];
+				let view=$('.view[data-level="'+level+'"]');
+				if(-1==path.indexOf('viz://')){//look in services views
+					let path_parts=path.split('/');
+					view=$('.view[data-path="'+path_parts[0]+'"]');
+				}
+				let actions=view.find('.objects .object[data-link="'+current_link+'"] .actions-view')[0];
 				$(actions).find('.award-action').addClass('success');
 				$(actions).find('.award-action').prop('title',ltmp(ltmp_arr.awarded_amount,{amount:result.amount}));
 			}
@@ -3584,7 +3607,12 @@ function render_object(user,object,type){
 				}),
 			});
 			setTimeout(function(){
-				let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"].type-text-loading .load-content');
+				let view=$('.view[data-level="'+current_level+'"]');
+				if(-1==path.indexOf('viz://')){//look in services views
+					let path_parts=path.split('/');
+					view=$('.view[data-path="'+path_parts[0]+'"]');
+				}
+				let load_content=view.find('.objects .object[data-link="'+current_link+'"].type-text-loading .load-content');
 				get_user(object.parent_account,false,function(err,sub_user){
 					if(err){
 						let sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found});
@@ -3681,7 +3709,12 @@ function render_object(user,object,type){
 				}),
 			});
 			setTimeout(function(){
-				let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"].type-text-loading .load-content');
+				let view=$('.view[data-level="'+current_level+'"]');
+				if(-1==path.indexOf('viz://')){//look in services views
+					let path_parts=path.split('/');
+					view=$('.view[data-path="'+path_parts[0]+'"]');
+				}
+				let load_content=view.find('.objects .object[data-link="'+current_link+'"].type-text-loading .load-content');
 				get_user(object.parent_account,false,function(err,sub_user){
 					if(err){
 						let sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found});
@@ -3768,7 +3801,12 @@ function render_object(user,object,type){
 			link:current_link,
 		});
 		setTimeout(function(){
-			let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"].type-text-wait-loading .load-content');
+			let view=$('.view[data-level="'+current_level+'"]');
+			if(-1==path.indexOf('viz://')){//look in services views
+				let path_parts=path.split('/');
+				view=$('.view[data-path="'+path_parts[0]+'"]');
+			}
+			let load_content=view.find('.objects .object[data-link="'+current_link+'"].type-text-wait-loading .load-content');
 			get_user(user,false,function(err,sub_user){
 				if(err){
 					let sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found});
@@ -3800,7 +3838,12 @@ function render_object(user,object,type){
 		});
 		console.log(render);
 		setTimeout(function(){
-			let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"] .load-content');
+			let view=$('.view[data-level="'+current_level+'"]');
+			if(-1==path.indexOf('viz://')){//look in services views
+				let path_parts=path.split('/');
+				view=$('.view[data-path="'+path_parts[0]+'"]');
+			}
+			let load_content=view.find('.objects .object[data-link="'+current_link+'"] .load-content');
 			get_user(user,false,function(err,sub_user){
 				if(err){
 					let sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found});
@@ -3851,8 +3894,13 @@ function render_object(user,object,type){
 			timestamp:object.data.timestamp,
 		});
 		setTimeout(function(){
-			let branch_line=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"] .avatar-column');
-			let load_content=$('.view[data-level="'+current_level+'"] .objects .object[data-link="'+current_link+'"] .nested-replies');
+			let view=$('.view[data-level="'+current_level+'"]');
+			if(-1==path.indexOf('viz://')){//look in services views
+				let path_parts=path.split('/');
+				view=$('.view[data-path="'+path_parts[0]+'"]');
+			}
+			let branch_line=view.find('.objects .object[data-link="'+current_link+'"] .avatar-column');
+			let load_content=view.find('.objects .object[data-link="'+current_link+'"] .nested-replies');
 			let t=db.transaction(['replies'],'readonly');
 			let q=t.objectStore('replies');
 			let req=q.index('parent').openCursor(IDBKeyRange.only([user.account,parseInt(object.block)]),'next');
@@ -3932,7 +3980,63 @@ function render_object(user,object,type){
 
 function load_more_objects(indicator,check_level){
 	//feed
-	console.log('load_more_objects indicator',indicator,typeof indicator.data('time'),indicator.data('time'));
+	console.log('load_more_objects',indicator,indicator.data('awards-id'));
+	if(typeof indicator.data('awards-id') !== 'undefined'){
+		let update_t=db.transaction(['awards'],'readonly');
+		let update_q=update_t.objectStore('awards');
+		let awards_id=parseInt(indicator.data('awards-id'));
+		let same_id=0;
+		console.log('load_more_objects objects awards-id:',same_id);
+		let objects=[];
+		let update_req;
+		let check_level=level;
+		if(0==awards_id){
+			update_req=update_q.openCursor(null,'prev');
+		}
+		else{
+			update_req=update_q.openCursor(IDBKeyRange.upperBound(awards_id,true),'prev');
+		}
+		update_req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let item=cur.value;
+				//console.log(item);
+				if(0==same_id){
+					if(typeof indicator.closest('.objects').data('awards-id') === 'undefined'){
+						indicator.closest('.objects').data('awards-id',item.id);
+					}
+					same_id=item.id;
+				}
+				if(same_id==item.id){
+					objects.push(item);
+					cur.continue();
+				}
+				else{
+					cur.continue(-1);
+				}
+			}
+			else{
+				console.log('load_more_objects end cursor',objects);
+				if(0==objects.length){
+					indicator.before(ltmp_arr.load_more_end_notice);
+					indicator.remove();
+					return;
+				}
+				else{
+					for(let i in objects){
+						if(check_level==level){
+							let object=objects[i];
+							let object_view=render_object(object.account,object.block,'feed');
+							indicator.before(object_view);
+						}
+					}
+					indicator.data('awards-id',same_id);
+					indicator.data('busy','0');
+					check_load_more();
+				}
+			}
+		};
+	}
 	if(typeof indicator.data('time') !== 'undefined'){
 		let update_t=db.transaction(['feed'],'readonly');
 		let update_q=update_t.objectStore('feed');
@@ -4049,16 +4153,22 @@ function check_load_more(){
 	let scroll_top=window.pageYOffset;
 	let window_height=window.innerHeight;
 	let view=$('.view[data-level="'+level+'"]');
-	view.find('.loader-notice').each(function(){
-		let indicator=$(this);
-		if('1'!=indicator.data('busy')){
-			let offset=indicator.offset();
-			if((scroll_top+window_height)>(offset.top+(indicator.outerHeight()*0.7))){
-				indicator.data('busy','1');
-				load_more_objects(indicator,level);
+	if(-1==path.indexOf('viz://')){//look in services views
+		let path_parts=path.split('/');
+		view=$('.view[data-path="'+path_parts[0]+'"]');
+	}
+	if(0!=view.length){
+		view.find('.loader-notice').each(function(){
+			let indicator=$(this);
+			if('1'!=indicator.data('busy')){
+				let offset=indicator.offset();
+				if((scroll_top+window_height)>(offset.top+(indicator.outerHeight()*0.7))){
+					indicator.data('busy','1');
+					load_more_objects(indicator,level);
+				}
 			}
-		}
-	});
+		});
+	}
 }
 
 function is_full(){
