@@ -1794,9 +1794,16 @@ function app_mouse(e){
 	if($(target).hasClass('back-action')){
 		$('.loader').css('display','block');
 		$('.view').css('display','none');
+		let need_update=false;//if current view can change previous view
 
 		if(0<$('.view[data-level="'+level+'"]').length){//if not service view
 			$('.view[data-level="'+level+'"]').remove();
+		}
+		else{//if service view check forced update
+			let path_parts=path.split('/');
+			if(0!=$('.view[data-path="'+path_parts[0]+'"]').length){
+				need_update=(true==$('.view[data-path="'+path_parts[0]+'"]').data('update'));
+			}
 		}
 
 		level--;
@@ -1812,7 +1819,7 @@ function app_mouse(e){
 			}
 		}
 		//trigger view_path with update prop
-		view_path(path,{},true,true);
+		view_path(path,{},true,need_update);
 	}
 	/*
 	//button to scroll top, need to show it for long views on scrolling more that 100hv?
@@ -3100,7 +3107,7 @@ function view_path(location,state,save_state,update){
 
 	document.title=title;
 
-	console.log('location: '+location,path_parts,'query: '+query);
+	console.log('location: '+location,path_parts,'query: '+query,'update: '+update);
 	$('div.menu .primary div a').removeClass('current');
 	if(0<$('div.menu .primary div a[data-href="'+path_parts[0]+'"]').length){
 		$('div.menu .primary div a[data-href="'+path_parts[0]+'"]').addClass('current');
@@ -3980,13 +3987,11 @@ function render_object(user,object,type){
 
 function load_more_objects(indicator,check_level){
 	//feed
-	console.log('load_more_objects',indicator,indicator.data('awards-id'));
 	if(typeof indicator.data('awards-id') !== 'undefined'){
 		let update_t=db.transaction(['awards'],'readonly');
 		let update_q=update_t.objectStore('awards');
 		let awards_id=parseInt(indicator.data('awards-id'));
 		let same_id=0;
-		console.log('load_more_objects objects awards-id:',same_id);
 		let objects=[];
 		let update_req;
 		let check_level=level;
