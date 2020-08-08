@@ -1311,7 +1311,7 @@ function load_new_objects(el){
 	let new_feed_time=0;
 	let new_objects=[];
 	let update_req;
-	let check_level=level;
+	let check_level=0;//load new objects only in feed (0 level)
 	if(0==feed_time){
 		update_req=update_q.index('time').openCursor(null,'prev');
 	}
@@ -1332,11 +1332,9 @@ function load_new_objects(el){
 		else{
 			console.log('load_new_objects end cursor',new_objects);
 			for(let i in new_objects){
-				if(check_level==level){
-					let object=new_objects[i];
-					let object_view=render_object(object.account,object.block,'feed');
-					indicator.before(object_view);
-				}
+				let object=new_objects[i];
+				let object_view=render_object(object.account,object.block,'feed',check_level);
+				indicator.before(object_view);
 			}
 			setTimeout(function(){
 				$(window)[0].scrollTo({behavior:'smooth',top:(indicator.offset().top>400?indicator.offset().top-100:indicator.offset().top)});
@@ -3643,8 +3641,9 @@ function check_object_award(account,block){
 	};
 }
 
-function render_object(user,object,type){
+function render_object(user,object,type,preset_level){
 	type=typeof type==='undefined'?'default':type;
+	preset_level=typeof preset_level==='undefined'?level:preset_level;
 	let render='';
 	let profile={};
 	if(typeof user.profile != 'undefined'){
@@ -3659,7 +3658,6 @@ function render_object(user,object,type){
 			}
 
 			let current_link='viz://@'+user.account+'/'+object.block+'/';
-			let current_level=level;
 			render=ltmp(ltmp_arr.object_type_text_loading,{
 				previous:object.data.p,
 				link:current_link,
@@ -3670,7 +3668,7 @@ function render_object(user,object,type){
 				}),
 			});
 			setTimeout(function(){
-				let view=$('.view[data-level="'+current_level+'"]');
+				let view=$('.view[data-level="'+preset_level+'"]');
 				if(-1==path.indexOf('viz://')){//look in services views
 					let path_parts=path.split('/');
 					view=$('.view[data-path="'+path_parts[0]+'"]');
@@ -3761,7 +3759,6 @@ function render_object(user,object,type){
 			}
 
 			let current_link='viz://@'+user.account+'/'+object.block+'/';
-			let current_level=level;
 			render=ltmp(ltmp_arr.object_type_text_loading,{
 				previous:object.data.p,
 				link:current_link,
@@ -3772,7 +3769,7 @@ function render_object(user,object,type){
 				}),
 			});
 			setTimeout(function(){
-				let view=$('.view[data-level="'+current_level+'"]');
+				let view=$('.view[data-level="'+preset_level+'"]');
 				if(-1==path.indexOf('viz://')){//look in services views
 					let path_parts=path.split('/');
 					view=$('.view[data-path="'+path_parts[0]+'"]');
@@ -3859,12 +3856,11 @@ function render_object(user,object,type){
 	}
 	if('feed'==type){
 		let current_link='viz://@'+user+'/'+object+'/';
-		let current_level=level;
 		render=ltmp(ltmp_arr.object_type_text_wait_loading,{
 			link:current_link,
 		});
 		setTimeout(function(){
-			let view=$('.view[data-level="'+current_level+'"]');
+			let view=$('.view[data-level="'+preset_level+'"]');
 			if(-1==path.indexOf('viz://')){//look in services views
 				let path_parts=path.split('/');
 				view=$('.view[data-path="'+path_parts[0]+'"]');
@@ -3895,13 +3891,12 @@ function render_object(user,object,type){
 	}
 	if('reply'==type){
 		let current_link='viz://@'+user+'/'+object+'/';
-		let current_level=level;
 		render=ltmp(ltmp_arr.object_type_text_wait_loading,{
 			link:current_link,
 		});
 		console.log(render);
 		setTimeout(function(){
-			let view=$('.view[data-level="'+current_level+'"]');
+			let view=$('.view[data-level="'+preset_level+'"]');
 			if(-1==path.indexOf('viz://')){//look in services views
 				let path_parts=path.split('/');
 				view=$('.view[data-path="'+path_parts[0]+'"]');
@@ -3932,7 +3927,6 @@ function render_object(user,object,type){
 	}
 	if('reply-view'==type){
 		let current_link='viz://@'+user.account+'/'+object.block+'/';
-		let current_level=level;
 
 		let text=object.data.d.text;
 		text=escape_html(text);
@@ -3957,7 +3951,7 @@ function render_object(user,object,type){
 			timestamp:object.data.timestamp,
 		});
 		setTimeout(function(){
-			let view=$('.view[data-level="'+current_level+'"]');
+			let view=$('.view[data-level="'+preset_level+'"]');
 			if(-1==path.indexOf('viz://')){//look in services views
 				let path_parts=path.split('/');
 				view=$('.view[data-path="'+path_parts[0]+'"]');
@@ -4050,7 +4044,6 @@ function load_more_objects(indicator,check_level){
 		let same_id=0;
 		let objects=[];
 		let update_req;
-		let check_level=level;
 		if(0==awards_id){
 			update_req=update_q.openCursor(null,'prev');
 		}
@@ -4085,11 +4078,9 @@ function load_more_objects(indicator,check_level){
 				}
 				else{
 					for(let i in objects){
-						if(check_level==level){
-							let object=objects[i];
-							let object_view=render_object(object.account,object.block,'feed');
-							indicator.before(object_view);
-						}
+						let object=objects[i];
+						let object_view=render_object(object.account,object.block,'feed',check_level);
+						indicator.before(object_view);
 					}
 					indicator.data('awards-id',same_id);
 					indicator.data('busy','0');
@@ -4106,7 +4097,6 @@ function load_more_objects(indicator,check_level){
 		console.log('load_more_objects objects feed-time:',same_time);
 		let objects=[];
 		let update_req;
-		let check_level=level;
 		if(0==feed_time){
 			update_req=update_q.index('time').openCursor(null,'prev');
 		}
@@ -4141,11 +4131,9 @@ function load_more_objects(indicator,check_level){
 				}
 				else{
 					for(let i in objects){
-						if(check_level==level){
-							let object=objects[i];
-							let object_view=render_object(object.account,object.block,'feed');
-							indicator.before(object_view);
-						}
+						let object=objects[i];
+						let object_view=render_object(object.account,object.block,'feed');
+						indicator.before(object_view);
 					}
 					indicator.data('time',same_time);
 					indicator.data('busy','0');
@@ -4184,26 +4172,24 @@ function load_more_objects(indicator,check_level){
 				}
 			}
 			get_object(check_account,offset,function(err,object_result){
-				if(check_level==level){
-					if(err){
-						if(1==object_result){
-							indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
-						}
-						if(2==object_result){
-							indicator.before(ltmp_arr.load_more_end_notice);
-							indicator.remove();
-						}
+				if(err){
+					if(1==object_result){
+						indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
 					}
-					else{
-						let object_view=render_object(user_result,object_result,'preview');
+					if(2==object_result){
+						indicator.before(ltmp_arr.load_more_end_notice);
+						indicator.remove();
+					}
+				}
+				else{
+					let object_view=render_object(user_result,object_result,'preview');
 
-						indicator.before(object_view);
-						let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
-						let timestamp=new_object.find('.short-date-view').data('timestamp');
-						new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
-						indicator.data('busy','0');
-						check_load_more();
-					}
+					indicator.before(object_view);
+					let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
+					let timestamp=new_object.find('.short-date-view').data('timestamp');
+					new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+					indicator.data('busy','0');
+					check_load_more();
 				}
 			});
 		});
