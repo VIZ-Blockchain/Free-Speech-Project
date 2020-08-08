@@ -3158,6 +3158,9 @@ function view_path(location,state,save_state,update){
 		level=0;
 		$('.loader').css('display','none');
 		view.css('display','block');
+		if(!update){
+			$(window)[0].scrollTo({top:(typeof view.data('scroll')!=='undefined'?view.data('scroll'):0)});
+		}
 		check_load_more();
 	}
 	else{
@@ -3289,6 +3292,9 @@ function view_path(location,state,save_state,update){
 							}
 							$('.loader').css('display','none');
 							view.css('display','block');
+							if(!update){
+								$(window)[0].scrollTo({top:(typeof view.data('scroll')!=='undefined'?view.data('scroll'):0)});
+							}
 							check_load_more();
 						}
 					});
@@ -3401,6 +3407,7 @@ function view_path(location,state,save_state,update){
 								else{
 									$('.loader').css('display','none');
 									view.css('display','block');
+									$(window)[0].scrollTo({top:(typeof view.data('scroll')!=='undefined'?view.data('scroll'):0)});
 									check_load_more();
 								}
 							}
@@ -4256,6 +4263,11 @@ function main_app(){
 	document.addEventListener('keyup',app_keyboard,false);
 
 	document.addEventListener('scroll',function(){
+		if(-1!=path.indexOf('viz://')){//save view scroll position
+			if('none'!=$('.view[data-level="'+level+'"]').css('display')){
+				$('.view[data-level="'+level+'"]').data('scroll',Math.ceil(window.pageYOffset));
+			}
+		}
 		check_load_more();
 	});
 	window.onresize=function(){
