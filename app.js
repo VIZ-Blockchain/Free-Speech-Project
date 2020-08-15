@@ -564,6 +564,7 @@ function ltmp(ltmp_str,ltmp_args){
 }
 
 var ltmp_arr={
+	notify_item:'<div class="notify-item{addon}" data-id="{id}">{context}</div></div>',
 	notify:'<div class="notify-wrapper{addon}" data-id="{id}"><div class="notify" role="alert" aria-live="polite">{context}</div></div>',
 	notify_title:'<div class="title">{caption}</div>',
 	notify_text:'<div class="text">{text}</div>',
@@ -591,6 +592,7 @@ var ltmp_arr={
 	error_notice:'<div class="error-notice"><em>{error}</em></div>',
 	loader_notice:'<div class="loader-notice" data-account="{account}" data-block="{block}"><span class="submit-button-ring"></span></div>',
 	feed_loader_notice:'<div class="loader-notice" data-time="{time}"><span class="submit-button-ring"></span></div>',
+	notifications_loader_notice:'<div class="loader-notice" data-notifications-id="{id}"><span class="submit-button-ring"></span></div>',
 	awards_loader_notice:'<div class="loader-notice" data-awards-id="{id}"><span class="submit-button-ring"></span></div>',
 
 	toggle_menu:'<a tabindex="0" title="{title}" class="toggle-menu">{icon}</a>',
@@ -604,6 +606,7 @@ var ltmp_arr={
 	account_settings_saved:'Данные аккаунта сохранены',
 	account_settings_reset:'Данные аккаунта удалены',
 
+	notifications_caption:'Уведомления',
 	awards_caption:'Награждения',
 	app_settings_caption:'Настройки приложения',
 	app_settings_saved:'Настройки сохранены',
@@ -648,6 +651,7 @@ var ltmp_arr={
 	menu_primary:`<div><a tabindex="0" data-href="{link}" class="{class}">{icon}<span>{caption}</span></a></div>`,
 	menu_feed:'Лента новостей',
 	menu_view_profile:'Профиль',
+	menu_notifications:'Уведомления',
 	menu_awards:'Награждения',
 	menu_app_settings:'Настройки',
 	menu_account_settings:'Аккаунт',
@@ -687,6 +691,7 @@ var ltmp_arr={
 	header_caption:'<div class="caption grow">{caption}</div>',
 	icon_link:'<a tabindex="0" class="{action}-action" title="{caption}">{icon}</a>',
 	clear_awards_caption:'Очистить историю наград',
+	clear_notifications_caption:'Удалить уведомления',
 
 	user_actions_open:'<div class="user-actions" data-user="{user}">',
 	user_actions_close:'</div>',
@@ -797,6 +802,7 @@ function render_menu(){
 	let primary_menu='';
 	if(current_user){
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://',class:(path=='viz://'?'current':''),icon:ltmp_arr.icon_feed,caption:ltmp_arr.menu_feed});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:notifications',class:(path=='fsp:notifications'?'current':''),icon:ltmp_arr.icon_notify,caption:ltmp_arr.menu_notifications});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:awards',class:(path=='fsp:awards'?'current':''),icon:ltmp_arr.icon_gem,caption:ltmp_arr.menu_awards});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://@'+current_user+'/',class:(path=='viz://@'+current_user+'/'?'current':''),icon:ltmp_arr.icon_view_profile,caption:ltmp_arr.menu_view_profile});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:app_settings',class:(path=='fsp:app_settings'?'current':''),icon:ltmp_arr.icon_settings,caption:ltmp_arr.menu_app_settings});
@@ -1189,6 +1195,46 @@ function clear_awards(el){
 		}
 		else{
 			$('.view[data-path="fsp:awards"] .objects').html(ltmp_arr.load_more_end_notice);
+		}
+	};
+}
+
+function mark_readed_notifications(el){
+	let t,q,req;
+	t=db.transaction(['notifications'],'readwrite');
+	q=t.objectStore('notifications');
+	req=q.openCursor(null,'next');
+
+	let find=false;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let item=cur.value;
+			item.status=1;
+			cur.update(item);
+			cur.continue();
+		}
+		else{
+			$('.view[data-path="fsp:notifications"] .objects').html(ltmp_arr.load_more_end_notice);
+		}
+	};
+}
+
+function clear_notifications(el){
+	let t,q,req;
+	t=db.transaction(['notifications'],'readwrite');
+	q=t.objectStore('notifications');
+	req=q.openCursor(null,'next');
+
+	let find=false;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			update_req=cur.delete();
+			cur.continue();
+		}
+		else{
+			$('.view[data-path="fsp:notifications"] .objects').html(ltmp_arr.load_more_end_notice);
 		}
 	};
 }
@@ -2933,6 +2979,23 @@ function view_edit_profile(view,path_parts,query,title){
 	});
 }
 
+function view_notifications(view,path_parts,query,title){
+	document.title=ltmp_arr.notifications_caption+' - '+title;
+	let header='';
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.notifications_caption});
+
+	//header+=ltmp(ltmp_arr.icon_link,{action:'mark-readed-notifications',caption:ltmp_arr.mark_readed_notifications,icon:ltmp_arr.icon_notify_clear});
+	//header+=ltmp(ltmp_arr.icon_link,{action:'clear-notifications',caption:ltmp_arr.clear_notifications_caption,icon:ltmp_arr.icon_notify_clear});
+
+	view.find('.header').html(header);
+	view.find('.objects').html(ltmp(ltmp_arr.notifications_loader_notice,{id:0}));
+
+	$('.loader').css('display','none');
+	view.css('display','block');
+	check_load_more();
+}
+
 function view_awards(view,path_parts,query,title){
 	document.title=ltmp_arr.awards_caption+' - '+title;
 	let header='';
@@ -2948,6 +3011,7 @@ function view_awards(view,path_parts,query,title){
 	view.css('display','block');
 	check_load_more();
 }
+
 function view_app_settings(view,path_parts,query,title){
 	document.title=ltmp_arr.app_settings_caption+' - '+title;
 	let header='';
@@ -4065,8 +4129,85 @@ function render_object(user,object,type,preset_level){
 	return render;
 }
 
+function render_notify(data,check_level){
+	console.log(data,check_level);
+	let render='';
+	let line=true;
+	if(''!=data.title){
+		render+=ltmp(ltmp_arr.notify_title,{caption:data.title});
+		if(''!=data.text){
+			line=false;
+		}
+	}
+	if(''!=data.text){
+		if(''!=data.link){
+			render+=ltmp(ltmp_arr.notify_link,{link:data.link,text:data.text});
+		}
+		else{
+			render+=ltmp(ltmp_arr.notify_text,{text:data.text});
+		}
+	}
+	let notify=ltmp(ltmp_arr.notify_item,{id:data.id,addon:(1==data.status?' readed':'')+(line?' line':''),context:render});
+	return notify;
+}
+
 function load_more_objects(indicator,check_level){
-	//feed
+	//notifications service page
+	if(typeof indicator.data('notifications-id') !== 'undefined'){
+		let update_t=db.transaction(['notifications'],'readwrite');
+		let update_q=update_t.objectStore('notifications');
+		let notifications_id=parseInt(indicator.data('notifications-id'));
+		let same_id=0;
+		let objects=[];
+		let update_req;
+		if(0==notifications_id){
+			update_req=update_q.openCursor(null,'prev');
+		}
+		else{
+			update_req=update_q.openCursor(IDBKeyRange.upperBound(notifications_id,true),'prev');
+		}
+		update_req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let item=cur.value;
+				//console.log(item);
+				if(0==same_id){
+					if(typeof indicator.closest('.objects').data('notifications-id') === 'undefined'){
+						indicator.closest('.objects').data('notifications-id',item.id);
+					}
+					same_id=item.id;
+				}
+				if(same_id==item.id){
+					objects.push(item);
+					item.status=1;
+					cur.update(item);
+					cur.continue();
+				}
+				else{
+					cur.continue(-1);
+				}
+			}
+			else{
+				console.log('load_more_objects end cursor',objects);
+				if(0==objects.length){
+					indicator.before(ltmp_arr.load_more_end_notice);
+					indicator.remove();
+					return;
+				}
+				else{
+					for(let i in objects){
+						let object=objects[i];
+						let object_view=render_notify(object,check_level);
+						indicator.before(object_view);
+					}
+					indicator.data('notifications-id',same_id);
+					indicator.data('busy','0');
+					check_load_more();
+				}
+			}
+		};
+	}
+	//awards service page
 	if(typeof indicator.data('awards-id') !== 'undefined'){
 		let update_t=db.transaction(['awards'],'readonly');
 		let update_q=update_t.objectStore('awards');
@@ -4119,6 +4260,7 @@ function load_more_objects(indicator,check_level){
 			}
 		};
 	}
+	//feed
 	if(typeof indicator.data('time') !== 'undefined'){
 		let update_t=db.transaction(['feed'],'readonly');
 		let update_q=update_t.objectStore('feed');
