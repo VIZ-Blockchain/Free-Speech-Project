@@ -564,11 +564,12 @@ function ltmp(ltmp_str,ltmp_args){
 }
 
 var ltmp_arr={
-	notify_item:'<div class="notify-item{addon}" data-id="{id}">{context}</div></div>',
+	notify_item:'<div class="notify-item{addon}" data-id="{id}">{context}</div>',
 	notify:'<div class="notify-wrapper{addon}" data-id="{id}"><div class="notify" role="alert" aria-live="polite">{context}</div></div>',
 	notify_title:'<div class="title">{caption}</div>',
 	notify_text:'<div class="text">{text}</div>',
 	notify_link:'<a tabindex="0" data-href="{link}" class="close-notify-action">{text}</a>',
+	notify_item_link:'<a tabindex="0" data-href="{link}">{text}</a>',
 	notify_arr:{
 		error:'Ошибка',
 		award_success:'Вы наградили @{account}',
@@ -1584,6 +1585,36 @@ function app_mouse(e){
 		}
 		view_path(href,{},true,false);
 		e.preventDefault();
+	}
+	if($(target).hasClass('read-notify-action')){
+		console.log('read-notify-action click');
+		let notify_id=$(target).data('id');
+		let notify_link=false;
+		let t,q,req;
+		t=db.transaction(['notifications'],'readwrite');
+		q=t.objectStore('notifications');
+		req=q.openCursor(IDBKeyRange.only(notify_id),'next');
+
+		let find=false;
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let item=cur.value;
+				if(typeof item.link !== 'undefined'){
+					notify_link=item.link;
+				}
+				item.status=1;
+				cur.update(item);
+				$(target).addClass('readed');
+				cur.continue();
+			}
+			else{
+				if(notify_link){
+					view_path(notify_link,{},true,false);
+				}
+			}
+		};
+
 	}
 	if($(target).hasClass('notify')){
 		let wrapper=$(target).parent();
@@ -4139,15 +4170,15 @@ function render_notify(data,check_level){
 			line=false;
 		}
 	}
-	if(''!=data.text){
-		if(''!=data.link){
-			render+=ltmp(ltmp_arr.notify_link,{link:data.link,text:data.text});
+	if(typeof data.text !== 'undefined'){
+		if(typeof data.link !== 'undefined'){
+			render+=ltmp(ltmp_arr.notify_item_link,{link:data.link,text:data.text});
 		}
 		else{
 			render+=ltmp(ltmp_arr.notify_text,{text:data.text});
 		}
 	}
-	let notify=ltmp(ltmp_arr.notify_item,{id:data.id,addon:(1==data.status?' readed':'')+(line?' line':''),context:render});
+	let notify=ltmp(ltmp_arr.notify_item,{id:data.id,addon:' read-notify-action'+(1==data.status?' readed':'')+(line?' line':''),context:render});
 	return notify;
 }
 
@@ -4179,8 +4210,6 @@ function load_more_objects(indicator,check_level){
 				}
 				if(same_id==item.id){
 					objects.push(item);
-					item.status=1;
-					cur.update(item);
 					cur.continue();
 				}
 				else{

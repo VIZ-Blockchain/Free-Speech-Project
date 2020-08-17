@@ -445,7 +445,7 @@ body.night .notify-item{
 	height:70px;
 }
 .notify-item.readed{
-	opacity:0.7;
+	opacity:0.6;
 }
 .notify-item.readed:hover{
 	opacity:1.0;
@@ -469,6 +469,7 @@ body.night .notify-item{
 	text-overflow:ellipsis;
 	white-space:nowrap;
 	color:#1c98e5;
+	pointer-events:none;
 }
 .objects .object{
 	position:relative;
