@@ -579,6 +579,9 @@ var ltmp_arr={
 		new_share:'Репост от @{account}',
 		new_mention:'Упоминание от @{account}',
 	},
+	notifications_all_tab:'Все',
+	notifications_new_tab:'Новые',
+	notifications_readed_tab:'Прочитанные',
 
 	awarded_amount:'Награждено на {amount} Ƶ',
 
@@ -692,7 +695,8 @@ var ltmp_arr={
 	header_caption:'<div class="caption grow">{caption}</div>',
 	icon_link:'<a tabindex="0" class="{action}-action" title="{caption}">{icon}</a>',
 	clear_awards_caption:'Очистить историю наград',
-	clear_notifications_caption:'Удалить уведомления',
+	mark_readed_notifications_caption:'Отметить прочитанными',
+	clear_readed_notifications_caption:'Удалить прочитанные уведомления',
 
 	user_actions_open:'<div class="user-actions" data-user="{user}">',
 	user_actions_close:'</div>',
@@ -1216,12 +1220,12 @@ function mark_readed_notifications(el){
 			cur.continue();
 		}
 		else{
-			$('.view[data-path="fsp:notifications"] .objects').html(ltmp_arr.load_more_end_notice);
+			$('.view[data-path="fsp:notifications"] .objects .notify-item').addClass('readed');
 		}
 	};
 }
 
-function clear_notifications(el){
+function clear_readed_notifications(el){
 	let t,q,req;
 	t=db.transaction(['notifications'],'readwrite');
 	q=t.objectStore('notifications');
@@ -1231,7 +1235,10 @@ function clear_notifications(el){
 	req.onsuccess=function(event){
 		let cur=event.target.result;
 		if(cur){
-			update_req=cur.delete();
+			let item=cur.value;
+			if(1==item.status){
+				update_req=cur.delete();
+			}
 			cur.continue();
 		}
 		else{
@@ -1603,7 +1610,12 @@ function app_mouse(e){
 				if(typeof item.link !== 'undefined'){
 					notify_link=item.link;
 				}
-				item.status=1;
+				if(1==item.status){
+					item.status=0;
+				}
+				else{
+					item.status=1;
+				}
 				cur.update(item);
 				$(target).addClass('readed');
 				cur.continue();
@@ -1681,6 +1693,12 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('preset-action')){
 		$('input[name="'+$(target).data('input')+'"]').val($(target).data('value'));
+	}
+	if($(target).hasClass('mark-readed-notifications-action')){
+		mark_readed_notifications();
+	}
+	if($(target).hasClass('clear-readed-notifications-action')){
+		clear_readed_notifications();
 	}
 	if($(target).hasClass('clear-awards-action')){
 		clear_awards();
@@ -3016,11 +3034,33 @@ function view_notifications(view,path_parts,query,title){
 	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.notifications_caption});
 
-	//header+=ltmp(ltmp_arr.icon_link,{action:'mark-readed-notifications',caption:ltmp_arr.mark_readed_notifications,icon:ltmp_arr.icon_notify_clear});
-	//header+=ltmp(ltmp_arr.icon_link,{action:'clear-notifications',caption:ltmp_arr.clear_notifications_caption,icon:ltmp_arr.icon_notify_clear});
+	let current_tab='all';
+	if((typeof path_parts[1] != 'undefined')&&(''!=path_parts[1])){
+		current_tab=path_parts[1];
+	}
+	let tabs='';
+	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:notifications/all',class:('all'==current_tab?'current':''),caption:ltmp_arr.notifications_all_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:notifications/new',class:('new'==current_tab?'current':''),caption:ltmp_arr.notifications_new_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:notifications/readed',class:('readed'==current_tab?'current':''),caption:ltmp_arr.notifications_readed_tab});
+	view.find('.tabs').html(tabs);
+
+	view.find('.content-view').css('display','none');
+	view.find('.content-view .objects').html('');
+	view.find('.content-view[data-tab="'+current_tab+'"]').css('display','block');
+
+	let tab=view.find('.content-view[data-tab="'+current_tab+'"]');
+	if('all'==current_tab){
+		header+=ltmp(ltmp_arr.icon_link,{action:'mark-readed-notifications',caption:ltmp_arr.mark_readed_notifications_caption,icon:ltmp_arr.icon_notify_clear});
+	}
+	if('new'==current_tab){
+		header+=ltmp(ltmp_arr.icon_link,{action:'mark-readed-notifications',caption:ltmp_arr.mark_readed_notifications_caption,icon:ltmp_arr.icon_notify_clear});
+	}
+	if('readed'==current_tab){
+		header+=ltmp(ltmp_arr.icon_link,{action:'clear-readed-notifications',caption:ltmp_arr.clear_readed_notifications_caption,icon:ltmp_arr.icon_message_clear});
+	}
 
 	view.find('.header').html(header);
-	view.find('.objects').html(ltmp(ltmp_arr.notifications_loader_notice,{id:0}));
+	tab.find('.objects').html(ltmp(ltmp_arr.notifications_loader_notice,{id:0}));
 
 	$('.loader').css('display','none');
 	view.css('display','block');
@@ -4185,10 +4225,12 @@ function render_notify(data,check_level){
 function load_more_objects(indicator,check_level){
 	//notifications service page
 	if(typeof indicator.data('notifications-id') !== 'undefined'){
+		let tab=indicator.closest('.content-view').data('tab');
 		let update_t=db.transaction(['notifications'],'readwrite');
 		let update_q=update_t.objectStore('notifications');
 		let notifications_id=parseInt(indicator.data('notifications-id'));
-		let same_id=0;
+		let last_id=0;
+		let limit_per_load=10;
 		let objects=[];
 		let update_req;
 		if(0==notifications_id){
@@ -4202,14 +4244,22 @@ function load_more_objects(indicator,check_level){
 			if(cur){
 				let item=cur.value;
 				//console.log(item);
-				if(0==same_id){
-					if(typeof indicator.closest('.objects').data('notifications-id') === 'undefined'){
-						indicator.closest('.objects').data('notifications-id',item.id);
-					}
-					same_id=item.id;
-				}
-				if(same_id==item.id){
+				if('all'==tab){
 					objects.push(item);
+				}
+				if('new'==tab){
+					if(0==item.status){
+						objects.push(item);
+					}
+				}
+				if('readed'==tab){
+					if(1==item.status){
+						objects.push(item);
+					}
+				}
+				if(limit_per_load>0){
+					limit_per_load--;
+					last_id=item.id;
 					cur.continue();
 				}
 				else{
@@ -4229,7 +4279,7 @@ function load_more_objects(indicator,check_level){
 						let object_view=render_notify(object,check_level);
 						indicator.before(object_view);
 					}
-					indicator.data('notifications-id',same_id);
+					indicator.data('notifications-id',last_id);
 					indicator.data('busy','0');
 					check_load_more();
 				}
