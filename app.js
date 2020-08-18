@@ -1610,12 +1610,7 @@ function app_mouse(e){
 				if(typeof item.link !== 'undefined'){
 					notify_link=item.link;
 				}
-				if(1==item.status){
-					item.status=0;
-				}
-				else{
-					item.status=1;
-				}
+				item.status=1;
 				cur.update(item);
 				$(target).addClass('readed');
 				cur.continue();
