@@ -595,7 +595,7 @@ var ltmp_arr={
 	load_more_end_notice:'<div class="load-more-end-notice"><em>Больше ничего не найдено.</em></div>',
 	error_notice:'<div class="error-notice"><em>{error}</em></div>',
 	loader_notice:'<div class="loader-notice" data-account="{account}" data-block="{block}"><span class="submit-button-ring"></span></div>',
-	feed_loader_notice:'<div class="loader-notice" data-time="{time}"><span class="submit-button-ring"></span></div>',
+	feed_loader_notice:'<div class="loader-notice" data-feed-time="{time}"><span class="submit-button-ring"></span></div>',
 	notifications_loader_notice:'<div class="loader-notice" data-notifications-id="{id}"><span class="submit-button-ring"></span></div>',
 	awards_loader_notice:'<div class="loader-notice" data-awards-id="{id}"><span class="submit-button-ring"></span></div>',
 
@@ -4263,6 +4263,7 @@ function load_more_objects(indicator,check_level){
 					cur.continue();
 				}
 				else{
+					last_id=item.id;
 					cur.continue(-1);
 				}
 			}
@@ -4291,7 +4292,7 @@ function load_more_objects(indicator,check_level){
 		let update_t=db.transaction(['awards'],'readonly');
 		let update_q=update_t.objectStore('awards');
 		let awards_id=parseInt(indicator.data('awards-id'));
-		let same_id=0;
+		let last_id=0;
 		let objects=[];
 		let update_req;
 		if(0==awards_id){
@@ -4305,19 +4306,9 @@ function load_more_objects(indicator,check_level){
 			if(cur){
 				let item=cur.value;
 				//console.log(item);
-				if(0==same_id){
-					if(typeof indicator.closest('.objects').data('awards-id') === 'undefined'){
-						indicator.closest('.objects').data('awards-id',item.id);
-					}
-					same_id=item.id;
-				}
-				if(same_id==item.id){
-					objects.push(item);
-					cur.continue();
-				}
-				else{
-					cur.continue(-1);
-				}
+				last_id=item.id;
+				objects.push(item);
+				cur.continue(-1);//load only one item
 			}
 			else{
 				console.log('load_more_objects end cursor',objects);
@@ -4332,7 +4323,7 @@ function load_more_objects(indicator,check_level){
 						let object_view=render_object(object.account,object.block,'feed',check_level);
 						indicator.before(object_view);
 					}
-					indicator.data('awards-id',same_id);
+					indicator.data('awards-id',last_id);
 					indicator.data('busy','0');
 					check_load_more();
 				}
@@ -4340,10 +4331,10 @@ function load_more_objects(indicator,check_level){
 		};
 	}
 	//feed
-	if(typeof indicator.data('time') !== 'undefined'){
+	if(typeof indicator.data('feed-time') !== 'undefined'){
 		let update_t=db.transaction(['feed'],'readonly');
 		let update_q=update_t.objectStore('feed');
-		let feed_time=parseInt(indicator.data('time'));
+		let feed_time=parseInt(indicator.data('feed-time'));
 		let same_time=0;
 		console.log('load_more_objects objects feed-time:',same_time);
 		let objects=[];
@@ -4386,7 +4377,7 @@ function load_more_objects(indicator,check_level){
 						let object_view=render_object(object.account,object.block,'feed');
 						indicator.before(object_view);
 					}
-					indicator.data('time',same_time);
+					indicator.data('feed-time',same_time);
 					indicator.data('busy','0');
 					check_load_more();
 				}
