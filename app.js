@@ -687,7 +687,7 @@ var ltmp_arr={
 	icon_notify_clear:`<i class="icon notify-clear"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.73 21a2 2 0 0 1-3.46 0"></path><path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path><path d="M18 8a6 6 0 0 0-9.33-5"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></i>`,
 	icon_message_clear:`<i class="icon message-clear"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20,2H4C2.897,2,2,2.897,2,4v12c0,1.103,0.897,2,2,2h3v3.767L13.277,18H20c1.103,0,2-0.897,2-2V4C22,2.897,21.103,2,20,2z M20,16h-7.277L9,18.233V16H4V4h16V16z"/><path d="M9.707 13.707L12 11.414 14.293 13.707 15.707 12.293 13.414 10 15.707 7.707 14.293 6.293 12 8.586 9.707 6.293 8.293 7.707 10.586 10 8.293 12.293z"/></svg></i>`,
 
-	header_back_action:`<a tabindex="0" class="back-action" title="Назад">{icon}</a>`,
+	header_back_action:`<a tabindex="0" class="back-action" title="Назад" data-force="{force}">{icon}</a>`,
 	header_link:'<div class="link grow"><div class="header-link-wrapper"><input type="text" class="header-link" value="{link}"><div class="header-link-icons">{icons}</div></div></div>',
 	header_link_icons:`
 		<i tabindex="0" class="icon copy icon-copy-action" title="Копировать адрес"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20,2H10C8.897,2,8,2.897,8,4v4H4c-1.103,0-2,0.897-2,2v10c0,1.103,0.897,2,2,2h10c1.103,0,2-0.897,2-2v-4h4 c1.103,0,2-0.897,2-2V4C22,2.897,21.103,2,20,2z M4,20V10h10l0.002,10H4z M20,14h-4v-4c0-1.103-0.897-2-2-2h-4V4h10V14z"/></svg></i>
@@ -1622,7 +1622,7 @@ function app_mouse(e){
 			}
 			else{
 				if(notify_link){
-					view_path(notify_link,{},true,false);
+					view_path(notify_link,{back:path},true,false);
 				}
 			}
 		};
@@ -1912,6 +1912,10 @@ function app_mouse(e){
 		}
 	}
 	if($(target).hasClass('back-action')){
+		let force_path=false;
+		if(''!=$(target).data('force')){
+			force_path=$(target).data('force');
+		}
 		$('.loader').css('display','block');
 		$('.view').css('display','none');
 		let need_update=false;//if current view can change previous view
@@ -1930,13 +1934,19 @@ function app_mouse(e){
 		level--;
 		path='viz://';
 		query='';
-		//search prev level props
-		if(0<$('.view[data-level="'+level+'"]').length){
-			if(typeof $('.view[data-level="'+level+'"]').data('path') != 'undefined'){
-				path=$('.view[data-level="'+level+'"]').data('path');
-			}
-			if(typeof $('.view[data-level="'+level+'"]').data('query') != 'undefined'){
-				query=$('.view[data-level="'+level+'"]').data('query');
+
+		if(false!==force_path){
+			path=force_path;
+		}
+		else{
+			//search prev level props
+			if(0<$('.view[data-level="'+level+'"]').length){
+				if(typeof $('.view[data-level="'+level+'"]').data('path') != 'undefined'){
+					path=$('.view[data-level="'+level+'"]').data('path');
+				}
+				if(typeof $('.view[data-level="'+level+'"]').data('query') != 'undefined'){
+					query=$('.view[data-level="'+level+'"]').data('query');
+				}
 			}
 		}
 		//console.log('—— back action —— ','path: '+path);
@@ -3240,7 +3250,11 @@ function view_path(location,state,save_state,update){
 	update=typeof update==='undefined'?false:update;
 	path_parts=[];
 	var title='Free Speech Project';
+	let back_to='';
 
+	if(typeof state.back !== 'undefined'){
+		back_to=state.back;
+	}
 	if(typeof state.path == 'undefined'){
 		//check query state
 		if('/'!=location.substr(-1)){
@@ -3366,7 +3380,7 @@ function view_path(location,state,save_state,update){
 							}
 							let view=$('.view[data-level="'+level+'"]');
 							let header='';
-							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
 							header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 							view.find('.header').html(header);
 							view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.gateway_error}));
@@ -3425,7 +3439,7 @@ function view_path(location,state,save_state,update){
 							}
 							let view=$('.view[data-level="'+level+'"]');
 							let header='';
-							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
 							header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 							if(check_account==current_user){
 								header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
@@ -3473,7 +3487,7 @@ function view_path(location,state,save_state,update){
 						$('.content').append(new_view);
 						let view=$('.view[data-level="'+level+'"]');
 						let header='';
-						header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+						header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
 						header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 						view.find('.header').html(header);
 						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
@@ -3495,7 +3509,7 @@ function view_path(location,state,save_state,update){
 								}
 								let view=$('.view[data-level="'+level+'"]');
 								let header='';
-								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
 								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 								view.find('.header').html(header);
 								view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.gateway_error}));
@@ -3526,7 +3540,7 @@ function view_path(location,state,save_state,update){
 								}
 								let view=$('.view[data-level="'+level+'"]');
 								let header='';
-								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
 								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 								view.find('.header').html(header);
 								if(update){
@@ -3583,7 +3597,7 @@ function view_path(location,state,save_state,update){
 					$('.content').append(new_view);
 					let view=$('.view[data-level="'+level+'"]');
 					let header='';
-					header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+					header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
 					header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 					view.find('.header').html(header);
 					view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
