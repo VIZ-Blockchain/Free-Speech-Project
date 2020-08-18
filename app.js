@@ -2925,7 +2925,7 @@ function save_profile(view){
 function view_search(view,path_parts,query,title){
 	document.title=ltmp_arr.search_caption+' - '+title;
 	let header='';
-	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.search_caption});
 	view.find('.header').html(header);
 
@@ -2945,7 +2945,7 @@ function view_publish(view,path_parts,query,title){
 	console.log('view_publish',path_parts,query);
 	document.title=ltmp_arr.publish_caption+' - '+title;
 	let header='';
-	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.publish_caption});
 	view.find('.header').html(header);
 
@@ -2993,7 +2993,7 @@ function view_publish(view,path_parts,query,title){
 function view_edit_profile(view,path_parts,query,title){
 	document.title=ltmp_arr.edit_profile_caption+' - '+title;
 	let header='';
-	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.edit_profile_caption});
 	view.find('.header').html(header);
 
@@ -3036,7 +3036,7 @@ function view_edit_profile(view,path_parts,query,title){
 function view_notifications(view,path_parts,query,title){
 	document.title=ltmp_arr.notifications_caption+' - '+title;
 	let header='';
-	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.notifications_caption});
 
 	let current_tab='all';
@@ -3075,7 +3075,7 @@ function view_notifications(view,path_parts,query,title){
 function view_awards(view,path_parts,query,title){
 	document.title=ltmp_arr.awards_caption+' - '+title;
 	let header='';
-	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.awards_caption});
 
 	header+=ltmp(ltmp_arr.icon_link,{action:'clear-awards',caption:ltmp_arr.clear_awards_caption,icon:ltmp_arr.icon_message_clear});
@@ -3091,7 +3091,7 @@ function view_awards(view,path_parts,query,title){
 function view_app_settings(view,path_parts,query,title){
 	document.title=ltmp_arr.app_settings_caption+' - '+title;
 	let header='';
-	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.app_settings_caption});
 	view.find('.header').html(header);
 
@@ -3151,7 +3151,7 @@ function view_app_settings(view,path_parts,query,title){
 function view_account_settings(view,path_parts,query,title){
 	document.title=ltmp_arr.account_settings_caption+' - '+title;
 	let header='';
-	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back});
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.account_settings_caption});
 	view.find('.header').html(header);
 
