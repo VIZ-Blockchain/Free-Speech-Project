@@ -1583,14 +1583,21 @@ function app_mouse(e){
 		target=$(target).parent();
 	}
 	if(typeof $(target).attr('data-href') != 'undefined'){
-		var href=$(target).attr('data-href');
+		let href=$(target).attr('data-href');
+		let back_to='';
 		if($(target).hasClass('close-notify-action')){
 			let notify=$(target).parent();
 			let wrapper=notify.parent();
 			wrapper.removeClass('show');
 			setTimeout(function(){wrapper.remove();},1000);
 		}
-		view_path(href,{},true,false);
+		else{
+			console.log('check back-force data',$(target).closest('.view').data('back-force'));
+			if($(target).closest('.view').data('back-force')){
+				back_to=path;
+			}
+		}
+		view_path(href,{back:back_to},true,false);
 		e.preventDefault();
 	}
 	if($(target).hasClass('read-notify-action')){
@@ -3374,10 +3381,12 @@ function view_path(location,state,save_state,update){
 								$('.content').append(new_view);
 							}
 							let view=$('.view[data-level="'+level+'"]');
-							let header='';
-							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
-							header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
-							view.find('.header').html(header);
+							if(update){
+								let header='';
+								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
+								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+								view.find('.header').html(header);
+							}
 							view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.gateway_error}));
 							$('.loader').css('display','none');
 							view.css('display','block');
@@ -3433,32 +3442,34 @@ function view_path(location,state,save_state,update){
 								update=true;
 							}
 							let view=$('.view[data-level="'+level+'"]');
-							let header='';
-							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
-							header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
-							if(check_account==current_user){
-								header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
-								header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
-							}
-							else{
-								header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
-								if(!db.objectStoreNames.contains('objects_'+check_account)){
-									if(2==result.status){
-										header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
-										header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
-									}
-									else{
-										header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-										header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
-									}
+							if(update){
+								let header='';
+								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
+								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+								if(check_account==current_user){
+									header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
+									header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
 								}
 								else{
-									header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
-									header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
+									header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
+									if(!db.objectStoreNames.contains('objects_'+check_account)){
+										if(2==result.status){
+											header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
+											header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+										}
+										else{
+											header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+											header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+										}
+									}
+									else{
+										header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
+										header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
+									}
+									header+=ltmp_arr.user_actions_close;
 								}
-								header+=ltmp_arr.user_actions_close;
+								view.find('.header').html(header);
 							}
-							view.find('.header').html(header);
 							if(update){
 								view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:result.account,block:0}));
 							}
@@ -3481,10 +3492,12 @@ function view_path(location,state,save_state,update){
 						let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
 						$('.content').append(new_view);
 						let view=$('.view[data-level="'+level+'"]');
-						let header='';
-						header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
-						header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
-						view.find('.header').html(header);
+						if(update){
+							let header='';
+							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
+							header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+							view.find('.header').html(header);
+						}
 						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
 						$('.loader').css('display','none');
 						view.css('display','block');
@@ -3503,10 +3516,12 @@ function view_path(location,state,save_state,update){
 									$('.content').append(new_view);
 								}
 								let view=$('.view[data-level="'+level+'"]');
-								let header='';
-								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
-								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
-								view.find('.header').html(header);
+								if(update){
+									let header='';
+									header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
+									header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+									view.find('.header').html(header);
+								}
 								view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.gateway_error}));
 
 								$('.loader').css('display','none');
@@ -3534,10 +3549,12 @@ function view_path(location,state,save_state,update){
 									update=true;
 								}
 								let view=$('.view[data-level="'+level+'"]');
-								let header='';
-								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
-								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
-								view.find('.header').html(header);
+								if(update){
+									let header='';
+									header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
+									header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+									view.find('.header').html(header);
+								}
 								if(update){
 									view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
 
@@ -3591,10 +3608,12 @@ function view_path(location,state,save_state,update){
 					let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
 					$('.content').append(new_view);
 					let view=$('.view[data-level="'+level+'"]');
-					let header='';
-					header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
-					header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
-					view.find('.header').html(header);
+					if(update){
+						let header='';
+						header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
+						header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+						view.find('.header').html(header);
+					}
 					view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
 					$('.loader').css('display','none');
 					view.css('display','block');
