@@ -4453,13 +4453,14 @@ function load_more_objects(indicator,check_level){
 				}
 				else{
 					let object_view=render_object(user_result,object_result,'preview');
-
-					indicator.before(object_view);
-					let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
-					let timestamp=new_object.find('.short-date-view').data('timestamp');
-					new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
-					indicator.data('busy','0');
-					check_load_more();
+					if(null!==indicator){
+						indicator.before(object_view);
+						let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
+						let timestamp=new_object.find('.short-date-view').data('timestamp');
+						new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+						indicator.data('busy','0');
+						check_load_more();
+					}
 				}
 			});
 		});
