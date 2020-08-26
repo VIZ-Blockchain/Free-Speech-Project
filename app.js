@@ -14,7 +14,7 @@ var api_gates=[
 	'https://viz.lexai.host/',
 	'https://vizrpc.lexai.host/',
 	'https://viz-node.dpos.space/',
-	'https://solox.world/',
+	'https://node.viz.media/',
 ];
 var default_api_gate=api_gates[0];
 var best_gate=-1;
