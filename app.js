@@ -1084,8 +1084,12 @@ function publish(view){
 				viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
 					if(result){
 						console.log(result);
-						view.find('.submit-button-ring').removeClass('show');
 						view.find('.success').html(ltmp_arr.publish_success);
+
+						view.find('input').val('');
+						view.find('textarea').val('');
+
+						view.find('.submit-button-ring').removeClass('show');
 						view.find('.button').removeClass('disabled');
 						setTimeout(function(){
 							get_user(current_user,true,function(err,result){
