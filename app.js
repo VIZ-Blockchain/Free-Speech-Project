@@ -9,6 +9,7 @@ var is_safari=navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
 var is_firefox=navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 
 var api_gates=[
+	'https://api.viz.world/',
 	'https://node.viz.plus/',
 	'https://node.viz.cx/',
 	'https://viz.lexai.host/',
