@@ -491,23 +491,30 @@ function save_account_settings(view,login,regular_key,energy_step){
 	regular_key=regular_key.trim();
 	if(''==login){
 		view.find('.submit-button-ring').removeClass('show');
-		view.find('.error').html(ltmp_arr.account_seetings_empty_account);
+		view.find('.error').html(ltmp_arr.account_settings_empty_account);
 		view.find('.button').removeClass('disabled');
 		return;
 	}
 	if(''==regular_key){
 		view.find('.submit-button-ring').removeClass('show');
-		view.find('.error').html(ltmp_arr.account_seetings_empty_regular_key);
+		view.find('.error').html(ltmp_arr.account_settings_empty_regular_key);
 		view.find('.button').removeClass('disabled');
 		return;
 	}
-	viz.api.getAccounts([login],function(err,response){
-		if(typeof response[0] != 'undefined'){
+	viz.api.getAccount(login,app_protocol,function(err,response){
+		if(err){
+			console.log(err);
+			view.find('.submit-button-ring').removeClass('show');
+			view.find('.error').html(ltmp_arr.account_settings_account_not_found);
+			view.find('.button').removeClass('disabled');
+			return;
+		}
+		else{
 			let regular_valid=false;
-			for(regular_check in response[0].regular_authority.key_auths){
-				if(response[0].regular_authority.key_auths[regular_check][1]>=response[0].regular_authority.weight_threshold){
+			for(regular_check in response.regular_authority.key_auths){
+				if(response.regular_authority.key_auths[regular_check][1]>=response.regular_authority.weight_threshold){
 					try{
-						if(viz.auth.wifIsValid(regular_key,response[0].regular_authority.key_auths[regular_check][0])){
+						if(viz.auth.wifIsValid(regular_key,response.regular_authority.key_auths[regular_check][0])){
 							regular_valid=true;
 						}
 					}
@@ -541,13 +548,6 @@ function save_account_settings(view,login,regular_key,energy_step){
 					view.find('.button').removeClass('disabled');
 				});
 			});
-		}
-		else{
-			console.log(err);
-			view.find('.submit-button-ring').removeClass('show');
-			view.find('.error').html(ltmp_arr.account_seetings_account_not_found);
-			view.find('.button').removeClass('disabled');
-			return;
 		}
 	});
 }
@@ -604,9 +604,9 @@ var ltmp_arr={
 
 	account_settings:'<a tabindex="0" data-href="fsp:account_settings" title="Настройки аккаунта">{icon_account_settings}</a>',
 	account_settings_caption:'Настройки аккаунта',
-	account_seetings_empty_account:'Введите аккаунт',
-	account_seetings_empty_regular_key:'Введите регулярный ключ',
-	account_seetings_account_not_found:'Аккаунт не найден',
+	account_settings_empty_account:'Введите аккаунт',
+	account_settings_empty_regular_key:'Введите регулярный ключ',
+	account_settings_account_not_found:'Аккаунт не найден',
 	account_settings_saved:'Данные аккаунта сохранены',
 	account_settings_reset:'Данные аккаунта удалены',
 
@@ -845,95 +845,87 @@ function award(account,block,callback){
 		memo='';
 	}
 	let new_energy=0;
-	viz.api.getAccounts([current_user],function(err,response){
+	viz.api.getAccount(current_user,app_protocol,function(err,response){
 		if(err){
 			console.log(err,response);
 			callback(false);
 		}
 		else{
-			if(typeof response[0] === 'undefined'){
-				console.log(err,response);
-				callback(false);
+			let vesting_shares=parseFloat(response.vesting_shares);
+			let delegated_vesting_shares=parseFloat(response.delegated_vesting_shares);
+			let received_vesting_shares=parseFloat(response.received_vesting_shares);
+			let effective_vesting_shares=vesting_shares + received_vesting_shares - delegated_vesting_shares;
+
+			let last_vote_time=Date.parse(response.last_vote_time);
+			let delta_time=parseInt((new Date().getTime() - last_vote_time+(new Date().getTimezoneOffset()*60000))/1000);
+			let current_energy=response.energy;
+			let new_energy=parseInt(current_energy+(delta_time*10000/432000));//CHAIN_ENERGY_REGENERATION_SECONDS 5 days
+			if(new_energy>10000){
+				new_energy=10000;
 			}
-			else{
-				let data=response[0];
+			new_energy-=energy;
+			let effective_vesting_shares_int=parseInt(effective_vesting_shares*1000000);//to int shares
+			let current_rshares=parseInt(effective_vesting_shares_int*energy/10000);
+			let total_reward_shares=parseInt(dgp.total_reward_shares);
+			total_reward_shares+=current_rshares;
+			let total_reward_fund=parseInt(parseFloat(dgp.total_reward_fund)*1000);//to int tokens
+			let predicted_reward=(total_reward_fund*current_rshares)/total_reward_shares;
+			predicted_reward=predicted_reward*0.9995;//decrease expectations 0.005%
+			predicted_reward=Math.ceil(predicted_reward)/1000;//to float tokens
+			if(isNaN(predicted_reward)){
+				predicted_reward=0;
+			}
+			viz.broadcast.award(users[current_user].regular_key,current_user,account,energy,0,memo,beneficiaries_list,function(err,result){
+				if(!err){
+					add_notify(
+						false,
+						ltmp(ltmp_arr.notify_arr.award_success,{account:account}),
+						ltmp(ltmp_arr.notify_arr.award_info,{amount:predicted_reward,percent:(new_energy/100)+'%'})
+					);
 
-				let vesting_shares=parseFloat(data.vesting_shares);
-				let delegated_vesting_shares=parseFloat(data.delegated_vesting_shares);
-				let received_vesting_shares=parseFloat(data.received_vesting_shares);
-				let effective_vesting_shares=vesting_shares + received_vesting_shares - delegated_vesting_shares;
-
-				let last_vote_time=Date.parse(data.last_vote_time);
-				let delta_time=parseInt((new Date().getTime() - last_vote_time+(new Date().getTimezoneOffset()*60000))/1000);
-				let current_energy=data.energy;
-				let new_energy=parseInt(current_energy+(delta_time*10000/432000));//CHAIN_ENERGY_REGENERATION_SECONDS 5 days
-				if(new_energy>10000){
-					new_energy=10000;
-				}
-				new_energy-=energy;
-				let effective_vesting_shares_int=parseInt(effective_vesting_shares*1000000);//to int shares
-				let current_rshares=parseInt(effective_vesting_shares_int*energy/10000);
-				let total_reward_shares=parseInt(dgp.total_reward_shares);
-				total_reward_shares+=current_rshares;
-				let total_reward_fund=parseInt(parseFloat(dgp.total_reward_fund)*1000);//to int tokens
-				let predicted_reward=(total_reward_fund*current_rshares)/total_reward_shares;
-				predicted_reward=predicted_reward*0.9995;//decrease expectations 0.005%
-				predicted_reward=Math.ceil(predicted_reward)/1000;//to float tokens
-				if(isNaN(predicted_reward)){
-					predicted_reward=0;
-				}
-				viz.broadcast.award(users[current_user].regular_key,current_user,account,energy,0,memo,beneficiaries_list,function(err,result){
-					if(!err){
-						add_notify(
-							false,
-							ltmp(ltmp_arr.notify_arr.award_success,{account:account}),
-							ltmp(ltmp_arr.notify_arr.award_info,{amount:predicted_reward,percent:(new_energy/100)+'%'})
-						);
-
-						//store awards item
-						let read_t=db.transaction(['awards'],'readwrite');
-						let read_q=read_t.objectStore('awards');
-						let req=read_q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
-						let find=false;
-						let obj={
-							account:account,
-							block:block,
-							amount:0
-						};
-						req.onsuccess=function(event){
-							let cur=event.target.result;
-							if(cur){
-								let obj=cur.value;
-								find=true;
+					//store awards item
+					let read_t=db.transaction(['awards'],'readwrite');
+					let read_q=read_t.objectStore('awards');
+					let req=read_q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
+					let find=false;
+					let obj={
+						account:account,
+						block:block,
+						amount:0
+					};
+					req.onsuccess=function(event){
+						let cur=event.target.result;
+						if(cur){
+							let obj=cur.value;
+							find=true;
+							obj.amount+=predicted_reward;
+							obj.amount=Math.ceil(obj.amount*1000)/1000;
+							cur.update(obj);
+							cur.continue();
+						}
+						else{
+							if(!find){
+								let add_t=db.transaction(['awards'],'readwrite');
+								let add_q=add_t.objectStore('awards');
 								obj.amount+=predicted_reward;
-								obj.amount=Math.ceil(obj.amount*1000)/1000;
-								cur.update(obj);
-								cur.continue();
-							}
-							else{
-								if(!find){
-									let add_t=db.transaction(['awards'],'readwrite');
-									let add_q=add_t.objectStore('awards');
-									obj.amount+=predicted_reward;
-									add_q.add(obj);
-									if(!is_safari){
-										if(!is_firefox){
-											add_t.commit();
-										}
+								add_q.add(obj);
+								if(!is_safari){
+									if(!is_firefox){
+										add_t.commit();
 									}
 								}
 							}
-						};
+						}
+					};
 
-						callback(true);
-					}
-					else{
-						add_notify(false,'',ltmp(ltmp_arr.notify_arr.award_error,{account:account}));
-						console.log(err);
-						callback(false);
-					}
-				});
-			}
+					callback(true);
+				}
+				else{
+					add_notify(false,'',ltmp(ltmp_arr.notify_arr.award_error,{account:account}));
+					console.log(err);
+					callback(false);
+				}
+			});
 		}
 	});
 }
@@ -942,60 +934,53 @@ function fast_publish(view){
 	let text=view.find('.fast-publish-wrapper textarea[name="text"]').val();
 	text=text.trim();
 	if(text){
-		viz.api.getAccounts([current_user],function(err,response){
+		viz.api.getAccount(current_user,app_protocol,function(err,response){
 			if(err){
+				console.log(err);
 				add_notify(false,'',ltmp_arr.gateway_error);
 				return;
 			}
 			else{
-				if(typeof response[0] !== 'undefined'){
-					let previous=response[0].custom_sequence_block_num;
-					let new_object={};
-					if(previous>0){
-						new_object.p=previous;
-					}
-					if(app_version>1){
-						new_object.v=app_version;
-					}
-					//new_object.t='text';//optional, this is the default
-					//new_object.u=new Date().getTime() /1000 | 0;//for delayed publication
+				let previous=response.custom_sequence_block_num;
+				let new_object={};
+				if(previous>0){
+					new_object.p=previous;
+				}
+				if(app_version>1){
+					new_object.v=app_version;
+				}
+				//new_object.t='text';//optional, this is the default
+				//new_object.u=new Date().getTime() /1000 | 0;//for delayed publication
 
-					let data={};
-					data.text=text;
+				let data={};
+				data.text=text;
 
-					new_object.d=data;
-					let object_json=JSON.stringify(new_object);
+				new_object.d=data;
+				let object_json=JSON.stringify(new_object);
 
-					viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
-						if(result){
-							console.log(result);
-							setTimeout(function(){
-								get_user(current_user,true,function(err,result){
-									if(!err){
-										if(result.start!=previous){
-											get_object(current_user,result.start,function(err,object_result){
-												if(!err){
-													view_path('viz://@'+current_user+'/'+result.start+'/',{},true,false);
-												}
-											});
-										}
+				viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
+					if(result){
+						console.log(result);
+						setTimeout(function(){
+							get_user(current_user,true,function(err,result){
+								if(!err){
+									if(result.start!=previous){
+										get_object(current_user,result.start,function(err,object_result){
+											if(!err){
+												view_path('viz://@'+current_user+'/'+result.start+'/',{},true,false);
+											}
+										});
 									}
-								});
-							},3000);
-						}
-						else{
-							console.log(err);
-							add_notify(false,'',ltmp_arr.gateway_error);
-							return;
-						}
-					});
-
-				}
-				else{
-					console.log(err);
-					add_notify(false,'',ltmp_arr.account_not_found);
-					return;
-				}
+								}
+							});
+						},3000);
+					}
+					else{
+						console.log(err);
+						add_notify(false,'',ltmp_arr.gateway_error);
+						return;
+					}
+				});
 			}
 		});
 	}
@@ -1042,7 +1027,7 @@ function publish(view){
 		}
 	}
 
-	viz.api.getAccounts([current_user],function(err,response){
+	viz.api.getAccount(current_user,app_protocol,function(err,response){
 		if(err){
 			console.log(err);
 			view.find('.submit-button-ring').removeClass('show');
@@ -1051,76 +1036,67 @@ function publish(view){
 			return;
 		}
 		else{
-			if(typeof response[0] !== 'undefined'){
-				let previous=response[0].custom_sequence_block_num;
+			let previous=response.custom_sequence_block_num;
 
-				if(loop){
-					previous=loop;
-				}
+			if(loop){
+				previous=loop;
+			}
 
-				let new_object={};
-				if(previous>0){
-					new_object.p=previous;
-				}
-				if(app_version>1){
-					new_object.v=app_version;
-				}
-				//new_object.t='text';//optional, this is the default
-				//new_object.u=new Date().getTime() /1000 | 0;//for delayed publication
+			let new_object={};
+			if(previous>0){
+				new_object.p=previous;
+			}
+			if(app_version>1){
+				new_object.v=app_version;
+			}
+			//new_object.t='text';//optional, this is the default
+			//new_object.u=new Date().getTime() /1000 | 0;//for delayed publication
 
-				let data={};
-				data.text=text;
-				if(false!=reply){
-					data.r=reply;
-				}
-				else
-				if(false!=share){
-					data.s=share;
-				}
+			let data={};
+			data.text=text;
+			if(false!=reply){
+				data.r=reply;
+			}
+			else
+			if(false!=share){
+				data.s=share;
+			}
 
-				new_object.d=data;
-				let object_json=JSON.stringify(new_object);
+			new_object.d=data;
+			let object_json=JSON.stringify(new_object);
 
-				viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
-					if(result){
-						console.log(result);
-						view.find('.success').html(ltmp_arr.publish_success);
+			viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
+				if(result){
+					console.log(result);
+					view.find('.success').html(ltmp_arr.publish_success);
 
-						view.find('input').val('');
-						view.find('textarea').val('');
+					view.find('input').val('');
+					view.find('textarea').val('');
 
-						view.find('.submit-button-ring').removeClass('show');
-						view.find('.button').removeClass('disabled');
-						setTimeout(function(){
-							get_user(current_user,true,function(err,result){
-								if(!err){
-									if(result.start!=previous){
-										get_object(current_user,result.start,function(err,object_result){
-											if(!err){
-												view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:result.start}));
-											}
-										});
-									}
+					view.find('.submit-button-ring').removeClass('show');
+					view.find('.button').removeClass('disabled');
+					setTimeout(function(){
+						get_user(current_user,true,function(err,result){
+							if(!err){
+								if(result.start!=previous){
+									get_object(current_user,result.start,function(err,object_result){
+										if(!err){
+											view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:result.start}));
+										}
+									});
 								}
-							});
-						},3000);
-					}
-					else{
-						console.log(err);
-						view.find('.submit-button-ring').removeClass('show');
-						view.find('.error').html(ltmp_arr.gateway_error);
-						view.find('.button').removeClass('disabled');
-						return;
-					}
-				});
-			}
-			else{
-				console.log(err);
-				view.find('.submit-button-ring').removeClass('show');
-				view.find('.error').html(ltmp_arr.account_not_found);
-				view.find('.button').removeClass('disabled');
-				return;
-			}
+							}
+						});
+					},3000);
+				}
+				else{
+					console.log(err);
+					view.find('.submit-button-ring').removeClass('show');
+					view.find('.error').html(ltmp_arr.gateway_error);
+					view.find('.button').removeClass('disabled');
+					return;
+				}
+			});
 		}
 	});
 }
@@ -1968,99 +1944,93 @@ function app_mouse(e){
 }
 
 function update_user_profile(account,callback){
-	viz.api.getAccounts([account],function(err,response){
+	viz.api.getAccount(account,app_protocol,function(err,response){
 		if(err){
 			console.log('viz api error:',err);
 			callback(true,false);
 		}
 		else{
-			if(typeof response[0] !== 'undefined'){
-				let profile_obj={};
-				let json_metadata={};
-				let profile_contacts='';
-				if(''!=response[0].json_metadata){
-					json_metadata=JSON.parse(response[0].json_metadata);
+			let profile_obj={};
+			let json_metadata={};
+			let profile_contacts='';
+			if(''!=response.json_metadata){
+				json_metadata=JSON.parse(response.json_metadata);
+			}
+			if(typeof json_metadata.profile != 'undefined'){
+				if(typeof json_metadata.profile.nickname != 'undefined'){
+					profile_obj.nickname=escape_html(json_metadata.profile.nickname);
 				}
-				if(typeof json_metadata.profile != 'undefined'){
-					if(typeof json_metadata.profile.nickname != 'undefined'){
-						profile_obj.nickname=escape_html(json_metadata.profile.nickname);
+				if(typeof json_metadata.profile.avatar != 'undefined'){
+					profile_obj.avatar=escape_html(json_metadata.profile.avatar);
+				}
+				if(typeof json_metadata.profile.about != 'undefined'){
+					profile_obj.about=escape_html(json_metadata.profile.about);
+				}
+				if(typeof json_metadata.profile.services != 'undefined'){
+					if(typeof json_metadata.profile.services.github != 'undefined'){
+						profile_obj.github=escape_html(json_metadata.profile.services.github);
 					}
-					if(typeof json_metadata.profile.avatar != 'undefined'){
-						profile_obj.avatar=escape_html(json_metadata.profile.avatar);
-					}
-					if(typeof json_metadata.profile.about != 'undefined'){
-						profile_obj.about=escape_html(json_metadata.profile.about);
-					}
-					if(typeof json_metadata.profile.services != 'undefined'){
-						if(typeof json_metadata.profile.services.github != 'undefined'){
-							profile_obj.github=escape_html(json_metadata.profile.services.github);
-						}
-						if(typeof json_metadata.profile.services.telegram != 'undefined'){
-							profile_obj.telegram=escape_html(json_metadata.profile.services.telegram);
-						}
+					if(typeof json_metadata.profile.services.telegram != 'undefined'){
+						profile_obj.telegram=escape_html(json_metadata.profile.services.telegram);
 					}
 				}
-				if(typeof profile_obj.nickname == 'undefined'){
-					profile_obj.nickname=response[0].name;
-				}
-				if(typeof profile_obj.avatar == 'undefined'){
-					profile_obj.avatar='default.png';
-				}
+			}
+			if(typeof profile_obj.nickname == 'undefined'){
+				profile_obj.nickname=response.name;
+			}
+			if(typeof profile_obj.avatar == 'undefined'){
+				profile_obj.avatar='default.png';
+			}
 
-				let obj={
-					account:account,
-					start:response[0].custom_sequence_block_num,
-					update:parseInt(new Date().getTime()/1000),
-					profile:JSON.stringify(profile_obj),
-					status:0,
-				};
+			let obj={
+				account:account,
+				start:response.custom_sequence_block_num,
+				update:parseInt(new Date().getTime()/1000),
+				profile:JSON.stringify(profile_obj),
+				status:0,
+			};
 
-				if(db.objectStoreNames.contains('objects_'+account)){
-					obj.status=1;
-				}
+			if(db.objectStoreNames.contains('objects_'+account)){
+				obj.status=1;
+			}
 
-				let t=db.transaction(['users'],'readwrite');
-				let q=t.objectStore('users');
-				let req=q.index('account').openCursor(IDBKeyRange.only(account),'next');
+			let t=db.transaction(['users'],'readwrite');
+			let q=t.objectStore('users');
+			let req=q.index('account').openCursor(IDBKeyRange.only(account),'next');
 
-				let result;
-				let find=false;
-				req.onsuccess=function(event){
-					let cur=event.target.result;
-					if(cur){
-						result=cur.value;
-						result.update=obj.update;
-						result.profile=obj.profile;
-						result.start=obj.start;
-						result.status=obj.status;
-						find=true;
-						update_req=cur.update(result);
-						update_req.onsuccess=function(e){
-							callback(false,result);
-						}
-						cur.continue();
+			let result;
+			let find=false;
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					result=cur.value;
+					result.update=obj.update;
+					result.profile=obj.profile;
+					result.start=obj.start;
+					result.status=obj.status;
+					find=true;
+					update_req=cur.update(result);
+					update_req.onsuccess=function(e){
+						callback(false,result);
 					}
-					else{
-						if(!find){
-							let add_t=db.transaction(['users'],'readwrite');
-							let add_q=add_t.objectStore('users');
-							add_q.add(obj);
-							if(!is_safari){
-								if(!is_firefox){
-									add_t.commit();
-								}
-							}
-							add_t.oncomplete=function(e){
-								callback(false,obj);
+					cur.continue();
+				}
+				else{
+					if(!find){
+						let add_t=db.transaction(['users'],'readwrite');
+						let add_q=add_t.objectStore('users');
+						add_q.add(obj);
+						if(!is_safari){
+							if(!is_firefox){
+								add_t.commit();
 							}
 						}
+						add_t.oncomplete=function(e){
+							callback(false,obj);
+						}
 					}
-				};
-			}
-			else{
-				console.log('viz api error, undefined response:',response);
-				callback(true);
-			}
+				}
+			};
 		}
 	});
 }
@@ -2836,7 +2806,7 @@ function save_profile(view){
 	let github=view.find('input[name="github"]').val();
 	github=github.trim();
 
-	viz.api.getAccounts([current_user],function(err,response){
+	viz.api.getAccount(current_user,app_protocol,function(err,response){
 		if(err){
 			console.log(err);
 			view.find('.submit-button-ring').removeClass('show');
@@ -2845,90 +2815,81 @@ function save_profile(view){
 			return;
 		}
 		else{
-			if(typeof response[0] !== 'undefined'){
-				let json_metadata={};
-				if(''!=response[0].json_metadata){
-					json_metadata=JSON.parse(response[0].json_metadata);
-				}
+			let json_metadata={};
+			if(''!=response.json_metadata){
+				json_metadata=JSON.parse(response.json_metadata);
+			}
 
-				if(typeof json_metadata.profile === 'undefined'){
-					json_metadata.profile={};
-				}
+			if(typeof json_metadata.profile === 'undefined'){
+				json_metadata.profile={};
+			}
 
-				json_metadata.profile.nickname=nickname;
-				json_metadata.profile.about=about;
-				json_metadata.profile.avatar=avatar;
+			json_metadata.profile.nickname=nickname;
+			json_metadata.profile.about=about;
+			json_metadata.profile.avatar=avatar;
 
-				if(typeof json_metadata.profile.services === 'undefined'){
-					json_metadata.profile.services={};
-				}
+			if(typeof json_metadata.profile.services === 'undefined'){
+				json_metadata.profile.services={};
+			}
 
-				if(''==telegram){
-					if(typeof json_metadata.profile.services.telegram !== 'undefined'){
-						delete json_metadata.profile.services.telegram;
-					}
+			if(''==telegram){
+				if(typeof json_metadata.profile.services.telegram !== 'undefined'){
+					delete json_metadata.profile.services.telegram;
 				}
-				else{
-					json_metadata.profile.services.telegram=telegram;
-				}
-
-				if(''==github){
-					if(typeof json_metadata.profile.services.github !== 'undefined'){
-						delete json_metadata.profile.services.github;
-					}
-				}
-				else{
-					json_metadata.profile.services.github=github;
-				}
-
-				if(Object.keys(json_metadata.profile.services).length==0){
-					delete json_metadata.profile.services;
-				}
-
-				if(''==json_metadata.profile.about){
-					delete json_metadata.profile.about;
-				}
-				if(''==json_metadata.profile.avatar){
-					delete json_metadata.profile.avatar;
-				}
-				if(''==json_metadata.profile.nickname){
-					delete json_metadata.profile.nickname;
-				}
-
-				let new_json_metadata=JSON.stringify(json_metadata);
-
-				viz.broadcast.accountMetadata(users[current_user].regular_key,current_user,new_json_metadata,function(err,result){
-					if(result){
-						view.find('.submit-button-ring').removeClass('show');
-						view.find('.success').html(ltmp_arr.edit_profile_saved);
-						view.find('.button').removeClass('disabled');
-						setTimeout(function(){
-							get_user(current_user,true,function(err,result){
-								if(err){
-									console.log('failed forced update after profile changes');
-								}
-								else{
-									console.log('successfully forced update after profile changes');
-								}
-							}
-						)},1000);
-					}
-					else{
-						console.log(err);
-						view.find('.submit-button-ring').removeClass('show');
-						view.find('.error').html(ltmp_arr.gateway_error);
-						view.find('.button').removeClass('disabled');
-						return;
-					}
-				});
 			}
 			else{
-				console.log(err);
-				view.find('.submit-button-ring').removeClass('show');
-				view.find('.error').html(ltmp_arr.account_not_found);
-				view.find('.button').removeClass('disabled');
-				return;
+				json_metadata.profile.services.telegram=telegram;
 			}
+
+			if(''==github){
+				if(typeof json_metadata.profile.services.github !== 'undefined'){
+					delete json_metadata.profile.services.github;
+				}
+			}
+			else{
+				json_metadata.profile.services.github=github;
+			}
+
+			if(Object.keys(json_metadata.profile.services).length==0){
+				delete json_metadata.profile.services;
+			}
+
+			if(''==json_metadata.profile.about){
+				delete json_metadata.profile.about;
+			}
+			if(''==json_metadata.profile.avatar){
+				delete json_metadata.profile.avatar;
+			}
+			if(''==json_metadata.profile.nickname){
+				delete json_metadata.profile.nickname;
+			}
+
+			let new_json_metadata=JSON.stringify(json_metadata);
+
+			viz.broadcast.accountMetadata(users[current_user].regular_key,current_user,new_json_metadata,function(err,result){
+				if(result){
+					view.find('.submit-button-ring').removeClass('show');
+					view.find('.success').html(ltmp_arr.edit_profile_saved);
+					view.find('.button').removeClass('disabled');
+					setTimeout(function(){
+						get_user(current_user,true,function(err,result){
+							if(err){
+								console.log('failed forced update after profile changes');
+							}
+							else{
+								console.log('successfully forced update after profile changes');
+							}
+						}
+					)},1000);
+				}
+				else{
+					console.log(err);
+					view.find('.submit-button-ring').removeClass('show');
+					view.find('.error').html(ltmp_arr.gateway_error);
+					view.find('.button').removeClass('disabled');
+					return;
+				}
+			});
 		}
 	});
 }
