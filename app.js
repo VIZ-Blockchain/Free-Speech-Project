@@ -427,11 +427,10 @@ function load_db(callback){
 		if(!db.objectStoreNames.contains('hashtags_feed')){
 			items_table=db.createObjectStore('hashtags_feed',{keyPath:'id',autoIncrement:true});
 			items_table.createIndex('tag','tag',{unique:true});//hash tag id
+			items_table.createIndex('tag_feed',['tag','id'],{unique:false});//hash tag id
 			items_table.createIndex('object',['account','block'],{unique:false});//account
 		}
 		else{
-			items_table=update_trx.objectStore('hashtags_feed');
-			items_table.createIndex('tag_feed',['tag','id'],{unique:false});//hash tag id
 			//new index for hashtags_feed
 		}
 
