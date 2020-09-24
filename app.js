@@ -635,7 +635,7 @@ function ltmp(ltmp_str,ltmp_args){
 	//remove empty args
 	let ltmp_arr=ltmp_str.match(/\{[a-z_\-]*\}/gm);
 	for(let ltmp_i in ltmp_arr){
-		ltmp_str=ltmp_str.split(ltmp_args[ltmp_i]).join('');
+		ltmp_str=ltmp_str.split(ltmp_arr[ltmp_i]).join('');
 	}
 	return ltmp_str;
 }
@@ -1474,7 +1474,7 @@ function clear_hashtags(el){
 						el.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.hashtags_not_found}));
 						let header='';
 						header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
-						header+=ltmp(ltmp_arr.header_caption,{caption:'#'+hashtag});
+						header+=ltmp(ltmp_arr.header_caption,{caption:'#'+uppercase_first_symbol(hashtag)});
 						el.find('.header').html(header);
 						render_right_addon();
 					}
