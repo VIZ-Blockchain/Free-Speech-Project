@@ -638,6 +638,7 @@ var ltmp_arr={
 	feed_end_notice:'<div class="load-more-end-notice"><em>Конец ленты новостей.</em></div>',
 	load_more_end_notice:'<div class="load-more-end-notice"><em>Больше ничего не найдено.</em></div>',
 	error_notice:'<div class="error-notice"><em>{error}</em></div>',
+	empty_loader_notice:'<div class="loader-notice"><span class="submit-button-ring"></span></div>',
 	loader_notice:'<div class="loader-notice" data-account="{account}" data-block="{block}"><span class="submit-button-ring"></span></div>',
 	feed_loader_notice:'<div class="loader-notice" data-feed-time="{time}"><span class="submit-button-ring"></span></div>',
 	notifications_loader_notice:'<div class="loader-notice" data-notifications-id="{id}"><span class="submit-button-ring"></span></div>',
@@ -3711,7 +3712,8 @@ function view_path(location,state,save_state,update){
 									view.find('.header').html(header);
 								}
 								if(update){
-									view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
+									//view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
+									view.find('.objects').html(ltmp_arr.empty_loader_notice);
 
 									get_object(check_account,check_block,function(err,object_result){
 										if(err){
@@ -4008,6 +4010,7 @@ function render_object(user,object,type,preset_level){
 	if(typeof user.profile != 'undefined'){
 		profile=JSON.parse(user.profile);
 	}
+	//console.log('render_object',user,object,type,preset_level);
 	if('default'==type){
 		if(object.is_share){
 			let text='';
@@ -4253,7 +4256,6 @@ function render_object(user,object,type,preset_level){
 		render=ltmp(ltmp_arr.object_type_text_wait_loading,{
 			link:current_link,
 		});
-		console.log(render);
 		setTimeout(function(){
 			let view=$('.view[data-level="'+preset_level+'"]');
 			if(-1==path.indexOf('viz://')){//look in services views
@@ -4329,7 +4331,7 @@ function render_object(user,object,type,preset_level){
 				}
 				else{
 					if(find_replies>0){
-						console.log('find nested replies in objects cache: '+find_replies);
+						//console.log('find nested replies in objects cache: '+find_replies);
 						load_content.html(ltmp(ltmp_arr.object_type_text_reply_nested_count,{count:find_replies}));
 						branch_line.append(ltmp_arr.object_type_text_reply_branch_line);
 					}
@@ -4395,7 +4397,7 @@ function render_object(user,object,type,preset_level){
 }
 
 function render_notify(data,check_level){
-	console.log(data,check_level);
+	//console.log(data,check_level);
 	let render='';
 	let line=true;
 	if(''!=data.title){
@@ -4437,7 +4439,6 @@ function load_more_objects(indicator,check_level){
 			let cur=event.target.result;
 			if(cur){
 				let item=cur.value;
-				//console.log(item);
 				if('all'==tab){
 					objects.push(item);
 				}
@@ -4462,7 +4463,7 @@ function load_more_objects(indicator,check_level){
 				}
 			}
 			else{
-				console.log('load_more_objects end cursor',objects);
+				//console.log('load_more_objects end cursor',objects);
 				if(0==objects.length){
 					indicator.before(ltmp_arr.load_more_end_notice);
 					indicator.remove();
@@ -4499,13 +4500,12 @@ function load_more_objects(indicator,check_level){
 			let cur=event.target.result;
 			if(cur){
 				let item=cur.value;
-				//console.log(item);
 				last_id=item.id;
 				objects.push(item);
 				cur.continue(-1);//load only one item
 			}
 			else{
-				console.log('load_more_objects end cursor',objects);
+				//console.log('load_more_objects end cursor',objects);
 				if(0==objects.length){
 					indicator.before(ltmp_arr.load_more_end_notice);
 					indicator.remove();
@@ -4574,7 +4574,7 @@ function load_more_objects(indicator,check_level){
 		let update_q=update_t.objectStore('feed');
 		let feed_time=parseInt(indicator.data('feed-time'));
 		let same_time=0;
-		console.log('load_more_objects objects feed-time:',same_time);
+		//console.log('load_more_objects objects feed-time:',same_time);
 		let objects=[];
 		let update_req;
 		if(0==feed_time){
@@ -4587,7 +4587,6 @@ function load_more_objects(indicator,check_level){
 			let cur=event.target.result;
 			if(cur){
 				let item=cur.value;
-				//console.log(item);
 				if(0==same_time){
 					if(typeof indicator.closest('.objects').data('feed-time') === 'undefined'){
 						indicator.closest('.objects').data('feed-time',item.time);
@@ -4603,7 +4602,7 @@ function load_more_objects(indicator,check_level){
 				}
 			}
 			else{
-				console.log('load_more_objects end cursor',objects);
+				//console.log('load_more_objects end cursor',objects);
 				if(0==objects.length){
 					indicator.before(ltmp_arr.feed_end_notice);
 					indicator.remove();
@@ -4663,14 +4662,12 @@ function load_more_objects(indicator,check_level){
 				}
 				else{
 					let object_view=render_object(user_result,object_result,'preview');
-					if(null!==indicator){
-						indicator.before(object_view);
-						let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
-						let timestamp=new_object.find('.short-date-view').data('timestamp');
-						new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
-						indicator.data('busy','0');
-						check_load_more();
-					}
+					indicator.before(object_view);
+					let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
+					let timestamp=new_object.find('.short-date-view').data('timestamp');
+					new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+					indicator.data('busy','0');
+					check_load_more();
 				}
 			});
 		});
@@ -4701,13 +4698,13 @@ function check_load_more(){
 
 function is_full(){
 	let calc_width=window.outerWidth;
-	console.log(calc_width);
+	//console.log(calc_width);
 	return (calc_width>1120);
 }
 
 function is_mobile(){
 	let calc_width=window.outerWidth;
-	console.log(calc_width);
+	//console.log(calc_width);
 	return (calc_width<=750);
 }
 
