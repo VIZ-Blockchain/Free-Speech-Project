@@ -153,6 +153,7 @@ var default_settings={
 	//feed_load_by_surf:false,
 	energy:100,
 	silent_award:false,
+	hashtags_addon_popular_limit:5,
 };
 var settings=default_settings;
 
@@ -421,6 +422,10 @@ function load_db(callback){
 			items_table.createIndex('status','status',{unique:false});//status: 0 - default (in popular), 1 - pinned, 2 - ignoring
 		}
 		else{
+			items_table=update_trx.objectStore('hashtags');
+			if(!items_table.indexNames.contains('pinned_order')){
+				items_table.createIndex('pinned_order',['status','order'],{unique:false});//order for pinned hashtags
+			}
 			//new index for hashtags
 		}
 
@@ -526,6 +531,29 @@ function idb_get_id(container,index,search,callback){
 	}
 }
 
+function idb_get_by_id(container,index,search,callback){
+	let find=false;
+	let t,q,req;
+	if(db.objectStoreNames.contains(container)){
+		t=db.transaction([container],'readonly');
+		q=t.objectStore(container);
+		req=q.index(index).openCursor(IDBKeyRange.only(search),'next');
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				find=cur.value;
+				cur.continue();
+			}
+			else{
+				callback(find);
+			}
+		}
+	}
+	else{
+		callback(find);
+	}
+}
+
 function save_account_settings(view,login,regular_key,energy_step){
 	login=login.toLowerCase();
 	if('@'==login.substring(0,1)){
@@ -601,13 +629,44 @@ var path='viz://';
 var query='';
 
 function ltmp(ltmp_str,ltmp_args){
-	for(ltmp_i in ltmp_args){
+	for(let ltmp_i in ltmp_args){
 		ltmp_str=ltmp_str.split('{'+ltmp_i+'}').join(ltmp_args[ltmp_i]);
+	}
+	//remove empty args
+	let ltmp_arr=ltmp_str.match(/\{[a-z_\-]*\}/gm);
+	for(let ltmp_i in ltmp_arr){
+		ltmp_str=ltmp_str.split(ltmp_args[ltmp_i]).join('');
 	}
 	return ltmp_str;
 }
 
 var ltmp_arr={
+	box_addon:`
+	<div class="box">
+		<div class="box-header">
+			<div class="box-title">{caption}</div>
+			<div class="box-buttons">
+				{button}
+			</div>
+		</div>
+		{context}
+	</div>`,
+	hashtags_addon_caption:'# Тэги',
+	hashtags_addon_button:'<a tabindex="0" data-href="fsp:hashtags" title="Управление тэгами">{icon}</a>',
+	hashtags_pinned_caption:'Закрепленные',
+	hashtags_popular_caption:'Популярные',
+	hashtags_main_tab:'Все',
+	hashtags_pinned_tab:'Закрепленные',
+	hashtags_ignored_tab:'Игнорируемые',
+	hashtags_objects_header:`<div class="hashtag-item nohover"><div class="hashtag-item-num">№</div><div class="hashtag-item-caption">Тэг</div><div class="hashtag-item-count">Количество</div></div>`,
+	hashtags_objects_item:`<div class="hashtag-item"><div class="hashtag-item-num">{num}</div><div class="hashtag-item-caption"><a data-href="fsp:hashtags/{tag}">#{tag}</a></div><div class="hashtag-item-count">{count}</div></div>`,
+	box_container:`
+	<div class="box-container">
+		<div class="box-subtitle">{caption}</div>
+		{context}
+	</div>`,
+	box_item:`<div class="box-item"><a data-href="{link}">{caption}</a></div>`,
+
 	notify_item:'<div class="notify-item{addon}" data-id="{id}">{context}</div>',
 	notify:'<div class="notify-wrapper{addon}" data-id="{id}"><div class="notify" role="alert" aria-live="polite">{context}</div></div>',
 	notify_title:'<div class="title">{caption}</div>',
@@ -703,6 +762,7 @@ var ltmp_arr={
 	menu_primary:`<div><a tabindex="0" data-href="{link}" class="{class}">{icon}<span>{caption}</span></a></div>`,
 	menu_feed:'Лента новостей',
 	menu_view_profile:'Профиль',
+	menu_hashtags:'Тэги',
 	menu_notifications:'Уведомления',
 	menu_awards:'Награждения',
 	menu_app_settings:'Настройки',
@@ -734,6 +794,9 @@ var ltmp_arr={
 	icon_notify:`<i class="icon notify"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></i>`,
 	icon_notify_clear:`<i class="icon notify-clear"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.73 21a2 2 0 0 1-3.46 0"></path><path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path><path d="M18 8a6 6 0 0 0-9.33-5"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></i>`,
 	icon_message_clear:`<i class="icon message-clear"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20,2H4C2.897,2,2,2.897,2,4v12c0,1.103,0.897,2,2,2h3v3.767L13.277,18H20c1.103,0,2-0.897,2-2V4C22,2.897,21.103,2,20,2z M20,16h-7.277L9,18.233V16H4V4h16V16z"/><path d="M9.707 13.707L12 11.414 14.293 13.707 15.707 12.293 13.414 10 15.707 7.707 14.293 6.293 12 8.586 9.707 6.293 8.293 7.707 10.586 10 8.293 12.293z"/></svg></i>`,
+	icon_hashtag:`<i class="icon hashtag"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7.784 14l.42-4H4V8h4.415l.525-5h2.011l-.525 5h3.989l.525-5h2.011l-.525 5H20v2h-3.784l-.42 4H20v2h-4.415l-.525 5h-2.011l.525-5H9.585l-.525 5H7.049l.525-5H4v-2h3.784zm2.011 0h3.99l.42-4h-3.99l-.42 4z"/></svg></i>`,
+	icon_pin:`<i class="icon pin"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13.828 1.686l8.486 8.486-1.415 1.414-.707-.707-4.242 4.242-.707 3.536-1.415 1.414-4.242-4.243-4.95 4.95-1.414-1.414 4.95-4.95-4.243-4.242 1.414-1.415L8.88 8.05l4.242-4.242-.707-.707 1.414-1.415zm.708 3.536l-4.671 4.67-2.822.565 6.5 6.5.564-2.822 4.671-4.67-4.242-4.243z"/></svg></i>`,
+	icon_eye_ignore:`<i class="icon eye-ignore"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.882 19.297A10.949 10.949 0 0 1 12 21c-5.392 0-9.878-3.88-10.819-9a10.982 10.982 0 0 1 3.34-6.066L1.392 2.808l1.415-1.415 19.799 19.8-1.415 1.414-3.31-3.31zM5.935 7.35A8.965 8.965 0 0 0 3.223 12a9.005 9.005 0 0 0 13.201 5.838l-2.028-2.028A4.5 4.5 0 0 1 8.19 9.604L5.935 7.35zm6.979 6.978l-3.242-3.242a2.5 2.5 0 0 0 3.241 3.241zm7.893 2.264l-1.431-1.43A8.935 8.935 0 0 0 20.777 12 9.005 9.005 0 0 0 9.552 5.338L7.974 3.76C9.221 3.27 10.58 3 12 3c5.392 0 9.878 3.88 10.819 9a10.947 10.947 0 0 1-2.012 4.592zm-9.084-9.084a4.5 4.5 0 0 1 4.769 4.769l-4.77-4.769z"/></svg></i>`,
 
 	header_back_action:`<a tabindex="0" class="back-action" title="Назад" data-force="{force}">{icon}</a>`,
 	header_link:'<div class="link grow"><div class="header-link-wrapper"><input type="text" class="header-link" value="{link}"><div class="header-link-icons">{icons}</div></div></div>',
@@ -741,8 +804,10 @@ var ltmp_arr={
 		<i tabindex="0" class="icon copy icon-copy-action" title="Копировать адрес"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20,2H10C8.897,2,8,2.897,8,4v4H4c-1.103,0-2,0.897-2,2v10c0,1.103,0.897,2,2,2h10c1.103,0,2-0.897,2-2v-4h4 c1.103,0,2-0.897,2-2V4C22,2.897,21.103,2,20,2z M4,20V10h10l0.002,10H4z M20,14h-4v-4c0-1.103-0.897-2-2-2h-4V4h10V14z"/></svg></i>
 		<i tabindex="0" class="icon search icon-search-action" title="Перейти"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.023,16.977c-0.513-0.488-1.004-0.997-1.367-1.384c-0.372-0.378-0.596-0.653-0.596-0.653l-2.8-1.337 C15.34,12.37,16,10.763,16,9c0-3.859-3.14-7-7-7S2,5.141,2,9s3.14,7,7,7c1.763,0,3.37-0.66,4.603-1.739l1.337,2.8 c0,0,0.275,0.224,0.653,0.596c0.387,0.363,0.896,0.854,1.384,1.367c0.494,0.506,0.988,1.012,1.358,1.392 c0.362,0.388,0.604,0.646,0.604,0.646l2.121-2.121c0,0-0.258-0.242-0.646-0.604C20.035,17.965,19.529,17.471,19.023,16.977z M9,14 c-2.757,0-5-2.243-5-5s2.243-5,5-5s5,2.243,5,5S11.757,14,9,14z"/></svg></i>`,
 	header_caption:'<div class="caption grow">{caption}</div>',
-	icon_link:'<a tabindex="0" class="{action}-action" title="{caption}">{icon}</a>',
+	icon_link:'<a tabindex="0" class="{action}-action{addon}" title="{caption}">{icon}</a>',
 	clear_awards_caption:'Очистить историю наград',
+	pin_hashtags_caption:'Закрепить',
+	ignore_hashtags_caption:'Игнорировать',
 	clear_hashtags_caption:'Удалить тэг',
 	mark_readed_notifications_caption:'Отметить прочитанными',
 	clear_readed_notifications_caption:'Удалить прочитанные уведомления',
@@ -859,12 +924,82 @@ function render_menu(){
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:notifications',class:(path=='fsp:notifications'?'current':''),icon:ltmp_arr.icon_notify,caption:ltmp_arr.menu_notifications});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:awards',class:(path=='fsp:awards'?'current':''),icon:ltmp_arr.icon_gem,caption:ltmp_arr.menu_awards});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://@'+current_user+'/',class:(path=='viz://@'+current_user+'/'?'current':''),icon:ltmp_arr.icon_view_profile,caption:ltmp_arr.menu_view_profile});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:hashtags',class:(path=='fsp:hashtags'?'current adaptive-show-inline':'adaptive-show-inline'),icon:ltmp_arr.icon_hashtag,caption:ltmp_arr.menu_hashtags});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:app_settings',class:(path=='fsp:app_settings'?'current':''),icon:ltmp_arr.icon_settings,caption:ltmp_arr.menu_app_settings});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:account_settings',class:(path=='fsp:account_settings'?'current':''),icon:ltmp_arr.icon_account_settings,caption:ltmp_arr.menu_account_settings});
 	}
 	$('div.menu .primary').html(primary_menu);
 	let secondary_menu=ltmp_arr.menu_secondary;
 	$('div.menu .secondary').html(secondary_menu);
+}
+
+function render_right_addon(){
+	$('div.right-addon').html('');
+	if(current_user){
+		let hashtags_addon='';
+		let hashtags_context='';
+		//pinned
+		let read_t=db.transaction(['hashtags'],'readonly');
+		let read_q=read_t.objectStore('hashtags');
+		let req=read_q.index('pinned_order').openCursor(IDBKeyRange.upperBound([1,Number.MAX_SAFE_INTEGER],true),'prev');
+		let find=false;
+		let container_context='';
+		let pinned_arr=[];
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				if(1==cur.value.status){//pinned
+					let hashtag_data=cur.value;
+					find=true;
+					container_context+=ltmp(ltmp_arr.box_item,{link:'fsp:hashtags/'+hashtag_data.tag,caption:hashtag_data.tag});
+					pinned_arr.push(hashtag_data.id);
+					cur.continue();
+				}
+				else{
+					cur.continue(-1);
+				}
+			}
+			else{
+				if(find){
+					hashtags_context+=ltmp(ltmp_arr.box_container,{context:container_context,caption:ltmp_arr.hashtags_pinned_caption})
+				}
+				//popular
+				let read_t2=db.transaction(['hashtags'],'readonly');
+				let read_q2=read_t2.objectStore('hashtags');
+				let req2=read_q2.index('count').openCursor(null,'prev');
+				let find2=false;
+				let popular_count=0;
+				let container_context2='';
+				req2.onsuccess=function(event){
+					let cur=event.target.result;
+					if(cur){
+						if(0==cur.value.status){
+							let hashtag_data=cur.value;
+							find2=true;
+							container_context2+=ltmp(ltmp_arr.box_item,{link:'fsp:hashtags/'+hashtag_data.tag,caption:hashtag_data.tag});
+							popular_count++;
+							if(popular_count>=settings.hashtags_addon_popular_limit){
+								cur.continue(-1);
+							}
+							else{
+								cur.continue();
+							}
+						}
+						else{
+							cur.continue();
+						}
+					}
+					else{
+						if(find2){
+							hashtags_context+=ltmp(ltmp_arr.box_container,{context:container_context2,caption:ltmp_arr.hashtags_popular_caption})
+						}
+						hashtags_addon=ltmp(ltmp_arr.box_addon,{caption:ltmp_arr.hashtags_addon_caption,button:ltmp(ltmp_arr.hashtags_addon_button,{icon:ltmp_arr.icon_settings}),context:hashtags_context});
+						$('div.right-addon').html(hashtags_addon);
+					}
+				};
+			}
+		};
+	}
 }
 
 function render_session(){
@@ -1233,6 +1368,82 @@ function clear_awards(el){
 	};
 }
 
+function ignore_hashtags(el){
+	let hashtag=el.data('hashtag');
+	let hashtag_id=el.data('hashtag-id');
+	if(hashtag_id){
+		let t,q,req;
+		t=db.transaction(['hashtags'],'readwrite');
+		q=t.objectStore('hashtags');
+		req=q.openCursor(IDBKeyRange.only(hashtag_id),'next');
+
+		let new_status=0;
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let result=cur.value;
+				if(2!=result.status){
+					result.status=2;
+				}
+				else{
+					result.status=0;
+				}
+				new_status=result.status;
+				cur.update(result);
+				cur.continue();
+			}
+			else{
+				if(2==new_status){
+					el.find('.header .ignore-hashtags-action').addClass('negative');
+					el.find('.header .pin-hashtags-action').removeClass('positive');
+				}
+				else{
+					el.find('.header .ignore-hashtags-action').removeClass('negative');
+				}
+				render_right_addon();
+			}
+		};
+	}
+}
+
+function pin_hashtags(el){
+	let hashtag=el.data('hashtag');
+	let hashtag_id=el.data('hashtag-id');
+	if(hashtag_id){
+		let t,q,req;
+		t=db.transaction(['hashtags'],'readwrite');
+		q=t.objectStore('hashtags');
+		req=q.openCursor(IDBKeyRange.only(hashtag_id),'next');
+
+		let new_status=0;
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let result=cur.value;
+				if(1!=result.status){
+					result.status=1;
+				}
+				else{
+					result.status=0;
+				}
+				new_status=result.status;
+				cur.update(result);
+				cur.continue();
+			}
+			else{
+				if(1==new_status){
+					el.find('.header .pin-hashtags-action').addClass('positive');
+					el.find('.header .ignore-hashtags-action').removeClass('negative');
+				}
+				else{
+					el.find('.header .pin-hashtags-action').removeClass('positive');
+				}
+				render_right_addon();
+			}
+		};
+	}
+}
+
 function clear_hashtags(el){
 	let hashtag=el.data('hashtag');
 	let hashtag_id=el.data('hashtag-id');
@@ -1265,6 +1476,7 @@ function clear_hashtags(el){
 						header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
 						header+=ltmp(ltmp_arr.header_caption,{caption:'#'+hashtag});
 						el.find('.header').html(header);
+						render_right_addon();
 					}
 				};
 			}
@@ -1776,6 +1988,14 @@ function app_mouse(e){
 	if($(target).hasClass('clear-hashtags-action')){
 		let view=$(target).closest('.view');
 		clear_hashtags(view);
+	}
+	if($(target).hasClass('pin-hashtags-action')){
+		let view=$(target).closest('.view');
+		pin_hashtags(view);
+	}
+	if($(target).hasClass('ignore-hashtags-action')){
+		let view=$(target).closest('.view');
+		ignore_hashtags(view);
 	}
 	if($(target).hasClass('subscribe-action')){
 		if(!$(target).hasClass('disabled')){
@@ -2457,7 +2677,7 @@ function parse_object(account,block,callback){
 										let hashtag=hashtags_links[i].substr(1);
 										idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
 											if(false===hashtag_id){
-												let hashtag_info={'tag':hashtag,'count':0,'status':0};
+												let hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
 												let hashtag_add_t=db.transaction(['hashtags'],'readwrite');
 												let hashtag_add_q=hashtag_add_t.objectStore('hashtags');
 												hashtag_add_q.add(hashtag_info);
@@ -3199,25 +3419,31 @@ function view_notifications(view,path_parts,query,title){
 	check_load_more();
 }
 
-function view_hashtags(view,path_parts,query,title){
+function uppercase_first_symbol(str){
+	return str.substring(0,1).toUpperCase()+str.substring(1);
+}
+function view_hashtags(view,path_parts,query,title,back_to){
 	view.data('hashtag','');
 	view.data('hashtag-id',0);
+	view.find('.tabs').html('');
 	document.title=ltmp_arr.hashtags_caption+' - '+title;
 	let header='';
-	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
 	if((typeof path_parts[1] != 'undefined')&&(''!=path_parts[1])){
 		let hashtag=decodeURIComponent(path_parts[1]);
-		idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+		idb_get_by_id('hashtags','tag',hashtag,function(hashtag_data){
 			view.data('hashtag',hashtag);
-			view.data('hashtag-id',hashtag_id);
-			if(false===hashtag_id){
+			header+=ltmp(ltmp_arr.header_caption,{caption:'#'+uppercase_first_symbol(hashtag)});
+			if(false===hashtag_data){
 				view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.hashtags_not_found}));
-				header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.hashtags_caption});
 			}
 			else{
-				header+=ltmp(ltmp_arr.header_caption,{caption:'#'+hashtag});
+				view.data('hashtag-id',hashtag_data.id);
+				header+=ltmp(ltmp_arr.icon_link,{action:'pin-hashtags',caption:ltmp_arr.pin_hashtags_caption,icon:ltmp_arr.icon_pin,addon:(1==hashtag_data.status?' positive':'')});
+				header+=ltmp(ltmp_arr.icon_link,{action:'ignore-hashtags',caption:ltmp_arr.ignore_hashtags_caption,icon:ltmp_arr.icon_eye_ignore,addon:(2==hashtag_data.status?' negative':'')});
 				header+=ltmp(ltmp_arr.icon_link,{action:'clear-hashtags',caption:ltmp_arr.clear_hashtags_caption,icon:ltmp_arr.icon_message_clear});
-				view.find('.objects').html(ltmp(ltmp_arr.hashtags_loader_notice,{tag_id:hashtag_id,id:0}));
+
+				view.find('.objects').html(ltmp(ltmp_arr.hashtags_loader_notice,{tag_id:hashtag_data.id,id:0}));
 			}
 			view.find('.header').html(header);
 			$('.loader').css('display','none');
@@ -3228,10 +3454,123 @@ function view_hashtags(view,path_parts,query,title){
 	else{
 		header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.hashtags_caption});
 		view.find('.header').html(header);
-		view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.hashtags_not_found}));
-		$('.loader').css('display','none');
-		view.css('display','block');
-		check_load_more();
+
+		let current_tab='main';
+		console.log(query);
+		if((typeof query != 'undefined')&&(''!=query)){
+			current_tab=query;
+		}
+
+		let tabs='';
+		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:hashtags?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.hashtags_main_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:hashtags?pinned',class:('pinned'==current_tab?'current':''),caption:ltmp_arr.hashtags_pinned_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:hashtags?ignored',class:('ignored'==current_tab?'current':''),caption:ltmp_arr.hashtags_ignored_tab});
+		view.find('.tabs').html(tabs);
+		view.find('.objects').html(ltmp_arr.empty_loader_notice);
+		if('main'==current_tab){
+			let read_t=db.transaction(['hashtags'],'readonly');
+			let read_q=read_t.objectStore('hashtags');
+			let req=read_q.index('count').openCursor(null,'prev');
+			let find=false;
+			let objects='';
+			let num=1;
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					let hashtag_data=cur.value;
+					find=true;
+					objects+=ltmp(ltmp_arr.hashtags_objects_item,{num:num,tag:hashtag_data.tag,count:hashtag_data.count});
+					num++;
+					cur.continue();
+				}
+				else{
+					if(find){
+						objects=ltmp_arr.hashtags_objects_header+objects;
+						view.find('.objects').html(objects);
+					}
+					else{
+						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.hashtags_not_found}));
+					}
+					$('.loader').css('display','none');
+					view.css('display','block');
+				}
+			};
+		}
+		else
+		if('pinned'==current_tab){
+			let read_t=db.transaction(['hashtags'],'readonly');
+			let read_q=read_t.objectStore('hashtags');
+			let req=read_q.index('pinned_order').openCursor(IDBKeyRange.upperBound([1,Number.MAX_SAFE_INTEGER],true),'prev');
+			let find=false;
+			let objects='';
+			let num=1;
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(1==cur.value.status){//pinned
+						let hashtag_data=cur.value;
+						find=true;
+						objects+=ltmp(ltmp_arr.hashtags_objects_item,{num:num,tag:hashtag_data.tag,count:hashtag_data.count});
+						num++;
+						cur.continue();
+					}
+					else{
+						cur.continue(-1);
+					}
+				}
+				else{
+					if(find){
+						objects=ltmp_arr.hashtags_objects_header+objects;
+						view.find('.objects').html(objects);
+					}
+					else{
+						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.hashtags_not_found}));
+					}
+					$('.loader').css('display','none');
+					view.css('display','block');
+				}
+			};
+		}
+		else
+		if('ignored'==current_tab){
+			let read_t=db.transaction(['hashtags'],'readonly');
+			let read_q=read_t.objectStore('hashtags');
+			let req=read_q.index('pinned_order').openCursor(IDBKeyRange.upperBound([2,Number.MAX_SAFE_INTEGER],true),'prev');
+			let find=false;
+			let objects='';
+			let num=1;
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(2==cur.value.status){//ignored
+						let hashtag_data=cur.value;
+						find=true;
+						objects+=ltmp(ltmp_arr.hashtags_objects_item,{num:num,tag:hashtag_data.tag,count:hashtag_data.count});
+						num++;
+						cur.continue();
+					}
+					else{
+						cur.continue(-1);
+					}
+				}
+				else{
+					if(find){
+						objects=ltmp_arr.hashtags_objects_header+objects;
+						view.find('.objects').html(objects);
+					}
+					else{
+						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.hashtags_not_found}));
+					}
+					$('.loader').css('display','none');
+					view.css('display','block');
+				}
+			};
+		}
+		else{
+			view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.hashtags_not_found}));
+			$('.loader').css('display','none');
+			view.css('display','block');
+		}
 	}
 }
 
@@ -3415,12 +3754,15 @@ function view_path(location,state,save_state,update){
 	}
 	if(typeof state.path == 'undefined'){
 		//check query state
-		if('/'!=location.substr(-1)){
-			location+='/';
-		}
 		if(-1!=location.indexOf('?')){
 			query=location.substring(location.indexOf('?')+1);
 			location=location.substring(0,location.indexOf('?'));
+		}
+		else{
+			query='';
+		}
+		if('/'!=location.substr(-1)){
+			location+='/';
 		}
 		if(-1!=location.indexOf('viz://')){
 			path=location;
@@ -3508,7 +3850,7 @@ function view_path(location,state,save_state,update){
 			//execute view_ function if exist to prepare page (load vars to input)
 			let current_view=path_parts[0].substring(('fsp:').length);
 			if(typeof window['view_'+current_view] === 'function'){
-				setTimeout(window['view_'+current_view],1,view,path_parts,query,title);
+				setTimeout(window['view_'+current_view],1,view,path_parts,query,title,back_to);
 			}
 			else{
 				$('.loader').css('display','none');
@@ -4716,6 +5058,7 @@ function main_app(){
 	parse_fullpath();
 	render_menu();
 	render_session();
+	render_right_addon();
 	view_path(path,{},false,false);
 	setTimeout(function(){
 		update_dgp(true);
