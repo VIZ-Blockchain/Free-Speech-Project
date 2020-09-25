@@ -420,6 +420,7 @@ function load_db(callback){
 			items_table.createIndex('tag','tag',{unique:true});//hash tag name
 			items_table.createIndex('count','count',{unique:false});//hash tag name
 			items_table.createIndex('status','status',{unique:false});//status: 0 - default (in popular), 1 - pinned, 2 - ignoring
+			items_table.createIndex('pinned_order',['status','order'],{unique:false});//order for pinned hashtags
 		}
 		else{
 			items_table=update_trx.objectStore('hashtags');
