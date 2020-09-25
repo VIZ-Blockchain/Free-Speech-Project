@@ -309,7 +309,7 @@ const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRa
 
 var db;
 var db_version=1;
-var global_db_version=2;
+var global_db_version=3;
 var need_update_db_version=false;
 var local_global_db_version=localStorage.getItem(storage_prefix+'global_db_version');
 if((null===local_global_db_version)||(global_db_version>local_global_db_version)){
@@ -976,7 +976,7 @@ function render_right_addon(){
 						if(0==cur.value.status){
 							let hashtag_data=cur.value;
 							find2=true;
-							container_context2+=ltmp(ltmp_arr.box_item,{link:'fsp:hashtags/'+hashtag_data.tag,caption:hashtag_data.tag});
+							container_context2+=ltmp(ltmp_arr.box_item,{link:'fsp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
 							popular_count++;
 							if(popular_count>=settings.hashtags_addon_popular_limit){
 								cur.continue(-1);
@@ -2640,8 +2640,26 @@ function parse_object(account,block,callback){
 					else{
 						if(!find){//object not found in base
 							if(global_db_version>=2){//hashtags support
+								//need replace url with hash to avoid conflict
+								let hashtags_text=obj.data.d.text;
+								let summary_links=[];
+								//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
+								//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
+								let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
+								let http_protocol_links=hashtags_text.match(http_protocol_pattern);
+								if(null!=http_protocol_links){
+									summary_links=summary_links.concat(http_protocol_links);
+								}
+
+								summary_links=array_unique(summary_links);
+								summary_links.sort(sort_by_length_desc);
+
+								for(let i in summary_links){
+									hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
+								}
+
 								let hashtags_pattern = /#(.[^@#!.,?\r\n\t ]*)/g;
-								let hashtags_links=obj.data.d.text.match(hashtags_pattern);
+								let hashtags_links=hashtags_text.match(hashtags_pattern);
 								if(null!=hashtags_links){
 									hashtags_links=hashtags_links.map(function(value){
 										return value.toLowerCase();
@@ -4251,23 +4269,24 @@ function array_unique(arr) {
 
 function highlight_links(text){
 	let summary_links=[];
-
-	let hashtags_pattern = /#(.[^@#!.,?\r\n\t ]*)/g;
-	let hashtags_links=text.match(hashtags_pattern);
-	if(null!=hashtags_links){
-		summary_links=summary_links.concat(hashtags_links);
-	}
+	let num=0;
 
 	let account_pattern = /@[a-z0-9\-\.]*/g;
 	let account_links=text.match(account_pattern);
 	if(null!=account_links){
-		summary_links=summary_links.concat(account_links);
+		for(let i in account_links){
+			summary_links[num]=account_links[i];
+			num++;
+		}
 	}
 
 	let viz_protocol_pattern = /viz\:\/\/[@a-z0-9\-\.\/]*/g;
 	let viz_protocol_links=text.match(viz_protocol_pattern);
 	if(null!=viz_protocol_links){
-		summary_links=summary_links.concat(viz_protocol_links);
+		for(let i in viz_protocol_links){
+			summary_links[num]=viz_protocol_links[i];
+			num++;
+		}
 	}
 
 	//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
@@ -4275,21 +4294,31 @@ function highlight_links(text){
 	let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
 	let http_protocol_links=text.match(http_protocol_pattern);
 	if(null!=http_protocol_links){
-		summary_links=summary_links.concat(http_protocol_links);
+		for(let i in http_protocol_links){
+			summary_links[num]=http_protocol_links[i];
+			num++;
+		}
+	}
+
+	//hashtags highlights after links for avoid conflicts with url with hashes (not necessary, because array sorted by length)
+	let hashtags_pattern = /#(.[^@#!.,?\r\n\t ]*)/g;
+	let hashtags_links=text.match(hashtags_pattern);
+	if(null!=hashtags_links){
+		for(let i in hashtags_links){
+			summary_links[num]=hashtags_links[i];
+			num++;
+		}
 	}
 
 	summary_links=array_unique(summary_links);
 	summary_links.sort(sort_by_length_desc);
 
 	for(let i in summary_links){
-		let link_num=i;
-		let change_text=summary_links[link_num];
-		text=fast_str_replace(change_text,'<REPLACE_LINK_'+link_num+'>',text);
+		text=fast_str_replace(summary_links[i],'<REPLACE_LINK_'+i+'>',text);
 	}
 
 	for(let i in summary_links){
-		let link_num=i;
-		let change_text=summary_links[link_num];
+		let change_text=summary_links[i];
 		let new_text=change_text;
 		if('#'==change_text.substring(0,1)){
 			new_text='<a tabindex="0" data-href="fsp:hashtags/'+(change_text.substring(1).toLowerCase())+'/">'+change_text+'</a>';
@@ -4305,7 +4334,7 @@ function highlight_links(text){
 		else{
 			new_text='<a href="'+change_text+'" target="_blank">'+change_text+'</a>';
 		}
-		text=fast_str_replace('<REPLACE_LINK_'+link_num+'>',new_text,text);
+		text=fast_str_replace('<REPLACE_LINK_'+i+'>',new_text,text);
 	}
 
 	return text;
