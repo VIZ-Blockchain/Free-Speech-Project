@@ -522,6 +522,69 @@ body.night .notifications .notify-wrapper .notify{
 }
 .hashtag-item-count{
 }
+
+.user-item-box{
+	line-height:20px;
+	font-size:14px;
+	margin-top:0;
+	padding:10px 15px;
+	text-align:left;
+	outline:0;
+	position:relative;
+	display:flex;
+	flex-direction:row;
+	border-bottom:1px solid rgba(204, 204, 221, 0.5);
+}
+.user-item-box.search-results{
+	display:none;
+}
+.user-item{
+	line-height:44px;
+	font-size:20px;
+	margin-top:0;
+	padding:10px 15px;
+	text-align:left;
+	outline:0;
+
+	position:relative;
+	display:flex;
+	flex-direction:row;
+
+	border-bottom:1px solid rgba(204, 204, 221, 0.5);
+
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+}
+.user-item:hover{
+	background-color:rgba(28, 152, 229, 0.05);
+}
+.user-item.nohover:hover{
+	background-color:transparent !important;
+}
+.user-item-avatar{
+	margin-right:10px;
+}
+.user-item-nickname{
+	font-weight:bold;
+	margin-right:10px;
+}
+.user-item-account{
+	color:rgba(96, 112, 124, 0.7);
+	flex-grow:1;
+}
+.user-item-search{
+	width:100%;
+	line-height:20px;
+	padding:5px 10px;
+	border:1px solid rgba(165, 180, 192, 0.7);
+	border-radius:15px;
+}
+.user-item-manage a{
+	color:#1c98e5;
+}
 .notify-item{
 	font-size:20px;
 	margin-top:0;

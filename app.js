@@ -661,6 +661,26 @@ var ltmp_arr={
 	hashtags_ignored_tab:'Игнорируемые',
 	hashtags_objects_header:`<div class="hashtag-item nohover"><div class="hashtag-item-num">№</div><div class="hashtag-item-caption">Тэг</div><div class="hashtag-item-count">Количество</div></div>`,
 	hashtags_objects_item:`<div class="hashtag-item"><div class="hashtag-item-num">{num}</div><div class="hashtag-item-caption"><a data-href="fsp:hashtags/{tag}">#{tag}</a></div><div class="hashtag-item-count">{count}</div></div>`,
+
+	found_results:'Найдено: {count}',
+
+	users_main_tab:'Все',
+	users_subscribed_tab:'Подписки',
+	users_ignored_tab:'Игнорируемые',
+	users_objects_box:`<div class="user-item-box">{context}</div>`,
+	users_objects_header:`
+	<div class="user-item-box"><input type="text" class="user-item-search" placeholder="Быстрый поиск" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+	<div class="user-item-box search-results"></div>
+	`,
+	users_objects_item:`
+	<div class="user-item" data-search="{search}">
+		<div class="user-item-avatar">{avatar}</div>
+		<a class="user-item-nickname" tabindex="0" data-href="viz://@{account}/">{nickname}</a>
+		<a class="user-item-account" tabindex="0" data-href="viz://@{account}/">{account}</a>
+		<!--<div class="user-item-manage"><a tabindex="0" data-href="fsp:users/{account}" title="Управление">{icon}</a></div>-->
+	</div>`,
+	users_objects_item_avatar:`<div class="avatar"><div class="shadow" data-href="viz://@{account}/"></div><img src="{avatar}"></div>`,
+
 	box_container:`
 	<div class="box-container">
 		<div class="box-subtitle">{caption}</div>
@@ -719,6 +739,7 @@ var ltmp_arr={
 	notifications_caption:'Уведомления',
 	awards_caption:'Награждения',
 	hashtags_caption:'Тэги',
+	users_caption:'Пользователи',
 	app_settings_caption:'Настройки приложения',
 	app_settings_saved:'Настройки сохранены',
 	app_settings_reset:'Настройки сброшены',
@@ -740,6 +761,7 @@ var ltmp_arr={
 	block_not_found:'Блок не найден, попробуйте позже',
 	data_not_found:'Данные не найдены',
 	hashtags_not_found:'Тэг не найден',
+	users_not_found:'Пользователи не найдены',
 
 	view:`
 		<div class="view" data-level="{level}" data-path="{path}" data-query="{query}">
@@ -764,6 +786,7 @@ var ltmp_arr={
 	menu_feed:'Лента новостей',
 	menu_view_profile:'Профиль',
 	menu_hashtags:'Тэги',
+	menu_users:'Пользователи',
 	menu_notifications:'Уведомления',
 	menu_awards:'Награждения',
 	menu_app_settings:'Настройки',
@@ -775,6 +798,7 @@ var ltmp_arr={
 	icon_reply:`<i class="icon reply"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M14 22.5L11.2 19H6a1 1 0 0 1-1-1V7.103a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1h-5.2L14 22.5zm1.839-5.5H21V8.103H7V17H12.161L14 19.298 15.839 17zM2 2h17v2H3v11H1V3a1 1 0 0 1 1-1z"/></svg></i>`,
 	icon_share:`<i class="icon share"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M3,12c0,1.654,1.346,3,3,3c0.794,0,1.512-0.315,2.049-0.82l5.991,3.424C14.022,17.734,14,17.864,14,18c0,1.654,1.346,3,3,3 s3-1.346,3-3s-1.346-3-3-3c-0.794,0-1.512,0.315-2.049,0.82L8.96,12.397C8.978,12.266,9,12.136,9,12s-0.022-0.266-0.04-0.397 l5.991-3.423C15.488,8.685,16.206,9,17,9c1.654,0,3-1.346,3-3s-1.346-3-3-3s-3,1.346-3,3c0,0.136,0.022,0.266,0.04,0.397 L8.049,9.82C7.512,9.315,6.794,9,6,9C4.346,9,3,10.346,3,12z"/></svg></i>`,
 
+	icon_users:`<i class="icon users"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M2 22a8 8 0 1 1 16 0h-2a6 6 0 1 0-12 0H2zm8-9c-3.315 0-6-2.685-6-6s2.685-6 6-6 6 2.685 6 6-2.685 6-6 6zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm8.284 3.703A8.002 8.002 0 0 1 23 22h-2a6.001 6.001 0 0 0-3.537-5.473l.82-1.824zm-.688-11.29A5.5 5.5 0 0 1 21 8.5a5.499 5.499 0 0 1-5 5.478v-2.013a3.5 3.5 0 0 0 1.041-6.609l.555-1.943z"/></svg></i>`,
 	icon_copy_link:`<i class="icon copy_link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8.465,11.293c1.133-1.133,3.109-1.133,4.242,0L13.414,12l1.414-1.414l-0.707-0.707c-0.943-0.944-2.199-1.465-3.535-1.465 S7.994,8.935,7.051,9.879L4.929,12c-1.948,1.949-1.948,5.122,0,7.071c0.975,0.975,2.255,1.462,3.535,1.462 c1.281,0,2.562-0.487,3.536-1.462l0.707-0.707l-1.414-1.414l-0.707,0.707c-1.17,1.167-3.073,1.169-4.243,0 c-1.169-1.17-1.169-3.073,0-4.243L8.465,11.293z"/><path d="M12,4.929l-0.707,0.707l1.414,1.414l0.707-0.707c1.169-1.167,3.072-1.169,4.243,0c1.169,1.17,1.169,3.073,0,4.243 l-2.122,2.121c-1.133,1.133-3.109,1.133-4.242,0L10.586,12l-1.414,1.414l0.707,0.707c0.943,0.944,2.199,1.465,3.535,1.465 s2.592-0.521,3.535-1.465L19.071,12c1.948-1.949,1.948-5.122,0-7.071C17.121,2.979,13.948,2.98,12,4.929z"/></svg></i>`,
 	icon_new_object:`<i class="icon new_object"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M3,16c0,1.103,0.897,2,2,2h3.586L12,21.414L15.414,18H19c1.103,0,2-0.897,2-2V4c0-1.103-0.897-2-2-2H5C3.897,2,3,2.897,3,4 V16z M5,4h14v12h-4.414L12,18.586L9.414,16H5V4z"/><path d="M11 14L13 14 13 11 16 11 16 9 13 9 13 6 11 6 11 9 8 9 8 11 11 11z"/></svg></i>`,
 	icon_edit_profile:`<i class="icon edit_profile"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M12 14v2a6 6 0 0 0-6 6H4a8 8 0 0 1 8-8zm0-1c-3.315 0-6-2.685-6-6s2.685-6 6-6 6 2.685 6 6-2.685 6-6 6zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm2.595 7.812a3.51 3.51 0 0 1 0-1.623l-.992-.573 1-1.732.992.573A3.496 3.496 0 0 1 17 14.645V13.5h2v1.145c.532.158 1.012.44 1.405.812l.992-.573 1 1.732-.992.573a3.51 3.51 0 0 1 0 1.622l.992.573-1 1.732-.992-.573a3.496 3.496 0 0 1-1.405.812V22.5h-2v-1.145a3.496 3.496 0 0 1-1.405-.812l-.992.573-1-1.732.992-.572zM18 19.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></i>`,
@@ -805,6 +829,7 @@ var ltmp_arr={
 		<i tabindex="0" class="icon copy icon-copy-action" title="Копировать адрес"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20,2H10C8.897,2,8,2.897,8,4v4H4c-1.103,0-2,0.897-2,2v10c0,1.103,0.897,2,2,2h10c1.103,0,2-0.897,2-2v-4h4 c1.103,0,2-0.897,2-2V4C22,2.897,21.103,2,20,2z M4,20V10h10l0.002,10H4z M20,14h-4v-4c0-1.103-0.897-2-2-2h-4V4h10V14z"/></svg></i>
 		<i tabindex="0" class="icon search icon-search-action" title="Перейти"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.023,16.977c-0.513-0.488-1.004-0.997-1.367-1.384c-0.372-0.378-0.596-0.653-0.596-0.653l-2.8-1.337 C15.34,12.37,16,10.763,16,9c0-3.859-3.14-7-7-7S2,5.141,2,9s3.14,7,7,7c1.763,0,3.37-0.66,4.603-1.739l1.337,2.8 c0,0,0.275,0.224,0.653,0.596c0.387,0.363,0.896,0.854,1.384,1.367c0.494,0.506,0.988,1.012,1.358,1.392 c0.362,0.388,0.604,0.646,0.604,0.646l2.121-2.121c0,0-0.258-0.242-0.646-0.604C20.035,17.965,19.529,17.471,19.023,16.977z M9,14 c-2.757,0-5-2.243-5-5s2.243-5,5-5s5,2.243,5,5S11.757,14,9,14z"/></svg></i>`,
 	header_caption:'<div class="caption grow">{caption}</div>',
+	header_caption_link:'<a data-href="{link}" tabindex="0" class="caption grow">{caption}</a>',
 	icon_link:'<a tabindex="0" class="{action}-action{addon}" title="{caption}">{icon}</a>',
 	clear_awards_caption:'Очистить историю наград',
 	pin_hashtags_caption:'Закрепить',
@@ -924,6 +949,7 @@ function render_menu(){
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://',class:(path=='viz://'?'current':''),icon:ltmp_arr.icon_feed,caption:ltmp_arr.menu_feed});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:notifications',class:(path=='fsp:notifications'?'current':''),icon:ltmp_arr.icon_notify,caption:ltmp_arr.menu_notifications});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:awards',class:(path=='fsp:awards'?'current':''),icon:ltmp_arr.icon_gem,caption:ltmp_arr.menu_awards});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:users',class:(path=='fsp:users'?'current':''),icon:ltmp_arr.icon_users,caption:ltmp_arr.menu_users});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://@'+current_user+'/',class:(path=='viz://@'+current_user+'/'?'current':''),icon:ltmp_arr.icon_view_profile,caption:ltmp_arr.menu_view_profile});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:hashtags',class:(path=='fsp:hashtags'?'current adaptive-show-inline':'adaptive-show-inline'),icon:ltmp_arr.icon_hashtag,caption:ltmp_arr.menu_hashtags});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:app_settings',class:(path=='fsp:app_settings'?'current':''),icon:ltmp_arr.icon_settings,caption:ltmp_arr.menu_app_settings});
@@ -3440,6 +3466,298 @@ function view_notifications(view,path_parts,query,title){
 
 function uppercase_first_symbol(str){
 	return str.substring(0,1).toUpperCase()+str.substring(1);
+}
+let reverse_arr={
+	'й':'ii',
+	'ц':'c',
+	'у':'u',
+	'к':'k',
+	'е':'e',
+	'н':'n',
+	'г':'g',
+	'ш':'sh',
+	'щ':'sh',
+	'з':'z',
+	'х':'h',
+	'ъ':'',
+	'ф':'f',
+	'ы':'ie',
+	'в':'v',
+	'а':'a',
+	'п':'p',
+	'р':'r',
+	'о':'o',
+	'л':'l',
+	'д':'d',
+	'ж':'g',
+	'э':'e',
+	'я':'ya',
+	'ч':'ch',
+	'с':'s',
+	'м':'m',
+	'и':'i',
+	'т':'t',
+	'ь':'',
+	'б':'b',
+	'ю':'yu',
+	'ё':'e',
+
+	'q':'к',
+	'w':'в',
+	'e':'е',
+	'r':'р',
+	't':'т',
+	'y':'й',
+	'u':'у',
+	'i':'и',
+	'o':'о',
+	'p':'п',
+	'a':'а',
+	's':'с',
+	'd':'д',
+	'f':'ф',
+	'g':'г',
+	'h':'х',
+	'j':'ж',
+	'k':'к',
+	'l':'л',
+	'z':'з',
+	'x':'кс',
+	'c':'к',
+	'v':'в',
+	'b':'б',
+	'n':'н',
+	'm':'м',
+};
+function reverse_str(str){
+	let res=str.split('');
+	for(let i in res){
+		let char=res[i];
+		res[i]=reverse_arr[char];
+	}
+	return res.join('');
+}
+
+function rebind_users_search(){
+	$('.user-item-search').off('input');
+	$('.user-item-search').on('input',function(){
+		if(''==this.value){
+			$('.user-item-box.search-results').css('display','none');
+			$('.view[data-path="fsp:users"] .objects .user-item').css('display','flex')
+		}
+		else{
+			let search_str=this.value.toLowerCase();
+			let count=0;
+			$('.view[data-path="fsp:users"] .objects .user-item').each(function(){
+				if(-1!=$(this).data('search').indexOf(search_str)){
+					$(this).css('display','flex');
+					count++;
+				}
+				else{
+					$(this).css('display','none');
+				}
+			})
+			$('.user-item-box.search-results').html(ltmp(ltmp_arr.found_results,{count:count}));
+			$('.user-item-box.search-results').css('display','block');
+		}
+	});
+}
+function view_users(view,path_parts,query,title,back_to){
+	view.find('.tabs').html('');
+	document.title=ltmp_arr.users_caption+' - '+title;
+	let header='';
+	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
+
+	view.data('user-account','');
+	if((typeof path_parts[1] != 'undefined')&&(''!=path_parts[1])){
+		let user_account=decodeURIComponent(path_parts[1]);
+		idb_get_by_id('users','account',user_account,function(user_data){
+			view.data('user-account',user_account);
+			if(false===user_data){
+				view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found}));
+			}
+			else{
+				let user_data_profile=JSON.parse(user_data.profile);
+				header+=ltmp(ltmp_arr.header_caption_link,{caption:user_data_profile.nickname,link:'viz://@'+user_data.account});
+				let check_account=user_data.account;
+				if(check_account==current_user){
+					header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
+					header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
+				}
+				else{
+					header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
+					if(!db.objectStoreNames.contains('objects_'+check_account)){
+						if(2==user_data.status){
+							header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
+							header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+						}
+						else{
+							header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+							header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+						}
+					}
+					else{
+						header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
+						header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
+					}
+					header+=ltmp_arr.user_actions_close;
+				}
+				view.find('.header').html(header);
+				let objects='';
+				objects+=ltmp(ltmp_arr.users_objects_box,{context:'Страница персонализированных настроек находится в разработке.'});
+				view.find('.objects').html(objects);
+			}
+			view.find('.header').html(header);
+			$('.loader').css('display','none');
+			view.css('display','block');
+		});
+	}
+	else{
+		header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.users_caption});
+		view.find('.header').html(header);
+
+		let current_tab='main';
+		console.log(query);
+		if((typeof query != 'undefined')&&(''!=query)){
+			current_tab=query;
+		}
+
+		let tabs='';
+		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:users?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.users_main_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:users?subscribed',class:('subscribed'==current_tab?'current':''),caption:ltmp_arr.users_subscribed_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:users?ignored',class:('ignored'==current_tab?'current':''),caption:ltmp_arr.users_ignored_tab});
+		view.find('.tabs').html(tabs);
+		view.find('.objects').html(ltmp_arr.empty_loader_notice);
+		if('main'==current_tab){
+			let read_t=db.transaction(['users'],'readonly');
+			let read_q=read_t.objectStore('users');
+			let req=read_q.index('account').openCursor(null,'next');
+			let find=false;
+			let objects='';
+			let num=1;
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(current_user!=cur.value.account){
+						let user_data=cur.value;
+						find=true;
+
+						let user_data_profile=JSON.parse(user_data.profile);
+
+						let search_str=user_data.account+user_data_profile.nickname;
+						search_str=search_str.split(' ').join('');
+						search_str=search_str.toLowerCase();
+						search_str+=reverse_str(search_str);
+
+						objects+=ltmp(ltmp_arr.users_objects_item,{search:search_str,avatar:ltmp(ltmp_arr.users_objects_item_avatar,{account:user_data.account,avatar:user_data_profile.avatar}),account:user_data.account,nickname:user_data_profile.nickname,icon:ltmp_arr.icon_edit_profile});
+						num++;
+					}
+					cur.continue();
+				}
+				else{
+					if(find){
+						objects=ltmp_arr.users_objects_header+objects;
+						view.find('.objects').html(objects);
+					}
+					else{
+						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.users_not_found}));
+					}
+					view.find('.header').html(header);
+					$('.loader').css('display','none');
+					view.css('display','block');
+					rebind_users_search();
+				}
+			};
+		}
+		else
+		if('subscribed'==current_tab){
+			let read_t=db.transaction(['users'],'readonly');
+			let read_q=read_t.objectStore('users');
+			let req=read_q.index('account').openCursor(null,'next');
+			let find=false;
+			let objects='';
+			let num=1;
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(current_user!=cur.value.account){
+						if(1==cur.value.status){
+							let user_data=cur.value;
+							find=true;
+
+							let user_data_profile=JSON.parse(user_data.profile);
+
+							let search_str=user_data.account+user_data_profile.nickname;
+							search_str=search_str.split(' ').join('');
+							search_str=search_str.toLowerCase();
+							search_str+=reverse_str(search_str);
+
+							objects+=ltmp(ltmp_arr.users_objects_item,{search:search_str,avatar:ltmp(ltmp_arr.users_objects_item_avatar,{account:user_data.account,avatar:user_data_profile.avatar}),account:user_data.account,nickname:user_data_profile.nickname,icon:ltmp_arr.icon_edit_profile});
+							num++;
+						}
+					}
+					cur.continue();
+				}
+				else{
+					if(find){
+						objects=ltmp_arr.users_objects_header+objects;
+						view.find('.objects').html(objects);
+					}
+					else{
+						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.users_not_found}));
+					}
+					$('.loader').css('display','none');
+					view.css('display','block');
+					rebind_users_search();
+				}
+			};
+		}
+		else{//ignored
+			let read_t=db.transaction(['users'],'readonly');
+			let read_q=read_t.objectStore('users');
+			let req=read_q.index('account').openCursor(null,'next');
+			let find=false;
+			let objects='';
+			let num=1;
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(current_user!=cur.value.account){
+						if(2==cur.value.status){
+							let user_data=cur.value;
+							find=true;
+
+							let user_data_profile=JSON.parse(user_data.profile);
+
+							let search_str=user_data.account+user_data_profile.nickname;
+							search_str=search_str.split(' ').join('');
+							search_str=search_str.toLowerCase();
+							search_str+=reverse_str(search_str);
+
+							objects+=ltmp(ltmp_arr.users_objects_item,{search:search_str,avatar:ltmp(ltmp_arr.users_objects_item_avatar,{account:user_data.account,avatar:user_data_profile.avatar}),account:user_data.account,nickname:user_data_profile.nickname,icon:ltmp_arr.icon_edit_profile});
+							num++;
+						}
+					}
+					cur.continue();
+				}
+				else{
+					if(find){
+						objects=ltmp_arr.users_objects_header+objects;
+						view.find('.objects').html(objects);
+					}
+					else{
+						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.users_not_found}));
+					}
+					$('.loader').css('display','none');
+					view.css('display','block');
+					rebind_users_search();
+				}
+			};
+		}
+		view.find('.header').html(header);
+		$('.loader').css('display','none');
+		view.css('display','block');
+	}
 }
 function view_hashtags(view,path_parts,query,title,back_to){
 	view.data('hashtag','');
