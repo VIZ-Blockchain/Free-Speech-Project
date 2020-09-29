@@ -352,6 +352,9 @@ function full_reset_db(){
 }
 
 function load_db(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
 	var req=idb.open(storage_prefix+'social_network',db_version);
 	req.onerror=idb_error;
 	req.onblocked=idb_error;
@@ -477,35 +480,6 @@ function load_db(callback){
 			}
 		}
 		users_table_diff=[];
-
-		/*
-		//add
-		let t1=db.transaction(['users'],'readwrite');
-		let q1=t1.objectStore('users');
-		q1.add({'account':'on1x'});
-		q1.add({'account':'test'});
-		t1.commit();
-		t1.oncomplete=function(e){
-			//refresh view?
-		}*/
-		/*
-		//read
-		let t=db.transaction(['users'],'readonly');
-		let q=t.objectStore('users');
-		let req=q.index('account').openCursor(null,'next');
-		let result=[];
-		req.onsuccess=function(event){
-			let cur=event.target.result;
-			if(cur){
-				let obj=cur.value;
-				result.push(obj);
-				cur.continue();
-			}
-			else{
-				console.log(result);
-			}
-		};
-		*/
 	};
 }
 
@@ -610,17 +584,7 @@ function save_account_settings(view,login,regular_key,energy_step){
 			users[login]={'regular_key':regular_key,'energy_step':energy_step};
 			current_user=login;
 			save_session();
-			users_table_diff.push([current_user,true]);
-			increase_db_version(function(){
-				get_user(current_user,true,function(){
-					render_menu();
-					render_session();
-
-					view.find('.submit-button-ring').removeClass('show');
-					view.find('.success').html(ltmp_arr.account_settings_saved);
-					view.find('.button').removeClass('disabled');
-				});
-			});
+			document.location.reload(true);
 		}
 	});
 }
@@ -3078,12 +3042,16 @@ function update_feed_subscribes(callback){
 
 var update_feed_timer=0;
 function update_feed(){
-	clearTimeout(update_feed_timer);
-	//if(settings.feed_load_by_timer){}
-	console.log('update feed trigger');
-	update_feed_subscribes(function(){
-		update_feed_timer=setTimeout(function(){update_feed()},60000);//1min
-	});
+	if(current_user){
+		clearTimeout(update_feed_timer);
+		//if(settings.feed_load_by_timer){}
+		console.log('update feed trigger');
+		update_feed_subscribes(function(){
+			update_feed_timer=setTimeout(function(){
+				update_feed();
+			},60000);//1min
+		});
+	}
 }
 
 function clear_users_objects(){
