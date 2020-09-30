@@ -4429,6 +4429,15 @@ function view_path(location,state,save_state,update){
 									}
 								}
 							}
+							else{
+								//fix: update toggled, check the need for a new level (different path in rare conditions?)
+								if(path!=$('.view[data-level="'+level+'"]').data('path')){
+									new_level=true;
+								}
+								else{
+									new_level=false;
+								}
+							}
 							if(new_level){
 								level++;
 								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile_section});
