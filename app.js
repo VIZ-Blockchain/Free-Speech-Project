@@ -257,6 +257,77 @@ function reset_settings(view){
 	localStorage.removeItem(storage_prefix+'settings');
 }
 
+function users_save_settings(view){
+	let user_account=view.data('user-account');
+	t=db.transaction(['users'],'readwrite');
+	q=t.objectStore('users');
+	req=q.index('account').openCursor(IDBKeyRange.only(user_account),'next');
+	let find=false;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			find=true;
+			let item=cur.value;
+			item.settings={};
+			item.settings.activity_period=parseInt(view.find('input[name="activity_period"]').val());
+			if(isNaN(item.settings.activity_period)){
+				item.settings.activity_period=settings.activity_period;
+			}
+			view.find('input[name="activity_period"]').val(item.settings.activity_period);
+			cur.update(item);
+			cur.continue();
+		}
+		else{
+			if(!find){
+				view.find('.error').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found}));
+				view.find('.success').html('');
+				view.find('.button').removeClass('disabled');
+				view.find('.submit-button-ring').removeClass('show');
+			}
+			else{
+				view.find('.error').html('');
+				view.find('.success').html(ltmp_arr.app_settings_saved);
+				view.find('.button').removeClass('disabled');
+				view.find('.submit-button-ring').removeClass('show');
+			}
+		}
+	}
+}
+
+function users_reset_settings(view){
+	let user_account=view.data('user-account');
+	t=db.transaction(['users'],'readwrite');
+	q=t.objectStore('users');
+	req=q.index('account').openCursor(IDBKeyRange.only(user_account),'next');
+	let find=false;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			find=true;
+			let item=cur.value;
+			item.settings={};
+			delete item.settings;
+			cur.update(item);
+			cur.continue();
+		}
+		else{
+			if(!find){
+				view.find('.error').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found}));
+				view.find('.success').html('');
+				view.find('.button').removeClass('disabled');
+				view.find('.submit-button-ring').removeClass('show');
+			}
+			else{
+				view.find('input').val('');
+				view.find('.error').html('');
+				view.find('.success').html(ltmp_arr.app_settings_reset);
+				view.find('.button').removeClass('disabled');
+				view.find('.submit-button-ring').removeClass('show');
+			}
+		}
+	}
+}
+
 function save_session(){
 	let users_json=JSON.stringify(users);
 	localStorage.setItem(storage_prefix+'users',users_json);
@@ -606,6 +677,24 @@ function ltmp(ltmp_str,ltmp_args){
 }
 
 var ltmp_arr={
+	content_view:`
+	<div class="object type-text">
+		<div class="object-column">
+			<div class="content-view">{content}</div>
+		</div>
+	</div>`,
+	settings_item:`
+	<p>{caption}:</p>
+	<p><input type="text" name="{prop}" placeholder="{placeholder}" value="{value}"></p>
+	<div class="input-addon">({addon})</div>`,
+	settings_activity_period:`Частота загрузки активности пользователей`,
+	settings_addon_activity_period:`в минутах после обновления`,
+	users_settings_buttons:`
+	<p class="error save-users-settings-error"></p>
+	<p class="success save-users-settings-success"></p>
+	<p><a class="button save-users-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
+	<hr>
+	<p><a class="button neutral-button reset-users-settings-action">Сброс</a></p>`,
 	box_addon:`
 	<div class="box">
 		<div class="box-header">
@@ -641,7 +730,7 @@ var ltmp_arr={
 		<div class="user-item-avatar">{avatar}</div>
 		<a class="user-item-nickname" tabindex="0" data-href="viz://@{account}/">{nickname}</a>
 		<a class="user-item-account" tabindex="0" data-href="viz://@{account}/">{account}</a>
-		<!--<div class="user-item-manage"><a tabindex="0" data-href="fsp:users/{account}" title="Управление">{icon}</a></div>-->
+		<div class="user-item-manage"><a tabindex="0" data-href="fsp:users/{account}" title="Управление">{icon}</a></div>
 	</div>`,
 	users_objects_item_avatar:`<div class="avatar"><div class="shadow" data-href="viz://@{account}/"></div><img src="{avatar}"></div>`,
 
@@ -2068,6 +2157,26 @@ function app_mouse(e){
 			reset_settings(view);
 		}
 	}
+	if($(target).hasClass('save-users-settings-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			let view=$(target).closest('.view');
+			view.find('.submit-button-ring').addClass('show');
+			view.find('.error').html('');
+			view.find('.success').html('');
+			users_save_settings(view);
+		}
+	}
+	if($(target).hasClass('reset-users-settings-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			let view=$(target).closest('.view');
+			view.find('.submit-button-ring').addClass('show');
+			view.find('.error').html('');
+			view.find('.success').html('');
+			users_reset_settings(view);
+		}
+	}
 	if($(target).hasClass('search-action')){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
@@ -3014,7 +3123,13 @@ function update_feed_subscribes(callback){
 			if(typeof item.activity === 'undefined'){
 				item.activity=0;
 			}
-			if(item.activity<check_activity){
+			let item_check_activity=check_activity;
+			if(typeof item.settings !== 'undefined'){
+				if(typeof item.settings.activity_period !== 'undefined'){
+					item_check_activity=(new Date().getTime() /1000 | 0) - item.settings.activity_period*60;
+				}
+			}
+			if(item.activity<item_check_activity){
 				list.push(item.account);
 				item.activity=new Date().getTime() /1000 | 0;
 				cur.update(item);
@@ -3530,6 +3645,7 @@ function rebind_users_search(){
 		}
 	});
 }
+
 function view_users(view,path_parts,query,title,back_to){
 	view.find('.tabs').html('');
 	document.title=ltmp_arr.users_caption+' - '+title;
@@ -3572,8 +3688,15 @@ function view_users(view,path_parts,query,title,back_to){
 				}
 				view.find('.header').html(header);
 				let objects='';
-				objects+=ltmp(ltmp_arr.users_objects_box,{context:'Страница персонализированных настроек находится в разработке.'});
-				view.find('.objects').html(objects);
+				if(typeof user_data.settings === 'undefined'){
+					user_data.settings={};
+				}
+				let prop_value='';
+				if(typeof user_data.settings.activity_period !== 'undefined'){
+					prop_value=user_data.settings.activity_period;
+				}
+				objects+=ltmp(ltmp_arr.settings_item,{caption:ltmp_arr.settings_activity_period,prop:'activity_period',placeholder:settings.activity_period,value:prop_value,addon:ltmp_arr.settings_addon_activity_period});
+				view.find('.objects').html(ltmp(ltmp_arr.content_view,{content:objects+ltmp_arr.users_settings_buttons}));
 			}
 			view.find('.header').html(header);
 			$('.loader').css('display','none');
@@ -3727,6 +3850,7 @@ function view_users(view,path_parts,query,title,back_to){
 		view.css('display','block');
 	}
 }
+
 function view_hashtags(view,path_parts,query,title,back_to){
 	view.data('hashtag','');
 	view.data('hashtag-id',0);
