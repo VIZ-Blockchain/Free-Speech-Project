@@ -3111,8 +3111,8 @@ function clear_users_cache(callback){
 		if(cur){
 			if(0==cur.value.status){//deleting only temporary users
 				cur.delete();
-				cur.continue();
 			}
+			cur.continue();
 		}
 		else{
 			setTimeout(function(){callback()},100);
@@ -3308,8 +3308,8 @@ function clear_cache(callback){
 	clearTimeout(clear_cache_timer);
 	clear_objects_cache(function(){
 		clear_users_cache(function(){
-			clear_cache_timer=setTimeout(function(){clear_cache()},300000);//5min
 			callback();
+			clear_cache_timer=setTimeout(function(){clear_cache()},300000);//5min
 		});
 	});
 }
@@ -5620,8 +5620,8 @@ function main_app(){
 		clear_feed(()=>{
 			clear_users_objects(()=>{
 				clear_cache(()=>{
-					update_feed();
 					view_path(path,{},false,false);
+					update_feed();
 				});
 			});
 		});
