@@ -2,6 +2,8 @@ var app_version=1;
 var app_protocol='V';//V for Voice :)
 var storage_prefix='viz_voice_';
 
+var whitelabel_account='';
+
 var is_safari=navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
 			navigator.userAgent &&
 			navigator.userAgent.indexOf('CriOS') == -1 &&
@@ -343,7 +345,7 @@ function remove_session(view){
 	view.find('input').val('');
 
 	users={};
-	if(current_user){
+	if(''!=current_user){
 		users_table_diff.push([current_user,false]);
 
 		let update_t=db.transaction(['users'],'readwrite');
@@ -526,9 +528,15 @@ function load_db(callback){
 			//items_table=update_trx.objectStore('objects');
 			//new index for objects cache
 		}
-		if(current_user){
+		if(''!=current_user){
 			if(!db.objectStoreNames.contains('objects_'+current_user)){
 				users_table_diff.push([current_user,true]);
+			}
+
+		}
+		if(''!=whitelabel_account){
+			if(!db.objectStoreNames.contains('objects_'+whitelabel_account)){
+				users_table_diff.push([whitelabel_account,true]);
 			}
 		}
 		for(let i in users_table_diff){
@@ -998,7 +1006,7 @@ if('full'!=menu_status){
 function render_menu(){
 	$('div.menu').html(ltmp_arr.menu_preset);
 	let primary_menu='';
-	if(current_user){
+	if(''!=current_user){
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://',class:(path=='viz://'?'current':''),icon:ltmp_arr.icon_feed,caption:ltmp_arr.menu_feed});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:notifications',class:(path=='fsp:notifications'?'current':''),icon:ltmp_arr.icon_notify,caption:ltmp_arr.menu_notifications});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:awards',class:(path=='fsp:awards'?'current':''),icon:ltmp_arr.icon_gem,caption:ltmp_arr.menu_awards});
@@ -1015,7 +1023,7 @@ function render_menu(){
 
 function render_right_addon(){
 	$('div.right-addon').html('');
-	if(current_user){
+	if(''!=current_user){
 		let hashtags_addon='';
 		let hashtags_context='';
 		//pinned
@@ -1084,7 +1092,7 @@ function render_right_addon(){
 
 function render_session(){
 	let toggle_menu=ltmp(ltmp_arr.toggle_menu,{title:ltmp_arr.toggle_menu_title,icon:ltmp_arr.icon_close});
-	if(current_user){
+	if(''!=current_user){
 		get_user(current_user,false,function(err,result){
 			if(!err){
 				profile=JSON.parse(result.profile);
@@ -2562,6 +2570,9 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 						});
 					}
 				}
+				else{
+					feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
+				}
 			}
 		}
 	});
@@ -2584,20 +2595,24 @@ function feed_load(account,limit,callback){
 		let cur=event.target.result;
 		if(cur){
 			end_offset=cur.value.block;
+			cur.continue(-1);
 		}
-		get_user(account,true,function(err,user_result){
-			if(err){
-				callback(err,0);
-			}
-			let start_offset=user_result.start;
-			offset=start_offset;
-			if(offset>end_offset){
-				feed_load_more(result,account,offset,end_offset,limit,callback);
-			}
-			else{
-				callback(false,false);
-			}
-		});
+		else{
+			get_user(account,true,function(err,user_result){
+				if(err){
+					callback(err,0);
+				}
+				else{
+					offset=user_result.start;
+					if(offset>end_offset){
+						feed_load_more(result,account,offset,end_offset,limit,callback);
+					}
+					else{
+						callback(false,false);
+					}
+				}
+			});
+		}
 	};
 }
 
@@ -3157,19 +3172,22 @@ function update_feed_subscribes(callback){
 
 var update_feed_timer=0;
 function update_feed(){
-	if(current_user){
+	//if(''!=current_user){
 		clearTimeout(update_feed_timer);
 		//if(settings.feed_load_by_timer){}
 		console.log('update feed trigger');
 		update_feed_subscribes(function(){
 			update_feed_timer=setTimeout(function(){
 				update_feed();
-			},60000);//1min
+			},30000);//30 sec
 		});
-	}
+	//}
 }
 
-function clear_users_objects(){
+function clear_users_objects(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
 	if(0<settings.activity_size){
 		let t=db.transaction(['users'],'readwrite');
 		let q=t.objectStore('users');
@@ -3207,6 +3225,7 @@ function clear_users_objects(){
 								if(0<count){
 									console.log('clear_users_objects',account,count);
 								}
+								callback();
 							}
 						};
 					}
@@ -3214,9 +3233,15 @@ function clear_users_objects(){
 			}
 		};
 	}
+	else{
+		callback();
+	}
 }
 
-function clear_feed(){
+function clear_feed(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
 	let t=db.transaction(['feed'],'readwrite');
 	let q=t.objectStore('feed');
 	let req=q.index('time').openCursor(null,'prev');
@@ -3237,17 +3262,22 @@ function clear_feed(){
 		}
 		else{
 			console.log('clear feed',count);
+			callback();
 		}
 	};
 }
 
 var clear_cache_timer=0;
-function clear_cache(){
+function clear_cache(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
 	console.log('clear cache trigger');
 	clearTimeout(clear_cache_timer);
 	clear_objects_cache(function(){
 		clear_users_cache(function(){
 			clear_cache_timer=setTimeout(function(){clear_cache()},300000);//5min
+			callback();
 		});
 	});
 }
@@ -3664,6 +3694,9 @@ function view_users(view,path_parts,query,title,back_to){
 				let user_data_profile=JSON.parse(user_data.profile);
 				header+=ltmp(ltmp_arr.header_caption_link,{caption:user_data_profile.nickname,link:'viz://@'+user_data.account});
 				let check_account=user_data.account;
+				if(check_account==whitelabel_account){
+				}
+				else
 				if(check_account==current_user){
 					header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
 					header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
@@ -4245,12 +4278,14 @@ function view_path(location,state,save_state,update){
 			view.find('.fast-publish-wrapper .button').removeClass('disabled');
 		}
 		else{
-			get_user(current_user,false,function(err,result){
-				if(!err){
-					let profile=JSON.parse(result.profile);
-					view.find('.objects').before(ltmp(ltmp_arr.fast_publish,{avatar:profile.avatar,button:ltmp_arr.icon_new_object}));
-				}
-			});
+			if(''!=current_user){
+				get_user(current_user,false,function(err,result){
+					if(!err){
+						let profile=JSON.parse(result.profile);
+						view.find('.objects').before(ltmp(ltmp_arr.fast_publish,{avatar:profile.avatar,button:ltmp_arr.icon_new_object}));
+					}
+				});
+			}
 		}
 		let clear=view.data('clear');
 		if(clear){
@@ -4373,6 +4408,9 @@ function view_path(location,state,save_state,update){
 								let header='';
 								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
 								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+								if(check_account==whitelabel_account){
+								}
+								else
 								if(check_account==current_user){
 									header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
 									header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
@@ -5490,16 +5528,61 @@ function is_mobile(){
 	return (calc_width<=750);
 }
 
+function check_current_user(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	if(''!=current_user){
+		if(db.objectStoreNames.contains('objects_'+current_user)){
+			get_user(current_user,true,()=>{callback();});
+		}
+	}
+	else{
+		callback();
+	}
+}
+
+function check_whitelabel_account(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	if(''!=whitelabel_account){
+		if(db.objectStoreNames.contains('objects_'+whitelabel_account)){
+			get_user(whitelabel_account,true,()=>{callback();});
+		}
+	}
+	else{
+		callback();
+	}
+}
+
+function init_users(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	check_current_user(()=>{
+		check_whitelabel_account(()=>{
+			callback();
+		})
+	});
+}
+
 function main_app(){
-	clear_feed();
-	clear_users_objects();
-	clear_cache();
-	update_feed();
 	parse_fullpath();
 	render_menu();
 	render_session();
 	render_right_addon();
-	view_path(path,{},false,false);
+
+	init_users(()=>{
+		clear_feed(()=>{
+			clear_users_objects(()=>{
+				clear_cache(()=>{
+					update_feed();
+					view_path(path,{},false,false);
+				});
+			});
+		});
+	});
 	setTimeout(function(){
 		update_dgp(true);
 	},10000);//10sec for re-check selected api gate
