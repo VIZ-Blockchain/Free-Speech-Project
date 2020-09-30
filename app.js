@@ -2,7 +2,11 @@ var app_version=1;
 var app_protocol='V';//V for Voice :)
 var storage_prefix='viz_voice_';
 
-var whitelabel_account='';
+var whitelabel_account='';//always subscribed to account
+var whitelabel_deep=10;//count of max activity loaded for feed on startup
+var whitelabel_redirect=false;//redirect to whitelabel profile on feed loadup
+
+var whitelabel_init=false;
 
 var is_safari=navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
 			navigator.userAgent &&
@@ -523,6 +527,13 @@ function load_db(callback){
 			items_table.createIndex('time','time',{unique:false});//unixtime for stored objects
 			items_table.createIndex('is_reply','is_reply',{unique:false});//true/false
 			items_table.createIndex('is_share','is_share',{unique:false});//true/false
+
+			if(''!=whitelabel_account){//only on genesis
+				if(!db.objectStoreNames.contains('objects_'+whitelabel_account)){
+					users_table_diff.push([whitelabel_account,true]);
+					whitelabel_init=true;
+				}
+			}
 		}
 		else{
 			//items_table=update_trx.objectStore('objects');
@@ -531,12 +542,6 @@ function load_db(callback){
 		if(''!=current_user){
 			if(!db.objectStoreNames.contains('objects_'+current_user)){
 				users_table_diff.push([current_user,true]);
-			}
-
-		}
-		if(''!=whitelabel_account){
-			if(!db.objectStoreNames.contains('objects_'+whitelabel_account)){
-				users_table_diff.push([whitelabel_account,true]);
 			}
 		}
 		for(let i in users_table_diff){
@@ -776,6 +781,7 @@ var ltmp_arr={
 	menu_session_account:'<div class="avatar"><div class="shadow" data-href="viz://@{account}/"></div><img src="{avatar}"></div><div class="account"><a class="account-name" tabindex="0" data-href="viz://@{account}/">{nickname}</a><a class="account-login" tabindex="0" data-href="viz://@{account}/">{account}</a></div>',
 
 	none_notice:'<div class="none-notice"><em>Лента новостей пока не работает, попробуйте поиск.<!--<br>Ничего не найдено.--></em></div>',
+	whitelabel_notice:`<div class="load-more-end-notice"><em>Загрузка последних публикаций @`+whitelabel_account+`&hellip;</em><span class="submit-button-ring"></span></div>`,
 	feed_end_notice:'<div class="load-more-end-notice"><em>Конец ленты новостей.</em></div>',
 	load_more_end_notice:'<div class="load-more-end-notice"><em>Больше ничего не найдено.</em></div>',
 	error_notice:'<div class="error-notice"><em>{error}</em></div>',
@@ -1745,9 +1751,9 @@ function unsubscribe(el){
 	};
 }
 
-function load_new_objects(el){
-	let indicator=$(el);
+function load_new_objects(indicator){
 	let objects=indicator.closest('.objects');
+	objects_counter=objects.find('.object').length;
 	let feed_time=0;
 	if(typeof objects.data('feed-time') !== 'undefined'){
 		feed_time=parseInt(objects.data('feed-time'));
@@ -1781,9 +1787,14 @@ function load_new_objects(el){
 				let object=new_objects[i];
 				let object_view=render_object(object.account,object.block,'feed',check_level);
 				indicator.before(object_view);
+				if(0==objects_counter){
+					$(window)[0].scrollTo({top:0});
+				}
 			}
 			setTimeout(function(){
-				$(window)[0].scrollTo({behavior:'smooth',top:(indicator.offset().top>400?indicator.offset().top-100:indicator.offset().top)});
+				if(0!=objects_counter){
+					$(window)[0].scrollTo({behavior:'smooth',top:(indicator.offset().top>400?indicator.offset().top-100:indicator.offset().top)});
+				}
 				indicator.data('items',0);
 				indicator.html(ltmp_arr.feed_no_new_objects);
 				indicator.insertBefore(objects.find('.object:first-child')[0]);
@@ -1828,6 +1839,9 @@ function notify_show(id){
 	notify[0].addEventListener('mouseleave',notify_add_timer,false);
 }
 function add_notify(store,title,text,link){
+	if(whitelabel_init){
+		return;
+	}
 	store=typeof store==='undefined'?false:store;
 	title=typeof title==='undefined'?'':title;
 	text=typeof text==='undefined'?'':text;
@@ -2112,7 +2126,7 @@ function app_mouse(e){
 	if($(target).hasClass('load-new-objects-action')){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
-			load_new_objects(target);
+			load_new_objects($(target));
 		}
 	}
 	if($(target).hasClass('load-nested-replies-action')){
@@ -2580,6 +2594,9 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 
 function feed_load(account,limit,callback){
 	limit=limit===false?settings.activity_deep:limit;
+	if(whitelabel_init){
+		limit=whitelabel_deep;
+	}
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
@@ -3116,7 +3133,22 @@ function update_feed_result(result){
 	}
 	else{
 		new_objects.html(ltmp(ltmp_arr.feed_new_objects,{items:new_objects.data('items')}));
-		new_objects.addClass('show');
+		if(whitelabel_init){
+			new_objects.addClass('disabled');
+			load_new_objects(new_objects);
+			whitelabel_init=false;
+			if(whitelabel_redirect && 0==level){
+				view_path('viz://@'+whitelabel_account+'/',{},true,false);
+			}
+			else{
+				let indicator=view.find('.load-more-end-notice');
+				indicator.before(ltmp_arr.feed_end_notice);
+				indicator.remove();
+			}
+		}
+		else{
+			new_objects.addClass('show');
+		}
 	}
 }
 
@@ -5424,7 +5456,12 @@ function load_more_objects(indicator,check_level){
 			else{
 				//console.log('load_more_objects end cursor',objects);
 				if(0==objects.length){
-					indicator.before(ltmp_arr.feed_end_notice);
+					if(whitelabel_init){
+						indicator.before(ltmp_arr.whitelabel_notice);
+					}
+					else{
+						indicator.before(ltmp_arr.feed_end_notice);
+					}
 					indicator.remove();
 					return;
 				}
@@ -5536,6 +5573,9 @@ function check_current_user(callback){
 		if(db.objectStoreNames.contains('objects_'+current_user)){
 			get_user(current_user,true,()=>{callback();});
 		}
+		else{
+			callback();
+		}
 	}
 	else{
 		callback();
@@ -5549,6 +5589,9 @@ function check_whitelabel_account(callback){
 	if(''!=whitelabel_account){
 		if(db.objectStoreNames.contains('objects_'+whitelabel_account)){
 			get_user(whitelabel_account,true,()=>{callback();});
+		}
+		else{
+			callback();
 		}
 	}
 	else{
