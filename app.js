@@ -2820,6 +2820,9 @@ function parse_object(account,block,callback){
 													cur.update(result);
 													cur.continue();
 												}
+												else{
+													setTimeout(function(){render_right_addon();},10);
+												}
 											};
 										};
 									};
@@ -5404,9 +5407,11 @@ function load_more_objects(indicator,check_level){
 			let cur=event.target.result;
 			if(cur){
 				let item=cur.value;
-				if((hashtags_feed_id>item.id)||(hashtags_feed_id==0)){
-					last_id=item.id;
-					objects.push(item);
+				if(item.tag==hashtags_id){
+					if((hashtags_feed_id>item.id)||(hashtags_feed_id==0)){
+						last_id=item.id;
+						objects.push(item);
+					}
 				}
 				cur.continue(-1);//load only one item
 			}
