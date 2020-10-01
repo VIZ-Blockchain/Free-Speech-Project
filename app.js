@@ -573,7 +573,12 @@ function idb_get_id(container,index,search,callback){
 	if(db.objectStoreNames.contains(container)){
 		t=db.transaction([container],'readonly');
 		q=t.objectStore(container);
-		req=q.index(index).openCursor(IDBKeyRange.only(search),'next');
+		if(false!==index){
+			req=q.index(index).openCursor(IDBKeyRange.only(search),'next');
+		}
+		else{
+			req=q.openCursor(IDBKeyRange.only(search),'next');
+		}
 		req.onsuccess=function(event){
 			let cur=event.target.result;
 			if(cur){
@@ -729,6 +734,11 @@ var ltmp_arr={
 	hashtags_objects_item:`<div class="hashtag-item"><div class="hashtag-item-num">{num}</div><div class="hashtag-item-caption"><a data-href="fsp:hashtags/{tag}">#{tag}</a></div><div class="hashtag-item-count">{count}</div></div>`,
 
 	found_results:'Найдено: {count}',
+
+	profile_main_tab:'Все',
+	profile_posts_tab:'Посты',
+	profile_shares_tab:'Репосты',
+	profile_replies_tab:'Ответы',
 
 	users_main_tab:'Все',
 	users_subscribed_tab:'Подписки',
@@ -941,14 +951,14 @@ var ltmp_arr={
 	<a tabindex="0" class="share-action" title="Поделиться">{icon_share}</a>
 	<a tabindex="0" class="award-action" title="Наградить">{icon_award}</a>
 	<a tabindex="0" class="copy-link-action" title="Копировать ссылку">{icon_copy_link}</a>`,
-	object_type_text_loading:`<div class="object type-text-loading" data-link="{link}" data-previous="{previous}">{context}</div>`,
+	object_type_text_loading:`<div class="object type-text-loading" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">{context}</div>`,
 	object_type_text_wait_loading:`<div class="object type-text-wait-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
 	object_type_text_share:`
 	<div class="share-view"><a tabindex="0" data-href="{link}">{caption}</a> поделился:{comment}</div>
 	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
 	object_type_text_share_comment:` <div class="comment-view">{comment}</div>`,
 	object_type_text_preview:`
-		<div class="object type-text-preview" data-link="{link}" data-previous="{previous}">
+		<div class="object type-text-preview" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">
@@ -1974,9 +1984,9 @@ function app_mouse(e){
 			setTimeout(function(){wrapper.remove();},1000);
 		}
 		else{
-			console.log('check back-force data',$(target).closest('.view').data('back-force'));
+			//console.log('check back-force data',$(target).closest('.view').data('back-force'));
 			if($(target).closest('.view').data('back-force')){
-				back_to=path;
+				back_to=path+(''==query?'':'?'+query);
 			}
 		}
 		view_path(href,{back:back_to},true,false);
@@ -2361,13 +2371,13 @@ function app_mouse(e){
 					path=$('.view[data-level="'+level+'"]').data('path');
 				}
 				if(typeof $('.view[data-level="'+level+'"]').data('query') != 'undefined'){
-					query=$('.view[data-level="'+level+'"]').data('query');
+					query+=$('.view[data-level="'+level+'"]').data('query');
 				}
 			}
 		}
 		//console.log('—— back action —— ','path: '+path);
 		//trigger view_path with update prop
-		view_path(path,{},true,need_update);
+		view_path(path+(''==query?'':'?'+query),{},true,need_update);
 	}
 	/*
 	//button to scroll top, need to show it for long views on scrolling more that 100hv?
@@ -2637,22 +2647,29 @@ function feed_add(account,block,time,callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
-	let add_t=db.transaction(['feed'],'readwrite');
-	let add_q=add_t.objectStore('feed');
-	let obj={
-		account:account,
-		block:block,
-		time:(time?time:(new Date().getTime() / 1000 | 0)),
-	};
-	add_q.add(obj);
-	if(!is_safari){
-		if(!is_firefox){
-			add_t.commit();
+	idb_get_id('feed','object',[account,block],function(feed_id){
+		if(false===feed_id){
+			let add_t=db.transaction(['feed'],'readwrite');
+			let add_q=add_t.objectStore('feed');
+			let obj={
+				account:account,
+				block:block,
+				time:(time?time:(new Date().getTime() / 1000 | 0)),
+			};
+			add_q.add(obj);
+			if(!is_safari){
+				if(!is_firefox){
+					add_t.commit();
+				}
+			}
+			add_t.oncomplete=function(e){
+				callback(false,obj);
+			};
 		}
-	}
-	add_t.oncomplete=function(e){
-		callback(false,obj);
-	};
+		else{
+			callback(true,false);
+		}
+	});
 }
 
 function parse_object(account,block,callback){
@@ -2797,35 +2814,40 @@ function parse_object(account,block,callback){
 										return value.toLowerCase();
 									});
 									hashtags_links=array_unique(hashtags_links);
+
 									let add_hashtag_object=function(hashtag_id,account,block){
-										//add object to hashtag feed
-										let add_t=db.transaction(['hashtags_feed'],'readwrite');
-										let add_q=add_t.objectStore('hashtags_feed');
-										add_q.add({tag:hashtag_id,account:account,block:block});
-										if(!is_safari){
-											if(!is_firefox){
-												add_t.commit();
+										idb_get_id('hashtags_feed','object',[account,block],function(feed_id){
+											if(false===feed_id){//add object to hashtag feed
+												let add_t=db.transaction(['hashtags_feed'],'readwrite');
+												let add_q=add_t.objectStore('hashtags_feed');
+												add_q.add({tag:hashtag_id,account:account,block:block});
+												if(!is_safari){
+													if(!is_firefox){
+														add_t.commit();
+													}
+												}
+												add_t.oncomplete=function(e){
+													//update hashtag counter
+													upd_t=db.transaction(['hashtags'],'readwrite');
+													upd_q=upd_t.objectStore('hashtags');
+													upd_req=upd_q.openCursor(IDBKeyRange.only(hashtag_id),'next');
+													upd_req.onsuccess=function(event){
+														let cur=event.target.result;
+														if(cur){
+															let result=cur.value;
+															result.count++;
+															cur.update(result);
+															cur.continue();
+														}
+														else{
+															setTimeout(function(){render_right_addon();},10);
+														}
+													};
+												};
 											}
-										}
-										add_t.oncomplete=function(e){
-											//update hashtag counter
-											upd_t=db.transaction(['hashtags'],'readwrite');
-											upd_q=upd_t.objectStore('hashtags');
-											upd_req=upd_q.openCursor(IDBKeyRange.only(hashtag_id),'next');
-											upd_req.onsuccess=function(event){
-												let cur=event.target.result;
-												if(cur){
-													let result=cur.value;
-													result.count++;
-													cur.update(result);
-													cur.continue();
-												}
-												else{
-													setTimeout(function(){render_right_addon();},10);
-												}
-											};
-										};
+										});
 									};
+
 									for(let i in hashtags_links){
 										let hashtag=hashtags_links[i].substr(1);
 										idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
@@ -2914,26 +2936,33 @@ function parse_object(account,block,callback){
 							}
 							*/
 							add_t.oncomplete=function(e){
-								if(reply){
-									let reply_add_t=db.transaction(['replies'],'readwrite');
-									let reply_add_q=reply_add_t.objectStore('replies');
-									let reply_obj={
-										account:account,
-										block:block,
-										parent_account:parent_account,
-										parent_block:parent_block,
-										time:new Date().getTime() / 1000 | 0,
-										cache:true,
-									};
-									reply_add_q.add(reply_obj);
-									if(!is_safari){
-										if(!is_firefox){
-											reply_add_t.commit();
+								if(reply){//add to replies
+									idb_get_id('replies','object',[account,block],function(reply_id){
+										if(false===reply_id){//create reply
+											let reply_add_t=db.transaction(['replies'],'readwrite');
+											let reply_add_q=reply_add_t.objectStore('replies');
+											let reply_obj={
+												account:account,
+												block:block,
+												parent_account:parent_account,
+												parent_block:parent_block,
+												time:new Date().getTime() / 1000 | 0,
+												cache:true,
+											};
+											reply_add_q.add(reply_obj);
+											if(!is_safari){
+												if(!is_firefox){
+													reply_add_t.commit();
+												}
+											}
+											reply_add_t.oncomplete=function(e){
+												callback(false,obj);
+											};
 										}
-									}
-									reply_add_t.oncomplete=function(e){
-										callback(false,obj);
-									};
+										else{//already exist
+											callback(false,obj);
+										}
+									});
 								}
 								else{
 									callback(false,obj);
@@ -4249,6 +4278,7 @@ function view_path(location,state,save_state,update){
 	if(typeof state.back !== 'undefined'){
 		back_to=state.back;
 	}
+
 	if(typeof state.path == 'undefined'){
 		//check query state
 		if(-1!=location.indexOf('?')){
@@ -4257,6 +4287,11 @@ function view_path(location,state,save_state,update){
 		}
 		else{
 			query='';
+			if(typeof state.query !== 'undefined'){
+				if(''!=state.query){
+					query=state.query;
+				}
+			}
 		}
 		if('/'!=location.substr(-1)){
 			location+='/';
@@ -4293,7 +4328,7 @@ function view_path(location,state,save_state,update){
 		$('div.menu .primary div a[data-href="'+location+'"]').addClass('current');
 	}
 
-	if(''==path_parts[0]){
+	if(''==path_parts[0]){//main page (feed)
 		$('.loader').css('display','block');
 		$('.view').css('display','none');
 		$('.view').each(function(i,el){
@@ -4340,7 +4375,7 @@ function view_path(location,state,save_state,update){
 		check_load_more();
 	}
 	else{
-		if(0==path_parts[0].indexOf('fsp:')){
+		if(0==path_parts[0].indexOf('fsp:')){//service page
 			$('.loader').css('display','block');
 			$('.view').css('display','none');
 			let view=$('.view[data-path="'+path_parts[0]+'"]');
@@ -4356,16 +4391,14 @@ function view_path(location,state,save_state,update){
 				view.css('display','block');
 			}
 		}
-		else{
-			if('@'==path_parts[0].substring(0,1)){
+		else{//dynamic page
+			if('@'==path_parts[0].substring(0,1)){//profile link
 				check_account=path_parts[0].substring(1);
 				check_account=check_account.toLowerCase();
 				check_account=check_account.trim();
 			}
-			if(''==path_parts[1]){
-				//not object
-				//check account link
-				if('@'==path_parts[0].substring(0,1)){
+			if(''==path_parts[1]){//profile page
+				if('@'==path_parts[0].substring(0,1)){//check account link
 					//preload account for view with +1 level
 					get_user(check_account,false,function(err,result){
 						if(err){
@@ -4441,13 +4474,30 @@ function view_path(location,state,save_state,update){
 									new_level=false;
 								}
 							}
+
 							if(new_level){
 								level++;
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile_section});
+								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:ltmp(ltmp_arr.tabs),profile:profile_section});
 								$('.content').append(new_view);
 								update=true;
 							}
 							let view=$('.view[data-level="'+level+'"]');
+
+							// Profile tabs
+							let current_tab='main';
+							if((typeof query != 'undefined')&&(''!=query)){
+								current_tab=query;
+							}
+							let tabs='';
+							tabs+=ltmp(ltmp_arr.tab,{link:path+'?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.profile_main_tab});
+							tabs+=ltmp(ltmp_arr.tab,{link:path+'?posts',class:('posts'==current_tab?'current':''),caption:ltmp_arr.profile_posts_tab});
+							tabs+=ltmp(ltmp_arr.tab,{link:path+'?shares',class:('shares'==current_tab?'current':''),caption:ltmp_arr.profile_shares_tab});
+							tabs+=ltmp(ltmp_arr.tab,{link:path+'?replies',class:('replies'==current_tab?'current':''),caption:ltmp_arr.profile_replies_tab});
+							view.find('.tabs').html(tabs);
+
+							if(!new_level){
+								view.data('query',query);
+							}
 							if(update){
 								let header='';
 								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
@@ -4487,14 +4537,13 @@ function view_path(location,state,save_state,update){
 							if(!update){
 								$(window)[0].scrollTo({top:(typeof view.data('scroll')!=='undefined'?view.data('scroll'):0)});
 							}
-							check_load_more();
+							profile_filter_by_type();
 						}
 					});
 				}
 			}
-			else{
-				//only block in path parts
-				if(''==path_parts[2]){
+			else{//object page
+				if(''==path_parts[2]){//only block in path part
 					let check_block=parseInt(path_parts[1]);
 					if(isNaN(check_block)){
 						level++;
@@ -4613,7 +4662,7 @@ function view_path(location,state,save_state,update){
 						});
 					}
 				}
-				else{
+				else{//additional part in path not supported
 					level++;
 					let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:''});
 					$('.content').append(new_view);
@@ -4631,15 +4680,6 @@ function view_path(location,state,save_state,update){
 			}
 		}
 	}
-	/*
-	if(''!=location){
-		if($('.view[data-path="'+location+'"]').length>0){
-			$('.view[data-path="'+location+'"]')[0].scrollIntoView({behavior:'smooth',block:'start'});
-		}
-	}
-	else{
-		$(window)[0].scrollTo({behavior:'smooth',top:0});
-	}*/
 }
 
 function show_time(str,add_seconds){
@@ -4886,6 +4926,8 @@ function render_object(user,object,type,preset_level){
 			let current_link='viz://@'+user.account+'/'+object.block+'/';
 			render=ltmp(ltmp_arr.object_type_text_loading,{
 				previous:object.data.p,
+				is_reply:object.is_reply,
+				is_share:object.is_share,
 				link:current_link,
 				context:ltmp(ltmp_arr.object_type_text_share,{
 					link:'viz://@'+user.account+'/',
@@ -4987,6 +5029,8 @@ function render_object(user,object,type,preset_level){
 			let current_link='viz://@'+user.account+'/'+object.block+'/';
 			render=ltmp(ltmp_arr.object_type_text_loading,{
 				previous:object.data.p,
+				is_reply:object.is_reply,
+				is_share:object.is_share,
 				link:current_link,
 				context:ltmp(ltmp_arr.object_type_text_share,{
 					link:'viz://@'+user.account+'/',
@@ -5068,6 +5112,8 @@ function render_object(user,object,type,preset_level){
 				avatar:profile.avatar,
 				text:text,
 				previous:object.data.p,
+				is_reply:object.is_reply,
+				is_share:object.is_share,
 				link:'viz://@'+user.account+'/'+object.block+'/',
 				actions:ltmp(ltmp_arr.object_type_text_actions,{
 					//link:link,
@@ -5280,6 +5326,47 @@ function render_notify(data,check_level){
 	}
 	let notify=ltmp(ltmp_arr.notify_item,{id:data.id,addon:' read-notify-action'+(1==data.status?' readed':'')+(line?' line':''),context:render});
 	return notify;
+}
+
+function profile_filter_by_type(){
+	let view=$('.view[data-level="'+level+'"]');
+	let type=view.data('query');
+	if(''==type){
+		type='main';
+	}
+	if(0!=view.length){
+		if('main'==type){
+			view.find('.objects>.object').css('display','flex');
+			check_load_more();
+		}
+		else{
+			view.find('.objects>.object').css('display','none');
+			if('posts'==type){
+				view.find('.objects .object').each(function(i,el){
+					if(0==$(el).data('is-reply') && 0==$(el).data('is-share')){
+						$(el).css('display','flex');
+					}
+				});
+			}
+			else
+			if('replies'==type){
+				view.find('.objects>.object').each(function(i,el){
+					if(1==$(el).data('is-reply')){
+						$(el).css('display','flex');
+					}
+				});
+			}
+			else
+			if('shares'==type){
+				view.find('.objects>.object').each(function(i,el){
+					if(1==$(el).data('is-share')){
+						$(el).css('display','flex');
+					}
+				});
+			}
+		}
+		check_load_more();
+	}
 }
 
 function load_more_objects(indicator,check_level){
@@ -5538,6 +5625,7 @@ function load_more_objects(indicator,check_level){
 					let timestamp=new_object.find('.short-date-view').data('timestamp');
 					new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
 					indicator.data('busy','0');
+					profile_filter_by_type();
 					check_load_more();
 				}
 			});
@@ -5634,7 +5722,7 @@ function main_app(){
 		clear_feed(()=>{
 			clear_users_objects(()=>{
 				clear_cache(()=>{
-					view_path(path,{},false,false);
+					view_path(path+(''==query?'':'?'+query),{},false,false);
 					update_feed();
 				});
 			});
@@ -5682,6 +5770,6 @@ function main_app(){
 	window.onhashchange=function(e){
 		e.preventDefault();
 		parse_fullpath();
-		view_path(path,{},true,false);
+		view_path(path+(''==query?'':'?'+query),{},true,false);
 	};
 }
