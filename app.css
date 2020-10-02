@@ -116,6 +116,28 @@ i.icon.copy svg{
 	color:#26be0a;
 }
 
+div.icon-counter{
+	position:absolute;
+	overflow:hidden;
+	border-radius:4px;
+	font-size:10px;
+	background:#026fbe;
+	line-height:11px;
+	padding:2px 5px;
+	color:#fff;
+	margin-left:-28px;
+	margin-top:4px;
+	display:none;
+	border-bottom:0;
+}
+div.icon-counter.show{
+	display:inline-block;
+}
+
+div.menu.short div.icon-counter{
+	margin-left:-18px;
+}
+
 div.right-addon{
 	top:0;
 	position:fixed;
@@ -807,6 +829,7 @@ body.night .share-view{
 	display:block;
 	margin:10px 0;
 	font-size:20px;
+	word-break:break-word;
 }
 .fast-publish-wrapper{
 	position:relative;
@@ -1446,6 +1469,13 @@ div.menu .secondary a{
 		left:15px;
 		top:-1px;
 		color:#1c98e5;
+	}
+	div.menu.show div.icon-counter.show{
+		display:inline-block;
+		position:relative;
+		margin-right:12px;
+		top:-4px;
+		border:0;
 	}
 	.notifications{
 		right:0;

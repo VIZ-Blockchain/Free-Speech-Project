@@ -808,6 +808,8 @@ var ltmp_arr={
 	toggle_menu:'<a tabindex="0" title="{title}" class="toggle-menu">{icon}</a>',
 	toggle_menu_title:'Переключить меню',
 
+	icon_counter:`<div class="icon-counter counter-{name}">{count}</div>`,
+
 	account_settings:'<a tabindex="0" data-href="fsp:account_settings" title="Настройки аккаунта">{icon_account_settings}</a>',
 	account_settings_caption:'Настройки аккаунта',
 	account_settings_empty_account:'Введите аккаунт',
@@ -1026,8 +1028,8 @@ function render_menu(){
 	$('div.menu').html(ltmp_arr.menu_preset);
 	let primary_menu='';
 	if(''!=current_user){
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://',class:(path=='viz://'?'current':''),icon:ltmp_arr.icon_feed,caption:ltmp_arr.menu_feed});
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:notifications',class:(path=='fsp:notifications'?'current':''),icon:ltmp_arr.icon_notify,caption:ltmp_arr.menu_notifications});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://',class:(path=='viz://'?'current':''),icon:ltmp_arr.icon_feed+ltmp(ltmp_arr.icon_counter,{name:'feed',count:'0'}),caption:ltmp_arr.menu_feed});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:notifications',class:(path=='fsp:notifications'?'current':''),icon:ltmp_arr.icon_notify+ltmp(ltmp_arr.icon_counter,{name:'notifications',count:'0'}),caption:ltmp_arr.menu_notifications});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:awards',class:(path=='fsp:awards'?'current':''),icon:ltmp_arr.icon_gem,caption:ltmp_arr.menu_awards});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:users',class:(path=='fsp:users'?'current':''),icon:ltmp_arr.icon_users,caption:ltmp_arr.menu_users});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://@'+current_user+'/',class:(path=='viz://@'+current_user+'/'?'current':''),icon:ltmp_arr.icon_view_profile,caption:ltmp_arr.menu_view_profile});
@@ -1608,6 +1610,8 @@ function mark_readed_notifications(el){
 		}
 		else{
 			$('.view[data-path="fsp:notifications"] .objects .notify-item').addClass('readed');
+			clearTimeout(load_notifications_count_timer);
+			load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
 		}
 	};
 }
@@ -1630,6 +1634,8 @@ function clear_readed_notifications(el){
 		}
 		else{
 			$('.view[data-path="fsp:notifications"] .objects').html(ltmp_arr.load_more_end_notice);
+			clearTimeout(load_notifications_count_timer);
+			load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
 		}
 	};
 }
@@ -1796,6 +1802,11 @@ function load_new_objects(indicator){
 		}
 		else{
 			console.log('load_new_objects end cursor',new_objects);
+
+			//reset feed counter
+			$('.counter-feed').removeClass('show');
+			$('.counter-feed').html('0');
+
 			for(let i in new_objects){
 				let object=new_objects[i];
 				let object_view=render_object(object.account,object.block,'feed',check_level);
@@ -1891,6 +1902,9 @@ function add_notify(store,title,text,link){
 			}
 		}
 		add_t.oncomplete=function(e){
+			clearTimeout(load_notifications_count_timer);
+			load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
+
 			let read_t=db.transaction(['notifications'],'readonly');
 			let read_q=read_t.objectStore('notifications');
 			let req=read_q.openCursor(null,'prev');
@@ -1981,6 +1995,8 @@ function app_mouse(e){
 		let href=$(target).attr('data-href');
 		let back_to='';
 		if($(target).hasClass('close-notify-action')){
+			set_notify_readed($(target).closest('.notify-wrapper').data('id'));
+
 			let notify=$(target).parent();
 			let wrapper=notify.parent();
 			wrapper.removeClass('show');
@@ -2004,7 +2020,6 @@ function app_mouse(e){
 		q=t.objectStore('notifications');
 		req=q.openCursor(IDBKeyRange.only(notify_id),'next');
 
-		let find=false;
 		req.onsuccess=function(event){
 			let cur=event.target.result;
 			if(cur){
@@ -2018,14 +2033,18 @@ function app_mouse(e){
 				cur.continue();
 			}
 			else{
+				clearTimeout(load_notifications_count_timer);
+				load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
+
 				if(notify_link){
 					view_path(notify_link,{back:path},true,false);
 				}
 			}
 		};
-
 	}
 	if($(target).hasClass('notify')){
+		set_notify_readed($(target).closest('.notify-wrapper').data('id'));
+
 		let wrapper=$(target).parent();
 		wrapper.removeClass('show');
 		setTimeout(function(){wrapper.remove();},1000);
@@ -3155,38 +3174,90 @@ function clear_users_cache(callback){
 	};
 }
 
-var load_new_objects_timer=0;
-function update_feed_result(result){
-	let view=$('.view[data-level="0"]');
-	let new_objects=view.find('.objects .new-objects');
-	let items=new_objects.data('items');
-	if(false!==result){
-		items+=result.items;
-		new_objects.data('items',items);
-	}
-	if(0==items){
-		new_objects.removeClass('show');
-	}
-	else{
-		if(whitelabel_init){
-			clearTimeout(load_new_objects_timer);
-			load_new_objects_timer=setTimeout(function(){
-				new_objects.addClass('disabled');
-				load_new_objects(new_objects);
-				whitelabel_init=false;
-				if(whitelabel_redirect && 0==level){
-					view_path('viz://@'+whitelabel_account+'/',{},true,false);
-				}
-				else{
-					let indicator=view.find('.load-more-end-notice');
-					indicator.before(ltmp_arr.feed_end_notice);
-					indicator.remove();
-				}
-			},200);
+var load_notifications_count_timer=0;
+function load_notifications_count(){
+	let t,q,req;
+	t=db.transaction(['notifications'],'readonly');
+	q=t.objectStore('notifications');
+	req=q.index('status').count(IDBKeyRange.only(0));
+	req.onsuccess=function(event){
+		let count=event.target.result;
+		let counter_notifications=$('.counter-notifications');
+		if(0==count){
+			counter_notifications.removeClass('show');
 		}
 		else{
-			new_objects.html(ltmp(ltmp_arr.feed_new_objects,{items:new_objects.data('items')}));
-			new_objects.addClass('show');
+			counter_notifications.html(count);
+			counter_notifications.addClass('show');
+		}
+	};
+}
+
+function set_notify_readed(id){
+	let t,q,req;
+	t=db.transaction(['notifications'],'readwrite');
+	q=t.objectStore('notifications');
+	req=q.openCursor(IDBKeyRange.only(id),'next');
+
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let item=cur.value;
+			if(typeof item.link !== 'undefined'){
+				notify_link=item.link;
+			}
+			item.status=1;
+			cur.update(item);
+			cur.continue();
+		}
+		else{
+			clearTimeout(load_notifications_count_timer);
+			load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
+		}
+	};
+}
+
+var load_new_objects_timer=0;
+function update_feed_result(result){
+	if(false!==result){
+		console.log('update_feed_result',result);
+		let view=$('.view[data-level="0"]');
+		let new_objects=view.find('.objects .new-objects');
+		let counter_feed=$('.counter-feed');
+		let items=new_objects.data('items');
+		if(isNaN(items)){
+			items=0;
+		}
+		items+=result.items;
+		new_objects.data('items',items);
+		if(0==items){
+			new_objects.removeClass('show');
+			counter_feed.removeClass('show');
+		}
+		else{
+			if(whitelabel_init){
+				clearTimeout(load_new_objects_timer);
+				load_new_objects_timer=setTimeout(function(){
+					new_objects.addClass('disabled');
+					load_new_objects(new_objects);
+					whitelabel_init=false;
+					if(whitelabel_redirect && 0==level){
+						view_path('viz://@'+whitelabel_account+'/',{},true,false);
+					}
+					else{
+						let indicator=view.find('.load-more-end-notice');
+						indicator.before(ltmp_arr.feed_end_notice);
+						indicator.remove();
+					}
+				},200);
+			}
+			else{
+				new_objects.html(ltmp(ltmp_arr.feed_new_objects,{items:items}));
+				new_objects.addClass('show');
+				console.log('show counter_feed',items);
+				counter_feed.html(items);
+				counter_feed.addClass('show');
+			}
 		}
 	}
 }
@@ -3251,6 +3322,8 @@ function update_feed(){
 		//if(settings.feed_load_by_timer){}
 		console.log('update feed trigger');
 		update_feed_subscribes(function(){
+			clearTimeout(load_notifications_count_timer);
+			load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
 			update_feed_timer=setTimeout(function(){
 				update_feed();
 			},30000);//30 sec
@@ -3818,7 +3891,6 @@ function view_users(view,path_parts,query,title,back_to){
 		view.find('.header').html(header);
 
 		let current_tab='main';
-		console.log(query);
 		if((typeof query != 'undefined')&&(''!=query)){
 			current_tab=query;
 		}
@@ -4377,6 +4449,8 @@ function view_path(location,state,save_state,update){
 		}
 		if(update){
 			view.find('.objects').html(ltmp(ltmp_arr.new_objects+ltmp_arr.feed_loader_notice,{time:0}));
+			$('.counter-feed').removeClass('show');
+			$('.counter-feed').html('0');
 		}
 		path='viz://';
 		level=0;
@@ -5731,15 +5805,21 @@ function init_users(callback){
 }
 
 function main_app(){
+	console.log('Startup: main_app');
 	parse_fullpath();
 	render_menu();
 	render_session();
 	render_right_addon();
+	console.log('Startup: renders +');
 
 	init_users(()=>{
+		console.log('Startup: init_users +');
 		clear_feed(()=>{
+			console.log('Startup: clear_feed +');
 			clear_users_objects(()=>{
+				console.log('Startup: clear_users_objects +');
 				clear_cache(()=>{
+					console.log('Startup: clear_cache +');
 					view_path(path+(''==query?'':'?'+query),{},false,false);
 					update_feed();
 				});
