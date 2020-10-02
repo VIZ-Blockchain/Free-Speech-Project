@@ -2833,7 +2833,7 @@ function parse_object(account,block,callback){
 									hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
 								}
 
-								let hashtags_pattern = /#(.[^@#!.,?\r\n\t ]*)/g;
+								let hashtags_pattern = /#([^@#!.,?\r\n\t <>()\[\]]*)/g;
 								let hashtags_links=hashtags_text.match(hashtags_pattern);
 								if(null!=hashtags_links){
 									hashtags_links=hashtags_links.map(function(value){
@@ -4899,8 +4899,10 @@ function highlight_links(text){
 	let account_links=text.match(account_pattern);
 	if(null!=account_links){
 		for(let i in account_links){
-			summary_links[num]=account_links[i];
-			num++;
+			if(1<account_links[i].length){
+				summary_links[num]=account_links[i];
+				num++;
+			}
 		}
 	}
 
@@ -4925,12 +4927,14 @@ function highlight_links(text){
 	}
 
 	//hashtags highlights after links for avoid conflicts with url with hashes (not necessary, because array sorted by length)
-	let hashtags_pattern = /#(.[^@#!.,?\r\n\t ]*)/g;
+	let hashtags_pattern = /#([^@#!.,?\r\n\t <>()\[\]]*)/g;
 	let hashtags_links=text.match(hashtags_pattern);
 	if(null!=hashtags_links){
 		for(let i in hashtags_links){
-			summary_links[num]=hashtags_links[i];
-			num++;
+			if(1<hashtags_links[i].length){
+				summary_links[num]=hashtags_links[i];
+				num++;
+			}
 		}
 	}
 
