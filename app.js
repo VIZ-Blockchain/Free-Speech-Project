@@ -2,7 +2,8 @@ var app_version=1;
 var app_protocol='V';//V for Voice :)
 var storage_prefix='viz_voice_';
 
-var whitelabel_account='';//always subscribed to account
+var whitelabel_account='';//main whitelabel account to redirect
+var whitelabel_accounts=[whitelabel_account];//always subscribed to whitelabels accounts
 var whitelabel_deep=10;//count of max activity loaded for feed on startup
 var whitelabel_redirect=false;//redirect to whitelabel profile on feed loadup
 
@@ -529,10 +530,12 @@ function load_db(callback){
 			items_table.createIndex('is_share','is_share',{unique:false});//true/false
 
 			if(''!=whitelabel_account){//only on genesis
-				if(!db.objectStoreNames.contains('objects_'+whitelabel_account)){
-					users_table_diff.push([whitelabel_account,true]);
-					whitelabel_init=true;
+				for(let i in whitelabel_accounts){
+					if(!db.objectStoreNames.contains('objects_'+whitelabel_accounts[i])){
+						users_table_diff.push([whitelabel_accounts[i],true]);
+					}
 				}
+				whitelabel_init=true;
 			}
 		}
 		else{
@@ -3152,6 +3155,7 @@ function clear_users_cache(callback){
 	};
 }
 
+var load_new_objects_timer=0;
 function update_feed_result(result){
 	let view=$('.view[data-level="0"]');
 	let new_objects=view.find('.objects .new-objects');
@@ -3164,21 +3168,24 @@ function update_feed_result(result){
 		new_objects.removeClass('show');
 	}
 	else{
-		new_objects.html(ltmp(ltmp_arr.feed_new_objects,{items:new_objects.data('items')}));
 		if(whitelabel_init){
-			new_objects.addClass('disabled');
-			load_new_objects(new_objects);
-			whitelabel_init=false;
-			if(whitelabel_redirect && 0==level){
-				view_path('viz://@'+whitelabel_account+'/',{},true,false);
-			}
-			else{
-				let indicator=view.find('.load-more-end-notice');
-				indicator.before(ltmp_arr.feed_end_notice);
-				indicator.remove();
-			}
+			clearTimeout(load_new_objects_timer);
+			load_new_objects_timer=setTimeout(function(){
+				new_objects.addClass('disabled');
+				load_new_objects(new_objects);
+				whitelabel_init=false;
+				if(whitelabel_redirect && 0==level){
+					view_path('viz://@'+whitelabel_account+'/',{},true,false);
+				}
+				else{
+					let indicator=view.find('.load-more-end-notice');
+					indicator.before(ltmp_arr.feed_end_notice);
+					indicator.remove();
+				}
+			},200);
 		}
 		else{
+			new_objects.html(ltmp(ltmp_arr.feed_new_objects,{items:new_objects.data('items')}));
 			new_objects.addClass('show');
 		}
 	}
@@ -3193,7 +3200,10 @@ function update_feed_subscribes(callback){
 	let req=q.index('status').openCursor(IDBKeyRange.only(1),'next');
 	let list=[];
 	let delay=0;
-	let delay_step=500;
+	let delay_step=200;
+	if(whitelabel_init){
+		delay_step=10;
+	}
 	let check_activity=(new Date().getTime() /1000 | 0) - settings.activity_period*60;
 	req.onsuccess=function(event){
 		let cur=event.target.result;
@@ -3348,6 +3358,9 @@ function clear_cache(callback){
 
 function get_user(account,forced_update,callback){
 	forced_update=typeof forced_update==='undefined'?false:forced_update;
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
 
 	let result={};
 	let find=false;
@@ -3758,7 +3771,7 @@ function view_users(view,path_parts,query,title,back_to){
 				let user_data_profile=JSON.parse(user_data.profile);
 				header+=ltmp(ltmp_arr.header_caption_link,{caption:user_data_profile.nickname,link:'viz://@'+user_data.account});
 				let check_account=user_data.account;
-				if(check_account==whitelabel_account){
+				if(-1!=whitelabel_accounts.indexOf(check_account)){
 				}
 				else
 				if(check_account==current_user){
@@ -4502,7 +4515,7 @@ function view_path(location,state,save_state,update){
 								let header='';
 								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
 								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
-								if(check_account==whitelabel_account){
+								if(-1!=whitelabel_accounts.indexOf(check_account)){
 								}
 								else
 								if(check_account==current_user){
@@ -5689,8 +5702,13 @@ function check_whitelabel_account(callback){
 		callback=function(){};
 	}
 	if(''!=whitelabel_account){
+		for(let i in whitelabel_accounts){
+			if(db.objectStoreNames.contains('objects_'+whitelabel_accounts[i])){
+				get_user(whitelabel_accounts[i],true);
+			}
+		}
 		if(db.objectStoreNames.contains('objects_'+whitelabel_account)){
-			get_user(whitelabel_account,true,()=>{callback();});
+			get_user(whitelabel_account,false,()=>{callback();});
 		}
 		else{
 			callback();
