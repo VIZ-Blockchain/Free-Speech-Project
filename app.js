@@ -16,8 +16,8 @@ var is_safari=navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
 var is_firefox=navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 
 var api_gates=[
-	'https://api.viz.world/',
 	'https://node.viz.plus/',
+	'https://api.viz.world/',
 	'https://node.viz.cx/',
 	'https://viz.lexai.host/',
 	'https://vizrpc.lexai.host/',
@@ -85,10 +85,14 @@ function select_best_gate(){
 		}
 		if('http'==protocol){
 			let xhr = new XMLHttpRequest();
+			xhr.timeout=3000;
 			xhr.overrideMimeType('text/plain');
 			xhr.open('POST',current_gate_url);
 			xhr.setRequestHeader('accept','application/json, text/plain, */*');
 			xhr.setRequestHeader('content-type','application/json');
+			xhr.ontimeout = function() {
+				console.log('select_best_gate node timeout',current_gate_url);
+			};
 			xhr.onreadystatechange = function() {
 				if(4==xhr.readyState && 200==xhr.status){
 					latency=new Date().getTime() - latency_start;
@@ -108,7 +112,7 @@ function select_best_gate(){
 						}
 					}
 				}
-			}
+			};
 			xhr.send('{"id":1,"method":"call","jsonrpc":"2.0","params":["database_api","get_dynamic_global_properties",[]]}');
 		}
 	}
