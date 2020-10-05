@@ -3,6 +3,7 @@ body{
 	color:#000;
 	font-size:15px;
 	font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial;
+	overflow-y:scroll;
 }
 body.night{
 	background:#14202c;
@@ -1374,6 +1375,9 @@ div.menu .secondary a{
 	.adaptive-show-inline{
 		display:inline-block !important;
 	}
+	.adaptive-show-inline.mobile{
+		display:none !important;
+	}
 	.adaptive-show-flex{
 		display:flex !important;
 	}
@@ -1461,7 +1465,7 @@ div.menu .secondary a{
 	}
 	div.menu .primary div a{
 		text-align:left;
-		min-width:50vw;
+		min-width:60vw;
 	}
 	div.menu.show .toggle-menu{
 		display:inline-block;

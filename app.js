@@ -839,7 +839,7 @@ var ltmp_arr={
 
 	awarded_amount:'Награждено на {amount} Ƶ',
 
-	menu_session_empty:'<div class="avatar"><img src="default.png"></div><a tabindex="0" data-href="fsp:account_settings">{caption}</a>',
+	menu_session_empty:'<div class="avatar"><img src="default.png" data-href="fsp:account_settings"></div><a tabindex="0" data-href="fsp:account_settings">{caption}</a>',
 	menu_session_login:'Войти',
 	menu_session_error:'<span class="error">Ошибка</span>',
 	menu_session_account:'<div class="avatar"><div class="shadow" data-href="viz://@{account}/"></div><img src="{avatar}"></div><div class="account"><a class="account-name" tabindex="0" data-href="viz://@{account}/">{nickname}</a><a class="account-login" tabindex="0" data-href="viz://@{account}/">{account}</a></div>',
@@ -856,8 +856,10 @@ var ltmp_arr={
 	awards_loader_notice:'<div class="loader-notice" data-awards-id="{id}"><span class="submit-button-ring"></span></div>',
 	hashtags_loader_notice:'<div class="loader-notice" data-hashtags-id="{tag_id}" data-hashtags-feed-id="{id}"><span class="submit-button-ring"></span></div>',
 
-	toggle_menu:'<a tabindex="0" title="{title}" class="toggle-menu">{icon}</a>',
+	toggle_menu:'<a tabindex="0" title="{title}" class="toggle-menu adaptive-show-inline mobile">{icon}</a>',
 	toggle_menu_title:'Переключить меню',
+
+	toggle_menu_icon:'<div><a tabindex="0" title="{title}" class="toggle-menu-icon">{icon}</a></div>',
 
 	icon_counter:`<div class="icon-counter counter-{name}">{count}</div>`,
 
@@ -955,6 +957,12 @@ var ltmp_arr={
 	icon_hashtag:`<i class="icon hashtag"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7.784 14l.42-4H4V8h4.415l.525-5h2.011l-.525 5h3.989l.525-5h2.011l-.525 5H20v2h-3.784l-.42 4H20v2h-4.415l-.525 5h-2.011l.525-5H9.585l-.525 5H7.049l.525-5H4v-2h3.784zm2.011 0h3.99l.42-4h-3.99l-.42 4z"/></svg></i>`,
 	icon_pin:`<i class="icon pin"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13.828 1.686l8.486 8.486-1.415 1.414-.707-.707-4.242 4.242-.707 3.536-1.415 1.414-4.242-4.243-4.95 4.95-1.414-1.414 4.95-4.95-4.243-4.242 1.414-1.415L8.88 8.05l4.242-4.242-.707-.707 1.414-1.415zm.708 3.536l-4.671 4.67-2.822.565 6.5 6.5.564-2.822 4.671-4.67-4.242-4.243z"/></svg></i>`,
 	icon_eye_ignore:`<i class="icon eye-ignore"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.882 19.297A10.949 10.949 0 0 1 12 21c-5.392 0-9.878-3.88-10.819-9a10.982 10.982 0 0 1 3.34-6.066L1.392 2.808l1.415-1.415 19.799 19.8-1.415 1.414-3.31-3.31zM5.935 7.35A8.965 8.965 0 0 0 3.223 12a9.005 9.005 0 0 0 13.201 5.838l-2.028-2.028A4.5 4.5 0 0 1 8.19 9.604L5.935 7.35zm6.979 6.978l-3.242-3.242a2.5 2.5 0 0 0 3.241 3.241zm7.893 2.264l-1.431-1.43A8.935 8.935 0 0 0 20.777 12 9.005 9.005 0 0 0 9.552 5.338L7.974 3.76C9.221 3.27 10.58 3 12 3c5.392 0 9.878 3.88 10.819 9a10.947 10.947 0 0 1-2.012 4.592zm-9.084-9.084a4.5 4.5 0 0 1 4.769 4.769l-4.77-4.769z"/></svg></i>`,
+
+	icon_menu_collapse:`<i class="icon menu-collapse"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18 6H20V18H18zM10 11L4 11 4 13 10 13 10 18 16 12 10 6z"/></svg></i>`,
+	icon_menu_expand:`<i class="icon menu-expand"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18 6H20V18H18zM10 18L10 13 16 13 16 11 10 11 10 6 4 12z"/></svg></i>`,
+	icon_theme_moon:`<i class="icon theme-moon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.742,13.045c-0.677,0.18-1.376,0.271-2.077,0.271c-2.135,0-4.14-0.83-5.646-2.336c-2.008-2.008-2.799-4.967-2.064-7.723 c0.092-0.345-0.007-0.713-0.259-0.965C10.444,2.04,10.077,1.938,9.73,2.034C8.028,2.489,6.476,3.382,5.241,4.616 c-3.898,3.898-3.898,10.243,0,14.143c1.889,1.889,4.401,2.93,7.072,2.93c2.671,0,5.182-1.04,7.07-2.929 c1.236-1.237,2.13-2.791,2.583-4.491c0.092-0.345-0.008-0.713-0.26-0.965C21.454,13.051,21.085,12.951,20.742,13.045z M17.97,17.346c-1.511,1.511-3.52,2.343-5.656,2.343c-2.137,0-4.146-0.833-5.658-2.344c-3.118-3.119-3.118-8.195,0-11.314 c0.602-0.602,1.298-1.102,2.06-1.483c-0.222,2.885,0.814,5.772,2.89,7.848c2.068,2.069,4.927,3.12,7.848,2.891 C19.072,16.046,18.571,16.743,17.97,17.346z"/></svg></i>`,
+	icon_theme_full_moon:`<i class="icon theme-full-moon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12,11.807C9.349,9.155,8.7,5.261,10.049,2c-1.875,0.37-3.666,1.281-5.12,2.735c-3.905,3.905-3.905,10.237,0,14.142	c3.906,3.906,10.237,3.905,14.143,0c1.454-1.454,2.364-3.244,2.735-5.119C18.545,15.106,14.651,14.458,12,11.807z"/></svg></i>`,
+	icon_theme_sun:`<i class="icon theme-sun"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></i>`,
 
 	header_back_action:`<a tabindex="0" class="back-action" title="Назад" data-force="{force}">{icon}</a>`,
 	header_link:'<div class="link grow"><div class="header-link-wrapper"><input type="text" class="header-link" value="{link}"><div class="header-link-icons">{icons}</div></div></div>',
@@ -1072,9 +1080,7 @@ var menu_status='full';
 if(null!=localStorage.getItem(storage_prefix+'menu_status')){
 	menu_status=localStorage.getItem(storage_prefix+'menu_status');
 }
-if('full'!=menu_status){
-	$('div.menu').addClass(menu_status);
-}
+
 function render_menu(){
 	$('div.menu').html(ltmp_arr.menu_preset);
 	let primary_menu='';
@@ -1089,8 +1095,13 @@ function render_menu(){
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:account_settings',class:(path=='fsp:account_settings'?'current':''),icon:ltmp_arr.icon_account_settings,caption:ltmp_arr.menu_account_settings});
 	}
 	$('div.menu .primary').html(primary_menu);
-	let secondary_menu=ltmp_arr.menu_secondary;
+	let toggle_menu=ltmp(ltmp_arr.toggle_menu_icon,{title:ltmp_arr.toggle_menu_title,icon:('full'==menu_status?ltmp_arr.icon_menu_collapse:ltmp_arr.icon_menu_expand)});
+	let secondary_menu=ltmp_arr.menu_secondary+toggle_menu;
 	$('div.menu .secondary').html(secondary_menu);
+
+	if('full'!=menu_status){
+		$('div.menu').addClass(menu_status);
+	}
 }
 
 function render_right_addon(){
@@ -2103,11 +2114,12 @@ function app_mouse(e){
 	if($(target).hasClass('theme-action')){
 		$('body').removeClass('light');
 		$('body').removeClass('night');
+		$('body').removeClass('dark');
 		theme=$(target).attr('rel');
 		$('body').addClass(theme);
 		localStorage.setItem(storage_prefix+'theme',theme)
 	}
-	if($(target).hasClass('toggle-menu')){
+	if($(target).hasClass('toggle-menu') || $(target).hasClass('toggle-menu-icon')){
 		if(is_mobile()){
 			clearTimeout(mobile_hide_menu_timer);
 			$('div.menu').removeClass('hidden');
@@ -2123,6 +2135,17 @@ function app_mouse(e){
 		}
 		else{
 			if(is_full()){
+				if($('div.menu').hasClass('short')){
+					$('div.menu').removeClass('short');
+					menu_status='full';
+					localStorage.setItem(storage_prefix+'menu_status',menu_status);
+				}
+				else{
+					$('div.menu').addClass('short');
+					menu_status='short';
+					localStorage.setItem(storage_prefix+'menu_status',menu_status);
+				}
+				/*
 				if($('div.menu').hasClass('hidden')){
 					$('div.menu').removeClass('hidden');
 					menu_status='full';
@@ -2141,8 +2164,14 @@ function app_mouse(e){
 						localStorage.setItem(storage_prefix+'menu_status',menu_status);
 					}
 				}
+				*/
 			}
 			else{
+				$('div.menu').removeClass('hidden');
+				$('div.menu').addClass('short');
+				menu_status='short';
+				localStorage.setItem(storage_prefix+'menu_status',menu_status);
+				/*
 				if($('div.menu').hasClass('short')){
 					$('div.menu').addClass('hidden');
 					$('div.menu').removeClass('short');
@@ -2155,6 +2184,13 @@ function app_mouse(e){
 					menu_status='short';
 					localStorage.setItem(storage_prefix+'menu_status',menu_status);
 				}
+				*/
+			}
+			if('full'==menu_status){
+				$('.toggle-menu-icon').html(ltmp_arr.icon_menu_collapse);
+			}
+			else{
+				$('.toggle-menu-icon').html(ltmp_arr.icon_menu_expand);
 			}
 		}
 	}
@@ -5903,7 +5939,7 @@ function main_app(){
 		}
 		check_load_more();
 	});
-	window.onresize=function(){
+	window.onresize=function(init){
 		if(!is_mobile()){
 			if(!is_full()){
 				if(!$('div.menu').hasClass('short')){
@@ -5911,17 +5947,39 @@ function main_app(){
 					$('div.menu').removeClass('show');
 					$('div.menu').addClass('short');
 				}
+				$('.toggle-menu-icon').css('display','none');
+				if(true!==init){
+					menu_status='short';
+					localStorage.setItem(storage_prefix+'menu_status',menu_status);
+				}
 			}
 			else{
 				$('div.menu').removeClass('hidden');
 				$('div.menu').removeClass('show');
 				$('div.menu').removeClass('short');
+				$('.toggle-menu-icon').css('display','inline-block');
+				if(true!==init){
+					menu_status='full';
+					localStorage.setItem(storage_prefix+'menu_status',menu_status);
+				}
 			}
 		}
 		else{
+			$('.toggle-menu-icon').css('display','none');
 			$('div.menu').removeClass('hidden');
 			$('div.menu').removeClass('short');
 			$('div.menu').removeClass('show');
+		}
+		if('full'==menu_status){
+			$('.toggle-menu-icon').html(ltmp_arr.icon_menu_collapse);
+		}
+		else{
+			$('.toggle-menu-icon').html(ltmp_arr.icon_menu_expand);
+		}
+		if(true===init){
+			if('short'==menu_status){
+				$('div.menu').addClass('short');
+			}
 		}
 		check_load_more();
 	};
@@ -5930,4 +5988,5 @@ function main_app(){
 		parse_fullpath();
 		view_path(path+(''==query?'':'?'+query),{},true,false);
 	};
+	window.onresize(true);
 }
