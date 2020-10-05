@@ -391,13 +391,13 @@ const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRa
 
 var db;
 var db_version=1;
-var global_db_version=3;
+var global_db_version=4;
 var need_update_db_version=false;
 var local_global_db_version=localStorage.getItem(storage_prefix+'global_db_version');
 if((null===local_global_db_version)||(global_db_version>local_global_db_version)){
 	console.log('need update global db version',global_db_version);
 	need_update_db_version=true;
-	localStorage.setItem(storage_prefix+'global_db_version',global_db_version)
+	localStorage.setItem(storage_prefix+'global_db_version',global_db_version);
 }
 if(null!=localStorage.getItem(storage_prefix+'db_version')){
 	db_version=parseInt(localStorage.getItem(storage_prefix+'db_version'));
@@ -517,11 +517,19 @@ function load_db(callback){
 
 		if(!db.objectStoreNames.contains('hashtags_feed')){
 			items_table=db.createObjectStore('hashtags_feed',{keyPath:'id',autoIncrement:true});
-			items_table.createIndex('tag','tag',{unique:true});//hash tag id
+			items_table.createIndex('tag','tag',{unique:false});//hash tag id
 			items_table.createIndex('tag_feed',['tag','id'],{unique:false});//hash tag id
 			items_table.createIndex('object',['account','block'],{unique:false});//account
 		}
 		else{
+			if(need_update_db_version){
+				if(3==local_global_db_version){//not updated yet
+					items_table=update_trx.objectStore('hashtags_feed');
+					//remove unique flag for tag index
+					items_table.deleteIndex('tag');
+					items_table.createIndex('tag','tag',{unique:false});
+				}
+			}
 			//new index for hashtags_feed
 		}
 
@@ -591,6 +599,45 @@ function idb_get_id(container,index,search,callback){
 			if(cur){
 				find=cur.value.id;
 				cur.continue();
+			}
+			else{
+				callback(find);
+			}
+		}
+	}
+	else{
+		callback(find);
+	}
+}
+
+function idb_get_id_filter(container,index,search,filter,callback){
+	let find=false;
+	let t,q,req;
+	if(db.objectStoreNames.contains(container)){
+		t=db.transaction([container],'readonly');
+		q=t.objectStore(container);
+		if(false!==index){
+			req=q.index(index).openCursor(IDBKeyRange.only(search),'next');
+		}
+		else{
+			req=q.openCursor(IDBKeyRange.only(search),'next');
+		}
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let find_filter=false;
+				for(let filter_i in filter){
+					if(cur.value[filter_i]==filter[filter_i]){
+						find_filter=true;
+					}
+				}
+				if(find_filter){
+					find=cur.value.id;
+					cur.continue(-1);
+				}
+				else{
+					cur.continue();
+				}
 			}
 			else{
 				callback(find);
@@ -2842,18 +2889,20 @@ function parse_object(account,block,callback){
 									hashtags_links=array_unique(hashtags_links);
 
 									let add_hashtag_object=function(hashtag_id,account,block){
-										idb_get_id('hashtags_feed','object',[account,block],function(feed_id){
+										idb_get_id_filter('hashtags_feed','object',[account,block],{tag:hashtag_id},function(feed_id){
 											if(false===feed_id){//add object to hashtag feed
-												let add_t=db.transaction(['hashtags_feed'],'readwrite');
-												let add_q=add_t.objectStore('hashtags_feed');
-												add_q.add({tag:hashtag_id,account:account,block:block});
+												let add_t,add_q,add_req;
+												add_t=db.transaction(['hashtags_feed'],'readwrite');
+												add_q=add_t.objectStore('hashtags_feed');
+												add_req=add_q.add({tag:hashtag_id,account:account,block:block});
 												if(!is_safari){
 													if(!is_firefox){
 														add_t.commit();
 													}
 												}
-												add_t.oncomplete=function(e){
+												add_req.onsuccess=function(e){
 													//update hashtag counter
+													let upd_t,upd_q,upd_req;
 													upd_t=db.transaction(['hashtags'],'readwrite');
 													upd_q=upd_t.objectStore('hashtags');
 													upd_req=upd_q.openCursor(IDBKeyRange.only(hashtag_id),'next');
@@ -2876,29 +2925,32 @@ function parse_object(account,block,callback){
 
 									for(let i in hashtags_links){
 										let hashtag=hashtags_links[i].substr(1);
-										idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
-											if(false===hashtag_id){
-												let hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
-												let hashtag_add_t=db.transaction(['hashtags'],'readwrite');
-												let hashtag_add_q=hashtag_add_t.objectStore('hashtags');
-												hashtag_add_q.add(hashtag_info);
-												if(!is_safari){
-													if(!is_firefox){
-														hashtag_add_t.commit();
+										if(''!=hashtag){
+											idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+												if(false===hashtag_id){
+													let hashtag_info,hashtag_add_t,hashtag_add_q,hashtag_add_req;
+													hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
+													hashtag_add_t=db.transaction(['hashtags'],'readwrite');
+													hashtag_add_q=hashtag_add_t.objectStore('hashtags');
+													hashtag_add_req=hashtag_add_q.add(hashtag_info);
+													if(!is_safari){
+														if(!is_firefox){
+															hashtag_add_t.commit();
+														}
+													}
+													hashtag_add_req.onsuccess=function(e){
+														idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+															if(false!==hashtag_id){
+																add_hashtag_object(hashtag_id,obj.account,obj.block);
+															}
+														});
 													}
 												}
-												hashtag_add_t.oncomplete=function(e){
-													idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
-														if(false!==hashtag_id){
-															add_hashtag_object(hashtag_id,obj.account,obj.block);
-														}
-													});
+												else{
+													add_hashtag_object(hashtag_id,obj.account,obj.block);
 												}
-											}
-											else{
-												add_hashtag_object(hashtag_id,obj.account,obj.block);
-											}
-										});
+											});
+										}
 									}
 								}
 							}
