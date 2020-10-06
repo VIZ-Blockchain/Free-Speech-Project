@@ -199,6 +199,7 @@ function save_theme_settings(view){
 	localStorage.setItem(storage_prefix+'settings',settings_json);
 
 	tab.find('.success').html(ltmp_arr.app_settings_saved);
+	apply_theme_mode();
 }
 function save_feed_settings(view){
 	let tab=view.find('.content-view[data-tab="feed"]');
@@ -4406,7 +4407,7 @@ function view_app_settings(view,path_parts,query,title){
 			let settings_json=JSON.stringify(settings);
 			localStorage.setItem(storage_prefix+'settings',settings_json);
 
-			apply_theme_mode()
+			apply_theme_mode();
 		});
 
 		tab.find('input[name="theme-mode"]').off('change');
