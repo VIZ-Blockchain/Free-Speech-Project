@@ -1149,7 +1149,7 @@ function render_right_addon(){
 				if(1==cur.value.status){//pinned
 					let hashtag_data=cur.value;
 					find=true;
-					container_context+=ltmp(ltmp_arr.box_item,{link:'fsp:hashtags/'+hashtag_data.tag,caption:hashtag_data.tag});
+					container_context+=ltmp(ltmp_arr.box_item,{link:'fsp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
 					pinned_arr.push(hashtag_data.id);
 					cur.continue();
 				}
