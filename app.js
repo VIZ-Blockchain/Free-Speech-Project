@@ -135,17 +135,12 @@ function update_dgp(auto=false){
 var users={};
 var current_user='';
 var default_energy_step=500;//5.00%
-var theme='light';
 
 if(null!=localStorage.getItem(storage_prefix+'users')){
 	users=JSON.parse(localStorage.getItem(storage_prefix+'users'));
 }
 if(null!=localStorage.getItem(storage_prefix+'current_user')){
 	current_user=localStorage.getItem(storage_prefix+'current_user');
-}
-if(null!=localStorage.getItem(storage_prefix+'theme')){
-	theme=localStorage.getItem(storage_prefix+'theme');
-	$('body').addClass(theme);
 }
 
 var default_settings={
@@ -165,6 +160,11 @@ var default_settings={
 	energy:100,
 	silent_award:false,
 	hashtags_addon_popular_limit:5,
+
+	theme_mode:'light',
+	theme_night_mode:'midnight',
+	theme_auto_light:'06:00',
+	theme_auto_night:'21:00',
 };
 var settings=default_settings;
 
@@ -177,6 +177,29 @@ if(null!=localStorage.getItem(storage_prefix+'settings')){
 	}
 }
 
+function save_theme_settings(view){
+	let tab=view.find('.content-view[data-tab="theme"]');
+	tab.find('.button').removeClass('disabled');
+	tab.find('.submit-button-ring').removeClass('show');
+	tab.find('.error').html('');
+
+	settings.theme_auto_light=tab.find('input[name="theme-auto-light"]').val();
+	if(!/^([0-9]?[0-9]?\:[0-9]?[0-9]?)$/.test(settings.theme_auto_light)){
+		settings.theme_auto_light=default_settings.theme_auto_light;
+	}
+	tab.find('input[name="theme-auto-light"]').val(settings.theme_auto_light);
+
+	settings.theme_auto_night=tab.find('input[name="theme-auto-night"]').val();
+	if(!/^([0-9]?[0-9]?\:[0-9]?[0-9]?)$/.test(settings.theme_auto_night)){
+		settings.theme_auto_night=default_settings.theme_auto_night;
+	}
+	tab.find('input[name="theme-auto-light"]').val(settings.theme_auto_light);
+
+	let settings_json=JSON.stringify(settings);
+	localStorage.setItem(storage_prefix+'settings',settings_json);
+
+	tab.find('.success').html(ltmp_arr.app_settings_saved);
+}
 function save_feed_settings(view){
 	let tab=view.find('.content-view[data-tab="feed"]');
 	tab.find('.button').removeClass('disabled');
@@ -741,9 +764,9 @@ function ltmp(ltmp_str,ltmp_args){
 		ltmp_str=ltmp_str.split('{'+ltmp_i+'}').join(ltmp_args[ltmp_i]);
 	}
 	//remove empty args
-	let ltmp_arr=ltmp_str.match(/\{[a-z_\-]*\}/gm);
-	for(let ltmp_i in ltmp_arr){
-		ltmp_str=ltmp_str.split(ltmp_arr[ltmp_i]).join('');
+	let ltmp_prop_arr=ltmp_str.match(/\{[a-z_\-]*\}/gm);
+	for(let ltmp_i in ltmp_prop_arr){
+		ltmp_str=ltmp_str.split(ltmp_prop_arr[ltmp_i]).join('');
 	}
 	return ltmp_str;
 }
@@ -858,8 +881,10 @@ var ltmp_arr={
 
 	toggle_menu:'<a tabindex="0" title="{title}" class="toggle-menu adaptive-show-inline mobile">{icon}</a>',
 	toggle_menu_title:'Переключить меню',
-
 	toggle_menu_icon:'<div><a tabindex="0" title="{title}" class="toggle-menu-icon">{icon}</a></div>',
+
+	toggle_theme_icon:'<div><a tabindex="0" data-href="fsp:app_settings/theme/" title="{title}" class="toggle-theme-icon">{icon}</a></div>',
+	toggle_theme_title:'Настроить оформление',
 
 	icon_counter:`<div class="icon-counter counter-{name}">{count}</div>`,
 
@@ -880,6 +905,7 @@ var ltmp_arr={
 	app_settings_reset:'Настройки сброшены',
 	app_settings_main_tab:'Общие',
 	app_settings_feed_tab:'Лента новостей',
+	app_settings_theme_tab:'Оформление',
 
 	view_profile:'<a tabindex="0" data-href="viz://@{account}/" title="Просмотреть профиль">{icon_view_profile}</a>',
 
@@ -926,7 +952,6 @@ var ltmp_arr={
 	menu_awards:'Награждения',
 	menu_app_settings:'Настройки',
 	menu_account_settings:'Аккаунт',
-	menu_secondary:`Тема: <a class="theme-action" rel="light">день</a>, <a class="theme-action" rel="night">ночь</a>`,
 
 	icon_back:`<i class="icon back"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></i>`,
 	icon_gem:`<i class="icon gem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6.3499998 6.3500002" height="24" width="24" fill="none" stroke="currentColor" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"><path d="m 1.019418,1.20416 1.108597,0.36953 m 4.0648556,0.86224 -0.8622424,-1.23177 m -5.17345221,1.23177 3.07943611,3.07944 2.9562585,-3.07944 -1.6013069,0.49271 -1.3549516,2.58673 -1.4781293,-2.58673 -1.60130681,-0.49271 0.86224211,-1.23177 1.2317745,-0.36953 h 1.8476616 l 1.231774,0.36953 -1.1085967,0.36953 H 2.128015 l -0.3695322,1.35495 h 2.8330809 l -0.3695322,-1.35495"/></svg></i>`,
@@ -1096,7 +1121,8 @@ function render_menu(){
 	}
 	$('div.menu .primary').html(primary_menu);
 	let toggle_menu=ltmp(ltmp_arr.toggle_menu_icon,{title:ltmp_arr.toggle_menu_title,icon:('full'==menu_status?ltmp_arr.icon_menu_collapse:ltmp_arr.icon_menu_expand)});
-	let secondary_menu=ltmp_arr.menu_secondary+toggle_menu;
+	let toggle_theme=ltmp(ltmp_arr.toggle_theme_icon,{title:ltmp_arr.toggle_theme_title,icon:($('body').hasClass('light')?ltmp_arr.icon_theme_sun:ltmp_arr.icon_theme_moon)});
+	let secondary_menu=toggle_theme+toggle_menu;
 	$('div.menu .secondary').html(secondary_menu);
 
 	if('full'!=menu_status){
@@ -1211,8 +1237,8 @@ function award(account,block,callback){
 			let received_vesting_shares=parseFloat(response.received_vesting_shares);
 			let effective_vesting_shares=vesting_shares + received_vesting_shares - delegated_vesting_shares;
 
-			let last_vote_time=Date.parse(response.last_vote_time);
-			let delta_time=parseInt((new Date().getTime() - last_vote_time+(new Date().getTimezoneOffset()*60000))/1000);
+			let last_vote_time=parse_date(response.last_vote_time);
+			let delta_time=parseInt((new Date().getTime() - last_vote_time + timezone_offset())/1000);
 			let current_energy=response.energy;
 			let new_energy=parseInt(current_energy+(delta_time*10000/432000));//CHAIN_ENERGY_REGENERATION_SECONDS 5 days
 			if(new_energy>10000){
@@ -2265,6 +2291,17 @@ function app_mouse(e){
 			save_feed_settings(view);
 		}
 	}
+	if($(target).hasClass('save-theme-settings-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			let view=$(target).closest('.view');
+			let tab=view.find('.content-view[data-tab="theme"]');
+			tab.find('.submit-button-ring').addClass('show');
+			tab.find('.error').html('');
+			tab.find('.success').html('');
+			save_theme_settings(view);
+		}
+	}
 	if($(target).hasClass('save-settings-action')){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
@@ -2796,7 +2833,7 @@ function parse_object(account,block,callback){
 						let op=response[item_i].op[1];
 						if(op.required_regular_auths.includes(account)){
 							item=JSON.parse(response[item_i].op[1].json);
-							item.timestamp=Date.parse(response[item_i].timestamp) / 1000 | 0;
+							item.timestamp=parse_date(response[item_i].timestamp) / 1000 | 0;
 						}
 					}
 				}
@@ -4307,6 +4344,7 @@ function view_app_settings(view,path_parts,query,title){
 	let tabs='';
 	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:app_settings/main',class:('main'==current_tab?'current':''),caption:ltmp_arr.app_settings_main_tab});
 	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:app_settings/theme',class:('theme'==current_tab?'current':''),caption:ltmp_arr.app_settings_theme_tab});
 	view.find('.tabs').html(tabs);
 
 	view.find('.content-view').css('display','none');
@@ -4348,9 +4386,86 @@ function view_app_settings(view,path_parts,query,title){
 		//$('input[name="feed_load_by_timer"]').prop("checked",settings.feed_load_by_timer);
 		//$('input[name="feed_load_by_surf"]').prop("checked",settings.feed_load_by_surf);
 	}
+	if('theme'==current_tab){
+		tab.find('.button').removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+		tab.find('.error').html('');
+		tab.find('.success').html('');
+
+		tab.find('input[type="radio"]').prop("checked",false)
+
+		tab.find('input[name="theme-auto-light"]').val(settings.theme_auto_light);
+		tab.find('input[name="theme-auto-night"]').val(settings.theme_auto_night);
+
+		tab.find('input[name="theme-mode"][value="'+settings.theme_mode+'"]').prop("checked",true);
+		tab.find('input[name="theme-night-mode"][value="'+settings.theme_night_mode+'"]').prop("checked",true);
+
+		tab.find('input[name="theme-night-mode"]').off('change');
+		tab.find('input[name="theme-night-mode"]').on('change',function(){
+			settings.theme_night_mode=this.value;
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
+
+			apply_theme_mode()
+		});
+
+		tab.find('input[name="theme-mode"]').off('change');
+		tab.find('input[name="theme-mode"]').on('change',function(){
+			settings.theme_mode=this.value;
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
+
+			apply_theme_mode();
+		});
+	}
 
 	$('.loader').css('display','none');
 	view.css('display','block');
+}
+
+var apply_theme_mode_timer=0;
+function apply_theme_mode(){
+	$('body').removeClass('light');
+	$('body').removeClass('midnight');
+	$('body').removeClass('dark');
+	let mode=settings.theme_mode;
+	if('auto'==mode){
+		let h=new Date().getHours();
+		let m=new Date().getMinutes();
+		let auto_light=settings.theme_auto_light.split(':');
+		let auto_night=settings.theme_auto_night.split(':');
+		mode='night';
+		if(h>=parseInt(auto_light[0])){
+			if(h==parseInt(auto_light[0])){
+				if(m>=parseInt(auto_light[1])){
+					mode='light';
+				}
+			}
+			else{
+				mode='light';
+			}
+		}
+		if(h>=parseInt(auto_night[0])){
+			if(h==parseInt(auto_night[0])){
+				if(m>=parseInt(auto_night[1])){
+					mode='night';
+				}
+			}
+			else{
+				mode='night';
+			}
+		}
+	}
+	if('light'==mode){
+		$('body').addClass(mode);
+		$('.toggle-theme-icon').html(ltmp_arr.icon_theme_sun);
+	}
+	else{
+		$('body').addClass(settings.theme_night_mode);
+		$('.toggle-theme-icon').html(ltmp_arr.icon_theme_moon);
+	}
+	clearTimeout(apply_theme_mode_timer);
+	apply_theme_mode_timer=setTimeout(function(){apply_theme_mode();},60000);
 }
 
 function view_account_settings(view,path_parts,query,title){
@@ -4590,12 +4705,10 @@ function view_path(location,state,save_state,update){
 								$('.content').append(new_view);
 							}
 							let view=$('.view[data-level="'+level+'"]');
-							if(update){
-								let header='';
-								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
-								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
-								view.find('.header').html(header);
-							}
+							let header='';
+							header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
+							header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+							view.find('.header').html(header);
 							view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.gateway_error}));
 							$('.loader').css('display','none');
 							view.css('display','block');
@@ -4753,12 +4866,10 @@ function view_path(location,state,save_state,update){
 									$('.content').append(new_view);
 								}
 								let view=$('.view[data-level="'+level+'"]');
-								if(update){
-									let header='';
-									header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
-									header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
-									view.find('.header').html(header);
-								}
+								let header='';
+								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
+								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
+								view.find('.header').html(header);
 								view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.gateway_error}));
 
 								$('.loader').css('display','none');
@@ -4813,8 +4924,8 @@ function view_path(location,state,save_state,update){
 
 											view.find('.objects').html(object_view);
 											let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
-											view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),false,false,false));
-											view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000-(new Date().getTimezoneOffset()*60000)));
+											view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000 - timezone_offset(),false,false,false));
+											view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000 - timezone_offset()));
 
 											get_replies(user_result.account,object_result.block,function(err,replies_result){
 												for(let i in replies_result){
@@ -4861,6 +4972,15 @@ function view_path(location,state,save_state,update){
 	}
 }
 
+function timezone_offset(){
+	return new Date().getTimezoneOffset()*60000;
+}
+
+function parse_date(str){
+	var a = str.split(/[^0-9]/).map(s=>parseInt(s));
+	return new Date(a[0], a[1]-1 || 0, a[2] || 1, a[3] || 0, a[4] || 0, a[5] || 0, a[6] || 0);
+}
+
 function show_time(str,add_seconds){
 	str=typeof str==='undefined'?false:str;
 	add_time=typeof add_time==='undefined'?false:add_time;
@@ -4876,7 +4996,7 @@ function show_time(str,add_seconds){
 			str_time=str;
 		}
 		else{
-			str_time=Date.parse(str);
+			str_time=parse_date(str);
 		}
 		str_date=new Date(str_time);
 	}
@@ -4914,7 +5034,7 @@ function show_date(str,add_time,add_seconds,remove_today){
 			str_time=str;
 		}
 		else{
-			str_time=Date.parse(str);
+			str_time=parse_date(str);
 		}
 		str_date=new Date(str_time);
 	}
@@ -5142,7 +5262,7 @@ function render_object(user,object,type,preset_level){
 							load_content.html(sub_render);
 							let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
 							let timestamp=new_object.find('.short-date-view').data('timestamp');
-							new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+							new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
 						});
 					}
 				});
@@ -5245,7 +5365,7 @@ function render_object(user,object,type,preset_level){
 							load_content.html(sub_render);
 							let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
 							let timestamp=new_object.find('.short-date-view').data('timestamp');
-							new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+							new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
 						});
 					}
 				});
@@ -5338,7 +5458,7 @@ function render_object(user,object,type,preset_level){
 						load_content.html(sub_render);
 						let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
 						let timestamp=new_object.find('.short-date-view').data('timestamp');
-						new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+						new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
 					});
 				}
 			});
@@ -5373,7 +5493,7 @@ function render_object(user,object,type,preset_level){
 						load_content.html(sub_render);
 						let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
 						let timestamp=new_object.find('.short-date-view').data('timestamp');
-						new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+						new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
 					});
 				}
 			});
@@ -5806,7 +5926,7 @@ function load_more_objects(indicator,check_level){
 					indicator.before(object_view);
 					let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
 					let timestamp=new_object.find('.short-date-view').data('timestamp');
-					new_object.find('.objects .short-date-view').html(show_date(timestamp*1000-(new Date().getTimezoneOffset()*60000),true,false,false));
+					new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
 					indicator.data('busy','0');
 					profile_filter_by_type();
 					check_load_more();
@@ -5903,6 +6023,7 @@ function init_users(callback){
 function main_app(){
 	console.log('Startup: main_app');
 	parse_fullpath();
+	apply_theme_mode();
 	render_menu();
 	render_session();
 	render_right_addon();

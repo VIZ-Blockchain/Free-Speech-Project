@@ -147,6 +147,27 @@
 						<p class="success save-feed-settings-success"></p>
 						<p><a class="button save-feed-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
 					</div>
+					<div class="content-view" data-tab="theme">
+						<p>Используемая тема:</p>
+						<p><label><input type="radio" name="theme-mode" value="light"> &mdash; дневная</label></p>
+						<p><label><input type="radio" name="theme-mode" value="night"> &mdash; ночная</label></p>
+						<p><label><input type="radio" name="theme-mode" value="auto"> &mdash; автоматический режим</label></p>
+						<hr>
+						<p>Ночная тема:</p>
+						<p><label><input type="radio" name="theme-night-mode" value="midnight"> &mdash; полночь</label></p>
+						<p><label><input type="radio" name="theme-night-mode" value="dark"> &mdash; тьма</label></p>
+						<hr>
+						<p>Автоматический режим</p>
+						<p>День начинается:</p>
+						<p><input type="text" name="theme-auto-light" placeholder="06:00" value=""></p>
+						<p>Ночь начинается:</p>
+						<p><input type="text" name="theme-auto-night" placeholder="21:00" value=""></p>
+						<div class="input-addon">(время в формате HH:MM)</div>
+
+						<p class="error save-theme-settings-error"></p>
+						<p class="success save-theme-settings-success"></p>
+						<p><a class="button save-theme-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
+					</div>
 				</div>
 			</div>
 		</div>
