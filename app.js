@@ -2954,7 +2954,7 @@ function parse_object(account,block,callback){
 									hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
 								}
 
-								let hashtags_pattern = /#([^@#!.,?\r\n\t <>()\[\]]*)/g;
+								let hashtags_pattern = /(|\b)#([^@#!.,?\r\n\t <>()\[\]]+)(|\b)/g;;
 								let hashtags_links=hashtags_text.match(hashtags_pattern);
 								if(null!=hashtags_links){
 									hashtags_links=hashtags_links.map(function(value){
@@ -5101,10 +5101,32 @@ function array_unique(arr) {
 }
 
 function highlight_links(text){
+	console.log(text);
 	let summary_links=[];
 	let num=0;
 
-	let account_pattern = /@[a-z0-9\-\.]*/g;
+	let summary_mnemonics=[];
+	let mnemonics_num=0;
+
+	let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+	let mnemonics_arr=text.match(mnemonics_pattern);
+	if(null!=mnemonics_arr){
+		for(let i in mnemonics_arr){
+			if(1<mnemonics_arr[i].length){
+				summary_mnemonics[mnemonics_num]=mnemonics_arr[i];
+				mnemonics_num++;
+			}
+		}
+	}
+
+	summary_mnemonics=array_unique(summary_mnemonics);
+	summary_mnemonics.sort(sort_by_length_desc);
+
+	for(let i in summary_mnemonics){
+		text=fast_str_replace(summary_mnemonics[i],'<REPLACE_MNEMONIC_'+i+'>',text);
+	}
+
+	let account_pattern = /@[a-z0-9\-\.]+/g;
 	let account_links=text.match(account_pattern);
 	if(null!=account_links){
 		for(let i in account_links){
@@ -5115,12 +5137,14 @@ function highlight_links(text){
 		}
 	}
 
-	let viz_protocol_pattern = /viz\:\/\/[@a-z0-9\-\.\/]*/g;
+	let viz_protocol_pattern = /viz\:\/\/[@a-z0-9\-\.\/]+/g;
 	let viz_protocol_links=text.match(viz_protocol_pattern);
 	if(null!=viz_protocol_links){
 		for(let i in viz_protocol_links){
-			summary_links[num]=viz_protocol_links[i];
-			num++;
+			if(6<viz_protocol_links[i].length){
+				summary_links[num]=viz_protocol_links[i];
+				num++;
+			}
 		}
 	}
 
@@ -5136,7 +5160,7 @@ function highlight_links(text){
 	}
 
 	//hashtags highlights after links for avoid conflicts with url with hashes (not necessary, because array sorted by length)
-	let hashtags_pattern = /#([^@#!.,?\r\n\t <>()\[\]]*)/g;
+	let hashtags_pattern = /(|\b)#([^@#!.,?\r\n\t <>()\[\]]+)(|\b)/g;
 	let hashtags_links=text.match(hashtags_pattern);
 	if(null!=hashtags_links){
 		for(let i in hashtags_links){
@@ -5166,12 +5190,16 @@ function highlight_links(text){
 		}
 		else
 		if('viz://'==change_text.substring(0,6)){
-			new_text='<a tabindex="0" data-href="'+change_text+'">'+change_text.substring(6)+'</a>';
+			new_text='<a tabindex="0" data-href="'+change_text+'">'+change_text+'</a>';
 		}
 		else{
 			new_text='<a href="'+change_text+'" target="_blank">'+change_text+'</a>';
 		}
 		text=fast_str_replace('<REPLACE_LINK_'+i+'>',new_text,text);
+	}
+
+	for(let i in summary_mnemonics){
+		text=fast_str_replace('<REPLACE_MNEMONIC_'+i+'>',summary_mnemonics[i],text);
 	}
 
 	return text;
