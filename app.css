@@ -3,6 +3,9 @@ body{
 	color:#000;
 	font-size:15px;
 	font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial;
+	overflow:hidden;
+}
+body.loaded{
 	overflow-y:scroll;
 }
 body.midnight{
@@ -42,12 +45,16 @@ body.dark input,body.dark textarea{
 }
 
 .content{
+	display:none;
 	margin:0 auto;
 	width:600px;
 	max-width:600px;
 	min-width:600px;
 	z-index:1;
 	position:relative;
+}
+body.loaded .content{
+	display:block;
 }
 
 .view{
@@ -1489,6 +1496,65 @@ div.menu .secondary a{
 }
 .adaptive-hide-flex{
 	display:flex !important;
+}
+
+.startup-screen{
+	z-index:100;
+	position:fixed;
+	background:#fff;
+	left:0;
+	right:0;
+	top:0;
+	bottom:0;
+	width:100vw;
+	height:100vh;
+	overflow:none;
+}
+body.loaded .startup-screen{
+	display:none;
+}
+.startup-screen .startup-logo{
+	position:fixed;
+	top:calc(50vh - 60px);
+	width:100vw;
+	text-align:center;
+}
+.startup-screen .startup-logo svg{
+	max-height:120px;
+}
+.runs-on{
+	text-align:center;
+	position:fixed;
+	bottom:0px;
+	width:100vw;
+	padding:20px;
+	font-size:20px;
+	color:rgba(0,0,0,0.6);
+	text-shadow:1px 1px 0 #fff;
+}
+
+#whitelabel-logo .animation{
+	opacity:0;
+	-webkit-transition: all 0.9s ease-in;
+	-moz-transition: all 0.9s ease-in;
+	-ms-transition: all 0.9s ease-in;
+	-o-transition: all 0.9s ease-in;
+	transition: all 0.9s ease-in;
+	transition-delay:0.1s;
+}
+#whitelabel-logo.animation .animation{
+	opacity:1;
+}
+#whitelabel-logo .back-animation{
+	opacity:1;
+	-webkit-transition: all 0.5s ease-out;
+	-moz-transition: all 0.5s ease-out;
+	-ms-transition: all 0.5s ease-out;
+	-o-transition: all 0.5s ease-out;
+	transition: all 0.5s ease-out;
+}
+#whitelabel-logo.animation .back-animation{
+	opacity:0;
 }
 
 @media only screen and (min-width:751px) and (max-width:1200px){

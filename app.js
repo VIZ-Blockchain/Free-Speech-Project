@@ -7,6 +7,8 @@ var whitelabel_accounts=[whitelabel_account];//always subscribed to whitelabels 
 var whitelabel_deep=10;//count of max activity loaded for feed on startup
 var whitelabel_redirect=false;//redirect to whitelabel profile on feed loadup
 
+var whitelabel_logo=false;
+
 var whitelabel_init=false;
 
 var is_safari=navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
@@ -773,6 +775,7 @@ function ltmp(ltmp_str,ltmp_args){
 }
 
 var ltmp_arr={
+	dapp_startup:`<div class="startup-screen"><div class="startup-logo">{logo}</div><div class="runs-on">Runs on VIZ Blockchain</div></div>`,
 	content_view:`
 	<div class="object type-text">
 		<div class="object-column">
@@ -6049,7 +6052,25 @@ function init_users(callback){
 	});
 }
 
+var dapp_loaded_timer=0;
+function dapp_loaded(){
+	clearTimeout(dapp_loaded_timer);
+	dapp_loaded_timer=setTimeout(function(){
+		$('body').addClass('loaded');
+	},2200);
+}
 function main_app(){
+	whitelabel_logo=false;
+	if(false!==whitelabel_logo){
+		$('body').append(ltmp(ltmp_arr.dapp_startup,{logo:whitelabel_logo}));
+		setTimeout(function(){
+			$('#whitelabel-logo').addClass('animation');
+			dapp_loaded();
+		},1000);
+	}
+	else{
+		$('body').addClass('loaded');
+	}
 	console.log('Startup: main_app');
 	parse_fullpath();
 	apply_theme_mode();
@@ -6068,6 +6089,9 @@ function main_app(){
 					console.log('Startup: clear_cache +');
 					view_path(path+(''==query?'':'?'+query),{},false,false);
 					update_feed();
+					if(false!==whitelabel_logo){
+						dapp_loaded();
+					}
 				});
 			});
 		});
