@@ -19,30 +19,7 @@
 	<div class="view" data-path="fsp:account_settings" data-update="true">
 		<div class="header space-between">
 		</div>
-		<div class="objects">
-			<div class="object type-text">
-				<div class="object-column">
-					<div class="content-view">
-						<p>Аккаунт в VIZ:</p>
-						<p><input type="text" name="viz_account" value=""></p>
-						<div class="input-addon">(регистрация через <a href="https://start.viz.plus/" target="_blank">start.viz.plus</a>)</div>
-						<p>Приватный обычный ключ:</p>
-						<p><input type="password" name="viz_regular_key" value=""></p>
-						<div class="input-addon">(regular private key)</div>
-						<!--
-						<p>Энергия для награждения:</p>
-						<p><input type="text" name="viz_energy_step" value=""></p>
-						<div class="input-addon">(регенерируется 20% за сутки)</div>
-						-->
-						<p class="error save-account-error"></p>
-						<p class="success save-account-success"></p>
-						<p><a class="button save-account-action">Сохранить</a><span class="submit-button-ring"></span></p>
-						<hr>
-						<p><a class="button neutral-button remove-account-action">Очистить</a></p>
-					</div>
-				</div>
-			</div>
-		</div>
+		<div class="objects"></div>
 	</div>
 
 	<div class="view" data-path="fsp:notifications">
@@ -85,206 +62,23 @@
 	<div class="view" data-path="fsp:app_settings" data-update="true">
 		<div class="header space-between"></div>
 		<div class="tabs"></div>
-		<div class="objects">
-			<div class="object type-text">
-				<div class="object-column">
-					<div class="content-view" data-tab="main">
-						<p>Максимальное количество хранимых записей пользователя:</p>
-						<p><input type="text" name="activity_size" placeholder="0" value=""></p>
-						<div class="input-addon">(0 — без ограничений)</div>
-
-						<p>Частота загрузки активности пользователей:</p>
-						<p><input type="text" name="activity_period" placeholder="30" value=""></p>
-						<div class="input-addon">(в минутах после обновления)</div>
-
-						<p>Глубина загрузки активности пользователей:</p>
-						<p><input type="text" name="activity_deep" placeholder="50" value=""></p>
-						<div class="input-addon">(действует при активации обновления)</div>
-
-						<p>Частота обновления профилей пользователей:</p>
-						<p><input type="text" name="user_profile_ttl" placeholder="60" value=""></p>
-						<div class="input-addon">(в минутах после последнего обновления)</div>
-
-						<p>Длительность хранения кэша незнакомых пользователей:</p>
-						<p><input type="text" name="user_cache_ttl" placeholder="10" value=""></p>
-						<div class="input-addon">(в минутах после загрузки)</div>
-
-						<p>Длительность хранения записей незнакомых пользователей:</p>
-						<p><input type="text" name="object_cache_ttl" placeholder="10" value=""></p>
-						<div class="input-addon">(в минутах после загрузки)</div>
-
-						<hr>
-						<p>Настройки награждений:</p>
-						<p><label><input type="checkbox" name="silent_award"> &mdash; очищать заметку</label></p>
-						<div class="input-addon">(никто не будет знать за что получена награда)</div>
-
-						<p>Используемый процент энергии при награждении:</p>
-						<p><input type="text" name="energy" placeholder="1%" value=""></p>
-
-						<p class="error save-settings-error"></p>
-						<p class="success save-settings-success"></p>
-						<p><a class="button save-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
-						<hr>
-						<p><a class="button neutral-button reset-settings-action">Сбросить все настройки</a></p>
-						<p><a class="button neutral-button reset-database-action">Сбросить состояние базы данных</a></p>
-					</div>
-					<div class="content-view" data-tab="feed">
-						<p>Максимальное количество записей в ленте новостей:</p>
-						<p><input type="text" name="feed_size" placeholder="10000" value=""></p>
-						<hr>
-						<p>Добавление в ленту новостей:</p>
-						<p><label><input type="checkbox" name="feed_subscribe_text"> &mdash; посты</label></p>
-						<p><label><input type="checkbox" name="feed_subscribe_shares"> &mdash; репосты</label></p>
-						<p><label><input type="checkbox" name="feed_subscribe_mentions"> &mdash; упоминания</label></p>
-						<p><label><input type="checkbox" name="feed_subscribe_replies"> &mdash; ответы другим пользователям</label></p>
-						<!--
-							<hr>
-							<p>Условия для добавления в ленту новостей:</p>
-							<p><label><input type="checkbox" name="feed_load_by_timer"> &mdash; загрузка обновлений активности пользователей</label></p>
-							<p><label><input type="checkbox" name="feed_load_by_surf"> &mdash; при ручном обзоре (серфинге)</label></p>
-						-->
-						<p class="error save-feed-settings-error"></p>
-						<p class="success save-feed-settings-success"></p>
-						<p><a class="button save-feed-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
-					</div>
-					<div class="content-view" data-tab="theme">
-						<p>Используемая тема:</p>
-						<p><label><input type="radio" name="theme-mode" value="light"> &mdash; дневная</label></p>
-						<p><label><input type="radio" name="theme-mode" value="night"> &mdash; ночная</label></p>
-						<p><label><input type="radio" name="theme-mode" value="auto"> &mdash; автоматический режим</label></p>
-						<hr>
-						<p>Ночная тема:</p>
-						<p><label><input type="radio" name="theme-night-mode" value="midnight"> &mdash; полночь</label></p>
-						<p><label><input type="radio" name="theme-night-mode" value="dark"> &mdash; тьма</label></p>
-						<hr>
-						<p>Автоматический режим</p>
-						<p>День начинается:</p>
-						<p><input type="text" name="theme-auto-light" placeholder="06:00" value=""></p>
-						<p>Ночь начинается:</p>
-						<p><input type="text" name="theme-auto-night" placeholder="21:00" value=""></p>
-						<div class="input-addon">(время в формате HH:MM)</div>
-
-						<p class="error save-theme-settings-error"></p>
-						<p class="success save-theme-settings-success"></p>
-						<p><a class="button save-theme-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="view" data-path="fsp:search">
-		<div class="header space-between">
-		</div>
-		<div class="objects">
-			<div class="object type-text">
-				<div class="object-column">
-					<div class="content-view">
-						<p>Аккаунт или ссылка на объект:</p>
-						<p><input type="text" name="search" value=""></p>
-						<div class="input-addon">(например, <span class="preset-action" data-input="search" data-value="@on1x">@on1x</span> или <span class="preset-action" data-input="search" data-value="viz://@on1x/17740801/">viz://@on1x/17740801/</span>)</div>
-						<p class="error search-error"></p>
-						<p class="success search-success"></p>
-						<p><a class="button search-action">Поиск</a><span class="submit-button-ring"></span></p>
-					</div>
-				</div>
-			</div>
-		</div>
+		<div class="objects"></div>
 	</div>
 
 	<div class="view" data-path="fsp:edit_profile" data-update="true">
-		<div class="header space-between">
-		</div>
-		<div class="objects">
-			<div class="object type-text">
-				<div class="object-column">
-					<div class="content-view">
-						<p>Имя:</p>
-						<p><input type="text" name="nickname" value=""></p>
-						<div class="input-addon">(будет отображаться рядом с аккаунтом <span class="viz_account">&hellip;</span>)</div>
-
-						<p>Немного о себе:</p>
-						<p><input type="text" name="about" value=""></p>
-						<div class="input-addon">(отображается в вашем профиле)</div>
-
-						<p>Ссылка на аватар:</p>
-						<p><input type="text" name="avatar" value="" placeholder="https://"></p>
-						<div class="input-addon">(обязательно https://, минимальный размер изображения 49x49 пикселей)</div>
-						<!--
-						<p>Интересы:</p>
-						<p><input type="text" name="interests" value=""></p>
-						<div class="input-addon">(через запятую)</div>
-						-->
-
-						<p>Телеграм:</p>
-						<p><input type="text" name="telegram" value=""></p>
-						<div class="input-addon">(укажите имя пользователя без символа «@»)</div>
-
-						<p>GitHub:</p>
-						<p><input type="text" name="github" value=""></p>
-						<div class="input-addon">(укажите имя пользователя)</div>
-
-						<p class="error save-profile-error"></p>
-						<p class="success save-profile-success"></p>
-						<p><a class="button save-profile-action">Сохранить</a><span class="submit-button-ring"></span></p>
-						<p><em>Внимание! Вся информация будет записана в блокчейн, её можно заменить, но невозможно будет «удалить» или «стереть» из истории.</em></p>
-					</div>
-				</div>
-			</div>
-		</div>
+		<div class="header space-between"></div>
+		<div class="objects"></div>
 	</div>
 
 	<div class="view" data-path="fsp:publish" data-update="true">
-		<div class="header space-between">
-		</div>
-		<div class="objects">
-			<div class="object type-text">
-				<div class="object-column">
-					<div class="content-view">
-						<div class="object-type-text">
-							<div class="text-addon">
-								<p>Текст сообщения:</p>
-								<p><textarea name="text"></textarea></p>
-								<div class="input-addon">(просто текст без разметки)</div>
-							</div>
-							<div class="comment-addon">
-								<p>Текст комментария:</p>
-								<p><input type="text" name="comment" value=""></p>
-								<div class="input-addon">(просто текст без разметки)</div>
-							</div>
-							<div class="reply-addon">
-								<p>Комментируемый объект:</p>
-								<p><input type="text" name="reply" value=""></p>
-								<div class="input-addon">(опциональное поле, содержит адрес на объект)</div>
-							</div>
-							<div class="share-addon">
-								<p>Распространяемый объект:</p>
-								<p><input type="text" name="share" value=""></p>
-								<div class="input-addon">(опциональное поле, содержит адрес на объект)</div>
-							</div>
-							<div class="loop-addon">
-								<p>Номер блока для создания петли:</p>
-								<p><input type="text" name="loop" value=""></p>
-								<div class="input-addon">(можно скрыть последние записи или наоборот: восстановить связь)</div>
-							</div>
-						</div>
-						<p class="error publish-error"></p>
-						<p class="success publish-success"></p>
-						<p><a class="button publish-action">Опубликовать</a><span class="submit-button-ring"></span></p>
-						<p><em>Внимание! Вся информация будет записана в блокчейн от аккаунта <span class="viz_account">&hellip;</span>, её невозможно будет «удалить».</em></p>
-					</div>
-				</div>
-			</div>
-		</div>
+		<div class="header space-between"></div>
+		<div class="objects"></div>
 	</div>
 
 	<div class="view" data-level="0" data-clear="true">
-		<div class="header space-between">
-		</div>
-		<div class="objects">
-		</div>
+		<div class="header space-between"></div>
+		<div class="objects"></div>
 	</div>
-
 </div>
 <input type="text" class="text-copy" value="">
 <script src="app.js?3"></script>
