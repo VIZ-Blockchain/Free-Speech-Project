@@ -774,9 +774,33 @@ function ltmp(ltmp_str,ltmp_args){
 	return ltmp_str;
 }
 
-var langs_arr=['ru'];
+var langs_arr={
+	//'en-US':'en',
+	//'en':'en',
+	'ru-RU':'ru',
+	'ru':'ru',
+};
+var available_langs={
+	//'en':'English',
+	'ru':'Русский',
+};
 var default_lang='ru';
 var selected_lang=default_lang;
+if(null!=localStorage.getItem(storage_prefix+'lang')){
+	if(typeof available_langs[localStorage.getItem(storage_prefix+'lang')] !== 'undefined'){
+		selected_lang=langs_arr[localStorage.getItem(storage_prefix+'lang')];
+	}
+}
+else{
+	for(let i in window.navigator.languages){
+		if(typeof langs_arr[window.navigator.languages[i]] !== 'undefined'){
+			let try_lang=langs_arr[window.navigator.languages[i]];
+			if(typeof available_langs[try_lang] !== 'undefined'){
+				selected_lang=langs_arr[try_lang];
+			}
+		}
+	}
+}
 var ltmp_arr=window['ltmp_'+selected_lang+'_arr'];
 
 var menu_status='full';
