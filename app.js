@@ -979,14 +979,14 @@ var ltmp_arr={
 		{context}
 	</div>`,
 	hashtags_addon_caption:'# Тэги',
-	hashtags_addon_button:'<a tabindex="0" data-href="fsp:hashtags" title="Управление тэгами">{icon}</a>',
+	hashtags_addon_button:'<a tabindex="0" data-href="dapp:hashtags" title="Управление тэгами">{icon}</a>',
 	hashtags_pinned_caption:'Закрепленные',
 	hashtags_popular_caption:'Популярные',
 	hashtags_main_tab:'Все',
 	hashtags_pinned_tab:'Закрепленные',
 	hashtags_ignored_tab:'Игнорируемые',
 	hashtags_objects_header:`<div class="hashtag-item nohover"><div class="hashtag-item-num">№</div><div class="hashtag-item-caption">Тэг</div><div class="hashtag-item-count">Количество</div></div>`,
-	hashtags_objects_item:`<div class="hashtag-item"><div class="hashtag-item-num">{num}</div><div class="hashtag-item-caption"><a data-href="fsp:hashtags/{tag}">#{tag}</a></div><div class="hashtag-item-count">{count}</div></div>`,
+	hashtags_objects_item:`<div class="hashtag-item"><div class="hashtag-item-num">{num}</div><div class="hashtag-item-caption"><a data-href="dapp:hashtags/{tag}">#{tag}</a></div><div class="hashtag-item-count">{count}</div></div>`,
 
 	found_results:'Найдено: {count}',
 
@@ -1008,7 +1008,7 @@ var ltmp_arr={
 		<div class="user-item-avatar">{avatar}</div>
 		<a class="user-item-nickname" tabindex="0" data-href="viz://@{account}/">{nickname}</a>
 		<a class="user-item-account" tabindex="0" data-href="viz://@{account}/">{account}</a>
-		<div class="user-item-manage"><a tabindex="0" data-href="fsp:users/{account}" title="Управление">{icon}</a></div>
+		<div class="user-item-manage"><a tabindex="0" data-href="dapp:users/{account}" title="Управление">{icon}</a></div>
 	</div>`,
 	users_objects_item_avatar:`<div class="avatar"><div class="shadow" data-href="viz://@{account}/"></div><img src="{avatar}"></div>`,
 
@@ -1040,7 +1040,7 @@ var ltmp_arr={
 
 	awarded_amount:'Награждено на {amount} Ƶ',
 
-	menu_session_empty:'<div class="avatar"><img src="default.png" data-href="fsp:account_settings"></div><a tabindex="0" data-href="fsp:account_settings">{caption}</a>',
+	menu_session_empty:'<div class="avatar"><img src="default.png" data-href="dapp:account_settings"></div><a tabindex="0" data-href="dapp:account_settings">{caption}</a>',
 	menu_session_login:'Войти',
 	menu_session_error:'<span class="error">Ошибка</span>',
 	menu_session_account:'<div class="avatar"><div class="shadow" data-href="viz://@{account}/"></div><img src="{avatar}"></div><div class="account"><a class="account-name" tabindex="0" data-href="viz://@{account}/">{nickname}</a><a class="account-login" tabindex="0" data-href="viz://@{account}/">{account}</a></div>',
@@ -1061,12 +1061,12 @@ var ltmp_arr={
 	toggle_menu_title:'Переключить меню',
 	toggle_menu_icon:'<div><a tabindex="0" title="{title}" class="toggle-menu-icon">{icon}</a></div>',
 
-	toggle_theme_icon:'<div><a tabindex="0" data-href="fsp:app_settings/theme/" title="{title}" class="toggle-theme-icon">{icon}</a></div>',
+	toggle_theme_icon:'<div><a tabindex="0" data-href="dapp:app_settings/theme/" title="{title}" class="toggle-theme-icon">{icon}</a></div>',
 	toggle_theme_title:'Настроить оформление',
 
 	icon_counter:`<div class="icon-counter counter-{name}">{count}</div>`,
 
-	account_settings:'<a tabindex="0" data-href="fsp:account_settings" title="Настройки аккаунта">{icon_account_settings}</a>',
+	account_settings:'<a tabindex="0" data-href="dapp:account_settings" title="Настройки аккаунта">{icon_account_settings}</a>',
 	account_settings_caption:'Настройки аккаунта',
 	account_settings_empty_account:'Введите аккаунт',
 	account_settings_empty_regular_key:'Введите регулярный ключ',
@@ -1189,10 +1189,10 @@ var ltmp_arr={
 	ignore_link:'<a tabindex="0" class="ignore-action" title="Игнорировать пользователя">{icon}</a>',
 	ignored_link:'<a tabindex="0" class="ignored-action negative" title="Вы игнорируете пользователя">{icon}</a>',
 	unignore_link:'<a tabindex="0" class="unignore-action" title="Прекратить игнорировать пользователя">{icon}</a>',
-	edit_profile_link:'<a tabindex="0" data-href="fsp:edit_profile" title="Изменить профиль">{icon_edit_profile}</a>',
+	edit_profile_link:'<a tabindex="0" data-href="dapp:edit_profile" title="Изменить профиль">{icon_edit_profile}</a>',
 	edit_profile_caption:'Настройка профиля',
 	edit_profile_saved:'Профиль сохранен',
-	new_object_link:'<a tabindex="0" data-href="fsp:publish" title="Написать">{icon_new_object}</a>',
+	new_object_link:'<a tabindex="0" data-href="dapp:publish" title="Написать">{icon_new_object}</a>',
 
 	publish_caption:'Публикация',
 	publish_empty_text:'Введите текст публикации',
@@ -1288,13 +1288,13 @@ function render_menu(){
 	let primary_menu='';
 	if(''!=current_user){
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://',class:(path=='viz://'?'current':''),icon:ltmp_arr.icon_feed+ltmp(ltmp_arr.icon_counter,{name:'feed',count:'0'}),caption:ltmp_arr.menu_feed});
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:notifications',class:(path=='fsp:notifications'?'current':''),icon:ltmp_arr.icon_notify+ltmp(ltmp_arr.icon_counter,{name:'notifications',count:'0'}),caption:ltmp_arr.menu_notifications});
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:awards',class:(path=='fsp:awards'?'current':''),icon:ltmp_arr.icon_gem,caption:ltmp_arr.menu_awards});
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:users',class:(path=='fsp:users'?'current':''),icon:ltmp_arr.icon_users,caption:ltmp_arr.menu_users});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:notifications',class:(path=='dapp:notifications'?'current':''),icon:ltmp_arr.icon_notify+ltmp(ltmp_arr.icon_counter,{name:'notifications',count:'0'}),caption:ltmp_arr.menu_notifications});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:awards',class:(path=='dapp:awards'?'current':''),icon:ltmp_arr.icon_gem,caption:ltmp_arr.menu_awards});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:users',class:(path=='dapp:users'?'current':''),icon:ltmp_arr.icon_users,caption:ltmp_arr.menu_users});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://@'+current_user+'/',class:(path=='viz://@'+current_user+'/'?'current':''),icon:ltmp_arr.icon_view_profile,caption:ltmp_arr.menu_view_profile});
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:hashtags',class:(path=='fsp:hashtags'?'current adaptive-show-inline':'adaptive-show-inline'),icon:ltmp_arr.icon_hashtag,caption:ltmp_arr.menu_hashtags});
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:app_settings',class:(path=='fsp:app_settings'?'current':''),icon:ltmp_arr.icon_settings,caption:ltmp_arr.menu_app_settings});
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'fsp:account_settings',class:(path=='fsp:account_settings'?'current':''),icon:ltmp_arr.icon_account_settings,caption:ltmp_arr.menu_account_settings});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:hashtags',class:(path=='dapp:hashtags'?'current adaptive-show-inline':'adaptive-show-inline'),icon:ltmp_arr.icon_hashtag,caption:ltmp_arr.menu_hashtags});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:app_settings',class:(path=='dapp:app_settings'?'current':''),icon:ltmp_arr.icon_settings,caption:ltmp_arr.menu_app_settings});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:account_settings',class:(path=='dapp:account_settings'?'current':''),icon:ltmp_arr.icon_account_settings,caption:ltmp_arr.menu_account_settings});
 	}
 	$('div.menu .primary').html(primary_menu);
 	let toggle_menu=ltmp(ltmp_arr.toggle_menu_icon,{title:ltmp_arr.toggle_menu_title,icon:('full'==menu_status?ltmp_arr.icon_menu_collapse:ltmp_arr.icon_menu_expand)});
@@ -1325,7 +1325,7 @@ function render_right_addon(){
 				if(1==cur.value.status){//pinned
 					let hashtag_data=cur.value;
 					find=true;
-					container_context+=ltmp(ltmp_arr.box_item,{link:'fsp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
+					container_context+=ltmp(ltmp_arr.box_item,{link:'dapp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
 					pinned_arr.push(hashtag_data.id);
 					cur.continue();
 				}
@@ -1350,7 +1350,7 @@ function render_right_addon(){
 						if(0==cur.value.status){
 							let hashtag_data=cur.value;
 							find2=true;
-							container_context2+=ltmp(ltmp_arr.box_item,{link:'fsp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
+							container_context2+=ltmp(ltmp_arr.box_item,{link:'dapp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
 							popular_count++;
 							if(popular_count>=settings.hashtags_addon_popular_limit){
 								cur.continue(-1);
@@ -1737,7 +1737,7 @@ function clear_awards(el){
 			cur.continue();
 		}
 		else{
-			$('.view[data-path="fsp:awards"] .objects').html(ltmp_arr.load_more_end_notice);
+			$('.view[data-path="dapp:awards"] .objects').html(ltmp_arr.load_more_end_notice);
 		}
 	};
 }
@@ -1874,7 +1874,7 @@ function mark_readed_notifications(el){
 			cur.continue();
 		}
 		else{
-			$('.view[data-path="fsp:notifications"] .objects .notify-item').addClass('readed');
+			$('.view[data-path="dapp:notifications"] .objects .notify-item').addClass('readed');
 			clearTimeout(load_notifications_count_timer);
 			load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
 		}
@@ -1898,7 +1898,7 @@ function clear_readed_notifications(el){
 			cur.continue();
 		}
 		else{
-			$('.view[data-path="fsp:notifications"] .objects').html(ltmp_arr.load_more_end_notice);
+			$('.view[data-path="dapp:notifications"] .objects').html(ltmp_arr.load_more_end_notice);
 			clearTimeout(load_notifications_count_timer);
 			load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
 		}
@@ -2572,11 +2572,11 @@ function app_mouse(e){
 	*/
 	if($(target).hasClass('reply-action')){
 		let link=$(target).closest('.object').data('link');
-		view_path('fsp:publish/reply/?'+link,{},true,false);
+		view_path('dapp:publish/reply/?'+link,{},true,false);
 	}
 	if($(target).hasClass('share-action')){
 		let link=$(target).closest('.object').data('link');
-		view_path('fsp:publish/share/?'+link,{},true,false);
+		view_path('dapp:publish/share/?'+link,{},true,false);
 	}
 	if($(target).hasClass('award-action')){
 		let link=$(target).closest('.object').data('link');
@@ -4005,9 +4005,9 @@ function view_notifications(view,path_parts,query,title){
 		current_tab=path_parts[1];
 	}
 	let tabs='';
-	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:notifications/all',class:('all'==current_tab?'current':''),caption:ltmp_arr.notifications_all_tab});
-	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:notifications/new',class:('new'==current_tab?'current':''),caption:ltmp_arr.notifications_new_tab});
-	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:notifications/readed',class:('readed'==current_tab?'current':''),caption:ltmp_arr.notifications_readed_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:notifications/all',class:('all'==current_tab?'current':''),caption:ltmp_arr.notifications_all_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:notifications/new',class:('new'==current_tab?'current':''),caption:ltmp_arr.notifications_new_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:notifications/readed',class:('readed'==current_tab?'current':''),caption:ltmp_arr.notifications_readed_tab});
 	view.find('.tabs').html(tabs);
 
 	view.find('.content-view').css('display','none');
@@ -4112,12 +4112,12 @@ function rebind_users_search(){
 	$('.user-item-search').on('input',function(){
 		if(''==this.value){
 			$('.user-item-box.search-results').css('display','none');
-			$('.view[data-path="fsp:users"] .objects .user-item').css('display','flex')
+			$('.view[data-path="dapp:users"] .objects .user-item').css('display','flex')
 		}
 		else{
 			let search_str=this.value.toLowerCase();
 			let count=0;
-			$('.view[data-path="fsp:users"] .objects .user-item').each(function(){
+			$('.view[data-path="dapp:users"] .objects .user-item').each(function(){
 				if(-1!=$(this).data('search').indexOf(search_str)){
 					$(this).css('display','flex');
 					count++;
@@ -4202,9 +4202,9 @@ function view_users(view,path_parts,query,title,back_to){
 		}
 
 		let tabs='';
-		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:users?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.users_main_tab});
-		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:users?subscribed',class:('subscribed'==current_tab?'current':''),caption:ltmp_arr.users_subscribed_tab});
-		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:users?ignored',class:('ignored'==current_tab?'current':''),caption:ltmp_arr.users_ignored_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.users_main_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?subscribed',class:('subscribed'==current_tab?'current':''),caption:ltmp_arr.users_subscribed_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?ignored',class:('ignored'==current_tab?'current':''),caption:ltmp_arr.users_ignored_tab});
 		view.find('.tabs').html(tabs);
 		view.find('.objects').html(ltmp_arr.empty_loader_notice);
 		if('main'==current_tab){
@@ -4379,9 +4379,9 @@ function view_hashtags(view,path_parts,query,title,back_to){
 		}
 
 		let tabs='';
-		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:hashtags?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.hashtags_main_tab});
-		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:hashtags?pinned',class:('pinned'==current_tab?'current':''),caption:ltmp_arr.hashtags_pinned_tab});
-		tabs+=ltmp(ltmp_arr.tab,{link:'fsp:hashtags?ignored',class:('ignored'==current_tab?'current':''),caption:ltmp_arr.hashtags_ignored_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:hashtags?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.hashtags_main_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:hashtags?pinned',class:('pinned'==current_tab?'current':''),caption:ltmp_arr.hashtags_pinned_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:hashtags?ignored',class:('ignored'==current_tab?'current':''),caption:ltmp_arr.hashtags_ignored_tab});
 		view.find('.tabs').html(tabs);
 		view.find('.objects').html(ltmp_arr.empty_loader_notice);
 		if('main'==current_tab){
@@ -4519,9 +4519,9 @@ function view_app_settings(view,path_parts,query,title){
 		current_tab=path_parts[1];
 	}
 	let tabs='';
-	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:app_settings/main',class:('main'==current_tab?'current':''),caption:ltmp_arr.app_settings_main_tab});
-	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
-	tabs+=ltmp(ltmp_arr.tab,{link:'fsp:app_settings/theme',class:('theme'==current_tab?'current':''),caption:ltmp_arr.app_settings_theme_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/main',class:('main'==current_tab?'current':''),caption:ltmp_arr.app_settings_main_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/theme',class:('theme'==current_tab?'current':''),caption:ltmp_arr.app_settings_theme_tab});
 	view.find('.tabs').html(tabs);
 
 	view.find('.content-view').css('display','none');
@@ -4846,14 +4846,14 @@ function view_path(location,state,save_state,update){
 		check_load_more();
 	}
 	else{
-		if(0==path_parts[0].indexOf('fsp:')){//service page
+		if(0==path_parts[0].indexOf('dapp:')){//service page
 			$('.loader').css('display','block');
 			$('.view').css('display','none');
 			let view=$('.view[data-path="'+path_parts[0]+'"]');
 			level++;
 			//view.data('level',level);
 			//execute view_ function if exist to prepare page (load vars to input)
-			let current_view=path_parts[0].substring(('fsp:').length);
+			let current_view=path_parts[0].substring(('dapp:').length);
 			if(typeof window['view_'+current_view] === 'function'){
 				setTimeout(window['view_'+current_view],1,view,path_parts,query,title,back_to);
 			}
@@ -5358,7 +5358,7 @@ function highlight_links(text){
 		let change_text=summary_links[i];
 		let new_text=change_text;
 		if('#'==change_text.substring(0,1)){
-			new_text='<a tabindex="0" data-href="fsp:hashtags/'+(change_text.substring(1).toLowerCase())+'/">'+change_text+'</a>';
+			new_text='<a tabindex="0" data-href="dapp:hashtags/'+(change_text.substring(1).toLowerCase())+'/">'+change_text+'</a>';
 		}
 		else
 		if('@'==change_text.substring(0,1)){
@@ -6229,7 +6229,7 @@ function preset_view(){
 	let preset_view=['account_settings','app_settings','edit_profile','publish'];
 	for(let i in preset_view){
 		let view_name=preset_view[i];
-		let view=$('.view[data-path="fsp:'+view_name+'"]');
+		let view=$('.view[data-path="dapp:'+view_name+'"]');
 		view.find('.objects').html(ltmp_arr['preset_view_'+view_name]);
 	}
 }
