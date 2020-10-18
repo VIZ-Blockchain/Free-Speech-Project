@@ -6,6 +6,7 @@ var whitelabel_account='';//main whitelabel account to redirect
 var whitelabel_accounts=[whitelabel_account];//always subscribed to whitelabels accounts
 var whitelabel_deep=10;//count of max activity loaded for feed on startup
 var whitelabel_redirect=false;//redirect to whitelabel profile on feed loadup
+var whitelabel_app_title='The Free Speech Project';
 
 var whitelabel_logo=false;
 
@@ -816,7 +817,7 @@ function render_menu(){
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:notifications',class:(path=='dapp:notifications'?'current':''),icon:ltmp_arr.icon_notify+ltmp(ltmp_arr.icon_counter,{name:'notifications',count:'0'}),caption:ltmp_arr.menu_notifications});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:awards',class:(path=='dapp:awards'?'current':''),icon:ltmp_arr.icon_gem,caption:ltmp_arr.menu_awards});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:users',class:(path=='dapp:users'?'current':''),icon:ltmp_arr.icon_users,caption:ltmp_arr.menu_users});
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'viz://@'+current_user+'/',class:(path=='viz://@'+current_user+'/'?'current':''),icon:ltmp_arr.icon_view_profile,caption:ltmp_arr.menu_view_profile});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:edit_profile',class:(path=='dapp:edit_profile'?'current':''),icon:ltmp_arr.icon_edit_profile,caption:ltmp_arr.menu_view_profile});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:hashtags',class:(path=='dapp:hashtags'?'current adaptive-show-inline':'adaptive-show-inline'),icon:ltmp_arr.icon_hashtag,caption:ltmp_arr.menu_hashtags});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:app_settings',class:(path=='dapp:app_settings'?'current':''),icon:ltmp_arr.icon_settings,caption:ltmp_arr.menu_app_settings});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:account_settings',class:(path=='dapp:account_settings'?'current':''),icon:ltmp_arr.icon_account_settings,caption:ltmp_arr.menu_account_settings});
@@ -3536,7 +3537,9 @@ function view_notifications(view,path_parts,query,title){
 	let current_tab='all';
 	if((typeof path_parts[1] != 'undefined')&&(''!=path_parts[1])){
 		current_tab=path_parts[1];
+		document.title=ltmp_arr['notifications_'+current_tab+'_tab']+' - '+document.title;
 	}
+
 	let tabs='';
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:notifications/all',class:('all'==current_tab?'current':''),caption:ltmp_arr.notifications_all_tab});
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:notifications/new',class:('new'==current_tab?'current':''),caption:ltmp_arr.notifications_new_tab});
@@ -3673,6 +3676,7 @@ function view_users(view,path_parts,query,title,back_to){
 				view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found}));
 			}
 			else{
+				document.title='@'+user_data.account+' - '+document.title;
 				let user_data_profile=JSON.parse(user_data.profile);
 				header+=ltmp(ltmp_arr.header_caption_link,{caption:user_data_profile.nickname,link:'viz://@'+user_data.account});
 				let check_account=user_data.account;
@@ -3725,6 +3729,9 @@ function view_users(view,path_parts,query,title,back_to){
 		let current_tab='main';
 		if((typeof query != 'undefined')&&(''!=query)){
 			current_tab=query;
+		}
+		if('main'!=current_tab){
+			document.title=ltmp_arr['users_'+current_tab+'_tab']+' - '+document.title;
 		}
 
 		let tabs='';
@@ -3881,6 +3888,7 @@ function view_hashtags(view,path_parts,query,title,back_to){
 				view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.hashtags_not_found}));
 			}
 			else{
+				document.title='#'+uppercase_first_symbol(hashtag)+' - '+document.title;
 				view.data('hashtag-id',hashtag_data.id);
 				header+=ltmp(ltmp_arr.icon_link,{action:'pin-hashtags',caption:ltmp_arr.pin_hashtags_caption,icon:ltmp_arr.icon_pin,addon:(1==hashtag_data.status?' positive':'')});
 				header+=ltmp(ltmp_arr.icon_link,{action:'ignore-hashtags',caption:ltmp_arr.ignore_hashtags_caption,icon:ltmp_arr.icon_eye_ignore,addon:(2==hashtag_data.status?' negative':'')});
@@ -3902,6 +3910,9 @@ function view_hashtags(view,path_parts,query,title,back_to){
 		console.log(query);
 		if((typeof query != 'undefined')&&(''!=query)){
 			current_tab=query;
+		}
+		if('main'!=current_tab){
+			document.title=ltmp_arr['hashtags_'+current_tab+'_tab']+' - '+document.title;
 		}
 
 		let tabs='';
@@ -4044,6 +4055,10 @@ function view_app_settings(view,path_parts,query,title){
 	if((typeof path_parts[1] != 'undefined')&&(''!=path_parts[1])){
 		current_tab=path_parts[1];
 	}
+	if('main'!=current_tab){
+		document.title=ltmp_arr['app_settings_'+current_tab+'_tab']+' - '+document.title;
+	}
+
 	let tabs='';
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/main',class:('main'==current_tab?'current':''),caption:ltmp_arr.app_settings_main_tab});
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
@@ -4267,7 +4282,7 @@ function view_path(location,state,save_state,update){
 	//update current level? not work now
 	update=typeof update==='undefined'?false:update;
 	path_parts=[];
-	var title='Free Speech Project';
+	var title=whitelabel_app_title;
 	let back_to='';
 
 	if(typeof state.back !== 'undefined'){
@@ -4400,6 +4415,7 @@ function view_path(location,state,save_state,update){
 					get_user(check_account,false,function(err,result){
 						if(err){
 							console.log(err);
+							document.title=ltmp_arr.error_title+' - '+title;
 							$('.loader').css('display','block');
 							$('.view').css('display','none');
 							if(!update){
@@ -4422,6 +4438,13 @@ function view_path(location,state,save_state,update){
 							let profile_found=false;
 							let json_metadata={};
 							let profile_contacts='';
+
+							if(typeof profile.nickname !== 'undefined'){
+								document.title=profile.nickname+' (@'+result.account+') '+document.title;
+							}
+							else{
+								document.title='@'+result.account+' - '+title;
+							}
 
 							if(typeof profile != 'undefined'){
 								if(typeof profile.about != 'undefined'){
@@ -4489,6 +4512,9 @@ function view_path(location,state,save_state,update){
 							tabs+=ltmp(ltmp_arr.tab,{link:path+'?shares',class:('shares'==current_tab?'current':''),caption:ltmp_arr.profile_shares_tab});
 							tabs+=ltmp(ltmp_arr.tab,{link:path+'?replies',class:('replies'==current_tab?'current':''),caption:ltmp_arr.profile_replies_tab});
 							view.find('.tabs').html(tabs);
+							if('main'!=current_tab){
+								document.title=ltmp_arr['profile_'+current_tab+'_tab']+' - '+document.title;
+							}
 
 							if(!new_level){
 								view.data('query',query);
@@ -4561,6 +4587,7 @@ function view_path(location,state,save_state,update){
 						get_user(check_account,false,function(err,user_result){
 							if(err){
 								console.log(err);
+								document.title=ltmp_arr.error_title+' - '+title;
 								$('.loader').css('display','block');
 								$('.view').css('display','none');
 								if(!update){
@@ -4579,6 +4606,14 @@ function view_path(location,state,save_state,update){
 								view.css('display','block');
 							}
 							else{
+								let profile=JSON.parse(user_result.profile);
+								if(typeof profile.nickname !== 'undefined'){
+									document.title=profile.nickname+' (@'+user_result.account+') '+document.title;
+								}
+								else{
+									document.title='@'+user_result.account+' - '+title;
+								}
+
 								let new_level=true;
 								if(!update){
 									if(level==0){
@@ -4612,6 +4647,8 @@ function view_path(location,state,save_state,update){
 
 									get_object(check_account,check_block,function(err,object_result){
 										if(err){
+											console.log(err);
+											document.title=ltmp_arr.error_title+' - '+document.title;
 											if(1==object_result){//block not found
 												view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
 											}
@@ -4622,6 +4659,7 @@ function view_path(location,state,save_state,update){
 											view.css('display','block');
 										}
 										else{
+											document.title=check_block+' - '+document.title;
 											let object_view=render_object(user_result,object_result);
 											let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 

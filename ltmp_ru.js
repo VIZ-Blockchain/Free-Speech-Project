@@ -261,6 +261,7 @@ var ltmp_ru_arr={
 	notifications_all_tab:'Все',
 	notifications_new_tab:'Новые',
 	notifications_readed_tab:'Прочитанные',
+	error_title:'Ошибка',
 
 	awarded_amount:'Награждено на {amount} Ƶ',
 
