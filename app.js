@@ -1399,6 +1399,10 @@ function mark_readed_notifications(el){
 			cur.continue();
 		}
 		else{
+			$('.view[data-path="dapp:notifications"] .mark-readed-notifications-action').addClass('positive');
+			setTimeout(function(){
+				$('.view[data-path="dapp:notifications"] .mark-readed-notifications-action').removeClass('positive');
+			},3000);
 			$('.view[data-path="dapp:notifications"] .objects .notify-item').addClass('readed');
 			clearTimeout(load_notifications_count_timer);
 			load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
@@ -1423,6 +1427,10 @@ function clear_readed_notifications(el){
 			cur.continue();
 		}
 		else{
+			$('.view[data-path="dapp:notifications"] .clear-readed-notifications-action').addClass('positive');
+			setTimeout(function(){
+				$('.view[data-path="dapp:notifications"] .clear-readed-notifications-action').removeClass('positive');
+			},3000);
 			$('.view[data-path="dapp:notifications"] .objects').html(ltmp_arr.load_more_end_notice);
 			clearTimeout(load_notifications_count_timer);
 			load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
@@ -3540,15 +3548,8 @@ function view_notifications(view,path_parts,query,title){
 	view.find('.content-view[data-tab="'+current_tab+'"]').css('display','block');
 
 	let tab=view.find('.content-view[data-tab="'+current_tab+'"]');
-	if('all'==current_tab){
-		header+=ltmp(ltmp_arr.icon_link,{action:'mark-readed-notifications',caption:ltmp_arr.mark_readed_notifications_caption,icon:ltmp_arr.icon_notify_clear});
-	}
-	if('new'==current_tab){
-		header+=ltmp(ltmp_arr.icon_link,{action:'mark-readed-notifications',caption:ltmp_arr.mark_readed_notifications_caption,icon:ltmp_arr.icon_notify_clear});
-	}
-	if('readed'==current_tab){
-		header+=ltmp(ltmp_arr.icon_link,{action:'clear-readed-notifications',caption:ltmp_arr.clear_readed_notifications_caption,icon:ltmp_arr.icon_message_clear});
-	}
+	header+=ltmp(ltmp_arr.icon_link,{action:'mark-readed-notifications',caption:ltmp_arr.mark_readed_notifications_caption,icon:ltmp_arr.icon_notify_clear});
+	header+=ltmp(ltmp_arr.icon_link,{action:'clear-readed-notifications',caption:ltmp_arr.clear_readed_notifications_caption,icon:ltmp_arr.icon_message_clear});
 
 	view.find('.header').html(header);
 	tab.find('.objects').html(ltmp(ltmp_arr.notifications_loader_notice,{id:0}));
