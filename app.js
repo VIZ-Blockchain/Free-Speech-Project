@@ -1961,6 +1961,34 @@ function app_mouse(e){
 			subscribe(target);
 		}
 	}
+	if($(target).hasClass('publish-add-interest-action')){
+		let hashtag_str=fast_str_replace(' ','_',$(target).html());
+		let hashtag_lower_str=hashtag_str.toLowerCase();
+		let publish_form=$(target).closest('.add-interests').parent();
+		let text_el=false;
+		if(publish_form.hasClass('text-addon')){
+			text_el=publish_form.find('textarea');
+		}
+		if(publish_form.hasClass('comment-addon')){
+			text_el=publish_form.find('input[name=comment]');
+		}
+		if(false!==text_el){
+			let search_text=text_el.val();
+			if(-1==search_text.toLowerCase().indexOf(hashtag_lower_str)){
+				text_el.val((search_text.trim()+' '+hashtag_str).trim());
+			}
+		}
+	}
+	if($(target).hasClass('profile-select-interest-action')){
+		if(!$(target).hasClass('selected')){
+			$(target).addClass('selected');
+			profile_filter_by_type();
+		}
+		else{
+			$(target).removeClass('selected');
+			profile_filter_by_type();
+		}
+	}
 	if($(target).hasClass('unsubscribe-action')){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
@@ -2266,6 +2294,9 @@ function update_user_profile(account,callback){
 				}
 				if(typeof json_metadata.profile.about != 'undefined'){
 					profile_obj.about=escape_html(json_metadata.profile.about);
+				}
+				if(typeof json_metadata.profile.interests != 'undefined'){
+					profile_obj.interests=json_metadata.profile.interests;
 				}
 				if(typeof json_metadata.profile.services != 'undefined'){
 					if(typeof json_metadata.profile.services.github != 'undefined'){
@@ -3323,6 +3354,17 @@ function save_profile(view){
 	let avatar=view.find('input[name="avatar"]').val();
 	avatar=avatar.trim();
 
+	let interests_str=view.find('input[name="interests"]').val();
+	interests_str+=',';
+	let interests_arr=interests_str.split(',');
+	let interests=[];
+	for(let i in interests_arr){
+		let interest=escape_html(interests_arr[i].trim());
+		if(''!=interest){
+			interests.push(interest);
+		}
+	}
+
 	let telegram=view.find('input[name="telegram"]').val();
 	telegram=telegram.trim();
 
@@ -3371,6 +3413,15 @@ function save_profile(view){
 			}
 			else{
 				json_metadata.profile.services.github=github;
+			}
+
+			if(interests.length==0){
+				if(typeof json_metadata.profile.interests !== 'undefined'){
+					delete json_metadata.profile.interests;
+				}
+			}
+			else{
+				json_metadata.profile.interests=interests;
 			}
 
 			if(Object.keys(json_metadata.profile.services).length==0){
@@ -3481,8 +3532,26 @@ function view_publish(view,path_parts,query,title){
 	}
 	view.find('.viz_account').html('@'+current_user);
 
+	view.find('.add-interests').html('');
 	$('.loader').css('display','none');
 	view.css('display','block');
+
+	get_user(current_user,true,function(err,result){
+		if(!err){
+			let profile=JSON.parse(result.profile);
+			if(typeof profile.interests != 'undefined'){
+				if(profile.interests.length>0){
+					let interests_view='';
+					for(let i in profile.interests){
+						let interest_caption=profile.interests[i];
+						let interest_hashtag=interest_caption.replace(' ','_').trim().toLowerCase();
+						interests_view+=ltmp(ltmp_arr.publish_interests_item,{caption:interest_caption,hashtag:interest_hashtag});
+					}
+					view.find('.add-interests').html(ltmp(ltmp_arr.publish_interests,{interests:interests_view}));
+				}
+			}
+		}
+	});
 }
 
 function view_edit_profile(view,path_parts,query,title){
@@ -3514,6 +3583,9 @@ function view_edit_profile(view,path_parts,query,title){
 				}
 				if(typeof profile.avatar != 'undefined'){
 					view.find('input[name=avatar]').val(profile.avatar);
+				}
+				if(typeof profile.interests != 'undefined'){
+					view.find('input[name=interests]').val(profile.interests.join(', '));
 				}
 				if(typeof profile.telegram != 'undefined'){
 					view.find('input[name=telegram]').val(profile.telegram);
@@ -4451,6 +4523,18 @@ function view_path(location,state,save_state,update){
 									profile_view+=ltmp(ltmp_arr.profile_about,{about:profile.about});
 									profile_found=true;
 								}
+								if(typeof profile.interests != 'undefined'){
+									if(profile.interests.length>0){
+										let interests_view='';
+										for(let i in profile.interests){
+											let interest_caption=profile.interests[i];
+											let interest_hashtag=interest_caption.replace(' ','_').trim().toLowerCase();
+											interests_view+=ltmp(ltmp_arr.profile_interests_item,{caption:interest_caption,hashtag:interest_hashtag});
+										}
+										profile_view+=ltmp(ltmp_arr.profile_interests,{interests:interests_view});
+										profile_found=true;
+									}
+								}
 								if(typeof profile.github != 'undefined'){
 									profile_contacts+=ltmp(ltmp_arr.profile_contacts_github,{github:profile.github,icon_github:ltmp_arr.icon_github});
 									profile_found=true;
@@ -4515,7 +4599,7 @@ function view_path(location,state,save_state,update){
 							if('main'!=current_tab){
 								document.title=ltmp_arr['profile_'+current_tab+'_tab']+' - '+document.title;
 							}
-
+							view.data('profile',1);
 							if(!new_level){
 								view.data('query',query);
 							}
@@ -4647,7 +4731,7 @@ function view_path(location,state,save_state,update){
 
 									get_object(check_account,check_block,function(err,object_result){
 										if(err){
-											console.log(err);
+											console.log('get_object error',check_account,offset,err,object_result);
 											document.title=ltmp_arr.error_title+' - '+document.title;
 											if(1==object_result){//block not found
 												view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
@@ -4997,6 +5081,8 @@ function render_object(user,object,type,preset_level){
 
 			let current_link='viz://@'+user.account+'/'+object.block+'/';
 			render=ltmp(ltmp_arr.object_type_text_loading,{
+				account:user.account,
+				block:object.block,
 				previous:object.data.p,
 				is_reply:object.is_reply,
 				is_share:object.is_share,
@@ -5100,6 +5186,8 @@ function render_object(user,object,type,preset_level){
 
 			let current_link='viz://@'+user.account+'/'+object.block+'/';
 			render=ltmp(ltmp_arr.object_type_text_loading,{
+				account:user.account,
+				block:object.block,
 				previous:object.data.p,
 				is_reply:object.is_reply,
 				is_share:object.is_share,
@@ -5180,6 +5268,8 @@ function render_object(user,object,type,preset_level){
 			render=ltmp(ltmp_arr.object_type_text_preview,{
 				reply:reply,
 				author:'@'+user.account,
+				account:user.account,
+				block:object.block,
 				nickname:profile.nickname,
 				avatar:profile.avatar,
 				text:text,
@@ -5402,42 +5492,176 @@ function render_notify(data,check_level){
 
 function profile_filter_by_type(){
 	let view=$('.view[data-level="'+level+'"]');
-	let type=view.data('query');
-	if(''==type){
-		type='main';
-	}
-	if(0!=view.length){
-		if('main'==type){
-			view.find('.objects>.object').css('display','flex');
-			check_load_more();
+	if(1==view.data('profile')){//only for profile view
+		let type=view.data('query');
+		if(''==type){
+			type='main';
 		}
-		else{
-			view.find('.objects>.object').css('display','none');
-			if('posts'==type){
-				view.find('.objects .object').each(function(i,el){
-					if(0==$(el).data('is-reply') && 0==$(el).data('is-share')){
-						$(el).css('display','flex');
+		if(0!=view.length){
+			//selected interests as hashtags filter
+			let hashtags_filter=[];
+			view.find('.profile .interests a.selected').each(function(i,el){
+				hashtags_filter.push($(el).data('hashtag'));
+			});
+			hashtags_filter=array_unique(hashtags_filter);
+
+			if(0==hashtags_filter.length){
+				if('main'==type){
+						view.find('.objects>.object').css('display','flex');
+				}
+				else{
+					if('posts'==type){
+						view.find('.objects>.object').each(function(i,el){
+							if(0==$(el).data('is-reply') && 0==$(el).data('is-share')){
+								$(el).css('display','flex');
+							}
+							else{
+								$(el).css('display','none');
+							}
+						});
 					}
-				});
+					else
+					if('replies'==type){
+						view.find('.objects>.object').each(function(i,el){
+							if(1==$(el).data('is-reply')){
+								$(el).css('display','flex');
+							}
+							else{
+								$(el).css('display','none');
+							}
+						});
+					}
+					else
+					if('shares'==type){
+						view.find('.objects>.object').each(function(i,el){
+							if(1==$(el).data('is-share')){
+								$(el).css('display','flex');
+							}
+							else{
+								$(el).css('display','none');
+							}
+						});
+					}
+				}
+				clearTimeout(check_load_more_timer);
+				check_load_more_timer=setTimeout(function(){
+					check_load_more();
+				},50);
 			}
-			else
-			if('replies'==type){
-				view.find('.objects>.object').each(function(i,el){
-					if(1==$(el).data('is-reply')){
-						$(el).css('display','flex');
+			else{//filter by selected interests
+				let hashtags_id_filter=[];
+				let hashtags_id_counter=hashtags_filter.length;
+				let hashtags_filter_t,hashtags_filter_q,hashtags_filter_req;
+				hashtags_filter_t=db.transaction(['hashtags'],'readonly');
+				hashtags_filter_q=hashtags_filter_t.objectStore('hashtags');
+				hashtags_filter_req=hashtags_filter_q.openCursor(null,'prev');
+				hashtags_filter_req.onsuccess=function(event){
+					let cur=event.target.result;
+					if(cur){
+						let item=cur.value;
+						if(-1!=hashtags_filter.indexOf(cur.value.tag)){
+							hashtags_id_filter.push(cur.value.id);
+							hashtags_id_counter--;
+						}
+						if(hashtags_id_counter<=0){
+							cur.continue(-1);
+						}
+						else{
+							cur.continue();
+						}
 					}
-				});
-			}
-			else
-			if('shares'==type){
-				view.find('.objects>.object').each(function(i,el){
-					if(1==$(el).data('is-share')){
-						$(el).css('display','flex');
+					else{
+						//console.log(hashtags_id_filter,hashtags_id_filter.length);
+						if(hashtags_id_filter.length>0){
+							hashtags_id_filter_str=hashtags_id_filter.join(',');
+							let objects_counter=view.find('.objects>.object').length;
+							view.find('.objects>.object').each(function(i,el){
+								let search_object=el;
+								let check_filter=false;
+								if('posts'==type){
+									if(0==$(el).data('is-reply') && 0==$(el).data('is-share')){
+										check_filter=true;
+									}
+								}
+								else
+								if('replies'==type){
+									if(1==$(el).data('is-reply')){
+										check_filter=true;
+									}
+								}
+								else
+								if('shares'==type){
+									if(1==$(el).data('is-share')){
+										check_filter=true;
+									}
+								}
+								else
+								if('main'==type){
+									check_filter=true;
+								}
+								if(check_filter){
+									if(hashtags_id_filter_str!=$(search_object).data('filter')){
+										let search_object_t,search_object_q,search_object_req;
+										search_object_t=db.transaction(['hashtags_feed'],'readonly');
+										search_object_q=search_object_t.objectStore('hashtags_feed');
+										search_object_req=search_object_q.index('object').openCursor(IDBKeyRange.only([$(search_object).data('account'),$(search_object).data('block')]),'prev');
+										let find_object=false;
+										search_object_req.onsuccess=function(event){
+											let cur=event.target.result;
+											if(cur){
+												if(-1!=hashtags_id_filter.indexOf(cur.value.tag)){
+													find_object=true;
+													cur.continue(-1);
+												}
+												else{
+													cur.continue();
+												}
+											}
+											else{
+												if(!find_object){
+													$(search_object).css('display','none');
+													$(search_object).data('filter',hashtags_id_filter_str);
+													$(search_object).data('filtered',1);
+												}
+												else{
+													$(search_object).css('display','flex');
+													$(search_object).data('filter',hashtags_id_filter_str);
+													$(search_object).data('filtered',0);
+												}
+											}
+										};
+									}
+									else{
+										if(1==$(search_object).data('filtered')){
+											$(search_object).css('display','none');
+										}
+										else{
+											$(search_object).css('display','flex');
+										}
+									}
+								}
+								else{
+									$(search_object).css('display','none');
+								}
+
+								if(objects_counter==1+i){//all loaded/visible objects was checked
+									clearTimeout(check_load_more_timer);
+									check_load_more_timer=setTimeout(function(){
+										check_load_more();
+									},50);
+								}
+							});
+						}
+						else{//no actual hashtags find
+							clearTimeout(check_load_more_timer);
+							check_load_more_timer=setTimeout(function(){
+								check_load_more();
+							},50);
+						}
 					}
-				});
+				};
 			}
 		}
-		check_load_more();
 	}
 }
 
@@ -5682,6 +5906,7 @@ function load_more_objects(indicator,check_level){
 			}
 			get_object(check_account,offset,function(err,object_result){
 				if(err){
+					console.log('get_object error',check_account,offset,err,object_result);
 					if(1==object_result){
 						indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
 					}
@@ -5694,17 +5919,22 @@ function load_more_objects(indicator,check_level){
 					let object_view=render_object(user_result,object_result,'preview');
 					indicator.before(object_view);
 					let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
+					new_object.css('display','none');
 					let timestamp=new_object.find('.short-date-view').data('timestamp');
 					new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
 					indicator.data('busy','0');
 					profile_filter_by_type();
-					check_load_more();
+					clearTimeout(check_load_more_timer);
+					check_load_more_timer=setTimeout(function(){
+						check_load_more();
+					},100);
 				}
 			});
 		});
 	}
 }
 
+var check_load_more_timer=0;
 function check_load_more(){
 	let scroll_top=window.pageYOffset;
 	let window_height=window.innerHeight;

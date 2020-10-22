@@ -113,11 +113,10 @@ var ltmp_ru_arr={
 				<p>Ссылка на аватар:</p>
 				<p><input type="text" name="avatar" value="" placeholder="https://"></p>
 				<div class="input-addon">(обязательно https://, минимальный размер изображения 49x49 пикселей)</div>
-				<!--
+
 				<p>Интересы:</p>
 				<p><input type="text" name="interests" value=""></p>
-				<div class="input-addon">(через запятую)</div>
-				-->
+				<div class="input-addon">(перечислите через запятую, будут преобразованы в тэги для категоризации публикаций в профиле)</div>
 
 				<p>Телеграм:</p>
 				<p><input type="text" name="telegram" value=""></p>
@@ -134,6 +133,8 @@ var ltmp_ru_arr={
 			</div>
 		</div>
 	</div>`,
+	publish_interests:`Добавить тэги по вашим интересам:<div class="interests">{interests}</div>`,
+	publish_interests_item:`<a class="publish-add-interest-action" data-hashtag="{hashtag}">#{caption}</a>`,
 	preset_view_publish:`
 	<div class="object type-text">
 		<div class="object-column">
@@ -143,11 +144,13 @@ var ltmp_ru_arr={
 						<p>Текст сообщения:</p>
 						<p><textarea name="text"></textarea></p>
 						<div class="input-addon">(просто текст без разметки)</div>
+						<div class="add-interests"></div>
 					</div>
 					<div class="comment-addon">
 						<p>Текст комментария:</p>
 						<p><input type="text" name="comment" value=""></p>
 						<div class="input-addon">(просто текст без разметки)</div>
+						<div class="add-interests"></div>
 					</div>
 					<div class="reply-addon">
 						<p>Комментируемый объект:</p>
@@ -335,6 +338,8 @@ var ltmp_ru_arr={
 		</div>`,
 	profile:'<div class="profile">{profile}</div>',
 	profile_about:'<div class="about">{about}</div>',
+	profile_interests:'<div class="interests">{interests}</div>',
+	profile_interests_item:`<a class="profile-select-interest-action" data-hashtag="{hashtag}">#{caption}</a>`,
 	profile_contacts:'<div class="contacts">{contacts}</div>',
 	profile_contacts_github:'<a href="https://github.com/{github}" target="_blank" class="profile-contacts-github" title="GitHub">{icon_github}</a>',
 	profile_contacts_telegram:'<a href="tg://resolve?domain={telegram}" target="_blank" class="profile-contacts-telegram" title="Telegram">{icon_telegram}</a>',
@@ -442,14 +447,14 @@ var ltmp_ru_arr={
 	<a tabindex="0" class="share-action" title="Поделиться">{icon_share}</a>
 	<a tabindex="0" class="award-action" title="Наградить">{icon_award}</a>
 	<a tabindex="0" class="copy-link-action" title="Копировать ссылку">{icon_copy_link}</a>`,
-	object_type_text_loading:`<div class="object type-text-loading" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">{context}</div>`,
+	object_type_text_loading:`<div class="object type-text-loading" data-account="{account}" data-block="{block}" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">{context}</div>`,
 	object_type_text_wait_loading:`<div class="object type-text-wait-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
 	object_type_text_share:`
 	<div class="share-view"><a tabindex="0" data-href="{link}">{caption}</a> поделился:{comment}</div>
 	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
 	object_type_text_share_comment:` <div class="comment-view">{comment}</div>`,
 	object_type_text_preview:`
-		<div class="object type-text-preview" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
+		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">

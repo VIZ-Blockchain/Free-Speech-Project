@@ -1557,6 +1557,49 @@ body.loaded .startup-screen{
 	opacity:0;
 }
 
+.interests{
+	margin:5px 0;
+}
+.interests a{
+	display:inline-block;
+	white-space:nowrap;
+	max-width:300px;
+	text-overflow:ellipsis;
+    overflow:hidden;
+    background:#1c98e5;
+    border-radius:5px;
+    padding:0 5px;
+    padding-bottom:2px;
+    margin-left:5px;
+    color:#fff !important;
+    font-size:15px;
+    line-height:25px;
+    -webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+	opacity:0.6;
+}
+.interests a:hover{
+	opacity:1;
+}
+.interests a.selected{
+	text-decoration:underline;
+	opacity:1;
+}
+.interests a:first-child{
+	margin-left:0 !important;
+}
+body.midnight .interests a{
+	color:#000 !important;
+}
+body.dark .interests a{
+	background:#3daff5;
+	color:#000 !important;
+}
+
+
 @media only screen and (min-width:751px) and (max-width:1200px){
 	body{
 		font-size:16px;
