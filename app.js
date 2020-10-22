@@ -2170,6 +2170,10 @@ function app_mouse(e){
 		$('.text-copy')[0].select();
 		$('.text-copy')[0].setSelectionRange(0,99999);
 		document.execCommand("copy");
+		$(target).addClass('success');
+		setTimeout(function(){
+			$(target).removeClass('success');
+		},3000);
 	}
 	if($(target).hasClass('fast-publish-action')){
 		if(!$(target).hasClass('disabled')){

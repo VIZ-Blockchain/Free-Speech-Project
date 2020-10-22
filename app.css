@@ -127,10 +127,6 @@ i.icon.copy svg{
 	background:rgba(196, 9, 9, 0.2);
 	color:#be0a0a;
 }
-.actions-view a.success i.icon{
-	background:rgba(38, 196, 9, 0.1);
-	color:#26be0a;
-}
 
 div.icon-counter{
 	position:absolute;
@@ -1244,12 +1240,21 @@ body.dark .error{
 	flex-direction:column;
 	flex-basis:15%;
 	color:rgba(100,100,100,0.7);
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
 }
 .actions-view a:hover{
 	color:#1c98e5;
 }
 body.dark .actions-view a:hover{
 	color:#3daff5;
+}
+.actions-view a.success i.icon{
+	background:rgba(38, 196, 9, 0.1);
+	color:#26be0a;
 }
 
 .tabs{
