@@ -2302,6 +2302,9 @@ function update_user_profile(account,callback){
 				if(typeof json_metadata.profile.interests != 'undefined'){
 					profile_obj.interests=json_metadata.profile.interests;
 				}
+				if(typeof json_metadata.profile.pinned != 'undefined'){
+					profile_obj.pinned=json_metadata.profile.pinned;
+				}
 				if(typeof json_metadata.profile.services != 'undefined'){
 					if(typeof json_metadata.profile.services.github != 'undefined'){
 						profile_obj.github=escape_html(json_metadata.profile.services.github);
@@ -3375,6 +3378,9 @@ function save_profile(view){
 	let github=view.find('input[name="github"]').val();
 	github=github.trim();
 
+	let pinned_object=view.find('input[name="pinned_object"]').val();
+	pinned_object=pinned_object.trim();
+
 	viz.api.getAccount(current_user,app_protocol,function(err,response){
 		if(err){
 			console.log(err);
@@ -3426,6 +3432,15 @@ function save_profile(view){
 			}
 			else{
 				json_metadata.profile.interests=interests;
+			}
+
+			if(''==pinned_object){
+				if(typeof json_metadata.profile.pinned !== 'undefined'){
+					delete json_metadata.profile.pinned;
+				}
+			}
+			else{
+				json_metadata.profile.pinned=pinned_object;
 			}
 
 			if(Object.keys(json_metadata.profile.services).length==0){
@@ -3590,6 +3605,9 @@ function view_edit_profile(view,path_parts,query,title){
 				}
 				if(typeof profile.interests != 'undefined'){
 					view.find('input[name=interests]').val(profile.interests.join(', '));
+				}
+				if(typeof profile.pinned != 'undefined'){
+					view.find('input[name=pinned_object]').val(profile.pinned);
 				}
 				if(typeof profile.telegram != 'undefined'){
 					view.find('input[name=telegram]').val(profile.telegram);
@@ -4514,6 +4532,7 @@ function view_path(location,state,save_state,update){
 							let profile_found=false;
 							let json_metadata={};
 							let profile_contacts='';
+							let pinned_link=false;
 
 							if(typeof profile.nickname !== 'undefined'){
 								document.title=profile.nickname+' (@'+result.account+') '+document.title;
@@ -4523,6 +4542,9 @@ function view_path(location,state,save_state,update){
 							}
 
 							if(typeof profile != 'undefined'){
+								if(typeof profile.pinned != 'undefined'){
+										pinned_link=profile.pinned;
+								}
 								if(typeof profile.about != 'undefined'){
 									profile_view+=ltmp(ltmp_arr.profile_about,{about:profile.about});
 									profile_found=true;
@@ -4640,6 +4662,40 @@ function view_path(location,state,save_state,update){
 							}
 							if(update){
 								view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:result.account,block:0}));
+							}
+							if('main'==current_tab){
+								//pinned object from profile
+								if(false!==pinned_link)
+								if(0==pinned_link.indexOf('viz://')){
+									let pinned_object_account='';
+									let pinned_object_block=0;
+									pinned_link=pinned_link.toLowerCase();
+									pinned_link=escape_html(pinned_link);
+									let pattern = /@[a-z0-9\-\.]*/g;
+									let link_account=pinned_link.match(pattern);
+									if(typeof link_account[0] != 'undefined'){
+										pinned_object_account=link_account[0].substr(1);
+										let pattern_block = /\/([0-9]*)\//g;
+										let link_block=pinned_link.match(pattern_block);
+										if(typeof link_block[1] != 'undefined'){
+											pinned_object_block=parseInt(fast_str_replace('/','',link_block[1]));
+											//remove existed pinned objects and prepend new render
+											view.find('.objects .pinned-object').remove();
+											setTimeout(function(){
+												get_user(pinned_object_account,false,function(err,pinned_user_result){
+													if(!err)
+													get_object(pinned_object_account,pinned_object_block,function(err,pinned_object_result){
+														if(!err){
+															pinned_render=render_object(pinned_user_result,pinned_object_result,'pinned');
+															view.find('.objects').prepend(pinned_render);
+														}
+													});
+												});
+											},10);
+
+										}
+									}
+								}
 							}
 							$('.loader').css('display','none');
 							view.css('display','block');
@@ -5292,6 +5348,37 @@ function render_object(user,object,type,preset_level){
 			});
 		}
 	}
+	if('pinned'==type){
+		let text='';
+		if(typeof object.data.d.text !== 'undefined'){
+			text=object.data.d.text;
+			text=escape_html(text);
+		}
+
+		let current_link='viz://@'+user.account+'/'+object.block+'/';
+		render=ltmp(ltmp_arr.object_type_text_pinned,{
+			account:user.account,
+			block:object.block,
+			link:current_link,
+			context:ltmp(ltmp_arr.object_type_text_pinned_caption,{
+				icon:ltmp_arr.icon_pin
+			}),
+		});
+		setTimeout(function(){
+			let view=$('.view[data-level="'+preset_level+'"]');
+			if(-1==path.indexOf('viz://')){//look in services views
+				let path_parts=path.split('/');
+				view=$('.view[data-path="'+path_parts[0]+'"]');
+			}
+			let load_content=view.find('.object[data-link="'+current_link+'"].type-text-loading.pinned-object .load-content');
+			sub_render=render_object(user,object,'share-preview');
+			load_content.html(sub_render);
+			let new_object=load_content.find('.object[data-link="viz://@'+user.account+'/'+object.block+'/"]');
+			new_object.addClass('pinned-object');
+			let timestamp=new_object.find('.short-date-view').data('timestamp');
+			new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
+		},10);
+	}
 	if('feed'==type){
 		let current_link='viz://@'+user+'/'+object+'/';
 		render=ltmp(ltmp_arr.object_type_text_wait_loading,{
@@ -5546,6 +5633,7 @@ function profile_filter_by_type(){
 							}
 						});
 					}
+					view.find('.objects>.pinned-object').css('display','none');
 				}
 				clearTimeout(check_load_more_timer);
 				check_load_more_timer=setTimeout(function(){
@@ -5602,6 +5690,9 @@ function profile_filter_by_type(){
 								else
 								if('main'==type){
 									check_filter=true;
+								}
+								if($(el).hasClass('pinned-object')){
+									check_filter=false;
 								}
 								if(check_filter){
 									if(hashtags_id_filter_str!=$(search_object).data('filter')){
@@ -5892,12 +5983,16 @@ function load_more_objects(indicator,check_level){
 			let start_offset=user_result.start;
 			let offset=start_offset;
 			let find_objects=false;
-			if(0<indicator.parent().find('.object').length){
+			let objects_count=indicator.parent().find('.object').length;
+			objects_count-=indicator.parent().find('.pinned-object').length;
+			if(0<objects_count){
 				find_objects=true;
 			}
 			indicator.parent().find('.object').each(function(){
-				if(offset>parseInt($(this).data('previous'))){
-					offset=parseInt($(this).data('previous'));
+				if(typeof $(this).data('previous') !== 'undefined'){
+					if(offset>parseInt($(this).data('previous'))){
+						offset=parseInt($(this).data('previous'));
+					}
 				}
 			});
 			if(find_objects){

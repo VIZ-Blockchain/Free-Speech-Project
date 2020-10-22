@@ -118,6 +118,10 @@ var ltmp_ru_arr={
 				<p><input type="text" name="interests" value=""></p>
 				<div class="input-addon">(перечислите через запятую, будут преобразованы в тэги для категоризации публикаций в профиле)</div>
 
+				<p>Закрепленная запись:</p>
+				<p><input type="text" name="pinned_object" value=""></p>
+				<div class="input-addon">(укажите ссылку вида viz://@account/block/)</div>
+
 				<p>Телеграм:</p>
 				<p><input type="text" name="telegram" value=""></p>
 				<div class="input-addon">(укажите имя пользователя без символа «@»)</div>
@@ -447,6 +451,10 @@ var ltmp_ru_arr={
 	<a tabindex="0" class="share-action" title="Поделиться">{icon_share}</a>
 	<a tabindex="0" class="award-action" title="Наградить">{icon_award}</a>
 	<a tabindex="0" class="copy-link-action" title="Копировать ссылку">{icon_copy_link}</a>`,
+	object_type_text_pinned:`<div class="object type-text-loading pinned-object" data-link="{link}">{context}</div>`,
+	object_type_text_pinned_caption:`
+	<div class="share-view">{icon} Закрепленная запись</div>
+	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
 	object_type_text_loading:`<div class="object type-text-loading" data-account="{account}" data-block="{block}" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">{context}</div>`,
 	object_type_text_wait_loading:`<div class="object type-text-wait-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
 	object_type_text_share:`

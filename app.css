@@ -883,6 +883,9 @@ body.dark .reply-view a{
 	margin-bottom: 5px;
 	color:rgba(96, 112, 124, 0.7);
 }
+.objects .share-view:first-child{
+	margin-top:5px;
+}
 body.midnight .share-view{
 	color:rgba(165, 180, 192, 0.7);
 }
@@ -892,6 +895,19 @@ body.dark .share-view{
 .object.type-text .share-view{
 	margin:0;
 	margin-top:10px;
+}
+.share-view .icon{
+	max-width:18px;
+	max-height:18px;
+	line-height:18px;
+}
+.share-view .icon svg{
+	max-width:18px;
+	max-height:18px;
+	margin:0;
+}
+.share-view .icon:hover{
+	background:none;
 }
 .share-view a{
 	color:#1c98e5;
@@ -1264,7 +1280,7 @@ body.dark .actions-view a:hover{
 	-webkit-box-orient:horizontal;
 	justify-content:flex-start;
 	border-bottom:1px solid rgba(204, 204, 221, 0.5);
-	margin-bottom:10px;
+	margin-bottom:5px;
 	overflow-x:auto;
 }
 .tabs::-webkit-scrollbar{
