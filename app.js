@@ -5598,7 +5598,8 @@ function profile_filter_by_type(){
 
 			if(0==hashtags_filter.length){
 				if('main'==type){
-						view.find('.objects>.object').css('display','flex');
+					view.find('.objects>.object').css('display','flex');
+					view.find('.objects .pinned-object').css('display','flex');
 				}
 				else{
 					if('posts'==type){
@@ -5633,7 +5634,7 @@ function profile_filter_by_type(){
 							}
 						});
 					}
-					view.find('.objects>.pinned-object').css('display','none');
+					view.find('.objects .pinned-object').css('display','none');
 				}
 				clearTimeout(check_load_more_timer);
 				check_load_more_timer=setTimeout(function(){
