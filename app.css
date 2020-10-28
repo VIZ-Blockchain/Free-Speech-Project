@@ -292,6 +292,8 @@ body.dark div.menu .session .account-login{
 	color:rgba(179, 180, 184, 0.7);
 }
 div.menu .primary{
+	position:relative;
+	z-index:6;
 	padding-top:10px;
 }
 div.menu .primary a{
@@ -1453,6 +1455,7 @@ body.dark .error-notice{
 }
 div.menu .secondary{
 	position:fixed;
+	z-index:5;
 	text-align:left;
 	width:235px;
 	bottom:0;

@@ -12,6 +12,20 @@ var whitelabel_logo=false;
 
 var whitelabel_init=false;
 
+var mute_notifications=false;
+if(null!=localStorage.getItem(storage_prefix+'mute_notifications')){
+	mute_notifications=parseInt(localStorage.getItem(storage_prefix+'mute_notifications'));
+	if(isNaN(mute_notifications)){
+		localStorage.removeItem(storage_prefix+'mute_notifications');
+	}
+	else{
+		setTimeout(function(){
+			localStorage.removeItem(storage_prefix+'mute_notifications');
+			mute_notifications=false;
+		},mute_notifications*1000);
+	}
+}
+
 var is_safari=navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
 			navigator.userAgent &&
 			navigator.userAgent.indexOf('CriOS') == -1 &&
@@ -137,7 +151,6 @@ function update_dgp(auto=false){
 
 var users={};
 var current_user='';
-var default_energy_step=500;//5.00%
 
 if(null!=localStorage.getItem(storage_prefix+'users')){
 	users=JSON.parse(localStorage.getItem(storage_prefix+'users'));
@@ -168,6 +181,15 @@ var default_settings={
 	theme_night_mode:'midnight',
 	theme_auto_light:'06:00',
 	theme_auto_night:'21:00',
+
+	sync_cloud:true,
+	sync_users:true,
+	sync_feed:true,
+	sync_replies:true,
+	sync_hashtags:true,
+	sync_awards:true,
+	sync_settings:true,
+	sync_size:100,
 };
 var settings=default_settings;
 
@@ -395,21 +417,34 @@ function remove_session(view){
 				cur.update(item);
 				cur.continue();
 			}
+			else{
+				current_user='';
+				localStorage.removeItem(storage_prefix+'users');
+				localStorage.removeItem(storage_prefix+'current_user');
+				setTimeout(function(){
+					increase_db_version(function(){
+						render_menu();
+						render_session();
+					});
+				},100);
+			}
 		};
 	}
-	current_user='';
-	localStorage.removeItem(storage_prefix+'users');
-	localStorage.removeItem(storage_prefix+'current_user');
-	increase_db_version(function(){
-		render_menu();
-		render_session();
-	});
 }
 
 var users_table_diff=[];
 
 function idb_error(e){
 	console.log('IDB error',e);
+	add_notify(
+		false,
+		ltmp_arr.notify_arr.error,
+		ltmp_arr.notify_arr.idb_error
+	);
+	stop_timers();
+	setTimeout(function(){
+		document.location.reload(true);
+	},1000);
 }
 
 const idb=window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
@@ -450,14 +485,30 @@ function increase_db_version(callback){
 	localStorage.setItem(storage_prefix+'db_version',db_version);
 	if(typeof db !== 'undefined'){
 		db.close();
+		setTimeout(function(){
+			db=false;
+			load_db(()=>{
+				callback();
+			});
+		},1000);
 	}
-	load_db(()=>{callback();});
+	else{
+		load_db(()=>{
+			callback();
+		});
+	}
 }
 
 function full_reset_db(){
 	idb.deleteDatabase(storage_prefix+'social_network');
 	db.close();
-	load_db(()=>{document.location.reload(true);});
+	stop_timers();
+	setTimeout(function(){
+		db=false;
+		load_db(()=>{
+			document.location.reload(true);
+		});
+	},1000);
 }
 
 function load_db(callback){
@@ -495,7 +546,6 @@ function load_db(callback){
 			items_table.createIndex('object',['account','block'],{unique:false});//account
 			items_table.createIndex('parent',['parent_account','parent_block'],{unique:false});//account
 			items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
-			items_table.createIndex('cache','cache',{unique:false});//cache boolean for cleanup
 		}
 		else{
 			//items_table=update_trx.objectStore('replies');
@@ -549,14 +599,6 @@ function load_db(callback){
 			items_table.createIndex('object',['account','block'],{unique:false});//account
 		}
 		else{
-			if(need_update_db_version){
-				if(3==local_global_db_version){//not updated yet
-					items_table=update_trx.objectStore('hashtags_feed');
-					//remove unique flag for tag index
-					items_table.deleteIndex('tag');
-					items_table.createIndex('tag','tag',{unique:false});
-				}
-			}
 			//new index for hashtags_feed
 		}
 
@@ -586,6 +628,7 @@ function load_db(callback){
 				users_table_diff.push([current_user,true]);
 			}
 		}
+
 		for(let i in users_table_diff){
 			let check_user_table=users_table_diff[i];
 			console.log('users diff:',check_user_table);
@@ -660,11 +703,8 @@ function idb_get_id_filter(container,index,search,filter,callback){
 				}
 				if(find_filter){
 					find=cur.value.id;
-					cur.continue(-1);
 				}
-				else{
-					cur.continue();
-				}
+				cur.continue();
 			}
 			else{
 				callback(find);
@@ -699,7 +739,7 @@ function idb_get_by_id(container,index,search,callback){
 	}
 }
 
-function save_account_settings(view,login,regular_key,energy_step){
+function save_account_settings(view,login,regular_key){
 	login=login.toLowerCase();
 	if('@'==login.substring(0,1)){
 		login=login.substring(1);
@@ -751,9 +791,10 @@ function save_account_settings(view,login,regular_key,energy_step){
 			}
 			//clear users, maybe multi-account support in future
 			users={};
-			users[login]={'regular_key':regular_key,'energy_step':energy_step};
+			users[login]={'regular_key':regular_key};
 			current_user=login;
 			save_session();
+			stop_timers();
 			document.location.reload(true);
 		}
 	});
@@ -1661,9 +1702,15 @@ function notify_show(id){
 	notify[0].addEventListener('mouseenter',notify_remove_timer,false);
 	notify[0].addEventListener('mouseleave',notify_add_timer,false);
 }
-function add_notify(store,title,text,link){
-	if(whitelabel_init){
-		return;
+function add_notify(store,title,text,link,service){
+	service=(typeof service !== 'undefined')?service:false;
+	if(!service){
+		if(whitelabel_init){
+			return;
+		}
+		if(false!==mute_notifications){
+				return;
+		}
 	}
 	store=typeof store==='undefined'?false:store;
 	title=typeof title==='undefined'?'':title;
@@ -2019,6 +2066,74 @@ function app_mouse(e){
 			load_nested_replies(target);
 		}
 	}
+	if($(target).hasClass('sync-export-file-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			sync_export(false,target);
+		}
+	}
+	if($(target).hasClass('sync-import-file-action')){
+		if(!$(target).hasClass('disabled')){
+			let view=$(target).closest('.view');
+			let tab=view.find('.content-view[data-tab="sync"]');
+			select_file(function(data){
+				$(target).addClass('disabled');
+				tab.find('.submit-button-ring[rel="import-file"]').addClass('show');
+				tab.find('.sync-import-error').html('');
+				tab.find('.sync-import-success').html('');
+				if(false===data){
+					tab.find('.submit-button-ring[rel="import-file"]').removeClass('show');
+					tab.find('.sync-import-error').html(ltmp_arr.settings_sync_select_file_error);
+					$(target).removeClass('disabled');
+				}
+				import_backup(data,function(result){
+					if(false===result){
+						tab.find('.submit-button-ring[rel="import-file"]').removeClass('show');
+						tab.find('.sync-import-error').html(ltmp_arr.settings_sync_import_backup_error);
+						$(target).removeClass('disabled');
+					}
+					else{
+						if(true===result){
+							tab.find('.submit-button-ring[rel="import-file"]').removeClass('show');
+							$(target).removeClass('disabled');
+							render_session();
+							render_menu();
+							apply_theme_mode();
+							mute_notifications=true;//turn off notifications for next update feed
+							localStorage.setItem(storage_prefix+'mute_notifications',60);//set mute notifications for 1 minute to next reload
+							tab.find('.sync-import-success').html(tab.find('.sync-import-success').html()+'<br>'+ltmp_arr.settings_sync_import_restart);
+							stop_timers();
+							setTimeout(function(){
+								document.location.hash='';
+								document.location.reload(true);
+							},3000);//reload page
+
+							if(typeof users[current_user] !== 'undefined'){
+								if(typeof users[current_user].regular_key !== 'undefined'){
+								}
+								else{
+									tab.find('.sync-import-error').html(ltmp_arr.account_settings_empty_regular_key);
+									tab.find('.sync-import-error').css('color','red');
+								}
+							}
+							else{
+								tab.find('.sync-import-error').html(ltmp_arr.account_settings_empty_regular_key);
+								tab.find('.sync-import-error').css('color','red');
+							}
+						}
+						else{
+							let new_import=false;
+							if(''==tab.find('.sync-import-success').html()){
+								new_import=true;
+							}
+							tab.find('.sync-import-success').html((new_import?'':(tab.find('.sync-import-success').html()+'<br>'))+result);
+						}
+					}
+
+				});
+			});
+		}
+	}
 	if($(target).hasClass('save-feed-settings-action')){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
@@ -2223,7 +2338,7 @@ function app_mouse(e){
 
 			let viz_account=view.find('input[name="viz_account"]').val();
 			let viz_regular_key=view.find('input[name="viz_regular_key"]').val();
-			save_account_settings(view,viz_account,viz_regular_key,default_energy_step);
+			save_account_settings(view,viz_account,viz_regular_key);
 		}
 	}
 	if($(target).hasClass('back-action')){
@@ -2274,6 +2389,454 @@ function app_mouse(e){
 		$(window)[0].scrollTo({behavior:'smooth',top:0});
 	}
 	*/
+}
+
+function sync_export(cloud,target){
+	cloud=(typeof cloud !== 'undefined')?cloud:false;
+	let view=$(target).closest('.view');
+	let tab=view.find('.content-view[data-tab="sync"]');
+	tab.find('.submit-button-ring[rel="export-file"]').addClass('show');
+	tab.find('.error').html('');
+	tab.find('.success').html('');
+
+	let export_awards=function(json,callback){
+		if(settings.sync_awards){
+			json.awards=[];
+			let t=db.transaction(['awards'],'readonly');
+			let q=t.objectStore('awards');
+			let req=q.openCursor(null,'prev');
+			let limit=settings.sync_size;
+			if(0==settings.sync_size){
+				limit=1;
+			}
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(limit>0){
+						let item=cur.value;
+						delete item.id;
+						json.awards.push(item);
+						if(0!=settings.sync_size){
+							limit--;
+						}
+					}
+					cur.continue();
+				}
+				else{
+					callback(json,callback);
+				}
+			};
+		}
+		else{
+			callback(json,callback);
+		}
+	}
+	let export_hashtags_feed=function(json,callback){
+		if(settings.sync_hashtags){
+			json.hashtags_feed=[];
+			let t=db.transaction(['hashtags_feed'],'readonly');
+			let q=t.objectStore('hashtags_feed');
+			let req=q.openCursor(null,'prev');
+			let limit=settings.sync_size;
+			if(0==settings.sync_size){
+				limit=1;
+			}
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(limit>0){
+						let item=cur.value;
+						delete item.id;
+						json.hashtags_feed.push(item);
+						if(0!=settings.sync_size){
+							limit--;
+						}
+					}
+					cur.continue();
+				}
+				else{
+					export_awards(json,callback);
+				}
+			};
+		}
+		else{
+			export_awards(json,callback);
+		}
+	}
+	let export_hashtags=function(json,callback){
+		if(settings.sync_hashtags){
+			json.hashtags=[];
+			let t=db.transaction(['hashtags'],'readonly');
+			let q=t.objectStore('hashtags');
+			let req=q.index('status').openCursor(null,'prev');
+			let limit=settings.sync_size;
+			if(0==settings.sync_size){
+				limit=1;
+			}
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(limit>0){
+						let item=cur.value;
+						item.count=0;
+						json.hashtags.push(item);
+						if(0!=settings.sync_size){
+							limit--;
+						}
+					}
+					cur.continue();
+				}
+				else{
+					export_hashtags_feed(json,callback);
+				}
+			};
+		}
+		else{
+			export_hashtags_feed(json,callback);
+		}
+	}
+	let export_replies=function(json,callback){
+		if(settings.sync_replies){
+			json.replies=[];
+			let t=db.transaction(['replies'],'readonly');
+			let q=t.objectStore('replies');
+			let req=q.index('time').openCursor(null,'prev');
+			let limit=settings.sync_size;
+			if(0==settings.sync_size){
+				limit=1;
+			}
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(limit>0){
+						let item=cur.value;
+						delete item.id;
+						json.replies.push(item);
+						if(0!=settings.sync_size){
+							limit--;
+						}
+					}
+					cur.continue();
+				}
+				else{
+					export_hashtags(json,callback);
+				}
+			};
+		}
+		else{
+			export_hashtags(json,callback);
+		}
+	}
+	let export_feed=function(json,callback){
+		if(settings.sync_feed){
+			json.feed=[];
+			let t=db.transaction(['feed'],'readonly');
+			let q=t.objectStore('feed');
+			let req=q.index('time').openCursor(null,'prev');
+			let limit=settings.sync_size;
+			if(0==settings.sync_size){
+				limit=1;
+			}
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(limit>0){
+						let item=cur.value;
+						delete item.id;
+						json.feed.push(item);
+						if(0!=settings.sync_size){
+							limit--;
+						}
+					}
+					cur.continue();
+				}
+				else{
+					export_replies(json,callback);
+				}
+			};
+		}
+		else{
+			export_replies(json,callback);
+		}
+	}
+	let export_users=function(json,callback){
+		if(settings.sync_users){
+			json.users=[];
+			let t=db.transaction(['users'],'readonly');
+			let q=t.objectStore('users');
+			let req=q.openCursor(null,'next');
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					let item=cur.value;
+					delete item.id;
+					json.users.push(item)
+					cur.continue();
+				}
+				else{
+					export_feed(json,callback);
+				}
+			};
+		}
+		else{
+			export_feed(json,callback);
+		}
+	}
+
+	var export_json={};
+	export_json.time=new Date().getTime() /1000 | 0;
+	export_json.user=current_user;
+	if(settings.sync_settings){
+		export_json.settings=settings;
+	}
+	export_users(export_json,function(result_json){
+		//console.log(result_json);
+		if(!cloud){
+			tab.find('.sync-export-success').html(ltmp_arr.settings_sync_export_file_success);
+			download('dapp_export_'+fast_str_replace('.','_',show_date())+'.json',JSON.stringify(result_json),'application/json');
+		}
+		$(target).removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+	});
+}
+
+function download(filename,data,mime){
+	mime=(typeof mime !== 'undefined')?mime:'text/plain';
+	var link=document.createElement('a');
+	link.setAttribute('href','data:'+mime+';charset=utf-8,'+encodeURIComponent(data));
+	link.setAttribute('download',filename);
+	if(document.createEvent){
+		var event=document.createEvent('MouseEvents');
+		event.initEvent('click',true,true);
+		link.dispatchEvent(event);
+	}
+	else {
+		link.click();
+	}
+}
+
+var import_steps=0;
+function import_backup_final_step(backup,callback){
+	if(0==import_steps){
+		if(typeof backup.users !== 'undefined'){
+			let t_clear=db.transaction(['users'],'readwrite');
+			let q_clear=t_clear.objectStore('users');
+			q_result=q_clear.clear();
+			q_result.onsuccess=function(e){
+				let t_add=db.transaction(['users'],'readwrite');
+				let q_add=t_add.objectStore('users');
+				for(let i in backup.users){
+					let item=backup.users[i];
+					q_add.add(item);
+				}
+				if(!is_safari){
+					if(!is_firefox){
+						t_add.commit();
+					}
+				}
+				t_add.oncomplete=function(e){
+					callback(ltmp_arr.settings_sync_import_users_success);
+					console.log(users_table_diff);
+					setTimeout(function(){
+						callback(true);
+					},1000);
+				}
+			}
+		}
+		else{
+			setTimeout(function(){callback(true);},100);
+		}
+	}
+}
+var import_finish=0;
+function import_backup(data,callback){
+	let backup=false;
+	try{
+		backup=JSON.parse(data);
+	}
+	catch(e){
+		callback(false);
+		return;
+	}
+	if(typeof backup.user !== 'undefined'){
+		if(''!=current_user){
+			if(current_user!=backup.user){
+				callback(ltmp(ltmp_arr.settings_sync_import_another_user,{account:backup.user}));
+			}
+		}
+		current_user=backup.user;
+		localStorage.setItem(storage_prefix+'current_user',current_user);
+	}
+	if(typeof backup.settings !== 'undefined'){
+		settings=backup.settings;
+		let settings_json=JSON.stringify(settings);
+		localStorage.setItem(storage_prefix+'settings',settings_json);
+		callback(ltmp_arr.settings_sync_import_settings_success);
+	}
+	clearTimeout(import_finish);
+	import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},10000);
+	if(typeof backup.feed !== 'undefined'){
+		import_steps++;
+		let t_clear=db.transaction(['feed'],'readwrite');
+		let q_clear=t_clear.objectStore('feed');
+		q_result=q_clear.clear();
+		q_result.onsuccess=function(e){
+			let t_add=db.transaction(['feed'],'readwrite');
+			let q_add=t_add.objectStore('feed');
+			for(let i in backup.feed){
+				let item=backup.feed[i];
+				q_add.add(item);
+			}
+			if(!is_safari){
+				if(!is_firefox){
+					t_add.commit();
+				}
+			}
+			t_add.oncomplete=function(e){
+				import_steps--;
+				callback(ltmp_arr.settings_sync_import_feed_success);
+				clearTimeout(import_finish);
+				import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+			}
+		}
+	}
+	if(typeof backup.replies !== 'undefined'){
+		import_steps++;
+		let t_clear=db.transaction(['replies'],'readwrite');
+		let q_clear=t_clear.objectStore('replies');
+		q_result=q_clear.clear();
+		q_result.onsuccess=function(e){
+			let t_add=db.transaction(['replies'],'readwrite');
+			let q_add=t_add.objectStore('replies');
+			for(let i in backup.replies){
+				let item=backup.replies[i];
+				q_add.add(item);
+			}
+			if(!is_safari){
+				if(!is_firefox){
+					t_add.commit();
+				}
+			}
+			t_add.oncomplete=function(e){
+				import_steps--;
+				callback(ltmp_arr.settings_sync_import_replies_success);
+				clearTimeout(import_finish);
+				import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+			}
+		}
+	}
+	if(typeof backup.hashtags !== 'undefined'){
+		import_steps++;
+		let t_clear=db.transaction(['hashtags'],'readwrite');
+		let q_clear=t_clear.objectStore('hashtags');
+		q_result=q_clear.clear();
+		q_result.onsuccess=function(e){
+			let t_add=db.transaction(['hashtags'],'readwrite');
+			let q_add=t_add.objectStore('hashtags');
+			for(let i in backup.hashtags){
+				let item=backup.hashtags[i];
+				q_add.add(item);
+			}
+			if(!is_safari){
+				if(!is_firefox){
+					t_add.commit();
+				}
+			}
+			t_add.oncomplete=function(e){
+				import_steps--;
+				callback(ltmp_arr.settings_sync_import_hashtags_success);
+				if(typeof backup.hashtags_feed !== 'undefined'){
+					import_steps++;
+					let t_clear=db.transaction(['hashtags_feed'],'readwrite');
+					let q_clear=t_clear.objectStore('hashtags_feed');
+					q_result=q_clear.clear();
+					q_result.onsuccess=function(e){
+						let t_add=db.transaction(['hashtags_feed'],'readwrite');
+						let q_add=t_add.objectStore('hashtags_feed');
+						for(let i in backup.hashtags_feed){
+							let item=backup.hashtags_feed[i];
+							q_add.add(item);
+						}
+						if(!is_safari){
+							if(!is_firefox){
+								t_add.commit();
+							}
+						}
+						t_add.oncomplete=function(e){
+							import_steps--;
+							callback(ltmp_arr.settings_sync_import_hashtags_feed_success);
+							clearTimeout(import_finish);
+							import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+						}
+					}
+				}
+				else{
+					clearTimeout(import_finish);
+					import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+				}
+			}
+		}
+	}
+	if(typeof backup.awards !== 'undefined'){
+		import_steps++;
+		let t_clear=db.transaction(['awards'],'readwrite');
+		let q_clear=t_clear.objectStore('awards');
+		q_result=q_clear.clear();
+		q_result.onsuccess=function(e){
+			let t_add=db.transaction(['awards'],'readwrite');
+			let q_add=t_add.objectStore('awards');
+			for(let i in backup.awards){
+				let item=backup.awards[i];
+				q_add.add(item);
+			}
+			if(!is_safari){
+				if(!is_firefox){
+					t_add.commit();
+				}
+			}
+			t_add.oncomplete=function(e){
+				import_steps--;
+				callback(ltmp_arr.settings_sync_import_awards_success);
+				clearTimeout(import_finish);
+				import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+			}
+		}
+	}
+}
+
+function select_file(callback){
+	callback=(typeof callback !=='undefined')?callback:(data)=>{console.log(data)};
+	var input=document.createElement('input');
+	input.setAttribute('type','file');
+	document.body.appendChild(input);
+	$(input).on('change',function(event){
+		var file=input.files[0];
+		if(file){
+			var reader=new FileReader();
+			reader.readAsText(file,"UTF-8");
+			reader.onload=function(event){
+				callback(event.target.result);
+				input.remove();
+			}
+			reader.onerror=function(event){
+				callback(false);
+				input.remove();
+			}
+		}
+		else{
+			callback(false);
+			input.remove();
+		}
+	});
+	if(document.createEvent){
+		var event=document.createEvent('MouseEvents');
+		event.initEvent('click',true,true);
+		input.dispatchEvent(event);
+	}
+	else {
+		input.click();
+	}
+	//setTimeout(function(){input.remove();},1000);
 }
 
 function update_user_profile(account,callback){
@@ -2510,6 +3073,9 @@ function feed_load(account,limit,callback){
 	let end_offset=0;
 	let offset=0;
 
+	if(!db.objectStoreNames.contains('objects_'+account)){//catch import proccess and prevent error
+		return;
+	}
 	let t=db.transaction(['objects_'+account],'readonly');
 	let q=t.objectStore('objects_'+account);
 	let req=q.index('block').openCursor(null,'prev');
@@ -2846,8 +3412,7 @@ function parse_object(account,block,callback){
 												block:block,
 												parent_account:parent_account,
 												parent_block:parent_block,
-												time:new Date().getTime() / 1000 | 0,
-												cache:true,
+												time:new Date().getTime() / 1000 | 0
 											};
 											reply_add_q.add(reply_obj);
 											if(!is_safari){
@@ -3047,9 +3612,49 @@ function clear_users_cache(callback){
 			cur.continue();
 		}
 		else{
-			setTimeout(function(){callback()},100);
+			//check users without objects store
+			let t_search_users=db.transaction(['users'],'readonly');
+			let q_search_users=t_search_users.objectStore('users');
+			let req_search_users=q_search_users.index('status').openCursor(IDBKeyRange.only(1,true),'prev');
+			let find=false;
+			req_search_users.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(!db.objectStoreNames.contains('objects_'+cur.value.account)){
+						users_table_diff.push([cur.value.account,true]);
+						find=true;
+					}
+					cur.continue();
+				}
+				else{
+					if(find){
+						//find collisions, fix it and reload page
+						stop_timers();
+						setTimeout(function(){
+							increase_db_version(function(){
+								document.location.reload(true);
+							});
+						},100);
+					}
+					else{
+						setTimeout(function(){callback()},100);
+					}
+				}
+			};
 		}
 	};
+}
+
+function stop_timers(){
+	for(let feed_account_timer in feed_load_timers){
+		clearTimeout(feed_load_timers[feed_account_timer]);
+	}
+	clearTimeout(update_feed_timer);
+	clearTimeout(load_notifications_count_timer);
+	clearTimeout(load_new_objects_timer);
+	clearTimeout(check_load_more_timer);
+	clearTimeout(clear_cache_timer);
+	clearTimeout(dgp_timer);
 }
 
 var load_notifications_count_timer=0;
@@ -3140,6 +3745,7 @@ function update_feed_result(result){
 	}
 }
 
+let feed_load_timers={};
 function update_feed_subscribes(callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
@@ -3178,7 +3784,10 @@ function update_feed_subscribes(callback){
 			for(let i in list){
 				let account=list[i];
 				if(account!=current_user){
-					setTimeout(function(){
+					if(typeof feed_load_timers.account !== 'undefined'){
+						clearTimeout(feed_load_timers.account);
+					}
+					feed_load_timers.account=setTimeout(function(){
 						feed_load(account,false,function(err,result){
 							if(!err){
 								update_feed_result(result);
@@ -4157,6 +4766,7 @@ function view_app_settings(view,path_parts,query,title){
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/main',class:('main'==current_tab?'current':''),caption:ltmp_arr.app_settings_main_tab});
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/theme',class:('theme'==current_tab?'current':''),caption:ltmp_arr.app_settings_theme_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/sync',class:('sync'==current_tab?'current':''),caption:ltmp_arr.app_settings_sync_tab});
 	view.find('.tabs').html(tabs);
 
 	view.find('.content-view').css('display','none');
@@ -4230,6 +4840,84 @@ function view_app_settings(view,path_parts,query,title){
 			apply_theme_mode();
 		});
 	}
+	if('sync'==current_tab){
+		tab.find('.button').removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+		tab.find('.error').html('');
+		tab.find('.success').html('');
+
+		tab.find('input[name="sync-size"]').val(settings.sync_size);
+
+		tab.find('input[name="sync-cloud"]').prop("checked",settings.sync_cloud);
+		tab.find('input[name="sync-users"]').prop("checked",settings.sync_users);
+		tab.find('input[name="sync-feed"]').prop("checked",settings.sync_feed);
+		tab.find('input[name="sync-replies"]').prop("checked",settings.sync_replies);
+		tab.find('input[name="sync-hashtags"]').prop("checked",settings.sync_hashtags);
+		tab.find('input[name="sync-awards"]').prop("checked",settings.sync_awards);
+		tab.find('input[name="sync-settings"]').prop("checked",settings.sync_settings);
+
+		tab.find('input[name="sync-size"]').off('input');
+		tab.find('input[name="sync-size"]').on('input',function(){
+			if(!isNaN(parseInt(this.value))){
+				settings.sync_size=parseInt(this.value);
+			}
+			else{
+				settings.sync_size=0;
+			}
+			this.value=settings.sync_size;
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
+		});
+
+		tab.find('input[name="sync-cloud"]').off('change');
+		tab.find('input[name="sync-cloud"]').on('change',function(){
+			settings.sync_cloud=$(this).prop('checked');
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
+		});
+
+		tab.find('input[name="sync-users"]').off('change');
+		tab.find('input[name="sync-users"]').on('change',function(){
+			settings.sync_users=$(this).prop('checked');
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
+		});
+
+		tab.find('input[name="sync-feed"]').off('change');
+		tab.find('input[name="sync-feed"]').on('change',function(){
+			settings.sync_feed=$(this).prop('checked');
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
+		});
+
+		tab.find('input[name="sync-replies"]').off('change');
+		tab.find('input[name="sync-replies"]').on('change',function(){
+			settings.sync_replies=$(this).prop('checked');
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
+		});
+
+		tab.find('input[name="sync-hashtags"]').off('change');
+		tab.find('input[name="sync-hashtags"]').on('change',function(){
+			settings.sync_hashtags=$(this).prop('checked');
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
+		});
+
+		tab.find('input[name="sync-awards"]').off('change');
+		tab.find('input[name="sync-awards"]').on('change',function(){
+			settings.sync_awards=$(this).prop('checked');
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
+		});
+
+		tab.find('input[name="sync-settings"]').off('change');
+		tab.find('input[name="sync-settings"]').on('change',function(){
+			settings.sync_settings=$(this).prop('checked');
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
+		});
+	}
 
 	$('.loader').css('display','none');
 	view.css('display','block');
@@ -4296,7 +4984,19 @@ function view_account_settings(view,path_parts,query,title){
 
 	if(''!=current_user){
 		view.find('input[name=viz_account]').val(current_user);
-		view.find('input[name=viz_regular_key]').val(users[current_user].regular_key);
+		if(typeof users[current_user] !== 'undefined'){
+			if(typeof users[current_user].regular_key !== 'undefined'){
+				view.find('input[name=viz_regular_key]').val(users[current_user].regular_key);
+			}
+			else{
+				view.find('.error').html(ltmp_arr.account_settings_empty_regular_key);
+				view.find('.error').css('color','red');
+			}
+		}
+		else{
+			view.find('.error').html(ltmp_arr.account_settings_empty_regular_key);
+			view.find('.error').css('color','red');
+		}
 	}
 
 	$('.loader').css('display','none');
@@ -6074,6 +6774,22 @@ function check_current_user(callback){
 		callback=function(){};
 	}
 	if(''!=current_user){
+		if(typeof users[current_user] === 'undefined'){
+			add_notify(false,
+				ltmp_arr.notify_arr.error,
+				ltmp_arr.account_settings_empty_regular_key,
+				'dapp:account_settings'
+			);
+		}
+		else{
+			if(typeof users[current_user].regular_key === 'undefined'){
+				add_notify(false,
+					ltmp_arr.notify_arr.error,
+					ltmp_arr.account_settings_empty_regular_key,
+					'dapp:account_settings'
+				);
+			}
+		}
 		if(db.objectStoreNames.contains('objects_'+current_user)){
 			get_user(current_user,true,()=>{callback();});
 		}

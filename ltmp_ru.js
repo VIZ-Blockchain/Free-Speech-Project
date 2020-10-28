@@ -96,6 +96,42 @@ var ltmp_ru_arr={
 				<p class="success save-theme-settings-success"></p>
 				<p><a class="button save-theme-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
 			</div>
+			<div class="content-view" data-tab="sync">
+				<p>
+					<strong>Внимание!</strong>
+					Экспорт направлен на сохранение последних и актуальных записей из базы данных приложения, приватный ключ не сохраняется.
+					<!--
+					Синхронизация с облачным хранилищем проверяет наличие подписи данных приватным ключом аккаунта и позволяет синхронизировать последние изменения подписок между несколькими экземплярами приложений (например, на ПК и смартфоне).
+					-->
+				</p>
+				<p><label><input type="checkbox" name="sync-cloud"> &mdash; автоматическая синхронизация с облаком</label></p>
+				<p><label><input type="checkbox" name="sync-users"> &mdash; пользователи</label></p>
+				<p><label><input type="checkbox" name="sync-feed"> &mdash; лента новостей</label></p>
+				<p><label><input type="checkbox" name="sync-replies"> &mdash; ответы</label></p>
+				<p><label><input type="checkbox" name="sync-hashtags"> &mdash; тэги</label></p>
+				<p><label><input type="checkbox" name="sync-awards"> &mdash; награждения</label></p>
+				<p><label><input type="checkbox" name="sync-settings"> &mdash; настройки</label></p>
+				<p>Максимальное количество записей:</p>
+				<p><input type="text" name="sync-size" placeholder="" value=""></p>
+				<div class="input-addon">(для ленты новостей, ответов, тэгов, награждений)</div>
+
+				<p class="error sync-export-error"></p>
+				<p class="success sync-export-success"></p>
+				<p><a class="button sync-export-file-action">Экспортировать в файл</a><span class="submit-button-ring" rel="export-file"></span></p>
+				<!--
+				<p><a class="button sync-export-cloud-action">Экспортировать в облако</a><span class="submit-button-ring" rel="export-cloud"></span></p>
+				-->
+				<hr>
+				<p>
+					Импортирование сохраненного состояния происходит в несколько этапов, старые данные приложения будут удалены, новые восстановлены, а приложение будет планово перезапущено.
+				</p>
+				<p class="error sync-import-error"></p>
+				<p class="success sync-import-success"></p>
+				<p><a class="button sync-import-file-action">Импортировать из файла</a><span class="submit-button-ring" rel="import-file"></span></p>
+				<!--
+				<p><a class="button sync-import-cloud-action">Импортировать из облака</a><span class="submit-button-ring" rel="import-cloud"></span></p>
+				-->
+			</div>
 		</div>
 	</div>`,
 	preset_view_edit_profile:`
@@ -191,6 +227,18 @@ var ltmp_ru_arr={
 	<p>{caption}:</p>
 	<p><input type="text" name="{prop}" placeholder="{placeholder}" value="{value}"></p>
 	<div class="input-addon">({addon})</div>`,
+	settings_sync_export_file_success:'Экспорт в файл завершен, проверьте загрузки',
+	settings_sync_select_file_error:'Выберите файл для восстановления',
+	settings_sync_import_backup_error:'Неверный формат файла, возможно поврежден',
+	settings_sync_import_another_user:'Импортируются данные аккаунта {account}',
+	settings_sync_import_settings_success:'Импорт настроек выполнен',
+	settings_sync_import_feed_success:'Импорт ленты новостей завершен',
+	settings_sync_import_replies_success:'Импорт дерева ответов завершен',
+	settings_sync_import_hashtags_success:'Импорт тэгов завершен',
+	settings_sync_import_hashtags_feed_success:'Импорт ленты тэгов завершен',
+	settings_sync_import_awards_success:'Импорт награждений завершен',
+	settings_sync_import_users_success:'Импорт пользователей завершен',
+	settings_sync_import_restart:'<strong>Перезапуск приложения...</strong>',
 	settings_activity_period:`Частота загрузки активности пользователей`,
 	settings_addon_activity_period:`в минутах после обновления`,
 	users_settings_buttons:`
@@ -264,6 +312,7 @@ var ltmp_ru_arr={
 		new_reply:'Новый ответ от @{account}',
 		new_share:'Репост от @{account}',
 		new_mention:'Упоминание от @{account}',
+		idb_error:'Сбой в базе данных, перезагрузка приложения',
 	},
 	notifications_all_tab:'Все',
 	notifications_new_tab:'Новые',
@@ -316,6 +365,7 @@ var ltmp_ru_arr={
 	app_settings_main_tab:'Общие',
 	app_settings_feed_tab:'Лента новостей',
 	app_settings_theme_tab:'Оформление',
+	app_settings_sync_tab:'Перенос данных',
 
 	view_profile:'<a tabindex="0" data-href="viz://@{account}/" title="Просмотреть профиль">{icon_view_profile}</a>',
 
