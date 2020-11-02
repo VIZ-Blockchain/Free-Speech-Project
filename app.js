@@ -12,6 +12,262 @@ var whitelabel_logo=false;
 
 var whitelabel_init=false;
 
+var sync_cloud_domain=false;
+var sync_cloud_url=false;
+var sync_cloud_activity=0;
+var sync_cloud_update=0;
+if(null!=localStorage.getItem(storage_prefix+'sync_cloud_activity')){
+	sync_cloud_activity=parseInt(localStorage.getItem(storage_prefix+'sync_cloud_activity'));
+	if(isNaN(sync_cloud_activity)){
+		localStorage.removeItem(storage_prefix+'sync_cloud_activity');
+	}
+}
+if(null!=localStorage.getItem(storage_prefix+'sync_cloud_update')){
+	sync_cloud_update=parseInt(localStorage.getItem(storage_prefix+'sync_cloud_update'));
+	if(isNaN(sync_cloud_update)){
+		localStorage.removeItem(storage_prefix+'sync_cloud_update');
+	}
+}
+
+function auth_signature_data(domain,action,account,authority,nonce){
+	return domain+':'+action+':'+account+':'+authority+':'+(new Date().getTime() / 1000 | 0)+':'+nonce;
+}
+
+function auth_signature_check(hex){
+	let byte=hex.substring(0,2);
+	if('1f'==byte){
+		return true;
+	}
+	if('20'==byte){
+		return true;
+	}
+	return false;
+}
+
+function paswordless_auth(account,regular_key){
+	var nonce=0;
+	var data='';
+	var signature='';
+	while(!auth_signature_check(signature)){
+		data=auth_signature_data(sync_cloud_domain,'auth',account,'regular',nonce);
+		signature=viz.auth.signature.sign(data,regular_key).toHex();
+		nonce++;
+	}
+	return {data,signature};
+}
+
+var check_sync_cloud_activity_interval=5*60*1000;
+var check_sync_cloud_activity_timer=0;
+function check_sync_cloud_activity(){
+	if(!settings.sync_cloud){
+		return;
+	}
+	if(''==current_user){
+		return;
+	}
+	if(typeof users[current_user] === 'undefined'){
+		return;
+	}
+	if(typeof users[current_user].regular_key === 'undefined'){
+		return;
+	}
+	if(false===sync_cloud_domain){
+		return;
+	}
+	let xhr = new XMLHttpRequest();
+	xhr.timeout=5000;
+	xhr.overrideMimeType('text/plain');
+	xhr.open('POST',sync_cloud_url);
+	xhr.setRequestHeader('accept','application/json, text/plain, */*');
+	xhr.setRequestHeader('content-type','application/json');
+	xhr.ontimeout = function() {
+		console.log('check_sync_cloud_activity timeout',sync_cloud_url);
+	};
+	xhr.onreadystatechange = function() {
+		if(4==xhr.readyState && 200==xhr.status){
+			try{
+				let json=JSON.parse(xhr.response);
+				console.log('check_sync_cloud_activity response',json);
+				if(json.activity>=sync_cloud_activity){
+					if(json.update>sync_cloud_update){
+						load_sync_cloud_get_updates();
+					}
+				}
+				clearTimeout(check_sync_cloud_activity_timer);
+				check_sync_cloud_activity_timer=setTimeout(function(){
+					check_sync_cloud_activity();
+				},check_sync_cloud_activity_interval);
+			}
+			catch(e){
+				console.log('check_sync_cloud_activity response json error',xhr.response,e);
+			}
+		}
+	};
+	let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
+	auth_data.action='activity';
+	xhr.send(JSON.stringify(auth_data));
+
+	clearTimeout(check_sync_cloud_activity_timer);
+	check_sync_cloud_activity_timer=setTimeout(function(){
+		check_sync_cloud_activity();
+	},check_sync_cloud_activity_interval);
+}
+
+var sync_cloud_updates_queue=[];
+var sync_cloud_update_worker_busy=false;
+var sync_cloud_update_worker_timer=0;
+var sync_cloud_update_worker_interval=1*1000;
+function sync_cloud_update_worker(){
+	if(!sync_cloud_update_worker_busy){
+		sync_cloud_update_worker_busy=true;
+
+		let types_id={
+			1:'backup',
+			2:'subscribe',
+			3:'unsubscribe',
+			4:'ignore',
+			5:'ungnore',
+			6:'pin_hashtag',
+			7:'unpin_hashtag',
+			8:'ignore_hashtag',
+			9:'unignore_hashtag',
+		};
+
+		let update=sync_cloud_updates_queue.shift();
+		if(typeof update !== 'undefined'){
+			let type=types_id[update.type];
+			//stop_timers();
+			if('subscribe'==type){
+				subscribe_update(update.value,function(result){
+					if(false===result){
+						console.log('sync_cloud_update_worker error with update',update);
+					}
+					else{
+						console.log('sync_cloud_update_worker OK with update',update);
+					}
+					sync_cloud_update_worker_busy=false;
+					clearTimeout(sync_cloud_update_worker_timer);
+					sync_cloud_update_worker_timer=setTimeout(function(){
+						sync_cloud_update_worker();
+					},sync_cloud_update_worker_interval);
+				});
+			}
+			else{
+				console.log('sync_cloud_update_worker MISS with update',update);
+				sync_cloud_update_worker_busy=false;
+			}
+		}
+		else{
+			sync_cloud_update_worker_busy=false;
+		}
+	}
+}
+
+var load_sync_cloud_update_busy=false;
+function load_sync_cloud_get_updates(){
+	if(!load_sync_cloud_update_busy){
+		load_sync_cloud_update_busy=true;
+		let xhr = new XMLHttpRequest();
+		xhr.timeout=5000;
+		xhr.overrideMimeType('text/plain');
+		xhr.open('POST',sync_cloud_url);
+		xhr.setRequestHeader('accept','application/json, text/plain, */*');
+		xhr.setRequestHeader('content-type','application/json');
+		xhr.ontimeout = function() {
+			console.log('load_sync_cloud_update timeout',sync_cloud_url);
+		};
+		xhr.onreadystatechange = function() {
+			if(4==xhr.readyState && 200==xhr.status){
+				try{
+					let json=JSON.parse(xhr.response);
+					console.log('load_sync_cloud_update response',json);
+					if(typeof json.result !=='undefined'){
+						for(let i in json.result){
+							let update=json.result[i];
+							if(update.time>=sync_cloud_activity){
+								if(update.id>sync_cloud_update){
+									sync_cloud_updates_queue.push({type:update.type,value:update.value});
+									sync_cloud_activity=update.time;
+									sync_cloud_update=update.id;
+									localStorage.setItem(storage_prefix+'sync_cloud_activity',sync_cloud_activity);
+									localStorage.setItem(storage_prefix+'sync_cloud_update',sync_cloud_update);
+								}
+							}
+						}
+						clearTimeout(sync_cloud_update_worker_timer);
+						sync_cloud_update_worker_timer=setTimeout(function(){
+							sync_cloud_update_worker();
+						},sync_cloud_update_worker_interval);
+					}
+				}
+				catch(e){
+					console.log('load_sync_cloud_update response json error',xhr.response,e);
+				}
+				load_sync_cloud_update_busy=false;
+			}
+		};
+		let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
+		auth_data.action='get_updates';
+		auth_data.activity=sync_cloud_activity;
+		auth_data.update=sync_cloud_update;
+		xhr.send(JSON.stringify(auth_data));
+	}
+}
+
+function sync_cloud_put_update(type_str,value,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	let types_arr={
+		'backup':1,
+		'subscribe':2,
+		'unsubscribe':3,
+		'ignore':4,
+		'ungnore':5,
+		'pin_hashtag':6,
+		'unpin_hashtag':7,
+		'ignore_hashtag':8,
+		'unignore_hashtag':9,
+	};
+	if(typeof types_arr[type_str] !== 'undefined'){
+		let xhr = new XMLHttpRequest();
+		xhr.timeout=5000;
+		xhr.overrideMimeType('text/plain');
+		xhr.open('POST',sync_cloud_url);
+		xhr.setRequestHeader('accept','application/json, text/plain, */*');
+		xhr.setRequestHeader('content-type','application/json');
+		xhr.ontimeout = function() {
+			console.log('sync_cloud_put_update timeout',sync_cloud_url);
+		};
+		xhr.onreadystatechange = function() {
+			if(4==xhr.readyState && 200==xhr.status){
+				try{
+					let json=JSON.parse(xhr.response);
+					console.log('sync_cloud_put_update response',json);
+					if(typeof json.result !=='undefined'){
+						sync_cloud_activity=json.result.activity;
+						sync_cloud_update=json.result.update;
+						localStorage.setItem(storage_prefix+'sync_cloud_activity',sync_cloud_activity);
+						localStorage.setItem(storage_prefix+'sync_cloud_update',sync_cloud_update);
+					}
+					callback(true);
+				}
+				catch(e){
+					console.log('sync_cloud_put_update response json error',xhr.response,e);
+				}
+			}
+		};
+		let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
+		auth_data.action='put_update';
+		auth_data.type=types_arr[type_str];
+		auth_data.value=value;
+		xhr.send(JSON.stringify(auth_data));
+	}
+	else{
+		callback(false);
+	}
+}
+
 var mute_notifications=false;
 if(null!=localStorage.getItem(storage_prefix+'mute_notifications')){
 	mute_notifications=parseInt(localStorage.getItem(storage_prefix+'mute_notifications'));
@@ -402,10 +658,7 @@ function remove_session(view){
 
 	view.find('input').val('');
 
-	users={};
 	if(''!=current_user){
-		users_table_diff.push([current_user,false]);
-
 		let update_t=db.transaction(['users'],'readwrite');
 		let update_q=update_t.objectStore('users');
 		let update_req=update_q.index('account').openCursor(IDBKeyRange.only(current_user),'next');
@@ -418,21 +671,16 @@ function remove_session(view){
 				cur.continue();
 			}
 			else{
+				users={};
 				current_user='';
 				localStorage.removeItem(storage_prefix+'users');
 				localStorage.removeItem(storage_prefix+'current_user');
-				setTimeout(function(){
-					increase_db_version(function(){
-						render_menu();
-						render_session();
-					});
-				},100);
+				render_menu();
+				render_session();
 			}
 		};
 	}
 }
-
-var users_table_diff=[];
 
 function idb_error(e){
 	console.log('IDB error',e);
@@ -444,7 +692,7 @@ function idb_error(e){
 	stop_timers();
 	setTimeout(function(){
 		document.location.reload(true);
-	},1000);
+	},5000);
 }
 
 const idb=window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
@@ -452,6 +700,7 @@ const idbt=window.IDBTransaction || window.webkitIDBTransaction || window.msIDBT
 const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
 
 var db;
+var db_req;
 var db_version=1;
 var global_db_version=4;
 var need_update_db_version=false;
@@ -510,20 +759,21 @@ function full_reset_db(){
 		});
 	},1000);
 }
-
 function load_db(callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
-	var req=idb.open(storage_prefix+'social_network',db_version);
-	req.onerror=idb_error;
-	req.onblocked=idb_error;
-	req.onsuccess=function(event){
+	db=false;
+	db_req=false;
+	db_req=idb.open(storage_prefix+'social_network',db_version);
+	db_req.onerror=idb_error;
+	db_req.onblocked=idb_error;
+	db_req.onsuccess=function(event){
 		console.log('onsuccess!');
 		db=event.target.result;
 		callback();
 	};
-	req.onupgradeneeded=function(event){
+	db_req.onupgradeneeded=function(event){
 		console.log('onupgradeneeded!');
 		db=event.target.result;
 		let update_trx = event.target.transaction;
@@ -602,19 +852,23 @@ function load_db(callback){
 			//new index for hashtags_feed
 		}
 
+		users_table=update_trx.objectStore('users');
 		if(!db.objectStoreNames.contains('objects')){
 			items_table=db.createObjectStore('objects',{keyPath:'id',autoIncrement:true});
 			items_table.createIndex('object',['account','block'],{unique:true});//account
 			items_table.createIndex('account','account',{unique:false});
 			items_table.createIndex('time','time',{unique:false});//unixtime for stored objects
-			items_table.createIndex('is_reply','is_reply',{unique:false});//true/false
-			items_table.createIndex('is_share','is_share',{unique:false});//true/false
 
 			if(''!=whitelabel_account){//only on genesis
 				for(let i in whitelabel_accounts){
-					if(!db.objectStoreNames.contains('objects_'+whitelabel_accounts[i])){
-						users_table_diff.push([whitelabel_accounts[i],true]);
-					}
+					let obj={
+						account:whitelabel_accounts[i],
+						start:0,
+						update:0,
+						profile:'{}',
+						status:1,
+					};
+					users_table.add(obj);
 				}
 				whitelabel_init=true;
 			}
@@ -624,31 +878,15 @@ function load_db(callback){
 			//new index for objects cache
 		}
 		if(''!=current_user){
-			if(!db.objectStoreNames.contains('objects_'+current_user)){
-				users_table_diff.push([current_user,true]);
-			}
+			let obj={
+				account:current_user,
+				start:0,
+				update:0,
+				profile:'{}',
+				status:1,
+			};
+			users_table.add(obj);
 		}
-
-		for(let i in users_table_diff){
-			let check_user_table=users_table_diff[i];
-			console.log('users diff:',check_user_table);
-			if(check_user_table[1]){
-				if(!db.objectStoreNames.contains('objects_'+check_user_table[0])){
-					items_table=db.createObjectStore('objects_'+check_user_table[0],{keyPath:'id',autoIncrement:true});
-					items_table.createIndex('block','block',{unique:true});//block num
-					items_table.createIndex('time','time',{unique:false});//unixtime for delayed objects
-					//items_table.createIndex('type','type',{unique:false});//need for new types (not only text)
-					items_table.createIndex('is_reply','is_reply',{unique:false});//true/false
-					items_table.createIndex('is_share','is_share',{unique:false});//true/false
-				}
-			}
-			if(!check_user_table[1]){
-				if(db.objectStoreNames.contains('objects_'+check_user_table[0])){
-					db.deleteObjectStore('objects_'+check_user_table[0]);
-				}
-			}
-		}
-		users_table_diff=[];
 	};
 }
 
@@ -794,8 +1032,75 @@ function save_account_settings(view,login,regular_key){
 			users[login]={'regular_key':regular_key};
 			current_user=login;
 			save_session();
-			stop_timers();
-			document.location.reload(true);
+			let obj={
+				account:current_user,
+				start:0,
+				update:0,
+				profile:'{}',
+				status:1,
+			};
+
+			let t=db.transaction(['users'],'readwrite');
+			let q=t.objectStore('users');
+			let req=q.index('account').openCursor(IDBKeyRange.only(current_user),'next');
+
+			let result;
+			let find=false;
+
+			localStorage.removeItem(storage_prefix+'sync_cloud_activity');
+			localStorage.removeItem(storage_prefix+'sync_cloud_update');
+
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					result=cur.value;
+					result.start=obj.start;
+					result.update=obj.update;
+					result.profile=obj.profile;
+					result.status=obj.status;
+					find=true;
+					update_req=cur.update(result);
+					update_req.onsuccess=function(e){
+					}
+					cur.continue();
+				}
+				else{
+					if(!find){
+						let add_t=db.transaction(['users'],'readwrite');
+						let add_q=add_t.objectStore('users');
+						add_q.add(obj);
+						if(!is_safari){
+							if(!is_firefox){
+								add_t.commit();
+							}
+						}
+						add_t.oncomplete=function(e){
+							update_user_profile(current_user,function(){
+								render_session();
+								render_menu();
+								document.location.hash='dapp:edit_profile';
+								//init sync cloud
+								clearTimeout(check_sync_cloud_activity_timer);
+								check_sync_cloud_activity_timer=setTimeout(function(){
+									check_sync_cloud_activity();
+								},200);
+							});
+						}
+					}
+					else{
+						update_user_profile(current_user,function(){
+							render_session();
+							render_menu();
+							document.location.hash='dapp:edit_profile';
+							//init sync cloud
+							clearTimeout(check_sync_cloud_activity_timer);
+							check_sync_cloud_activity_timer=setTimeout(function(){
+								check_sync_cloud_activity();
+							},200);
+						});
+					}
+				}
+			};
 		}
 	});
 }
@@ -1226,70 +1531,6 @@ function publish(view){
 	});
 }
 
-function ignore(el){
-	let actions=$(el).closest('.user-actions');
-	let check_user=actions.data('user');
-	let render='';
-
-	let t,q,req;
-	t=db.transaction(['feed'],'readwrite');
-	q=t.objectStore('feed');
-	req=q.index('object').openCursor(IDBKeyRange.lowerBound([check_user,0]),'next');
-	req.onsuccess=function(event){
-		console.log(event);
-		let cur=event.target.result;
-		if(cur){
-			cur.delete();
-			cur.continue();
-		}
-		else{
-			//update user status
-			let update_t=db.transaction(['users'],'readwrite');
-			let update_q=update_t.objectStore('users');
-			let update_req=update_q.index('account').openCursor(IDBKeyRange.only(check_user),'next');
-			update_req.onsuccess=function(event){
-				let cur=event.target.result;
-				if(cur){
-					let item=cur.value;
-					item.status=2;
-					cur.update(item);
-					cur.continue();
-				}
-				else{
-					render+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
-					render+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
-					actions.html(render);
-				}
-			};
-		}
-	};
-}
-
-function unignore(el){
-	let actions=$(el).closest('.user-actions');
-	let check_user=actions.data('user');
-	let render='';
-
-	//update user status
-	let update_t=db.transaction(['users'],'readwrite');
-	let update_q=update_t.objectStore('users');
-	let update_req=update_q.index('account').openCursor(IDBKeyRange.only(check_user),'next');
-	update_req.onsuccess=function(event){
-		let cur=event.target.result;
-		if(cur){
-			let item=cur.value;
-			item.status=0;
-			cur.update(item);
-			cur.continue();
-		}
-		else{
-			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-			render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
-			actions.html(render);
-		}
-	};
-}
-
 function clear_awards(el){
 	let t,q,req;
 	t=db.transaction(['awards'],'readwrite');
@@ -1480,57 +1721,15 @@ function clear_readed_notifications(el){
 	};
 }
 
-function subscribe(el){
-	let actions=$(el).closest('.user-actions');
-	let check_user=actions.data('user');
-	let render='';
-
-	users_table_diff.push([check_user,true]);
-	increase_db_version(function(){
-		if(!db.objectStoreNames.contains('objects_'+check_user)){
-			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-			render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
-		}
-		else{
-			render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
-			render+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
-
-			//move from objects to user objects
-			let t,q,req;
-			t=db.transaction(['objects'],'readwrite');
-			q=t.objectStore('objects');
-			req=q.index('account').openCursor(IDBKeyRange.only(check_user),'next');
-
-			let result=[];
-			let find=false;
-			req.onsuccess=function(event){
-				let cur=event.target.result;
-				if(cur){
-					result.push(cur.value);
-					update_req=cur.delete();
-					cur.continue();
-				}
-				else{
-					for(let i in result){
-						let item_i=result[i];
-						let add_t,add_q;
-						add_t=db.transaction(['objects_'+check_user],'readwrite');
-						add_q=add_t.objectStore('objects_'+check_user);
-						add_q.add(item_i);
-						if(!is_safari){
-							if(!is_firefox){
-								add_t.commit();
-							}
-						}
-					}
-					feed_load(check_user,false,function(err,result){console.log('feed load by subscribe',err,result);});
-				}
-			};
-
-			//update user status
+function subscribe_update(account,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	get_user(account,false,function(check_err,check_result){
+		if(!check_err){
 			let update_t=db.transaction(['users'],'readwrite');
 			let update_q=update_t.objectStore('users');
-			let update_req=update_q.index('account').openCursor(IDBKeyRange.only(check_user),'next');
+			let update_req=update_q.index('account').openCursor(IDBKeyRange.only(account),'next');
 			update_req.onsuccess=function(event){
 				let cur=event.target.result;
 				if(cur){
@@ -1539,75 +1738,143 @@ function subscribe(el){
 					cur.update(item);
 					cur.continue();
 				}
+				else{
+					callback(true);
+				}
 			};
+		}
+		else{
+			callback(false);
+		}
+	});
+}
+function unsubscribe_update(account,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	get_user(account,false,function(check_err,check_result){
+		if(!check_err){
+			let update_t=db.transaction(['users'],'readwrite');
+			let update_q=update_t.objectStore('users');
+			let update_req=update_q.index('account').openCursor(IDBKeyRange.only(account),'next');
+			update_req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					let item=cur.value;
+					item.status=0;
+					cur.update(item);
+					cur.continue();
+				}
+				else{
+					callback(true);
+				}
+			};
+		}
+		else{
+			callback(false);
+		}
+	});
+}
+function ignore_update(account,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	get_user(account,false,function(check_err,check_result){
+		if(!check_err){
+			let update_t=db.transaction(['users'],'readwrite');
+			let update_q=update_t.objectStore('users');
+			let update_req=update_q.index('account').openCursor(IDBKeyRange.only(account),'next');
+			update_req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					let item=cur.value;
+					item.status=2;
+					cur.update(item);
+					cur.continue();
+				}
+				else{
+					callback(true);
+				}
+			};
+		}
+		else{
+			callback(false);
+		}
+	});
+}
+
+function subscribe(el){
+	let actions=$(el).closest('.user-actions');
+	let check_user=actions.data('user');
+	let render='';
+
+	subscribe_update(check_user,function(result){
+		if(result){
+			render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
+			render+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
+
+			feed_load(check_user,false,function(err,result){console.log('feed load by subscribe',err,result);});
+		}
+		else{
+			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+			render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
 		}
 		actions.html(render);
 	});
 }
-
 function unsubscribe(el){
 	let actions=$(el).closest('.user-actions');
 	let check_user=actions.data('user');
 	let render='';
 
-	//move from objects to user objects
-	let t,q,req;
-	t=db.transaction(['objects_'+check_user],'readwrite');
-	q=t.objectStore('objects_'+check_user);
-	req=q.index('block').openCursor(null,'next');
-
-	let result=[];
-	let find=false;
-	req.onsuccess=function(event){
-		let cur=event.target.result;
-		if(cur){
-			result.push(cur.value);
-			update_req=cur.delete();
-			cur.continue();
+	unsubscribe_update(check_user,function(result){
+		if(result){
+			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+			render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
 		}
 		else{
-			for(let i in result){
-				let item_i=result[i];
-				let add_t,add_q;
-				add_t=db.transaction(['objects'],'readwrite');
-				add_q=add_t.objectStore('objects');
-				add_q.add(item_i);
-				if(!is_safari){
-					if(!is_firefox){
-						add_t.commit();
-					}
-				}
-			}
-			users_table_diff.push([check_user,false]);
-			setTimeout(function(){
-				increase_db_version(function(){
-					if(!db.objectStoreNames.contains('objects_'+check_user)){
-						render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-						render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
-					}
-					else{
-						render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
-						render+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
-					}
-					actions.html(render);
-				});
-			},100);
+			render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
+			render+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
 		}
-	};
+		actions.html(render);
+	});
+}
 
-	//update user status
-	let update_t=db.transaction(['users'],'readwrite');
-	let update_q=update_t.objectStore('users');
-	let update_req=update_q.index('account').openCursor(IDBKeyRange.only(check_user),'next');
-	update_req.onsuccess=function(event){
-		let cur=event.target.result;
-		if(cur){
-			let item=cur.value;
-			item.status=0;
-			cur.update(item);
-			cur.continue();
+function ignore(el){
+	let actions=$(el).closest('.user-actions');
+	let check_user=actions.data('user');
+	let render='';
+
+	ignore_update(check_user,function(result){
+		if(result){
+			render+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
+			render+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+
+			feed_load(check_user,false,function(err,result){console.log('feed load by subscribe',err,result);});
 		}
-	};
+		else{
+			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+			render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+		}
+		actions.html(render);
+	});
+}
+function unignore(el){
+	let actions=$(el).closest('.user-actions');
+	let check_user=actions.data('user');
+	let render='';
+
+	unsubscribe_update(check_user,function(result){
+		if(result){
+			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+			render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+		}
+		else{
+			render+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
+			render+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+		}
+		actions.html(render);
+	});
 }
 
 function load_new_objects(indicator){
@@ -1709,7 +1976,7 @@ function add_notify(store,title,text,link,service){
 			return;
 		}
 		if(false!==mute_notifications){
-				return;
+			return;
 		}
 	}
 	store=typeof store==='undefined'?false:store;
@@ -1854,6 +2121,11 @@ function app_mouse(e){
 				back_to=path+(''==query?'':'?'+query);
 			}
 		}
+		if('viz://'==href){
+			if(0==level){
+				$('.view[data-level="0"]').data('scroll',0);
+			}
+		}
 		view_path(href,{back:back_to},true,false);
 		e.preventDefault();
 	}
@@ -1929,46 +2201,12 @@ function app_mouse(e){
 					menu_status='short';
 					localStorage.setItem(storage_prefix+'menu_status',menu_status);
 				}
-				/*
-				if($('div.menu').hasClass('hidden')){
-					$('div.menu').removeClass('hidden');
-					menu_status='full';
-					localStorage.setItem(storage_prefix+'menu_status',menu_status);
-				}
-				else{
-					if($('div.menu').hasClass('short')){
-						$('div.menu').addClass('hidden');
-						$('div.menu').removeClass('short');
-						menu_status='hidden';
-						localStorage.setItem(storage_prefix+'menu_status',menu_status);
-					}
-					else{
-						$('div.menu').addClass('short');
-						menu_status='short';
-						localStorage.setItem(storage_prefix+'menu_status',menu_status);
-					}
-				}
-				*/
 			}
 			else{
 				$('div.menu').removeClass('hidden');
 				$('div.menu').addClass('short');
 				menu_status='short';
 				localStorage.setItem(storage_prefix+'menu_status',menu_status);
-				/*
-				if($('div.menu').hasClass('short')){
-					$('div.menu').addClass('hidden');
-					$('div.menu').removeClass('short');
-					menu_status='hidden';
-					localStorage.setItem(storage_prefix+'menu_status',menu_status);
-				}
-				else{
-					$('div.menu').removeClass('hidden');
-					$('div.menu').addClass('short');
-					menu_status='short';
-					localStorage.setItem(storage_prefix+'menu_status',menu_status);
-				}
-				*/
 			}
 			if('full'==menu_status){
 				$('.toggle-menu-icon').html(ltmp_arr.icon_menu_collapse);
@@ -2096,30 +2334,43 @@ function app_mouse(e){
 						if(true===result){
 							tab.find('.submit-button-ring[rel="import-file"]').removeClass('show');
 							$(target).removeClass('disabled');
+
 							render_session();
 							render_menu();
 							apply_theme_mode();
-							mute_notifications=true;//turn off notifications for next update feed
-							localStorage.setItem(storage_prefix+'mute_notifications',60);//set mute notifications for 1 minute to next reload
-							tab.find('.sync-import-success').html(tab.find('.sync-import-success').html()+'<br>'+ltmp_arr.settings_sync_import_restart);
-							stop_timers();
-							setTimeout(function(){
-								document.location.hash='';
-								document.location.reload(true);
-							},3000);//reload page
 
+							tab.find('.sync-import-success').html(tab.find('.sync-import-success').html()+'<br>'+ltmp_arr.settings_sync_import_finished);
 							if(typeof users[current_user] !== 'undefined'){
 								if(typeof users[current_user].regular_key !== 'undefined'){
 								}
 								else{
 									tab.find('.sync-import-error').html(ltmp_arr.account_settings_empty_regular_key);
-									tab.find('.sync-import-error').css('color','red');
+								tab.find('.sync-import-error').attr('data-href','dapp:account_settings');
+									add_notify(false,
+										ltmp_arr.notify_arr.error,
+										ltmp_arr.account_settings_empty_regular_key,
+										'dapp:account_settings'
+									);
 								}
 							}
 							else{
 								tab.find('.sync-import-error').html(ltmp_arr.account_settings_empty_regular_key);
-								tab.find('.sync-import-error').css('color','red');
+								tab.find('.sync-import-error').attr('data-href','dapp:account_settings');
+								add_notify(false,
+									ltmp_arr.notify_arr.error,
+									ltmp_arr.account_settings_empty_regular_key,
+									'dapp:account_settings'
+								);
 							}
+
+							mute_notifications=60;//turn off notifications for next update feed
+							localStorage.setItem(storage_prefix+'mute_notifications',mute_notifications);//set mute notifications for 1 minute to next reload
+							setTimeout(function(){
+								localStorage.removeItem(storage_prefix+'mute_notifications');
+								mute_notifications=false;
+							},mute_notifications*1000);
+
+							update_feed();
 						}
 						else{
 							let new_import=false;
@@ -2238,15 +2489,6 @@ function app_mouse(e){
 			}
 		}
 	}
-	/*
-	if($(target).hasClass('header-link')){
-		let text=$(target).val();
-		$('.text-copy').val(text);
-		$('.text-copy')[0].select();
-		$('.text-copy')[0].setSelectionRange(0,99999);
-		document.execCommand("copy");
-	}
-	*/
 	if($(target).hasClass('reply-action')){
 		let link=$(target).closest('.object').data('link');
 		view_path('dapp:publish/reply/?'+link,{},true,false);
@@ -2636,7 +2878,6 @@ function import_backup_final_step(backup,callback){
 				}
 				t_add.oncomplete=function(e){
 					callback(ltmp_arr.settings_sync_import_users_success);
-					console.log(users_table_diff);
 					setTimeout(function(){
 						callback(true);
 					},1000);
@@ -2666,6 +2907,10 @@ function import_backup(data,callback){
 		}
 		current_user=backup.user;
 		localStorage.setItem(storage_prefix+'current_user',current_user);
+		if(typeof backup.time !== 'undefined'){
+			sync_cloud_activity=backup.time;
+			localStorage.setItem(storage_prefix+'sync_cloud_activity',sync_cloud_activity);
+		}
 	}
 	if(typeof backup.settings !== 'undefined'){
 		settings=backup.settings;
@@ -2840,6 +3085,9 @@ function select_file(callback){
 }
 
 function update_user_profile(account,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
 	viz.api.getAccount(account,app_protocol,function(err,response){
 		if(err){
 			console.log('viz api error:',err);
@@ -2892,7 +3140,10 @@ function update_user_profile(account,callback){
 				status:0,
 			};
 
-			if(db.objectStoreNames.contains('objects_'+account)){
+			if(current_user==account){
+				obj.status=1;
+			}
+			if(-1!=whitelabel_accounts.indexOf(account)){
 				obj.status=1;
 			}
 
@@ -2909,7 +3160,6 @@ function update_user_profile(account,callback){
 					result.update=obj.update;
 					result.profile=obj.profile;
 					result.start=obj.start;
-					result.status=obj.status;
 					find=true;
 					update_req=cur.update(result);
 					update_req.onsuccess=function(e){
@@ -3061,7 +3311,8 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 }
 
 function feed_load(account,limit,callback){
-	limit=limit===false?settings.activity_deep:limit;
+	console.log('feed_load',account);
+	limit=((false===limit)?settings.activity_deep:limit);
 	if(whitelabel_init){
 		limit=whitelabel_deep;
 	}
@@ -3072,35 +3323,31 @@ function feed_load(account,limit,callback){
 
 	let end_offset=0;
 	let offset=0;
-
-	if(!db.objectStoreNames.contains('objects_'+account)){//catch import proccess and prevent error
-		return;
-	}
-	let t=db.transaction(['objects_'+account],'readonly');
-	let q=t.objectStore('objects_'+account);
-	let req=q.index('block').openCursor(null,'prev');
+	let t=db.transaction(['objects'],'readonly');
+	let q=t.objectStore('objects');
+	let req=q.index('object').openCursor(IDBKeyRange.upperBound([account,Number.MAX_SAFE_INTEGER]),'prev');
 	req.onsuccess=function(event){
 		let cur=event.target.result;
 		if(cur){
-			end_offset=cur.value.block;
-			cur.continue(-1);
+			if(account==cur.value.account){
+				end_offset=cur.value.block;
+			}
 		}
-		else{
-			get_user(account,true,function(err,user_result){
-				if(err){
-					callback(err,0);
+		get_user(account,true,function(err,user_result){
+			if(err){
+				callback(err,0);
+			}
+			else{
+				offset=user_result.start;
+				if(offset>end_offset){
+					//console.log('start feed_load_more from feed_load, offset, end offset, limit:',account,offset,end_offset,limit);
+					feed_load_more(result,account,offset,end_offset,limit,callback);
 				}
 				else{
-					offset=user_result.start;
-					if(offset>end_offset){
-						feed_load_more(result,account,offset,end_offset,limit,callback);
-					}
-					else{
-						callback(false,false);
-					}
+					callback(false,false);
 				}
-			});
-		}
+			}
+		});
 	};
 }
 
@@ -3222,16 +3469,9 @@ function parse_object(account,block,callback){
 				console.log(obj);
 
 				let t,q,req;
-				if(!db.objectStoreNames.contains('objects_'+account)){
-					t=db.transaction(['objects'],'readwrite');
-					q=t.objectStore('objects');
-					req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
-				}
-				else{
-					t=db.transaction(['objects_'+account],'readwrite');
-					q=t.objectStore('objects_'+account);
-					req=q.index('block').openCursor(IDBKeyRange.only(block),'next');
-				}
+				t=db.transaction(['objects'],'readwrite');
+				q=t.objectStore('objects');
+				req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
 
 				let result;
 				let find=false;
@@ -3344,63 +3584,14 @@ function parse_object(account,block,callback){
 							}
 
 							let add_t,add_q;
-							if(!db.objectStoreNames.contains('objects_'+account)){
-								add_t=db.transaction(['objects'],'readwrite');
-								add_q=add_t.objectStore('objects');
-							}
-							else{
-								add_t=db.transaction(['objects_'+account],'readwrite');
-								add_q=add_t.objectStore('objects_'+account);
-							}
+							add_t=db.transaction(['objects'],'readwrite');
+							add_q=add_t.objectStore('objects');
 							add_q.add(obj);
 							if(!is_safari){
 								if(!is_firefox){
 									add_t.commit();
 								}
 							}
-							//if(settings.feed_load_by_surf){}
-							/*
-							if(db.objectStoreNames.contains('objects_'+account)){
-								if(account!=current_user){
-									let feed=false;
-									if(settings.feed_subscribe_text){
-										if(!reply){
-											if(!share){
-												feed=true;
-											}
-										}
-									}
-									if(settings.feed_subscribe_shares){
-										if(share){
-											feed=true;
-										}
-									}
-									if(settings.feed_subscribe_replies){
-										if(reply){
-											feed=true;
-										}
-									}
-									else{
-										if(reply){
-											feed=false;
-											if(parent_account==current_user){
-												feed=true;
-											}
-										}
-									}
-									if(settings.feed_subscribe_mentions){
-										if(typeof obj.data.d.text !== 'undefined'){
-											if(-1!=obj.data.d.text.indexOf('@'+current_user)){//mention
-												feed=true;
-											}
-										}
-									}
-									if(feed){
-										feed_add(account,block);
-									}
-								}
-							}
-							*/
 							add_t.oncomplete=function(e){
 								if(reply){//add to replies
 									idb_get_id('replies','object',[account,block],function(reply_id){
@@ -3504,54 +3695,28 @@ function get_object(account,block,callback){
 	let result={};
 	let find=false;
 
-	//check individual table
-	if(!db.objectStoreNames.contains('objects_'+account)){
-		//look on cache
-		let t=db.transaction(['objects'],'readonly');
-		let q=t.objectStore('objects');
-		let req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
-		req.onsuccess=function(event){
-			let cur=event.target.result;
-			if(cur){
-				result=cur.value;
-				find=true;
-				cur.continue();
+	//look on cache
+	let t=db.transaction(['objects'],'readonly');
+	let q=t.objectStore('objects');
+	let req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			result=cur.value;
+			find=true;
+			cur.continue();
+		}
+		else{
+			if(find){
+				console.log('find in objects cache: '+account+' '+block);
+				callback(false,result);
 			}
 			else{
-				if(find){
-					console.log('find in objects cache: '+account+' '+block);
-					callback(false,result);
-				}
-				else{
-					console.log('need parse object: '+account+' '+block);
-					parse_object(account,block,callback);
-				}
+				console.log('need parse object: '+account+' '+block);
+				parse_object(account,block,callback);
 			}
-		};
-	}
-	else{
-		let t=db.transaction(['objects_'+account],'readonly');
-		let q=t.objectStore('objects_'+account);
-		let req=q.index('block').openCursor(IDBKeyRange.only(block),'next');
-		req.onsuccess=function(event){
-			let cur=event.target.result;
-			if(cur){
-				result=cur.value;
-				find=true;
-				cur.continue();
-			}
-			else{
-				if(find){
-					console.log('find in user objects cache: '+account+' '+block);
-					callback(false,result);
-				}
-				else{
-					console.log('need parse user object: '+account+' '+block);
-					parse_object(account,block,callback);
-				}
-			}
-		};
-	}
+		}
+	};
 }
 
 function clear_objects_cache(callback){
@@ -3612,35 +3777,8 @@ function clear_users_cache(callback){
 			cur.continue();
 		}
 		else{
-			//check users without objects store
-			let t_search_users=db.transaction(['users'],'readonly');
-			let q_search_users=t_search_users.objectStore('users');
-			let req_search_users=q_search_users.index('status').openCursor(IDBKeyRange.only(1,true),'prev');
-			let find=false;
-			req_search_users.onsuccess=function(event){
-				let cur=event.target.result;
-				if(cur){
-					if(!db.objectStoreNames.contains('objects_'+cur.value.account)){
-						users_table_diff.push([cur.value.account,true]);
-						find=true;
-					}
-					cur.continue();
-				}
-				else{
-					if(find){
-						//find collisions, fix it and reload page
-						stop_timers();
-						setTimeout(function(){
-							increase_db_version(function(){
-								document.location.reload(true);
-							});
-						},100);
-					}
-					else{
-						setTimeout(function(){callback()},100);
-					}
-				}
-			};
+			//nothing
+			callback();
 		}
 	};
 }
@@ -3735,9 +3873,12 @@ function update_feed_result(result){
 				},200);
 			}
 			else{
+				if(false!==mute_notifications){
+					return;
+				}
 				new_objects.html(ltmp(ltmp_arr.feed_new_objects,{items:items}));
 				new_objects.addClass('show');
-				console.log('show counter_feed',items);
+				console.log('show counter_feed',items,mute_notifications);
 				counter_feed.html(items);
 				counter_feed.addClass('show');
 			}
@@ -3781,19 +3922,22 @@ function update_feed_subscribes(callback){
 			cur.continue();
 		}
 		else{
+			console.log('update_feed_subscribes users by activity',list);
 			for(let i in list){
 				let account=list[i];
 				if(account!=current_user){
-					if(typeof feed_load_timers.account !== 'undefined'){
-						clearTimeout(feed_load_timers.account);
+					if(typeof feed_load_timers[account] !== 'undefined'){
+						clearTimeout(feed_load_timers[account]);
 					}
-					feed_load_timers.account=setTimeout(function(){
+					feed_load_timers[account]=setTimeout(function(){
+						console.log('timer feed_load_timers executed',account);
 						feed_load(account,false,function(err,result){
 							if(!err){
 								update_feed_result(result);
 							}
 						});
 					},delay);
+					console.log('update_feed_subscribes new timer',account,feed_load_timers[account]);
 					delay+=delay_step;
 				}
 			}
@@ -3804,25 +3948,24 @@ function update_feed_subscribes(callback){
 
 var update_feed_timer=0;
 function update_feed(){
-	//if(''!=current_user){
-		clearTimeout(update_feed_timer);
-		//if(settings.feed_load_by_timer){}
-		console.log('update feed trigger');
-		update_feed_subscribes(function(){
-			clearTimeout(load_notifications_count_timer);
-			load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
-			update_feed_timer=setTimeout(function(){
-				update_feed();
-			},30000);//30 sec
-		});
-	//}
+	clearTimeout(update_feed_timer);
+	console.log('update feed trigger');
+	update_feed_subscribes(function(){
+		clearTimeout(load_notifications_count_timer);
+		load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
+		update_feed_timer=setTimeout(function(){
+			update_feed();
+		},30000);//30 sec
+	});
 }
 
+var clear_users_objects_end_timer=0;
 function clear_users_objects(callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
 	if(0<settings.activity_size){
+		console.log('start clear_users_objects');
 		let t=db.transaction(['users'],'readwrite');
 		let q=t.objectStore('users');
 		let req=q.index('status').openCursor(IDBKeyRange.only(1),'next');
@@ -3837,30 +3980,33 @@ function clear_users_objects(callback){
 				for(let i in users){
 					let account=users[i];
 					if(account!=current_user){
-						let user_t=db.transaction(['objects_'+account],'readwrite');
-						let user_q=user_t.objectStore('objects_'+account);
-						let user_req=user_q.index('block').openCursor(null,'prev');
+						let user_t=db.transaction(['objects'],'readwrite');
+						let user_q=user_t.objectStore('objects');
+						let user_req=user_q.index('object').openCursor(IDBKeyRange.upperBound([account,Number.MAX_SAFE_INTEGER]),'prev');
 						let offset=false;
 						let count=0;
 						user_req.onsuccess=function(event){
 							let cur=event.target.result;
 							if(cur){
-								if(!offset){
-									offset=true;
-									cur.advance(settings.activity_size-1);
-								}
-								else{
-									cur.delete();
-									count++;
-									cur.continue();
+								if(account==cur.value.account){
+									if(!offset){
+										offset=true;
+										cur.advance(settings.activity_size);
+									}
+									else{
+										cur.delete();
+										count++;
+										cur.continue();
+									}
 								}
 							}
-							else{
-								if(0<count){
-									console.log('clear_users_objects',account,count);
-								}
+							if(0<count){
+								console.log('clear_users_objects',account,count);
+							}
+							clearTimeout(clear_users_objects_end_timer);
+							clear_users_objects_end_timer=setTimeout(function(){
 								callback();
-							}
+							},300);
 						};
 					}
 				}
@@ -4172,8 +4318,10 @@ function view_publish(view,path_parts,query,title){
 					let interests_view='';
 					for(let i in profile.interests){
 						let interest_caption=profile.interests[i];
-						let interest_hashtag=interest_caption.replace(' ','_').trim().toLowerCase();
-						interests_view+=ltmp(ltmp_arr.publish_interests_item,{caption:interest_caption,hashtag:interest_hashtag});
+						if(interest_caption.length>0){
+							let interest_hashtag=interest_caption.replace(' ','_').trim().toLowerCase();
+							interests_view+=ltmp(ltmp_arr.publish_interests_item,{caption:interest_caption,hashtag:interest_hashtag});
+						}
 					}
 					view.find('.add-interests').html(ltmp(ltmp_arr.publish_interests,{interests:interests_view}));
 				}
@@ -4392,19 +4540,18 @@ function view_users(view,path_parts,query,title,back_to){
 				}
 				else{
 					header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
-					if(!db.objectStoreNames.contains('objects_'+check_account)){
-						if(2==user_data.status){
-							header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
-							header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
-						}
-						else{
-							header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-							header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
-						}
-					}
-					else{
+					if(1==user_data.status){
 						header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
 						header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
+					}
+					else
+					if(2==user_data.status){
+						header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
+						header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+					}
+					else{
+						header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+						header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
 					}
 					header+=ltmp_arr.user_actions_close;
 				}
@@ -5254,8 +5401,10 @@ function view_path(location,state,save_state,update){
 										let interests_view='';
 										for(let i in profile.interests){
 											let interest_caption=profile.interests[i];
-											let interest_hashtag=interest_caption.replace(' ','_').trim().toLowerCase();
-											interests_view+=ltmp(ltmp_arr.profile_interests_item,{caption:interest_caption,hashtag:interest_hashtag});
+											if(interest_caption.length>0){
+												let interest_hashtag=interest_caption.replace(' ','_').trim().toLowerCase();
+												interests_view+=ltmp(ltmp_arr.profile_interests_item,{caption:interest_caption,hashtag:interest_hashtag});
+											}
 										}
 										profile_view+=ltmp(ltmp_arr.profile_interests,{interests:interests_view});
 										profile_found=true;
@@ -5342,20 +5491,20 @@ function view_path(location,state,save_state,update){
 								}
 								else{
 									header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
-									if(!db.objectStoreNames.contains('objects_'+check_account)){
-										if(2==result.status){
-											header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
-											header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
-										}
-										else{
-											header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-											header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
-										}
-									}
-									else{
+									if(1==result.status){
 										header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
 										header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
 									}
+									else
+									if(2==result.status){
+										header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
+										header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+									}
+									else{
+										header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+										header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+									}
+
 									header+=ltmp_arr.user_actions_close;
 								}
 								view.find('.header').html(header);
@@ -6790,12 +6939,7 @@ function check_current_user(callback){
 				);
 			}
 		}
-		if(db.objectStoreNames.contains('objects_'+current_user)){
-			get_user(current_user,true,()=>{callback();});
-		}
-		else{
-			callback();
-		}
+		get_user(current_user,true,()=>{callback();});
 	}
 	else{
 		callback();
@@ -6808,16 +6952,9 @@ function check_whitelabel_account(callback){
 	}
 	if(''!=whitelabel_account){
 		for(let i in whitelabel_accounts){
-			if(db.objectStoreNames.contains('objects_'+whitelabel_accounts[i])){
-				get_user(whitelabel_accounts[i],true);
-			}
+			get_user(whitelabel_accounts[i],true);
 		}
-		if(db.objectStoreNames.contains('objects_'+whitelabel_account)){
-			get_user(whitelabel_account,false,()=>{callback();});
-		}
-		else{
-			callback();
-		}
+		get_user(whitelabel_account,false,()=>{callback();});
 	}
 	else{
 		callback();

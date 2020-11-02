@@ -1225,6 +1225,9 @@ body.midnight .error{
 body.dark .error{
 	color:rgba(179, 180, 184, 0.7);
 }
+.sync-import-error{
+	color:red;
+}
 .success{
 	color:#1a83c4;
 }

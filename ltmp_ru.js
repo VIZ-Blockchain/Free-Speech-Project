@@ -125,8 +125,8 @@ var ltmp_ru_arr={
 				<p>
 					Импортирование сохраненного состояния происходит в несколько этапов, старые данные приложения будут удалены, новые восстановлены, а приложение будет планово перезапущено.
 				</p>
-				<p class="error sync-import-error"></p>
 				<p class="success sync-import-success"></p>
+				<p class="error sync-import-error"></p>
 				<p><a class="button sync-import-file-action">Импортировать из файла</a><span class="submit-button-ring" rel="import-file"></span></p>
 				<!--
 				<p><a class="button sync-import-cloud-action">Импортировать из облака</a><span class="submit-button-ring" rel="import-cloud"></span></p>
@@ -238,7 +238,7 @@ var ltmp_ru_arr={
 	settings_sync_import_hashtags_feed_success:'Импорт ленты тэгов завершен',
 	settings_sync_import_awards_success:'Импорт награждений завершен',
 	settings_sync_import_users_success:'Импорт пользователей завершен',
-	settings_sync_import_restart:'<strong>Перезапуск приложения...</strong>',
+	settings_sync_import_finished:'<strong>Импорт успешно выполнен!</strong>',
 	settings_activity_period:`Частота загрузки активности пользователей`,
 	settings_addon_activity_period:`в минутах после обновления`,
 	users_settings_buttons:`
