@@ -12,8 +12,11 @@ var whitelabel_logo=false;
 
 var whitelabel_init=false;
 
+var sync_cloud_url='https://readdle.me/cloud/';
 var sync_cloud_domain=false;
-var sync_cloud_url=false;
+if(false!==sync_cloud_url){
+	sync_cloud_domain=sync_cloud_url.split('://')[1].split('/')[0];
+}
 var sync_cloud_activity=0;
 var sync_cloud_update=0;
 if(null!=localStorage.getItem(storage_prefix+'sync_cloud_activity')){
@@ -58,7 +61,10 @@ function paswordless_auth(account,regular_key){
 
 var check_sync_cloud_activity_interval=5*60*1000;
 var check_sync_cloud_activity_timer=0;
-function check_sync_cloud_activity(){
+function check_sync_cloud_activity(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
 	if(!settings.sync_cloud){
 		return;
 	}
@@ -91,6 +97,7 @@ function check_sync_cloud_activity(){
 				if(json.activity>=sync_cloud_activity){
 					if(json.update>sync_cloud_update){
 						load_sync_cloud_get_updates();
+						callback(true);
 					}
 				}
 				clearTimeout(check_sync_cloud_activity_timer);
@@ -101,6 +108,9 @@ function check_sync_cloud_activity(){
 			catch(e){
 				console.log('check_sync_cloud_activity response json error',xhr.response,e);
 			}
+		}
+		if(4==xhr.readyState && 200!=xhr.status){
+			callback(false);
 		}
 	};
 	let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
@@ -124,25 +134,109 @@ function sync_cloud_update_worker(){
 		let types_id={
 			1:'backup',
 			2:'subscribe',
-			3:'unsubscribe',
+			3:'reset',
 			4:'ignore',
-			5:'ungnore',
-			6:'pin_hashtag',
-			7:'unpin_hashtag',
-			8:'ignore_hashtag',
-			9:'unignore_hashtag',
+			5:'pin_hashtag',
+			6:'reset_hashtag',
+			7:'ignore_hashtag',
 		};
 
 		let update=sync_cloud_updates_queue.shift();
 		if(typeof update !== 'undefined'){
 			let type=types_id[update.type];
-			//stop_timers();
+			if('backup'==type){
+				import_cloud(update.value);
+			}
+			else
 			if('subscribe'==type){
 				subscribe_update(update.value,function(result){
 					if(false===result){
 						console.log('sync_cloud_update_worker error with update',update);
 					}
 					else{
+						console.log('sync_cloud_update_worker OK with update',update);
+					}
+					sync_cloud_update_worker_busy=false;
+					clearTimeout(sync_cloud_update_worker_timer);
+					sync_cloud_update_worker_timer=setTimeout(function(){
+						sync_cloud_update_worker();
+					},sync_cloud_update_worker_interval);
+				});
+			}
+			else
+			if('reset'==type){
+				reset_update(update.value,function(result){
+					if(false===result){
+						console.log('sync_cloud_update_worker error with update',update);
+					}
+					else{
+						console.log('sync_cloud_update_worker OK with update',update);
+					}
+					sync_cloud_update_worker_busy=false;
+					clearTimeout(sync_cloud_update_worker_timer);
+					sync_cloud_update_worker_timer=setTimeout(function(){
+						sync_cloud_update_worker();
+					},sync_cloud_update_worker_interval);
+				});
+			}
+			else
+			if('ignore'==type){
+				ignore_update(update.value,function(result){
+					if(false===result){
+						console.log('sync_cloud_update_worker error with update',update);
+					}
+					else{
+						console.log('sync_cloud_update_worker OK with update',update);
+					}
+					sync_cloud_update_worker_busy=false;
+					clearTimeout(sync_cloud_update_worker_timer);
+					sync_cloud_update_worker_timer=setTimeout(function(){
+						sync_cloud_update_worker();
+					},sync_cloud_update_worker_interval);
+				});
+			}
+			else
+			if('pin_hashtag'==type){
+				hashtag_update(update.value,1,function(result){
+					if(false===result){
+						console.log('sync_cloud_update_worker error with update',update);
+					}
+					else{
+						render_right_addon();
+						console.log('sync_cloud_update_worker OK with update',update);
+					}
+					sync_cloud_update_worker_busy=false;
+					clearTimeout(sync_cloud_update_worker_timer);
+					sync_cloud_update_worker_timer=setTimeout(function(){
+						sync_cloud_update_worker();
+					},sync_cloud_update_worker_interval);
+				});
+			}
+			else
+			if('reset_hashtag'==type){
+				hashtag_update(update.value,0,function(result){
+					if(false===result){
+						console.log('sync_cloud_update_worker error with update',update);
+					}
+					else{
+						render_right_addon();
+						console.log('sync_cloud_update_worker OK with update',update);
+					}
+					sync_cloud_update_worker_busy=false;
+					clearTimeout(sync_cloud_update_worker_timer);
+					sync_cloud_update_worker_timer=setTimeout(function(){
+						sync_cloud_update_worker();
+					},sync_cloud_update_worker_interval);
+				});
+			}
+			else
+			if('ignore_hashtag'==type){
+				hashtag_update(update.value,2,function(result){
+					if(false===result){
+						console.log('sync_cloud_update_worker error with update',update);
+					}
+					else{
+						render_right_addon();
 						console.log('sync_cloud_update_worker OK with update',update);
 					}
 					sync_cloud_update_worker_busy=false;
@@ -221,13 +315,11 @@ function sync_cloud_put_update(type_str,value,callback){
 	let types_arr={
 		'backup':1,
 		'subscribe':2,
-		'unsubscribe':3,
+		'reset':3,
 		'ignore':4,
-		'ungnore':5,
-		'pin_hashtag':6,
-		'unpin_hashtag':7,
-		'ignore_hashtag':8,
-		'unignore_hashtag':9,
+		'pin_hashtag':5,
+		'reset_hashtag':6,
+		'ignore_hashtag':7,
 	};
 	if(typeof types_arr[type_str] !== 'undefined'){
 		let xhr = new XMLHttpRequest();
@@ -250,11 +342,20 @@ function sync_cloud_put_update(type_str,value,callback){
 						localStorage.setItem(storage_prefix+'sync_cloud_activity',sync_cloud_activity);
 						localStorage.setItem(storage_prefix+'sync_cloud_update',sync_cloud_update);
 					}
-					callback(true);
+					if(false!==json.result){
+						callback(true);
+					}
+					else{
+						callback(false);
+					}
 				}
 				catch(e){
 					console.log('sync_cloud_put_update response json error',xhr.response,e);
 				}
+			}
+			if(4==xhr.readyState && 200!=xhr.status){
+				console.log('sync_cloud_put_update response status error',xhr.status);
+				callback(false);
 			}
 		};
 		let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
@@ -1576,10 +1677,12 @@ function ignore_hashtags(el){
 			}
 			else{
 				if(2==new_status){
+					sync_cloud_put_update('ignore_hashtag',hashtag.toLowerCase());
 					el.find('.header .ignore-hashtags-action').addClass('negative');
 					el.find('.header .pin-hashtags-action').removeClass('positive');
 				}
 				else{
+					sync_cloud_put_update('reset_hashtag',hashtag.toLowerCase());
 					el.find('.header .ignore-hashtags-action').removeClass('negative');
 				}
 				render_right_addon();
@@ -1588,6 +1691,55 @@ function ignore_hashtags(el){
 	}
 }
 
+function hashtag_update(hashtag,status,callback){
+	idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+		if(false===hashtag_id){
+			let hashtag_info,hashtag_add_t,hashtag_add_q,hashtag_add_req;
+			hashtag_info={'tag':hashtag,'count':0,'status':status,'order':0};
+			hashtag_add_t=db.transaction(['hashtags'],'readwrite');
+			hashtag_add_q=hashtag_add_t.objectStore('hashtags');
+			hashtag_add_req=hashtag_add_q.add(hashtag_info);
+			if(!is_safari){
+				if(!is_firefox){
+					hashtag_add_t.commit();
+				}
+			}
+			hashtag_add_req.onsuccess=function(e){
+				idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+					if(false!==hashtag_id){
+						callback(true);
+					}
+					else{
+						callback(false);
+					}
+				});
+			}
+		}
+		else{
+			let t,q,req;
+			t=db.transaction(['hashtags'],'readwrite');
+			q=t.objectStore('hashtags');
+			req=q.index('tag').openCursor(IDBKeyRange.only(hashtag),'next');
+
+			let find=false;
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					let result=cur.value;
+					result.status=status;
+					cur.update(result);
+					find=true;
+				}
+				if(find){
+					callback(true);
+				}
+				else{
+					callback(false);
+				}
+			};
+		}
+	});
+}
 function pin_hashtags(el){
 	let hashtag=el.data('hashtag');
 	let hashtag_id=el.data('hashtag-id');
@@ -1614,10 +1766,12 @@ function pin_hashtags(el){
 			}
 			else{
 				if(1==new_status){
+					sync_cloud_put_update('pin_hashtag',hashtag.toLowerCase());
 					el.find('.header .pin-hashtags-action').addClass('positive');
 					el.find('.header .ignore-hashtags-action').removeClass('negative');
 				}
 				else{
+					sync_cloud_put_update('reset_hashtag',hashtag.toLowerCase());
 					el.find('.header .pin-hashtags-action').removeClass('positive');
 				}
 				render_right_addon();
@@ -1748,7 +1902,7 @@ function subscribe_update(account,callback){
 		}
 	});
 }
-function unsubscribe_update(account,callback){
+function reset_update(account,callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
@@ -1810,6 +1964,7 @@ function subscribe(el){
 
 	subscribe_update(check_user,function(result){
 		if(result){
+			sync_cloud_put_update('subscribe',check_user);
 			render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
 			render+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
 
@@ -1827,8 +1982,9 @@ function unsubscribe(el){
 	let check_user=actions.data('user');
 	let render='';
 
-	unsubscribe_update(check_user,function(result){
+	reset_update(check_user,function(result){
 		if(result){
+			sync_cloud_put_update('reset',check_user);
 			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
 			render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
 		}
@@ -1847,6 +2003,7 @@ function ignore(el){
 
 	ignore_update(check_user,function(result){
 		if(result){
+			sync_cloud_put_update('ignore',check_user);
 			render+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
 			render+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
 
@@ -1864,8 +2021,9 @@ function unignore(el){
 	let check_user=actions.data('user');
 	let render='';
 
-	unsubscribe_update(check_user,function(result){
+	reset_update(check_user,function(result){
 		if(result){
+			sync_cloud_put_update('reset',check_user);
 			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
 			render+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
 		}
@@ -2310,6 +2468,35 @@ function app_mouse(e){
 			sync_export(false,target);
 		}
 	}
+	if($(target).hasClass('sync-export-cloud-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			sync_export(true,target);
+		}
+	}
+	if($(target).hasClass('sync-import-cloud-action')){
+		if(!$(target).hasClass('disabled')){
+			let view=$(target).closest('.view');
+			let tab=view.find('.content-view[data-tab="sync"]');
+			$(target).addClass('disabled');
+			tab.find('.submit-button-ring[rel="import-cloud"]').addClass('show');
+			tab.find('.sync-import-error').html('');
+			tab.find('.sync-import-success').html('');
+			localStorage.removeItem(storage_prefix+'sync_cloud_activity');
+			localStorage.removeItem(storage_prefix+'sync_cloud_update');
+			sync_cloud_activity=0;
+			sync_cloud_update=0;
+			check_sync_cloud_activity(function(status){
+				if(status){
+					tab.find('.sync-import-success').html(ltmp_arr.settings_sync_import_cloud_started);
+				}
+				else{
+					tab.find('.sync-import-error').html(ltmp_arr.settings_sync_import_cloud_error);
+				}
+				tab.find('.submit-button-ring[rel="import-cloud"]').removeClass('show');
+			});
+		}
+	}
 	if($(target).hasClass('sync-import-file-action')){
 		if(!$(target).hasClass('disabled')){
 			let view=$(target).closest('.view');
@@ -2345,7 +2532,7 @@ function app_mouse(e){
 								}
 								else{
 									tab.find('.sync-import-error').html(ltmp_arr.account_settings_empty_regular_key);
-								tab.find('.sync-import-error').attr('data-href','dapp:account_settings');
+									tab.find('.sync-import-error').attr('data-href','dapp:account_settings');
 									add_notify(false,
 										ltmp_arr.notify_arr.error,
 										ltmp_arr.account_settings_empty_regular_key,
@@ -2380,7 +2567,6 @@ function app_mouse(e){
 							tab.find('.sync-import-success').html((new_import?'':(tab.find('.sync-import-success').html()+'<br>'))+result);
 						}
 					}
-
 				});
 			});
 		}
@@ -2837,6 +3023,16 @@ function sync_export(cloud,target){
 			tab.find('.sync-export-success').html(ltmp_arr.settings_sync_export_file_success);
 			download('dapp_export_'+fast_str_replace('.','_',show_date())+'.json',JSON.stringify(result_json),'application/json');
 		}
+		else{
+			sync_cloud_put_update('backup',JSON.stringify(result_json),function(result){
+				if(result){
+					tab.find('.sync-export-success').html(ltmp_arr.settings_sync_export_cloud_success);
+				}
+				else{
+					tab.find('.sync-export-error').html(ltmp_arr.settings_sync_export_cloud_error);
+				}
+			});
+		}
 		$(target).removeClass('disabled');
 		tab.find('.submit-button-ring').removeClass('show');
 	});
@@ -2885,7 +3081,7 @@ function import_backup_final_step(backup,callback){
 			}
 		}
 		else{
-			setTimeout(function(){callback(true);},100);
+			setTimeout(function(){callback(true);},1000);
 		}
 	}
 }
@@ -2903,6 +3099,8 @@ function import_backup(data,callback){
 		if(''!=current_user){
 			if(current_user!=backup.user){
 				callback(ltmp(ltmp_arr.settings_sync_import_another_user,{account:backup.user}));
+				users={};
+				localStorage.removeItem(storage_prefix+'users');
 			}
 		}
 		current_user=backup.user;
@@ -2920,6 +3118,8 @@ function import_backup(data,callback){
 	}
 	clearTimeout(import_finish);
 	import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},10000);
+	let import_delay=1000;
+	let import_delay_offset=1000;
 	if(typeof backup.feed !== 'undefined'){
 		import_steps++;
 		let t_clear=db.transaction(['feed'],'readwrite');
@@ -2938,10 +3138,13 @@ function import_backup(data,callback){
 				}
 			}
 			t_add.oncomplete=function(e){
-				import_steps--;
-				callback(ltmp_arr.settings_sync_import_feed_success);
-				clearTimeout(import_finish);
-				import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+				setTimeout(function(){
+					import_steps--;
+					callback(ltmp_arr.settings_sync_import_feed_success);
+					clearTimeout(import_finish);
+					import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+				},import_delay);
+				import_delay+=import_delay_offset;
 			}
 		}
 	}
@@ -2963,10 +3166,13 @@ function import_backup(data,callback){
 				}
 			}
 			t_add.oncomplete=function(e){
-				import_steps--;
-				callback(ltmp_arr.settings_sync_import_replies_success);
-				clearTimeout(import_finish);
-				import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+				setTimeout(function(){
+					import_steps--;
+					callback(ltmp_arr.settings_sync_import_replies_success);
+					clearTimeout(import_finish);
+					import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+				},import_delay);
+				import_delay+=import_delay_offset;
 			}
 		}
 	}
@@ -2990,6 +3196,7 @@ function import_backup(data,callback){
 			t_add.oncomplete=function(e){
 				import_steps--;
 				callback(ltmp_arr.settings_sync_import_hashtags_success);
+				render_right_addon();
 				if(typeof backup.hashtags_feed !== 'undefined'){
 					import_steps++;
 					let t_clear=db.transaction(['hashtags_feed'],'readwrite');
@@ -3008,10 +3215,13 @@ function import_backup(data,callback){
 							}
 						}
 						t_add.oncomplete=function(e){
-							import_steps--;
-							callback(ltmp_arr.settings_sync_import_hashtags_feed_success);
-							clearTimeout(import_finish);
-							import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+							setTimeout(function(){
+								import_steps--;
+								callback(ltmp_arr.settings_sync_import_hashtags_feed_success);
+								clearTimeout(import_finish);
+								import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+							},import_delay);
+							import_delay+=import_delay_offset;
 						}
 					}
 				}
@@ -3040,13 +3250,78 @@ function import_backup(data,callback){
 				}
 			}
 			t_add.oncomplete=function(e){
-				import_steps--;
-				callback(ltmp_arr.settings_sync_import_awards_success);
-				clearTimeout(import_finish);
-				import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+				setTimeout(function(){
+					import_steps--;
+					callback(ltmp_arr.settings_sync_import_awards_success);
+					clearTimeout(import_finish);
+					import_finish=setTimeout(function(){import_backup_final_step(backup,callback);},1000);
+				},import_delay);
 			}
 		}
 	}
+}
+function import_cloud(data){
+	stop_timers();
+	add_notify(false,
+		ltmp_arr.notify_arr.attention,
+		ltmp_arr.notify_arr.sync_import
+	);
+	setTimeout(function(){
+		import_backup(data,function(result){
+			if(false===result){
+				add_notify(false,
+					ltmp_arr.notify_arr.error,
+					ltmp_arr.notify_arr.sync_import_error
+				);
+			}
+			else{
+				if(true===result){
+					render_session();
+					render_menu();
+					apply_theme_mode();
+
+					add_notify(false,
+						ltmp_arr.notify_arr.sync,
+						ltmp_arr.notify_arr.sync_import_success
+					);
+
+					if(typeof users[current_user] !== 'undefined'){
+						if(typeof users[current_user].regular_key !== 'undefined'){
+						}
+						else{
+							add_notify(false,
+								ltmp_arr.notify_arr.error,
+								ltmp_arr.account_settings_empty_regular_key,
+								'dapp:account_settings'
+							);
+						}
+					}
+					else{
+						add_notify(false,
+							ltmp_arr.notify_arr.error,
+							ltmp_arr.account_settings_empty_regular_key,
+							'dapp:account_settings'
+						);
+					}
+
+					mute_notifications=60;//turn off notifications for next update feed
+					localStorage.setItem(storage_prefix+'mute_notifications',mute_notifications);//set mute notifications for 1 minute to next reload
+					setTimeout(function(){
+						localStorage.removeItem(storage_prefix+'mute_notifications');
+						mute_notifications=false;
+					},mute_notifications*1000);
+
+					start_timers();
+				}
+				else{
+					add_notify(false,
+						ltmp_arr.notify_arr.sync,
+						result
+					);
+				}
+			}
+		});
+	},3000);
 }
 
 function select_file(callback){
@@ -3723,37 +3998,57 @@ function clear_objects_cache(callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
-	let t,q,req;
-	t=db.transaction(['objects'],'readwrite');
-	q=t.objectStore('objects');
-	let time_bound=new Date().getTime() / 1000 | 0;
-	time_bound-=settings.object_cache_ttl*60;
-	req=q.index('time').openCursor(IDBKeyRange.upperBound(time_bound),'next');
-
-	let result=[];
-	req.onsuccess=function(event){
+	let users_t,users_q,users_req;
+	users_t=db.transaction(['users'],'readonly');
+	users_q=users_t.objectStore('users');
+	users_req=users_q.index('status').openCursor(IDBKeyRange.only(1),'next');
+	let users_list=[];
+	users_req.onsuccess=function(event){
 		let cur=event.target.result;
 		if(cur){
-			result.push([cur.value.account,cur.value.block]);
-			cur.delete();
+			if(1==cur.value.status){//deleting only temporary users
+				users_list.push(cur.value.account);
+			}
 			cur.continue();
 		}
 		else{
-			for(let i in result){
-				let item_i=result[i];
-				let remove_t,remove_q;
-				remove_t=db.transaction(['replies'],'readwrite');
-				remove_q=remove_t.objectStore('replies');
-				remove_req=remove_q.index('object').openCursor(IDBKeyRange.only([item_i[0],item_i[1]]),'next');
-				remove_req.onsuccess=function(event){
-					let cur=event.target.result;
-					if(cur){
+			console.log('clear_objects_cache users_list',users_list);
+
+			let t,q,req;
+			t=db.transaction(['objects'],'readwrite');
+			q=t.objectStore('objects');
+			let time_bound=new Date().getTime() / 1000 | 0;
+			//time_bound-=settings.object_cache_ttl*60;
+			req=q.index('time').openCursor(IDBKeyRange.upperBound(time_bound),'next');
+
+			let result=[];
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					if(-1==users_list.indexOf(cur.value.account)){
+						result.push([cur.value.account,cur.value.block]);
 						cur.delete();
-						cur.continue();
 					}
+					cur.continue();
 				}
-			}
-			setTimeout(function(){callback()},100);
+				else{
+					for(let i in result){
+						let item_i=result[i];
+						let remove_t,remove_q;
+						remove_t=db.transaction(['replies'],'readwrite');
+						remove_q=remove_t.objectStore('replies');
+						remove_req=remove_q.index('object').openCursor(IDBKeyRange.only([item_i[0],item_i[1]]),'next');
+						remove_req.onsuccess=function(event){
+							let cur=event.target.result;
+							if(cur){
+								cur.delete();
+								cur.continue();
+							}
+						}
+					}
+					setTimeout(function(){callback()},100);
+				}
+			};
 		}
 	};
 }
@@ -3793,6 +4088,22 @@ function stop_timers(){
 	clearTimeout(check_load_more_timer);
 	clearTimeout(clear_cache_timer);
 	clearTimeout(dgp_timer);
+	clearTimeout(sync_cloud_update_worker_timer);
+}
+
+function start_timers(){
+	clearTimeout(update_feed_timer);
+	update_feed();
+	clearTimeout(load_notifications_count_timer);
+	load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
+	clearTimeout(clear_cache_timer);
+	clear_cache_timer=setTimeout(function(){clear_cache()},300000);//5min
+	clearTimeout(dgp_timer);
+	update_dgp(true);
+	clearTimeout(sync_cloud_update_worker_timer);
+	sync_cloud_update_worker_timer=setTimeout(function(){
+		sync_cloud_update_worker();
+	},sync_cloud_update_worker_interval);
 }
 
 var load_notifications_count_timer=0;
@@ -7018,6 +7329,7 @@ function main_app(){
 				clear_cache(()=>{
 					console.log('Startup: clear_cache +');
 					view_path(path+(''==query?'':'?'+query),{},false,false);
+					check_sync_cloud_activity();
 					update_feed();
 					if(false!==whitelabel_logo){
 						dapp_loaded();
@@ -7026,7 +7338,7 @@ function main_app(){
 			});
 		});
 	});
-	setTimeout(function(){
+	dgp_timer=setTimeout(function(){
 		update_dgp(true);
 	},10000);//10sec for re-check selected api gate
 

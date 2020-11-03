@@ -97,14 +97,17 @@ var ltmp_ru_arr={
 				<p><a class="button save-theme-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
 			</div>
 			<div class="content-view" data-tab="sync">
+				<p><label><input type="checkbox" name="sync-cloud"> &mdash; автоматическая синхронизация с облаком</label></p><hr>
 				<p>
 					<strong>Внимание!</strong>
 					Экспорт направлен на сохранение последних и актуальных записей из базы данных приложения, приватный ключ не сохраняется.
-					<!--
-					Синхронизация с облачным хранилищем проверяет наличие подписи данных приватным ключом аккаунта и позволяет синхронизировать последние изменения подписок между несколькими экземплярами приложений (например, на ПК и смартфоне).
-					-->
 				</p>
-				<p><label><input type="checkbox" name="sync-cloud"> &mdash; автоматическая синхронизация с облаком</label></p>
+				<p>
+					Синхронизация с облачным хранилищем проверяет наличие подписи данных приватным ключом аккаунта и позволяет синхронизировать последние изменения подписок между несколькими экземплярами приложений (например, на ПК и смартфоне). Для этого достаточно войти в приложение на другом устройстве и подождать, когда синхронизация будет закончена.
+				</p>
+				<p>
+					Если у вас включена синхронизация с облаком, то действия с пользователями и тэгами будут восстановлены на другом экземпляре приложения. Сохранение резервной копии является новой точкой отсчета (синхронизация будет начинаться с неё).
+				</p>
 				<p><label><input type="checkbox" name="sync-users"> &mdash; пользователи</label></p>
 				<p><label><input type="checkbox" name="sync-feed"> &mdash; лента новостей</label></p>
 				<p><label><input type="checkbox" name="sync-replies"> &mdash; ответы</label></p>
@@ -118,9 +121,7 @@ var ltmp_ru_arr={
 				<p class="error sync-export-error"></p>
 				<p class="success sync-export-success"></p>
 				<p><a class="button sync-export-file-action">Экспортировать в файл</a><span class="submit-button-ring" rel="export-file"></span></p>
-				<!--
-				<p><a class="button sync-export-cloud-action">Экспортировать в облако</a><span class="submit-button-ring" rel="export-cloud"></span></p>
-				-->
+				<p><a class="button sync-export-cloud-action">Сохранить резервную копию в облако</a><span class="submit-button-ring" rel="export-cloud"></span></p>
 				<hr>
 				<p>
 					Импортирование сохраненного состояния происходит в несколько этапов, старые данные приложения будут удалены, новые восстановлены, а приложение будет планово перезапущено.
@@ -128,9 +129,7 @@ var ltmp_ru_arr={
 				<p class="success sync-import-success"></p>
 				<p class="error sync-import-error"></p>
 				<p><a class="button sync-import-file-action">Импортировать из файла</a><span class="submit-button-ring" rel="import-file"></span></p>
-				<!--
-				<p><a class="button sync-import-cloud-action">Импортировать из облака</a><span class="submit-button-ring" rel="import-cloud"></span></p>
-				-->
+				<p><a class="button sync-import-cloud-action">Сброс и синхронизация из облака</a><span class="submit-button-ring" rel="import-cloud"></span></p>
 			</div>
 		</div>
 	</div>`,
@@ -227,6 +226,8 @@ var ltmp_ru_arr={
 	<p>{caption}:</p>
 	<p><input type="text" name="{prop}" placeholder="{placeholder}" value="{value}"></p>
 	<div class="input-addon">({addon})</div>`,
+	settings_sync_export_cloud_success:'Экспорт в облако завершен, теперь вы можете синхронизировать приложение на другом устройстве',
+	settings_sync_export_cloud_error:'Ошибка при загрузке данных в облако, попробуйте позже или уменьшите количество записей для экспорта',
 	settings_sync_export_file_success:'Экспорт в файл завершен, проверьте загрузки',
 	settings_sync_select_file_error:'Выберите файл для восстановления',
 	settings_sync_import_backup_error:'Неверный формат файла, возможно поврежден',
@@ -239,6 +240,8 @@ var ltmp_ru_arr={
 	settings_sync_import_awards_success:'Импорт награждений завершен',
 	settings_sync_import_users_success:'Импорт пользователей завершен',
 	settings_sync_import_finished:'<strong>Импорт успешно выполнен!</strong>',
+	settings_sync_import_cloud_started:'Синхронизация успешно запущена',
+	settings_sync_import_cloud_error:'Ошибка в подключении',
 	settings_activity_period:`Частота загрузки активности пользователей`,
 	settings_addon_activity_period:`в минутах после обновления`,
 	users_settings_buttons:`
@@ -306,6 +309,11 @@ var ltmp_ru_arr={
 	notify_item_link:'<a tabindex="0" data-href="{link}">{text}</a>',
 	notify_arr:{
 		error:'Ошибка',
+		attention:'Внимание!',
+		sync:'Синхронизация',
+		sync_import:'Происходит синхронизация с облаком&hellip;',
+		sync_import_error:'Неверный формат данных',
+		sync_import_success:'Перенос данных успешно завершен',
 		award_success:'Вы наградили @{account}',
 		award_info:'≈{amount}Ƶ [{percent}]',
 		award_error:'Ошибка при награждении @{account}',
