@@ -4842,29 +4842,30 @@ function view_users(view,path_parts,query,title,back_to){
 				let user_data_profile=JSON.parse(user_data.profile);
 				header+=ltmp(ltmp_arr.header_caption_link,{caption:user_data_profile.nickname,link:'viz://@'+user_data.account});
 				let check_account=user_data.account;
-				if(-1!=whitelabel_accounts.indexOf(check_account)){
-				}
-				else
 				if(check_account==current_user){
 					header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
 					header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
 				}
 				else{
-					header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
-					if(1==user_data.status){
-						header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
-						header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
-					}
-					else
-					if(2==user_data.status){
-						header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
-						header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+					if(-1!=whitelabel_accounts.indexOf(check_account)){
 					}
 					else{
-						header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-						header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+						header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
+						if(1==user_data.status){
+							header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
+							header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
+						}
+						else
+						if(2==user_data.status){
+							header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
+							header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+						}
+						else{
+							header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+							header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+						}
+						header+=ltmp_arr.user_actions_close;
 					}
-					header+=ltmp_arr.user_actions_close;
 				}
 				view.find('.header').html(header);
 				let objects='';
@@ -5793,30 +5794,30 @@ function view_path(location,state,save_state,update){
 								let header='';
 								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:back_to});
 								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
-								if(-1!=whitelabel_accounts.indexOf(check_account)){
-								}
-								else
 								if(check_account==current_user){
 									header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_arr.icon_edit_profile});
 									header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_arr.icon_new_object});
 								}
 								else{
-									header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
-									if(1==result.status){
-										header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
-										header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
-									}
-									else
-									if(2==result.status){
-										header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
-										header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+									if(-1!=whitelabel_accounts.indexOf(check_account)){
 									}
 									else{
-										header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
-										header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+										header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
+										if(1==result.status){
+											header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
+											header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
+										}
+										else
+										if(2==result.status){
+											header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
+											header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
+										}
+										else{
+											header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
+											header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_arr.icon_ignore});
+										}
+										header+=ltmp_arr.user_actions_close;
 									}
-
-									header+=ltmp_arr.user_actions_close;
 								}
 								view.find('.header').html(header);
 							}
