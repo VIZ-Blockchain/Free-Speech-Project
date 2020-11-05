@@ -7300,7 +7300,6 @@ function dapp_loaded(){
 	},2200);
 }
 function main_app(){
-	whitelabel_logo=false;
 	if(false!==whitelabel_logo){
 		$('body').append(ltmp(ltmp_arr.dapp_startup,{logo:whitelabel_logo}));
 		setTimeout(function(){
