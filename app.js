@@ -1351,19 +1351,63 @@ function render_right_addon(){
 	}
 }
 
+var sia_upload_percent=0;
+var sia_upload_percent_timer=0;
+function sia_upload(callback){
+	var upload = document.createElement("INPUT");
+	upload.setAttribute("type", "file");
+	$(upload).off('change');
+	$(upload).on('change',function(e){
+		e.preventDefault();
+		let files = this.files;
+		let file = files[0];
+		if(file.type.match(/image.*/)){
+			let post_form = new FormData();
+			post_form.append('file',file);
+			let xhr=new XMLHttpRequest();
+			xhr.timeout=60000;//1 minute
+			xhr.upload.addEventListener('progress',callback,false);
+			xhr.open('POST','https://siasky.net/skynet/skyfile');
+			xhr.onreadystatechange=function(){
+				if(4==xhr.readyState && 200==xhr.status){
+					console.log('sia_upload status OK',xhr);
+					let skylink=JSON.parse(xhr.responseText).skylink;
+					callback(skylink);
+				}
+				if(4==xhr.readyState && 200!=xhr.status){
+					console.log('sia_upload status error',xhr);
+					callback(false);
+				}
+			}
+			xhr.onerror=function(){
+				console.log('sia_upload error');
+				callback(false);
+			}
+			xhr.send(post_form);
+		}
+		else{
+			callback(false);
+		}
+	});
+	var event=document.createEvent('MouseEvents');
+	event.initEvent('click',true,true);
+	upload.dispatchEvent(event);
+}
+
 function safe_avatar(avatar){
 	let result='';
 	let error=false;
+	console.log(typeof avatar,avatar);
 	if(0==avatar.indexOf('https://')){
 		result=avatar;
 	}
 	else
 	if(0==avatar.indexOf('ipfs://')){
-		result='https://cloudflare-ipfs.com/ipfs/'.avatar.substring(7);
+		result='https://cloudflare-ipfs.com/ipfs/'+avatar.substring(7);
 	}
 	else
 	if(0==avatar.indexOf('sia://')){
-		result='https://siasky.net/'.avatar.substring(6);
+		result='https://siasky.net/'+avatar.substring(6);
 	}
 	else
 	if(0==avatar.indexOf('http://')){
@@ -2406,6 +2450,44 @@ function app_mouse(e){
 				$('.toggle-menu-icon').html(ltmp_arr.icon_menu_expand);
 			}
 		}
+	}
+	if($(target).hasClass('upload-profile-avatar-action')){
+		let view=$(target).closest('.view');
+		sia_upload_percent=0;
+		sia_upload(function(result){
+			if(typeof result == 'boolean'){
+				if(!result){
+					add_notify(false,
+						ltmp_arr.notify_arr.error,
+						ltmp_arr.notify_arr.upload_incorrect_format
+					);
+					sia_upload_percent=0;
+				}
+			}
+			else
+			if(typeof result == 'string'){
+				view.find('input[name="avatar"]').val('sia://'+result);
+				sia_upload_percent=0;
+			}
+			else{
+				if(typeof result == 'object'){
+					if(typeof result.loaded !== 'undefined'){
+						let percent = parseInt(result.loaded / result.total * 100);
+						if(percent>(sia_upload_percent+10)){
+							clearTimeout(sia_upload_percent_timer);
+							sia_upload_percent_timer=setTimeout(function(){
+								add_notify(false,
+									ltmp_arr.notify_arr.upload,
+									ltmp(ltmp_arr.notify_arr.upload_percent,{percent:percent})
+								);
+							},1000);
+							sia_upload_percent=percent;
+						}
+					}
+				}
+			}
+			console.log(typeof result,result);
+		});
 	}
 	if($(target).hasClass('preset-action')){
 		$('input[name="'+$(target).data('input')+'"]').val($(target).data('value'));

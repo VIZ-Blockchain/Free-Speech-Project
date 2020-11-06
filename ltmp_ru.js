@@ -147,7 +147,7 @@ var ltmp_ru_arr={
 
 				<p>Ссылка на аватар:</p>
 				<p><input type="text" name="avatar" value="" placeholder="https://"></p>
-				<div class="input-addon">(обязательно https://, минимальный размер изображения 49x49 пикселей)</div>
+				<div class="input-addon">(<a class="upload-profile-avatar-action">загрузить изображение</a>, допустимы https://, ipfs://, sia://, минимальный размер изображения 49x49 пикселей)</div>
 
 				<p>Интересы:</p>
 				<p><input type="text" name="interests" value=""></p>
@@ -310,6 +310,7 @@ var ltmp_ru_arr={
 	notify_arr:{
 		error:'Ошибка',
 		attention:'Внимание!',
+		upload:'Загрузка',
 		sync:'Синхронизация',
 		sync_import:'Происходит синхронизация с облаком&hellip;',
 		sync_import_error:'Неверный формат данных',
@@ -321,6 +322,8 @@ var ltmp_ru_arr={
 		new_share:'Репост от @{account}',
 		new_mention:'Упоминание от @{account}',
 		idb_error:'Сбой в базе данных, перезагрузка приложения',
+		upload_incorrect_format:'Недопустимый формат файла',
+		upload_percent:'Статус загрузки: {percent}%',
 	},
 	notifications_all_tab:'Все',
 	notifications_new_tab:'Новые',
