@@ -946,7 +946,6 @@ function load_db(callback){
 		if(!db.objectStoreNames.contains('hashtags_feed')){
 			items_table=db.createObjectStore('hashtags_feed',{keyPath:'id',autoIncrement:true});
 			items_table.createIndex('tag','tag',{unique:false});//hash tag id
-			items_table.createIndex('tag_feed',['tag','id'],{unique:false});//hash tag id
 			items_table.createIndex('object',['account','block'],{unique:false});//account
 		}
 		else{
@@ -1288,23 +1287,27 @@ function render_right_addon(){
 		//pinned
 		let read_t=db.transaction(['hashtags'],'readonly');
 		let read_q=read_t.objectStore('hashtags');
-		let req=read_q.index('pinned_order').openCursor(IDBKeyRange.upperBound([1,Number.MAX_SAFE_INTEGER],true),'prev');
+		let req=read_q.index('pinned_order').openCursor(IDBKeyRange.upperBound([1,Number.MAX_SAFE_INTEGER]),'prev');
 		let find=false;
+		let cursor_end=false;
 		let container_context='';
 		let pinned_arr=[];
 		req.onsuccess=function(event){
 			let cur=event.target.result;
+			if(cursor_end){
+				cur=false;
+			}
 			if(cur){
 				if(1==cur.value.status){//pinned
 					let hashtag_data=cur.value;
 					find=true;
 					container_context+=ltmp(ltmp_arr.box_item,{link:'dapp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
 					pinned_arr.push(hashtag_data.id);
-					cur.continue();
 				}
 				else{
-					cur.continue(-1);
+					cursor_end=true;
 				}
+				cur.continue();
 			}
 			else{
 				if(find){
@@ -1317,8 +1320,12 @@ function render_right_addon(){
 				let find2=false;
 				let popular_count=0;
 				let container_context2='';
+				let cursor_end=false;
 				req2.onsuccess=function(event){
 					let cur=event.target.result;
+					if(cursor_end){
+						cur=false;
+					}
 					if(cur){
 						if(0==cur.value.status){
 							let hashtag_data=cur.value;
@@ -1326,15 +1333,10 @@ function render_right_addon(){
 							container_context2+=ltmp(ltmp_arr.box_item,{link:'dapp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
 							popular_count++;
 							if(popular_count>=settings.hashtags_addon_popular_limit){
-								cur.continue(-1);
-							}
-							else{
-								cur.continue();
+								cursor_end=true;
 							}
 						}
-						else{
-							cur.continue();
-						}
+						cur.continue();
 					}
 					else{
 						if(find2){
@@ -5116,23 +5118,27 @@ function view_hashtags(view,path_parts,query,title,back_to){
 		if('pinned'==current_tab){
 			let read_t=db.transaction(['hashtags'],'readonly');
 			let read_q=read_t.objectStore('hashtags');
-			let req=read_q.index('pinned_order').openCursor(IDBKeyRange.upperBound([1,Number.MAX_SAFE_INTEGER],true),'prev');
+			let req=read_q.index('pinned_order').openCursor(IDBKeyRange.upperBound([1,Number.MAX_SAFE_INTEGER]),'prev');
 			let find=false;
+			let cursor_end=false;
 			let objects='';
 			let num=1;
 			req.onsuccess=function(event){
 				let cur=event.target.result;
+				if(cursor_end){
+					cur=false;
+				}
 				if(cur){
 					if(1==cur.value.status){//pinned
 						let hashtag_data=cur.value;
 						find=true;
 						objects+=ltmp(ltmp_arr.hashtags_objects_item,{num:num,tag:hashtag_data.tag,count:hashtag_data.count});
 						num++;
-						cur.continue();
 					}
 					else{
-						cur.continue(-1);
+						cursor_end=true;
 					}
+					cur.continue();
 				}
 				else{
 					if(find){
@@ -5151,23 +5157,27 @@ function view_hashtags(view,path_parts,query,title,back_to){
 		if('ignored'==current_tab){
 			let read_t=db.transaction(['hashtags'],'readonly');
 			let read_q=read_t.objectStore('hashtags');
-			let req=read_q.index('pinned_order').openCursor(IDBKeyRange.upperBound([2,Number.MAX_SAFE_INTEGER],true),'prev');
+			let req=read_q.index('pinned_order').openCursor(IDBKeyRange.upperBound([2,Number.MAX_SAFE_INTEGER]),'prev');
 			let find=false;
+			let cursor_end=false;
 			let objects='';
 			let num=1;
 			req.onsuccess=function(event){
 				let cur=event.target.result;
+				if(cursor_end){
+					cur=false;
+				}
 				if(cur){
 					if(2==cur.value.status){//ignored
 						let hashtag_data=cur.value;
 						find=true;
 						objects+=ltmp(ltmp_arr.hashtags_objects_item,{num:num,tag:hashtag_data.tag,count:hashtag_data.count});
 						num++;
-						cur.continue();
 					}
 					else{
-						cur.continue(-1);
+						cursor_end=true;
 					}
+					cur.continue();
 				}
 				else{
 					if(find){
@@ -6291,7 +6301,15 @@ function render_object(user,object,type,preset_level){
 	if(typeof user.profile != 'undefined'){
 		profile=JSON.parse(user.profile);
 	}
-	//console.log('render_object',user,object,type,preset_level);
+	//console.log('render_object',user,object,type,preset_level,typeof object);
+	if(typeof object === 'object'){
+		if(typeof object.data === 'undefined'){
+			object.data={};
+		}
+		if(typeof object.data.p === 'undefined'){
+			object.data.p=0;
+		}
+	}
 	if('default'==type){
 		if(object.is_share){
 			let text='';
@@ -6299,7 +6317,6 @@ function render_object(user,object,type,preset_level){
 				text=object.data.d.text;
 				text=escape_html(text);
 			}
-
 			let current_link='viz://@'+user.account+'/'+object.block+'/';
 			render=ltmp(ltmp_arr.object_type_text_loading,{
 				account:user.account,
@@ -6809,8 +6826,12 @@ function profile_filter_by_type(){
 				hashtags_filter_t=db.transaction(['hashtags'],'readonly');
 				hashtags_filter_q=hashtags_filter_t.objectStore('hashtags');
 				hashtags_filter_req=hashtags_filter_q.openCursor(null,'prev');
+				let cursor_end=false;
 				hashtags_filter_req.onsuccess=function(event){
 					let cur=event.target.result;
+					if(cursor_end){
+						cur=false;
+					}
 					if(cur){
 						let item=cur.value;
 						if(-1!=hashtags_filter.indexOf(cur.value.tag)){
@@ -6818,11 +6839,9 @@ function profile_filter_by_type(){
 							hashtags_id_counter--;
 						}
 						if(hashtags_id_counter<=0){
-							cur.continue(-1);
+							cursor_end=true;
 						}
-						else{
-							cur.continue();
-						}
+						cur.continue();
 					}
 					else{
 						//console.log(hashtags_id_filter,hashtags_id_filter.length);
@@ -6863,16 +6882,18 @@ function profile_filter_by_type(){
 										search_object_q=search_object_t.objectStore('hashtags_feed');
 										search_object_req=search_object_q.index('object').openCursor(IDBKeyRange.only([$(search_object).data('account'),$(search_object).data('block')]),'prev');
 										let find_object=false;
+										let cursor_end=false;
 										search_object_req.onsuccess=function(event){
 											let cur=event.target.result;
+											if(cursor_end){
+												cur=false;
+											}
 											if(cur){
 												if(-1!=hashtags_id_filter.indexOf(cur.value.tag)){
 													find_object=true;
-													cur.continue(-1);
+													cursor_end=true;
 												}
-												else{
-													cur.continue();
-												}
+												cur.continue();
 											}
 											else{
 												if(!find_object){
@@ -6933,6 +6954,7 @@ function load_more_objects(indicator,check_level){
 		let limit_per_load=10;
 		let objects=[];
 		let update_req;
+		let cursor_end=false;
 		if(0==notifications_id){
 			update_req=update_q.openCursor(null,'prev');
 		}
@@ -6941,6 +6963,9 @@ function load_more_objects(indicator,check_level){
 		}
 		update_req.onsuccess=function(event){
 			let cur=event.target.result;
+			if(cursor_end){
+				cur=false;
+			}
 			if(cur){
 				let item=cur.value;
 				if('all'==tab){
@@ -6959,12 +6984,12 @@ function load_more_objects(indicator,check_level){
 				if(limit_per_load>0){
 					limit_per_load--;
 					last_id=item.id;
-					cur.continue();
 				}
 				else{
 					last_id=item.id;
-					cur.continue(-1);
+					cursor_end=true;
 				}
+				cur.continue();
 			}
 			else{
 				//console.log('load_more_objects end cursor',objects);
@@ -6994,6 +7019,7 @@ function load_more_objects(indicator,check_level){
 		let last_id=0;
 		let objects=[];
 		let update_req;
+		let cursor_end=false;
 		if(0==awards_id){
 			update_req=update_q.openCursor(null,'prev');
 		}
@@ -7002,11 +7028,15 @@ function load_more_objects(indicator,check_level){
 		}
 		update_req.onsuccess=function(event){
 			let cur=event.target.result;
+			if(cursor_end){
+				cur=false;
+			}
 			if(cur){
 				let item=cur.value;
 				last_id=item.id;
 				objects.push(item);
-				cur.continue(-1);//load only one item
+				cursor_end=true;//load only one item
+				cur.continue();
 			}
 			else{
 				//console.log('load_more_objects end cursor',objects);
@@ -7036,24 +7066,24 @@ function load_more_objects(indicator,check_level){
 		let hashtags_feed_id=parseInt(indicator.data('hashtags-feed-id'));
 		let last_id=0;
 		let objects=[];
+		let cursor_end=false;
 		let update_req;
-		if(0==hashtags_feed_id){
-			update_req=update_q.index('tag_feed').openCursor(IDBKeyRange.upperBound([hashtags_id,Number.MAX_SAFE_INTEGER],true),'prev');
-		}
-		else{
-			update_req=update_q.index('tag_feed').openCursor(IDBKeyRange.upperBound([hashtags_id,hashtags_feed_id],true),'prev');
-		}
+		update_req=update_q.index('tag').openCursor(IDBKeyRange.only(hashtags_id),'prev');
 		update_req.onsuccess=function(event){
 			let cur=event.target.result;
+			if(cursor_end){
+				cur=false;
+			}
 			if(cur){
 				let item=cur.value;
 				if(item.tag==hashtags_id){
 					if((hashtags_feed_id>item.id)||(hashtags_feed_id==0)){
 						last_id=item.id;
 						objects.push(item);
+						cursor_end=true;
 					}
 				}
-				cur.continue(-1);//load only one item
+				cur.continue();
 			}
 			else{
 				if(0==objects.length){
@@ -7082,6 +7112,7 @@ function load_more_objects(indicator,check_level){
 		let same_time=0;
 		//console.log('load_more_objects objects feed-time:',same_time);
 		let objects=[];
+		let cursor_end=false;
 		let update_req;
 		if(0==feed_time){
 			update_req=update_q.index('time').openCursor(null,'prev');
@@ -7091,6 +7122,9 @@ function load_more_objects(indicator,check_level){
 		}
 		update_req.onsuccess=function(event){
 			let cur=event.target.result;
+			if(cursor_end){
+				cur=false;
+			}
 			if(cur){
 				let item=cur.value;
 				if(0==same_time){
@@ -7101,11 +7135,11 @@ function load_more_objects(indicator,check_level){
 				}
 				if(same_time==item.time){
 					objects.push(item);
-					cur.continue();
 				}
 				else{
-					cur.continue(-1);
+					cursor_end=true;
 				}
+				cur.continue();
 			}
 			else{
 				//console.log('load_more_objects end cursor',objects);
@@ -7152,8 +7186,14 @@ function load_more_objects(indicator,check_level){
 			}
 			indicator.parent().find('.object').each(function(){
 				if(typeof $(this).data('previous') !== 'undefined'){
-					if(offset>parseInt($(this).data('previous'))){
-						offset=parseInt($(this).data('previous'));
+					let previous=parseInt($(this).data('previous'));
+					if(isNaN(previous)){
+						offset=0;
+					}
+					else{
+						if(offset>previous){
+							offset=previous;
+						}
 					}
 				}
 			});
