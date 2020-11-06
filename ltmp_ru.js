@@ -147,7 +147,7 @@ var ltmp_ru_arr={
 
 				<p>Ссылка на аватар:</p>
 				<p><input type="text" name="avatar" value="" placeholder="https://"></p>
-				<div class="input-addon">(<a class="upload-profile-avatar-action">загрузить изображение</a>, допустимы https://, ipfs://, sia://, минимальный размер изображения 49x49 пикселей)</div>
+				<div class="input-addon">(загрузить изображение через: <a class="ipfs-upload-profile-avatar-action">IPFS</a>, <a class="sia-upload-profile-avatar-action">Sia</a>, допустимы ссылки https://, ipfs://, sia://, минимальный размер изображения 49x49 пикселей)</div>
 
 				<p>Интересы:</p>
 				<p><input type="text" name="interests" value=""></p>

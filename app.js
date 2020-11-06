@@ -1394,6 +1394,51 @@ function sia_upload(callback){
 	upload.dispatchEvent(event);
 }
 
+var ipfs_upload_percent=0;
+var ipfs_upload_percent_timer=0;
+function ipfs_upload(callback){
+	var upload = document.createElement("INPUT");
+	upload.setAttribute("type", "file");
+	$(upload).off('change');
+	$(upload).on('change',function(e){
+		e.preventDefault();
+		let files = this.files;
+		let file = files[0];
+		if(file.type.match(/image.*/)){
+			let post_form = new FormData();
+			post_form.append('file',file);
+			post_form.append('username','null');
+			post_form.append('keyphrase','');
+			let xhr=new XMLHttpRequest();
+			xhr.timeout=60000;//1 minute
+			xhr.upload.addEventListener('progress',callback,false);
+			xhr.open('POST','https://api.globalupload.io/transport/add');
+			xhr.onreadystatechange=function(){
+				if(4==xhr.readyState && 200==xhr.status){
+					console.log('ipfs_upload status OK',xhr);
+					let cid=JSON.parse(xhr.responseText).Hash;
+					callback(cid);
+				}
+				if(4==xhr.readyState && 200!=xhr.status){
+					console.log('ipfs_upload status error',xhr);
+					callback(false);
+				}
+			}
+			xhr.onerror=function(){
+				console.log('ipfs_upload error');
+				callback(false);
+			}
+			xhr.send(post_form);
+		}
+		else{
+			callback(false);
+		}
+	});
+	var event=document.createEvent('MouseEvents');
+	event.initEvent('click',true,true);
+	upload.dispatchEvent(event);
+}
+
 function safe_avatar(avatar){
 	let result='';
 	let error=false;
@@ -2451,7 +2496,7 @@ function app_mouse(e){
 			}
 		}
 	}
-	if($(target).hasClass('upload-profile-avatar-action')){
+	if($(target).hasClass('sia-upload-profile-avatar-action')){
 		let view=$(target).closest('.view');
 		sia_upload_percent=0;
 		sia_upload(function(result){
@@ -2482,6 +2527,43 @@ function app_mouse(e){
 								);
 							},1000);
 							sia_upload_percent=percent;
+						}
+					}
+				}
+			}
+		});
+	}
+	if($(target).hasClass('ipfs-upload-profile-avatar-action')){
+		let view=$(target).closest('.view');
+		ipfs_upload_percent=0;
+		ipfs_upload(function(result){
+			if(typeof result == 'boolean'){
+				if(!result){
+					add_notify(false,
+						ltmp_arr.notify_arr.error,
+						ltmp_arr.notify_arr.upload_incorrect_format
+					);
+					ipfs_upload_percent=0;
+				}
+			}
+			else
+			if(typeof result == 'string'){
+				view.find('input[name="avatar"]').val('ipfs://'+result);
+				ipfs_upload_percent=0;
+			}
+			else{
+				if(typeof result == 'object'){
+					if(typeof result.loaded !== 'undefined'){
+						let percent = parseInt(result.loaded / result.total * 100);
+						if(percent>(ipfs_upload_percent+10)){
+							clearTimeout(ipfs_upload_percent_timer);
+							ipfs_upload_percent_timer=setTimeout(function(){
+								add_notify(false,
+									ltmp_arr.notify_arr.upload,
+									ltmp(ltmp_arr.notify_arr.upload_percent,{percent:percent})
+								);
+							},1000);
+							ipfs_upload_percent=percent;
 						}
 					}
 				}
@@ -6316,6 +6398,28 @@ function highlight_links(text){
 		}
 	}
 
+	let sia_protocol_pattern = /sia\:\/\/[A-Za-z0-9\-\.\/]+/g;
+	let sia_protocol_links=text.match(sia_protocol_pattern);
+	if(null!=sia_protocol_links){
+		for(let i in sia_protocol_links){
+			if(6<sia_protocol_links[i].length){
+				summary_links[num]=sia_protocol_links[i];
+				num++;
+			}
+		}
+	}
+
+	let ipfs_protocol_pattern = /ipfs\:\/\/[A-Za-z0-9\-\.\/]+/g;
+	let ipfs_protocol_links=text.match(ipfs_protocol_pattern);
+	if(null!=ipfs_protocol_links){
+		for(let i in ipfs_protocol_links){
+			if(7<ipfs_protocol_links[i].length){
+				summary_links[num]=ipfs_protocol_links[i];
+				num++;
+			}
+		}
+	}
+
 	//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
 	//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
 	let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
@@ -6359,6 +6463,14 @@ function highlight_links(text){
 		else
 		if('viz://'==change_text.substring(0,6)){
 			new_text='<a tabindex="0" data-href="'+change_text+'">'+change_text+'</a>';
+		}
+		else
+		if('sia://'==change_text.substring(0,6)){
+			new_text='<a tabindex="0" href="https://siasky.net/'+change_text.substring(6)+'" target="_blank">'+change_text+'</a>';
+		}
+		else
+		if('ipfs://'==change_text.substring(0,7)){
+			new_text='<a tabindex="0" href="https://cloudflare-ipfs.com/ipfs/'+change_text.substring(7)+'" target="_blank">'+change_text+'</a>';
 		}
 		else{
 			new_text='<a href="'+change_text+'" target="_blank">'+change_text+'</a>';
