@@ -1351,21 +1351,52 @@ function render_right_addon(){
 	}
 }
 
+function safe_avatar(avatar){
+	let result='';
+	let error=false;
+	if(0==avatar.indexOf('https://')){
+		result=avatar;
+	}
+	else
+	if(0==avatar.indexOf('ipfs://')){
+		result='https://cloudflare-ipfs.com/ipfs/'.avatar.substring(7);
+	}
+	else
+	if(0==avatar.indexOf('sia://')){
+		result='https://siasky.net/'.avatar.substring(6);
+	}
+	else
+	if(0==avatar.indexOf('http://')){
+		error=true;//no http
+	}
+	else
+	if(0==avatar.indexOf('data:')){
+		error=true;//no encoded
+	}
+	else{
+		error=true;//unknown
+	}
+	if(error){
+		result=ltmp_arr.profile_default_avatar;
+	}
+	return result;
+}
+
 function render_session(){
 	let toggle_menu=ltmp(ltmp_arr.toggle_menu,{title:ltmp_arr.toggle_menu_title,icon:ltmp_arr.icon_close});
 	if(''!=current_user){
 		get_user(current_user,false,function(err,result){
 			if(!err){
 				profile=JSON.parse(result.profile);
-				$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_account,{'account':result.account,'nickname':profile.nickname,'avatar':profile.avatar}));
+				$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_account,{'account':result.account,'nickname':profile.nickname,'avatar':safe_avatar(profile.avatar)}));
 			}
 			else{
-				$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_error}));
+				$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_error,avatar:ltmp_arr.profile_default_avatar}));
 			}
 		});
 	}
 	else{
-		$('div.menu .session').html(ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_login}));
+		$('div.menu .session').html(ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_login,avatar:ltmp_arr.profile_default_avatar}));
 	}
 }
 
@@ -3406,7 +3437,7 @@ function update_user_profile(account,callback){
 				profile_obj.nickname=response.name;
 			}
 			if(typeof profile_obj.avatar == 'undefined'){
-				profile_obj.avatar='default.png';
+				profile_obj.avatar=ltmp_arr.profile_default_avatar;
 			}
 
 			let obj={
@@ -4925,7 +4956,7 @@ function view_users(view,path_parts,query,title,back_to){
 						search_str=search_str.toLowerCase();
 						search_str+=reverse_str(search_str);
 
-						objects+=ltmp(ltmp_arr.users_objects_item,{search:search_str,avatar:ltmp(ltmp_arr.users_objects_item_avatar,{account:user_data.account,avatar:user_data_profile.avatar}),account:user_data.account,nickname:user_data_profile.nickname,icon:ltmp_arr.icon_edit_profile});
+						objects+=ltmp(ltmp_arr.users_objects_item,{search:search_str,avatar:ltmp(ltmp_arr.users_objects_item_avatar,{account:user_data.account,avatar:safe_avatar(user_data_profile.avatar)}),account:user_data.account,nickname:user_data_profile.nickname,icon:ltmp_arr.icon_edit_profile});
 						num++;
 					}
 					cur.continue();
@@ -4968,7 +4999,7 @@ function view_users(view,path_parts,query,title,back_to){
 							search_str=search_str.toLowerCase();
 							search_str+=reverse_str(search_str);
 
-							objects+=ltmp(ltmp_arr.users_objects_item,{search:search_str,avatar:ltmp(ltmp_arr.users_objects_item_avatar,{account:user_data.account,avatar:user_data_profile.avatar}),account:user_data.account,nickname:user_data_profile.nickname,icon:ltmp_arr.icon_edit_profile});
+							objects+=ltmp(ltmp_arr.users_objects_item,{search:search_str,avatar:ltmp(ltmp_arr.users_objects_item_avatar,{account:user_data.account,avatar:safe_avatar(user_data_profile.avatar)}),account:user_data.account,nickname:user_data_profile.nickname,icon:ltmp_arr.icon_edit_profile});
 							num++;
 						}
 					}
@@ -5010,7 +5041,7 @@ function view_users(view,path_parts,query,title,back_to){
 							search_str=search_str.toLowerCase();
 							search_str+=reverse_str(search_str);
 
-							objects+=ltmp(ltmp_arr.users_objects_item,{search:search_str,avatar:ltmp(ltmp_arr.users_objects_item_avatar,{account:user_data.account,avatar:user_data_profile.avatar}),account:user_data.account,nickname:user_data_profile.nickname,icon:ltmp_arr.icon_edit_profile});
+							objects+=ltmp(ltmp_arr.users_objects_item,{search:search_str,avatar:ltmp(ltmp_arr.users_objects_item_avatar,{account:user_data.account,avatar:safe_avatar(user_data_profile.avatar)}),account:user_data.account,nickname:user_data_profile.nickname,icon:ltmp_arr.icon_edit_profile});
 							num++;
 						}
 					}
@@ -5625,7 +5656,7 @@ function view_path(location,state,save_state,update){
 				get_user(current_user,false,function(err,result){
 					if(!err){
 						let profile=JSON.parse(result.profile);
-						view.find('.objects').before(ltmp(ltmp_arr.fast_publish,{avatar:profile.avatar,button:ltmp_arr.icon_new_object}));
+						view.find('.objects').before(ltmp(ltmp_arr.fast_publish,{avatar:safe_avatar(profile.avatar),button:ltmp_arr.icon_new_object}));
 					}
 				});
 			}
@@ -6401,7 +6432,7 @@ function render_object(user,object,type,preset_level){
 				author:'@'+user.account,
 				link:'viz://@'+user.account+'/'+object.block+'/',
 				nickname:profile.nickname,
-				avatar:profile.avatar,
+				avatar:safe_avatar(profile.avatar),
 				text:text,
 				actions:ltmp(ltmp_arr.object_type_text_actions,{
 					//link:link,
@@ -6509,7 +6540,7 @@ function render_object(user,object,type,preset_level){
 				account:user.account,
 				block:object.block,
 				nickname:profile.nickname,
-				avatar:profile.avatar,
+				avatar:safe_avatar(profile.avatar),
 				text:text,
 				previous:object.data.p,
 				is_reply:object.is_reply,
@@ -6640,7 +6671,7 @@ function render_object(user,object,type,preset_level){
 		render=ltmp(ltmp_arr.object_type_text_reply,{
 			author:'@'+user.account,
 			nickname:profile.nickname,
-			avatar:profile.avatar,
+			avatar:safe_avatar(profile.avatar),
 			text:text,
 			link:current_link,
 			actions:ltmp(ltmp_arr.object_type_text_actions,{
@@ -6720,7 +6751,7 @@ function render_object(user,object,type,preset_level){
 		render=ltmp(ltmp_arr.object_type_text_share_preview,{
 			author:'@'+user.account,
 			nickname:profile.nickname,
-			avatar:profile.avatar,
+			avatar:safe_avatar(profile.avatar),
 			text:text,
 			link:'viz://@'+user.account+'/'+object.block+'/',
 			actions:ltmp(ltmp_arr.object_type_text_actions,{
