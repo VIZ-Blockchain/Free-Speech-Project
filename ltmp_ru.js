@@ -268,7 +268,7 @@ var ltmp_ru_arr={
 	hashtags_pinned_tab:'Закрепленные',
 	hashtags_ignored_tab:'Игнорируемые',
 	hashtags_objects_header:`<div class="hashtag-item nohover"><div class="hashtag-item-num">№</div><div class="hashtag-item-caption">Тэг</div><div class="hashtag-item-count">Количество</div></div>`,
-	hashtags_objects_item:`<div class="hashtag-item"><div class="hashtag-item-num">{num}</div><div class="hashtag-item-caption"><a data-href="dapp:hashtags/{tag}">#{tag}</a></div><div class="hashtag-item-count">{count}</div></div>`,
+	hashtags_objects_item:`<div class="hashtag-item" data-hashtag-id="{id}"><div class="hashtag-item-num">{num}</div><div class="hashtag-item-caption"><a data-href="dapp:hashtags/{tag}">#{tag}{addon}</a></div><div class="hashtag-item-count">{count}</div></div>`,
 
 	found_results:'Найдено: {count}',
 

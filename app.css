@@ -582,6 +582,13 @@ body.dark .hashtag-item:hover{
 	min-width:7%;
 	padding-right:10px;
 }
+.pin-hashtag-to-top-action{
+	margin:0 10px;
+	display:none;
+}
+.hashtag-item:hover .pin-hashtag-to-top-action{
+	display:inline-block;
+}
 .hashtag-item-caption{
 	word-break:break-word;
 	flex-grow:1;

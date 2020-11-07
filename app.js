@@ -1287,7 +1287,7 @@ function render_right_addon(){
 		//pinned
 		let read_t=db.transaction(['hashtags'],'readonly');
 		let read_q=read_t.objectStore('hashtags');
-		let req=read_q.index('pinned_order').openCursor(IDBKeyRange.upperBound([1,Number.MAX_SAFE_INTEGER]),'prev');
+		let req=read_q.index('pinned_order').openCursor(IDBKeyRange.lowerBound([1,0]),'next');
 		let find=false;
 		let cursor_end=false;
 		let container_context='';
@@ -2446,6 +2446,32 @@ function app_mouse(e){
 		let wrapper=$(target).parent();
 		wrapper.removeClass('show');
 		setTimeout(function(){wrapper.remove();},1000);
+	}
+	if($(target).hasClass('pin-hashtag-to-top-action')){
+		let hashtag_id=$(target).closest('.hashtag-item').data('hashtag-id');
+		let read_t=db.transaction(['hashtags'],'readwrite');
+		let read_q=read_t.objectStore('hashtags');
+		let req=read_q.index('status').openCursor(IDBKeyRange.only(1),'next');
+		let num=2;
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let item=cur.value;
+				if(hashtag_id==item.id){
+					item.order=1;
+				}
+				else{
+					item.order=num;
+					num++;
+				}
+				cur.update(item);
+				cur.continue();
+			}
+			else{
+				document.location.hash='dapp:hashtags?pinned';
+				render_right_addon();
+			}
+		}
 	}
 	if($(target).hasClass('theme-action')){
 		$('body').removeClass('light');
@@ -5311,9 +5337,10 @@ function view_hashtags(view,path_parts,query,title,back_to){
 		}
 		else
 		if('pinned'==current_tab){
+			let pin_top='<a class="pin-hashtag-to-top-action">&uarr;</a>';
 			let read_t=db.transaction(['hashtags'],'readonly');
 			let read_q=read_t.objectStore('hashtags');
-			let req=read_q.index('pinned_order').openCursor(IDBKeyRange.upperBound([1,Number.MAX_SAFE_INTEGER]),'prev');
+			let req=read_q.index('pinned_order').openCursor(IDBKeyRange.lowerBound([1,0]),'next');
 			let find=false;
 			let cursor_end=false;
 			let objects='';
@@ -5327,7 +5354,7 @@ function view_hashtags(view,path_parts,query,title,back_to){
 					if(1==cur.value.status){//pinned
 						let hashtag_data=cur.value;
 						find=true;
-						objects+=ltmp(ltmp_arr.hashtags_objects_item,{num:num,tag:hashtag_data.tag,count:hashtag_data.count});
+						objects+=ltmp(ltmp_arr.hashtags_objects_item,{num:num,tag:hashtag_data.tag,count:hashtag_data.count,addon:pin_top,id:hashtag_data.id});
 						num++;
 					}
 					else{
