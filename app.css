@@ -830,6 +830,7 @@ body.dark .objects .object{
 .author-column .profile-name{
 	font-weight:bold;
 	flex-shrink:1;
+	white-space:nowrap;
 }
 .author-column .profile-link{
 	color:rgba(96, 112, 124, 0.7);
