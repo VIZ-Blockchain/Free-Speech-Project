@@ -645,10 +645,16 @@ body.dark .user-item:hover{
 .user-item-nickname{
 	font-weight:bold;
 	margin-right:10px;
+	white-space:nowrap;
+	text-overflow:ellipsis;
+	overflow:hidden;
 }
 .user-item-account{
 	color:rgba(96, 112, 124, 0.7);
 	flex-grow:1;
+	white-space:nowrap;
+	text-overflow:ellipsis;
+	overflow:hidden;
 }
 .user-item-search{
 	width:100%;
@@ -815,17 +821,24 @@ body.dark .objects .object{
 	margin:0 5px;
 }
 .author-view .author-column{
-	flex-direction:column;
+	display:flex;
+	flex-direction:row;
 	flex-basis:auto;
 	flex-grow:1;
 	margin:0 5px;
 }
 .author-column .profile-name{
 	font-weight:bold;
+	flex-shrink:1;
 }
 .author-column .profile-link{
 	color:rgba(96, 112, 124, 0.7);
 	margin-left:5px;
+	flex-shrink:1;
+	max-width:100%;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
 }
 body.midnight .author-column .profile-link{
 	color:rgba(165, 180, 192, 0.7);
@@ -839,6 +852,7 @@ body.dark .author-column .profile-link{
 }
 .author-column .short-date-view{
 	color:rgba(96, 112, 124, 0.7);
+	white-space:nowrap;
 }
 body.midnight .author-column .short-date-view{
 	color:rgba(165, 180, 192, 0.7);
@@ -851,6 +865,7 @@ body.dark .author-column .short-date-view{
 	flex-basis:auto;
 	flex-grow:1;
 	margin:0 5px;
+	overflow:hidden;
 }
 .object.type-text-preview .object-column .author-column{
 	margin:0;
