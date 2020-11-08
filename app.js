@@ -5353,8 +5353,8 @@ function view_hashtags(view,path_parts,query,title,back_to){
 				if(cur){
 					if(1==cur.value.status){//pinned
 						let hashtag_data=cur.value;
+						objects+=ltmp(ltmp_arr.hashtags_objects_item,{num:num,tag:hashtag_data.tag,count:hashtag_data.count,addon:(find?pin_top:''/*not for first*/),id:hashtag_data.id});
 						find=true;
-						objects+=ltmp(ltmp_arr.hashtags_objects_item,{num:num,tag:hashtag_data.tag,count:hashtag_data.count,addon:pin_top,id:hashtag_data.id});
 						num++;
 					}
 					else{
