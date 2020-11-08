@@ -875,9 +875,14 @@ body.dark .author-column .short-date-view{
 .object.type-text-preview .object-column .author-column{
 	margin:0;
 }
+.object.type-text .author-column .profile-name{
+	display:block;
+	line-height:49px;
+}
 .object.type-text .author-column .profile-link{
 	display:block;
-	margin:0;
+	margin-left:5px;
+	line-height:49px;
 }
 .reply-view{
 	margin:2px 0;
