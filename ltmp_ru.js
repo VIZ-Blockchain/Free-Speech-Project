@@ -260,6 +260,17 @@ var ltmp_ru_arr={
 		</div>
 		{context}
 	</div>`,
+
+	render_preview_image:`<div class="preview-image"{addon}>{prepand}<img src="{image}" alt="Изображение"></div>`,
+	render_preview_image_addon:`<div class="preview-image-background" style="background-image:url('{image}');"></div>`,
+	render_preview_large_image:`<div class="preview-large-image"{addon}><img src="{image}" alt="Изображение"></div>`,
+	render_preview_link:`<div class="preview-link"{addon}>
+		<div class="preview-link-title">{title}</div>
+		<div class="preview-link-descr">{descr}</div>
+		<div class="preview-link-source">{source}</div>
+	</div>`,
+	render_preview_wrapper:`<a tabindex="0" class="preview-wrapper" href="{link}" target="_blank"{addon}>{context}</a>`,
+
 	hashtags_addon_caption:'# Тэги',
 	hashtags_addon_button:'<a tabindex="0" data-href="dapp:hashtags" title="Управление тэгами">{icon}</a>',
 	hashtags_pinned_caption:'Закрепленные',
@@ -504,6 +515,7 @@ var ltmp_ru_arr={
 			<div class="object-column">
 				{reply}
 				<div class="content-view">{text}</div>
+				<div class="preview-container"></div>
 				<div class="date-view" data-timestamp="{timestamp}"><div class="time">&hellip;</div><div class="date">&hellip;</div></div>
 				<div class="actions-view">{actions}</div>
 			</div>
@@ -532,6 +544,7 @@ var ltmp_ru_arr={
 				</div>
 				{reply}
 				<div class="content-view" data-href="{link}">{text}</div>
+				<div class="preview-container"></div>
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,

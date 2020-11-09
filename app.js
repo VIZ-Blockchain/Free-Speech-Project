@@ -107,6 +107,7 @@ function check_sync_cloud_activity(callback){
 			}
 			catch(e){
 				console.log('check_sync_cloud_activity response json error',xhr.response,e);
+				callback(false);
 			}
 		}
 		if(4==xhr.readyState && 200!=xhr.status){
@@ -351,6 +352,7 @@ function sync_cloud_put_update(type_str,value,callback){
 				}
 				catch(e){
 					console.log('sync_cloud_put_update response json error',xhr.response,e);
+					callback(false);
 				}
 			}
 			if(4==xhr.readyState && 200!=xhr.status){
@@ -1439,6 +1441,145 @@ function ipfs_upload(callback){
 	upload.dispatchEvent(event);
 }
 
+function first_link(text){
+	let link_pattern = /(([a-z]*):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
+	let links=text.match(link_pattern);
+	if(null===links){
+		return false;
+	}
+	if(typeof links[0] === 'undefined'){
+		return false;
+	}
+	return links[0];
+}
+function link_to_http_gate(link){
+	let result='';
+	let error=false;
+	if(0==link.indexOf('https://')){
+		result=link;
+	}
+	else
+	if(0==link.indexOf('http://')){
+		result=link;
+	}
+	else
+	if(0==link.indexOf('ipfs://')){
+		result=ipfs_link(link.substring(7));
+	}
+	else
+	if(0==link.indexOf('sia://')){
+		result=sia_link(link.substring(6));
+	}
+	else{
+		error=true;//unknown
+	}
+	if(error){
+		return false;
+	}
+	return result;
+}
+function render_preview_data(account,block,json){
+	if(typeof account == 'undefined'){
+		return;
+	}
+	if(typeof block == 'undefined'){
+		return;
+	}
+	if(false===json){
+		return;
+	}
+	let result='';
+	let image='';
+	let link='';
+	let image_part=(typeof json.image !== 'undefined');
+	if(image_part){
+		if(false===json.image){
+			image_part=false;
+		}
+	}
+	let link_part=(typeof json.title !== 'undefined');
+	let link_image_addon=' style="flex-shrink:1;flex-direction:column;width:30%;"';
+	let link_addon=' style="flex-shrink:0;flex-grow:1;flex-direction:column;width:70%;"';
+	let wrapper_addon=' style="flex-direction:column;"';
+	//console.log('render_preview_data',json);
+	if(link_part){
+		if(image_part){
+			if(!json.image.large){
+				link=ltmp(ltmp_arr.render_preview_link,{addon:link_addon,title:json.title,descr:json.description,source:ltmp_arr.icon_copy_link+json.source});
+			}
+			else{
+				link=ltmp(ltmp_arr.render_preview_link,{title:json.title,descr:json.description,source:ltmp_arr.icon_copy_link+json.source});
+			}
+		}
+		else{
+			link=ltmp(ltmp_arr.render_preview_link,{title:json.title,descr:json.description,source:ltmp_arr.icon_copy_link+json.source});
+		}
+	}
+	if(image_part){
+		if(json.image.large){
+			image=ltmp(ltmp_arr.render_preview_large_image,{image:json.image.data});
+		}
+		else{
+			wrapper_addon='';
+			if(link_part){
+				image=ltmp(ltmp_arr.render_preview_image,{addon:link_image_addon,image:json.image.data});
+			}
+			else{
+				image=ltmp(ltmp_arr.render_preview_image,{prepand:ltmp(ltmp_arr.render_preview_image_addon,{image:json.image.data}),image:json.image.data});
+			}
+		}
+	}
+
+	result=ltmp(ltmp_arr.render_preview_wrapper,{link:json.link,context:image+link,addon:wrapper_addon});
+
+	let current_link='viz://@'+account+'/'+block+'/';
+	let view=$('.view[data-level="'+level+'"]');
+	if(-1==path.indexOf('viz://')){//look in services views
+		let path_parts=path.split('/');
+		view=$('.view[data-path="'+path_parts[0]+'"]');
+	}
+	let actions=view.find('.objects .object[data-link="'+current_link+'"] .preview-container')[0];
+	$(actions).html(result);
+}
+function load_preview_data(link,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	let xhr = new XMLHttpRequest();
+	xhr.timeout=5000;
+	xhr.overrideMimeType('text/plain');
+	xhr.open('POST','https://readdle.me/preview/');
+	xhr.setRequestHeader('accept','application/json, text/plain, */*');
+	xhr.setRequestHeader('content-type','application/json');
+	xhr.ontimeout = function() {
+		console.log('load_preview_data timeout',link);
+	};
+	xhr.onreadystatechange = function() {
+		if(4==xhr.readyState && 200==xhr.status){
+			try{
+				let json=JSON.parse(xhr.response);
+				console.log('load_preview_data response',json);
+				callback(json.meta);
+			}
+			catch(e){
+				console.log('load_preview_data response json error',xhr.response,e);
+				callback(false);
+			}
+		}
+		if(4==xhr.readyState && 200!=xhr.status){
+			callback(false);
+		}
+	};
+	let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
+	auth_data.link=link;
+	xhr.send(JSON.stringify(auth_data));
+}
+function ipfs_link(cid){
+	return 'https://cloudflare-ipfs.com/ipfs/'+cid;
+}
+function sia_link(skylink){
+	return 'https://siasky.net/'+skylink;
+}
 function safe_avatar(avatar){
 	let result='';
 	let error=false;
@@ -1448,11 +1589,11 @@ function safe_avatar(avatar){
 	}
 	else
 	if(0==avatar.indexOf('ipfs://')){
-		result='https://cloudflare-ipfs.com/ipfs/'+avatar.substring(7);
+		result=ipfs_link(avatar.substring(7));
 	}
 	else
 	if(0==avatar.indexOf('sia://')){
-		result='https://siasky.net/'+avatar.substring(6);
+		result=sia_link(avatar.substring(6));
 	}
 	else
 	if(0==avatar.indexOf('http://')){
@@ -6493,11 +6634,11 @@ function highlight_links(text){
 		}
 		else
 		if('sia://'==change_text.substring(0,6)){
-			new_text='<a tabindex="0" href="https://siasky.net/'+change_text.substring(6)+'" target="_blank">'+change_text+'</a>';
+			new_text='<a tabindex="0" href="'+sia_link(change_text.substring(6))+'" target="_blank">'+change_text+'</a>';
 		}
 		else
 		if('ipfs://'==change_text.substring(0,7)){
-			new_text='<a tabindex="0" href="https://cloudflare-ipfs.com/ipfs/'+change_text.substring(7)+'" target="_blank">'+change_text+'</a>';
+			new_text='<a tabindex="0" href="'+ipfs_link(change_text.substring(7))+'" target="_blank">'+change_text+'</a>';
 		}
 		else{
 			new_text='<a href="'+change_text+'" target="_blank">'+change_text+'</a>';
@@ -6549,6 +6690,7 @@ function render_object(user,object,type,preset_level){
 	type=typeof type==='undefined'?'default':type;
 	preset_level=typeof preset_level==='undefined'?level:preset_level;
 	let render='';
+	let text_first_link=false;
 	let profile={};
 	if(typeof user.profile != 'undefined'){
 		profile=JSON.parse(user.profile);
@@ -6615,6 +6757,8 @@ function render_object(user,object,type,preset_level){
 		}
 		else{
 			let text=object.data.d.text;
+			text_first_link=first_link(text);
+
 			text=escape_html(text);
 			text=fast_str_replace("\n",'<br>',text);
 
@@ -6623,7 +6767,7 @@ function render_object(user,object,type,preset_level){
 				reply=ltmp(ltmp_arr.object_type_text_reply_internal,{link:'viz://@'+object.parent_account+'/'+object.parent_block+'/',caption:'@'+object.parent_account});
 			}
 			else{
-				if(typeof object.data.d.r != 'undefined'){
+				if(typeof object.data.d.r !== 'undefined'){
 					let reply_link=object.data.d.r;
 					//reply to external url
 					if(0==reply_link.indexOf('https://')){
@@ -6720,6 +6864,8 @@ function render_object(user,object,type,preset_level){
 		}
 		else{
 			let text=object.data.d.text;
+			text_first_link=first_link(text);
+
 			text=escape_html(text);
 			text=fast_str_replace("\n",'<br>',text);
 
@@ -6985,7 +7131,19 @@ function render_object(user,object,type,preset_level){
 			timestamp:object.data.timestamp,
 		});
 	}
-	setTimeout(function(){check_object_award(user.account,object.block)},100);
+	setTimeout(function(){
+		check_object_award(user.account,object.block);
+		console.log('render_object timeout check first link',type,text_first_link);
+		if(false!==text_first_link){
+			text_first_link=link_to_http_gate(text_first_link);
+			if(false!==text_first_link){
+				load_preview_data(text_first_link,function(preview_data){
+					render_preview_data(user.account,object.block,preview_data);
+				});
+			}
+		}
+	},100);
+
 	return render;
 }
 
