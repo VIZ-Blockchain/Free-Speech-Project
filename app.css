@@ -965,13 +965,30 @@ body.dark .share-view a{
 	left:15px;
 	margin-top:10px;
 }
-.fast-publish-wrapper .button{
+.fast-publish-wrapper .buttons{
 	position:absolute;
-	padding:7px;
-	right:15px;
+	right:20px;
 	bottom:15px;
+	line-height:18px;
+	font-size:18px;
+}
+.fast-publish-wrapper .button{
+	padding:7px;
+	padding-top:4px;
 	cursor:pointer;
 	outline:none;
+	min-width:35px;
+	text-align:center;
+}
+.fast-publish-wrapper .icon{
+	max-width:18px;
+	max-height:18px;
+	line-height:18px;
+}
+.fast-publish-wrapper .icon svg{
+	max-width:18px;
+	max-height:18px;
+	margin-top:0;
 }
 .fast-publish-wrapper .button.disabled{
 	opacity:0.4;
@@ -999,7 +1016,7 @@ body.dark .share-view a{
 	scrollbar-width: thin;
 }
 .fast-publish-wrapper textarea::-webkit-scrollbar{
-	width:10px;
+	width:15px;
 }
 .fast-publish-wrapper textarea::-webkit-scrollbar-track{
 	background:rgba(200, 200, 220, 0.3);
@@ -1908,6 +1925,10 @@ body.midnight .preview-link div{
 		width:100vw;
 		top:0;
 		padding:0;
+	}
+
+	.fast-publish-wrapper textarea{
+		min-height:20vh;
 	}
 
 	.adaptive-pinned-tags{

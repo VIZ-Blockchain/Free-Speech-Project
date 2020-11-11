@@ -1361,7 +1361,8 @@ function render_right_addon(){
 
 var sia_upload_percent=0;
 var sia_upload_percent_timer=0;
-function sia_upload(callback){
+function sia_upload(type,callback){
+	type=(typeof type !== 'undefined')?type:/.*/;
 	var upload = document.createElement("INPUT");
 	upload.setAttribute("type", "file");
 	$(upload).off('change');
@@ -1369,7 +1370,7 @@ function sia_upload(callback){
 		e.preventDefault();
 		let files = this.files;
 		let file = files[0];
-		if(file.type.match(/image.*/)){
+		if(file.type.match(type)){
 			let post_form = new FormData();
 			post_form.append('file',file);
 			let xhr=new XMLHttpRequest();
@@ -1404,7 +1405,8 @@ function sia_upload(callback){
 
 var ipfs_upload_percent=0;
 var ipfs_upload_percent_timer=0;
-function ipfs_upload(callback){
+function ipfs_upload(type,callback){
+	type=(typeof type !== 'undefined')?type:/.*/;
 	var upload = document.createElement("INPUT");
 	upload.setAttribute("type", "file");
 	$(upload).off('change');
@@ -1412,7 +1414,7 @@ function ipfs_upload(callback){
 		e.preventDefault();
 		let files = this.files;
 		let file = files[0];
-		if(file.type.match(/image.*/)){
+		if(file.type.match(type)){
 			let post_form = new FormData();
 			post_form.append('file',file);
 			post_form.append('username','null');
@@ -2674,7 +2676,7 @@ function app_mouse(e){
 	if($(target).hasClass('sia-upload-profile-avatar-action')){
 		let view=$(target).closest('.view');
 		sia_upload_percent=0;
-		sia_upload(function(result){
+		sia_upload(/image.*/,function(result){
 			if(typeof result == 'boolean'){
 				if(!result){
 					add_notify(false,
@@ -2708,10 +2710,112 @@ function app_mouse(e){
 			}
 		});
 	}
+	if($(target).hasClass('publish-attach-sia-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			let view=$(target).closest('.view');
+			let publish_form=$(target).parent().parent();
+			let text_el=false;
+			sia_upload_percent=0;
+			sia_upload(/.*/,function(result){
+				if(typeof result == 'boolean'){
+					if(!result){
+						add_notify(false,
+							ltmp_arr.notify_arr.error,
+							ltmp_arr.notify_arr.upload_incorrect_format
+						);
+						sia_upload_percent=0;
+					}
+				}
+				else
+				if(typeof result == 'string'){
+					if(publish_form.hasClass('text-addon')){
+						text_el=publish_form.find('textarea');
+					}
+					/*
+					if(publish_form.hasClass('comment-addon')){
+						text_el=publish_form.find('input[name=comment]');
+					}
+					*/
+					if(false!==text_el){
+						let text=text_el.val();
+						text=text.trim();
+						text+="\n"+'sia://'+result;
+						text=text.trim();
+						text_el.val(text);
+					}
+					$(target).removeClass('disabled');
+					sia_upload_percent=0;
+				}
+				else{
+					if(typeof result == 'object'){
+						if(typeof result.loaded !== 'undefined'){
+							let percent = parseInt(result.loaded / result.total * 100);
+							if(percent>(sia_upload_percent+10)){
+								clearTimeout(sia_upload_percent_timer);
+								sia_upload_percent_timer=setTimeout(function(){
+									add_notify(false,
+										ltmp_arr.notify_arr.upload,
+										ltmp(ltmp_arr.notify_arr.upload_percent,{percent:percent})
+									);
+								},1000);
+								sia_upload_percent=percent;
+							}
+						}
+					}
+				}
+			});
+		}
+	}
+	if($(target).hasClass('fast-publish-attach-action')){
+		if(!$(target).hasClass('disabled')){
+			$(target).addClass('disabled');
+			let view=$(target).closest('.view');
+			sia_upload_percent=0;
+			sia_upload(/.*/,function(result){
+				if(typeof result == 'boolean'){
+					if(!result){
+						add_notify(false,
+							ltmp_arr.notify_arr.error,
+							ltmp_arr.notify_arr.upload_incorrect_format
+						);
+						sia_upload_percent=0;
+					}
+				}
+				else
+				if(typeof result == 'string'){
+					let text=view.find('.fast-publish-wrapper textarea[name="text"]').val();
+					text=text.trim();
+					text+="\n"+'sia://'+result;
+					text=text.trim();
+					view.find('.fast-publish-wrapper textarea[name="text"]').val(text);
+					$(target).removeClass('disabled');
+					sia_upload_percent=0;
+				}
+				else{
+					if(typeof result == 'object'){
+						if(typeof result.loaded !== 'undefined'){
+							let percent = parseInt(result.loaded / result.total * 100);
+							if(percent>(sia_upload_percent+10)){
+								clearTimeout(sia_upload_percent_timer);
+								sia_upload_percent_timer=setTimeout(function(){
+									add_notify(false,
+										ltmp_arr.notify_arr.upload,
+										ltmp(ltmp_arr.notify_arr.upload_percent,{percent:percent})
+									);
+								},1000);
+								sia_upload_percent=percent;
+							}
+						}
+					}
+				}
+			});
+		}
+	}
 	if($(target).hasClass('ipfs-upload-profile-avatar-action')){
 		let view=$(target).closest('.view');
 		ipfs_upload_percent=0;
-		ipfs_upload(function(result){
+		ipfs_upload(/image.*/,function(result){
 			if(typeof result == 'boolean'){
 				if(!result){
 					add_notify(false,
@@ -5997,7 +6101,11 @@ function view_path(location,state,save_state,update){
 				get_user(current_user,false,function(err,result){
 					if(!err){
 						let profile=JSON.parse(result.profile);
-						view.find('.objects').before(ltmp(ltmp_arr.fast_publish,{avatar:safe_avatar(profile.avatar),button:ltmp_arr.icon_new_object}));
+						view.find('.objects').before(ltmp(ltmp_arr.fast_publish,{
+							avatar:safe_avatar(profile.avatar),
+							attach:ltmp_arr.icon_attach,
+							button:ltmp_arr.fast_publish_button,
+						}));
 					}
 				});
 			}
