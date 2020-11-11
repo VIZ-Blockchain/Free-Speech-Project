@@ -199,7 +199,8 @@ div.right-addon .box .box-container{
 	max-height:30vh;
 	overflow:hidden;
 }
-.adaptive-pinned-tags {
+.adaptive-pinned-tags{
+	display:none;
 	margin-top:25px;
 }
 div.right-addon .box .box-container .box-item::before{
@@ -1907,6 +1908,10 @@ body.midnight .preview-link div{
 		width:100vw;
 		top:0;
 		padding:0;
+	}
+
+	.adaptive-pinned-tags{
+		display:block;
 	}
 
 	.adaptive-show{
