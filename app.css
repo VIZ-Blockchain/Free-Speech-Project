@@ -199,6 +199,9 @@ div.right-addon .box .box-container{
 	max-height:30vh;
 	overflow:hidden;
 }
+.adaptive-pinned-tags {
+	margin-top:25px;
+}
 div.right-addon .box .box-container .box-item::before{
 	content:'•';
 	margin-right:5px;
@@ -1435,7 +1438,7 @@ body.dark .loading-ring:after {
 .loader{
 	text-align:center;
 	padding:20vh 0;
-	width:598px;
+	max-width:598px;
 	height:100vh;
 	border:1px solid rgba(204, 204, 221, 0.6);
 	border-top:0;

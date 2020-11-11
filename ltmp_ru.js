@@ -427,6 +427,8 @@ var ltmp_ru_arr={
 		<div class="primary"></div>
 		<div class="secondary"></div>`,
 	menu_primary:`<div><a tabindex="0" data-href="{link}" class="{class}">{icon}<span>{caption}</span></a></div>`,
+	menu_primary_pinned_tags:`<div class="adaptive-pinned-tags"></div>`,
+	menu_primary_pinned_tags_caption:`Закрепленные тэги:`,
 	menu_feed:'Лента новостей',
 	menu_view_profile:'Профиль',
 	menu_hashtags:'Тэги',
