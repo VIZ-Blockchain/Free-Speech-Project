@@ -1845,6 +1845,7 @@ body.midnight .preview-link div{
 		z-index:10;
 		background:#fff;
 		min-height:100vh;
+		overflow-y:scroll;
 	}
 	body.midnight div.menu{
 		background:#14202c;
@@ -1864,8 +1865,6 @@ body.midnight .preview-link div{
 	div.menu .primary{
 		padding:0;
 		text-align:center;
-		overflow-y:scroll;
-		height:calc(100vh - 75px - 60px);/* minus session height and secondary menu height */
 	}
 	div.menu .primary div{
 		text-align:center;
@@ -1876,6 +1875,7 @@ body.midnight .preview-link div{
 		min-width:60vw;
 	}
 	div.menu .secondary{
+		position:relative;
 		border-top:2px solid rgba(204, 204, 221, 0.4);
 		padding:5px;
 		margin:0;
@@ -1891,6 +1891,7 @@ body.midnight .preview-link div{
 		left:15px;
 		top:-1px;
 		color:#1c98e5;
+		z-index:10;
 	}
 	div.menu.show div.icon-counter.show{
 		display:inline-block;
