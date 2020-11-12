@@ -1546,7 +1546,7 @@ function render_preview_data(account,block,json){
 		let path_parts=path.split('/');
 		view=$('.view[data-path="'+path_parts[0]+'"]');
 	}
-	let actions=view.find('.objects .object[data-link="'+current_link+'"] .preview-container')[0];
+	let actions=view.find('.objects .object[data-link="'+current_link+'"] .preview-container');
 	$(actions).html(result);
 }
 function load_preview_data(link,callback){
