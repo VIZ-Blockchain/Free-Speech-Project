@@ -588,13 +588,16 @@ var ltmp_ru_arr={
 	feed_no_new_objects:'Новых обновлений нет',
 
 	fast_publish:`
-	<div class="fast-publish-wrapper">
-		<div class="avatar" alt="Быстрая публикация"><img src="{avatar}"></div>
-		<textarea name="text" placeholder="Что нового?"></textarea>
+	<div class="fast-publish-wrapper" data-reply="{reply}" data-share="{share}" tabindex="0" title="Форма быстрой публикации">
+		<div class="avatar" alt=""><img src="{avatar}"></div>
+		<textarea name="text" placeholder="{placeholder}"></textarea>
 		<div class="buttons">
 			<div tabindex="0" class="button fast-publish-attach-action" title="Добавить файл">{attach}</div>
 			<div tabindex="0" class="button fast-publish-action" title="Опубликовать">{button}</div>
 		</div>
 	</div>`,
+	fast_publish_feed:`Что нового?`,
+	fast_publish_reply:`Написать в ответ`,
+	fast_publish_share:`Добавить комментарий`,
 	fast_publish_button:`Отправить`,
 };

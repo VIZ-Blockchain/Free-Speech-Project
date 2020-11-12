@@ -1620,13 +1620,16 @@ function safe_avatar(avatar){
 	return result;
 }
 
+var user_profile=false;
 function render_session(){
 	let toggle_menu=ltmp(ltmp_arr.toggle_menu,{title:ltmp_arr.toggle_menu_title,icon:ltmp_arr.icon_close});
 	if(''!=current_user){
 		get_user(current_user,false,function(err,result){
 			if(!err){
-				profile=JSON.parse(result.profile);
-				$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_account,{'account':result.account,'nickname':profile.nickname,'avatar':safe_avatar(profile.avatar)}));
+				if(false===user_profile){
+					user_profile=JSON.parse(result.profile);
+				}
+				$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_account,{'account':result.account,'nickname':user_profile.nickname,'avatar':safe_avatar(user_profile.avatar)}));
 			}
 			else{
 				$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_error,avatar:ltmp_arr.profile_default_avatar}));
@@ -1732,14 +1735,63 @@ function award(account,block,callback){
 	});
 }
 
-function fast_publish(view){
-	let text=view.find('.fast-publish-wrapper textarea[name="text"]').val();
+var wait_publish_timer=0;
+function wait_publish(last_id,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	clearTimeout(wait_publish_timer);
+	get_user(current_user,true,function(err,result){
+		if(!err){
+			if(result.start!=last_id){
+				get_object(current_user,result.start,function(err,object_result){
+					if(!err){
+						callback(result.start);
+					}
+					else{
+						wait_publish_timer=setTimeout(function(){
+							wait_publish(last_id,callback);
+						},1000);
+					}
+				});
+			}
+			else{
+				wait_publish_timer=setTimeout(function(){
+					wait_publish(last_id,callback);
+				},1000);
+			}
+		}
+		else{
+			wait_publish_timer=setTimeout(function(){
+				wait_publish(last_id,callback);
+			},1000);
+		}
+	});
+}
+function fast_publish(publish_form){
+	let text=publish_form.find('textarea[name="text"]').val();
+	let action=false;
 	text=text.trim();
-	if(text){
+	let ignore_text=false;
+	let reply=false;
+	let share=false;
+
+	if(''!==publish_form.data('reply')){
+		reply=publish_form.data('reply');
+		action=publish_form.prev().find('.actions-view .reply-action');
+	}
+	if(''!==publish_form.data('share')){
+		share=publish_form.data('share');
+		action=publish_form.prev().find('.actions-view .share-action');
+		ignore_text=true;
+	}
+
+	if(''!==text || ignore_text){
 		viz.api.getAccount(current_user,app_protocol,function(err,response){
 			if(err){
 				console.log(err);
 				add_notify(false,'',ltmp_arr.gateway_error);
+				publish_form.find('.fast-publish-action').removeClass('disabled');
 				return;
 			}
 			else{
@@ -1757,6 +1809,14 @@ function fast_publish(view){
 				let data={};
 				data.text=text;
 
+				if(false!=reply){
+					data.r=reply;
+				}
+				else
+				if(false!=share){
+					data.s=share;
+				}
+
 				new_object.d=data;
 				let object_json=JSON.stringify(new_object);
 
@@ -1764,15 +1824,11 @@ function fast_publish(view){
 					if(result){
 						console.log(result);
 						setTimeout(function(){
-							get_user(current_user,true,function(err,result){
-								if(!err){
-									if(result.start!=previous){
-										get_object(current_user,result.start,function(err,object_result){
-											if(!err){
-												view_path('viz://@'+current_user+'/'+result.start+'/',{},true,false);
-											}
-										});
-									}
+							wait_publish(previous,function(object_block){
+								view_path('viz://@'+current_user+'/'+object_block+'/',{},true,false);
+								if(false!==action){
+									action.removeClass('success');
+									publish_form.remove();
 								}
 							});
 						},3000);
@@ -1780,6 +1836,7 @@ function fast_publish(view){
 					else{
 						console.log(err);
 						add_notify(false,'',ltmp_arr.gateway_error);
+						publish_form.find('.fast-publish-action').removeClass('disabled');
 						return;
 					}
 				});
@@ -1787,8 +1844,8 @@ function fast_publish(view){
 		});
 	}
 	else{
-		view.find('.fast-publish-wrapper textarea[name="text"]')[0].focus();
-		view.find('.fast-publish-wrapper .button').removeClass('disabled');
+		publish_form.find('textarea[name="text"]')[0].focus();
+		publish_form.find('.fast-publish-action').removeClass('disabled');
 		add_notify(false,'',ltmp_arr.publish_empty_text);
 	}
 }
@@ -2770,7 +2827,8 @@ function app_mouse(e){
 	if($(target).hasClass('fast-publish-attach-action')){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
-			let view=$(target).closest('.view');
+			let publish_form=$(target).closest('.fast-publish-wrapper');
+
 			sia_upload_percent=0;
 			sia_upload(/.*/,function(result){
 				if(typeof result == 'boolean'){
@@ -2780,15 +2838,16 @@ function app_mouse(e){
 							ltmp_arr.notify_arr.upload_incorrect_format
 						);
 						sia_upload_percent=0;
+						$(target).removeClass('disabled');
 					}
 				}
 				else
 				if(typeof result == 'string'){
-					let text=view.find('.fast-publish-wrapper textarea[name="text"]').val();
+					let text=publish_form.find('textarea[name="text"]').val();
 					text=text.trim();
 					text+="\n"+'sia://'+result;
 					text=text.trim();
-					view.find('.fast-publish-wrapper textarea[name="text"]').val(text);
+					publish_form.find('textarea[name="text"]').val(text);
 					$(target).removeClass('disabled');
 					sia_upload_percent=0;
 				}
@@ -3152,12 +3211,54 @@ function app_mouse(e){
 		}
 	}
 	if($(target).hasClass('reply-action')){
-		let link=$(target).closest('.object').data('link');
-		view_path('dapp:publish/reply/?'+link,{},true,false);
+		let object=$(target).closest('.object');
+		let link=object.data('link');
+		let check_share=object.find('.share-action');
+		if(check_share.hasClass('success')){
+			$('.fast-publish-wrapper[data-share="'+link+'"]').remove();
+			check_share.removeClass('success');
+		}
+		if($(target).hasClass('success')){
+			$('.fast-publish-wrapper[data-reply="'+link+'"]').remove();
+			$(target).removeClass('success');
+		}
+		else{
+			$(target).addClass('success');
+			object.after(ltmp(ltmp_arr.fast_publish,{
+				avatar:safe_avatar(user_profile.avatar),
+				attach:ltmp_arr.icon_attach,
+				reply:link,
+				placeholder:ltmp_arr.fast_publish_reply,
+				button:ltmp_arr.fast_publish_button,
+			}));
+			$('.fast-publish-wrapper[data-reply="'+link+'"] textarea')[0].focus();
+		}
+		//view_path('dapp:publish/reply/?'+link,{},true,false);
 	}
 	if($(target).hasClass('share-action')){
-		let link=$(target).closest('.object').data('link');
-		view_path('dapp:publish/share/?'+link,{},true,false);
+		let object=$(target).closest('.object');
+		let link=object.data('link');
+		let check_reply=object.find('.reply-action');
+		if(check_reply.hasClass('success')){
+			$('.fast-publish-wrapper[data-reply="'+link+'"]').remove();
+			check_reply.removeClass('success');
+		}
+		if($(target).hasClass('success')){
+			$('.fast-publish-wrapper[data-share="'+link+'"]').remove();
+			$(target).removeClass('success');
+		}
+		else{
+			$(target).addClass('success');
+			object.after(ltmp(ltmp_arr.fast_publish,{
+				avatar:safe_avatar(user_profile.avatar),
+				attach:ltmp_arr.icon_attach,
+				share:link,
+				placeholder:ltmp_arr.fast_publish_share,
+				button:ltmp_arr.fast_publish_button,
+			}));
+			$('.fast-publish-wrapper[data-share="'+link+'"] textarea')[0].focus();
+		}
+		//view_path('dapp:publish/share/?'+link,{},true,false);
 	}
 	if($(target).hasClass('award-action')){
 		let link=$(target).closest('.object').data('link');
@@ -3197,8 +3298,8 @@ function app_mouse(e){
 	if($(target).hasClass('fast-publish-action')){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
-			let view=$(target).closest('.view');
-			fast_publish(view);
+			let publish_form=$(target).closest('.fast-publish-wrapper');
+			fast_publish(publish_form);
 		}
 	}
 	if($(target).hasClass('publish-action')){
@@ -3881,6 +3982,10 @@ function update_user_profile(account,callback){
 			}
 			if(typeof profile_obj.avatar == 'undefined'){
 				profile_obj.avatar=ltmp_arr.profile_default_avatar;
+			}
+
+			if(current_user==account){
+				user_profile=profile_obj;
 			}
 
 			let obj={
@@ -6098,16 +6203,12 @@ function view_path(location,state,save_state,update){
 		}
 		else{
 			if(''!=current_user){
-				get_user(current_user,false,function(err,result){
-					if(!err){
-						let profile=JSON.parse(result.profile);
-						view.find('.objects').before(ltmp(ltmp_arr.fast_publish,{
-							avatar:safe_avatar(profile.avatar),
-							attach:ltmp_arr.icon_attach,
-							button:ltmp_arr.fast_publish_button,
-						}));
-					}
-				});
+				view.find('.objects').before(ltmp(ltmp_arr.fast_publish,{
+					avatar:safe_avatar(user_profile.avatar),
+					attach:ltmp_arr.icon_attach,
+					placeholder:ltmp_arr.fast_publish_feed,
+					button:ltmp_arr.fast_publish_button,
+				}));
 			}
 		}
 		let clear=view.data('clear');
