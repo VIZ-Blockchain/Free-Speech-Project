@@ -526,6 +526,7 @@ var default_settings={
 	user_profile_ttl:60,
 	user_cache_ttl:10,
 	object_cache_ttl:10,
+	preview_cache_ttl:7200,
 	feed_subscribe_text:true,
 	feed_subscribe_replies:false,
 	feed_subscribe_shares:true,
@@ -652,6 +653,12 @@ function save_settings(view){
 		settings.object_cache_ttl=default_settings.object_cache_ttl;
 	}
 	tab.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
+
+	settings.preview_cache_ttl=parseInt(tab.find('input[name="preview_cache_ttl"]').val());
+	if(isNaN(settings.preview_cache_ttl)){
+		settings.preview_cache_ttl=default_settings.preview_cache_ttl;
+	}
+	tab.find('input[name="preview_cache_ttl"]').val(settings.preview_cache_ttl);
 
 	let energy_str=tab.find('input[name="energy"]').val();
 	energy_str=fast_str_replace(',','.',energy_str);
@@ -795,7 +802,7 @@ function idb_error(e){
 	stop_timers();
 	setTimeout(function(){
 		document.location.reload(true);
-	},5000);
+	},10000);
 }
 
 const idb=window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
@@ -805,7 +812,7 @@ const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRa
 var db;
 var db_req;
 var db_version=1;
-var global_db_version=4;
+var global_db_version=5;
 var need_update_db_version=false;
 var local_global_db_version=localStorage.getItem(storage_prefix+'global_db_version');
 if((null===local_global_db_version)||(global_db_version>local_global_db_version)){
@@ -816,6 +823,8 @@ if((null===local_global_db_version)||(global_db_version>local_global_db_version)
 if(null!=localStorage.getItem(storage_prefix+'db_version')){
 	db_version=parseInt(localStorage.getItem(storage_prefix+'db_version'));
 }
+//need_update_db_version=true;
+console.log('db_version',db_version,'local_global_db_version',global_db_version,need_update_db_version);
 if(need_update_db_version){
 	increase_db_version(function(){
 		load_db(function(){
@@ -839,15 +848,11 @@ function increase_db_version(callback){
 		db.close();
 		setTimeout(function(){
 			db=false;
-			load_db(()=>{
-				callback();
-			});
+			callback();
 		},1000);
 	}
 	else{
-		load_db(()=>{
-			callback();
-		});
+		callback();
 	}
 }
 
@@ -954,6 +959,15 @@ function load_db(callback){
 			//new index for hashtags_feed
 		}
 
+		if(!db.objectStoreNames.contains('preview')){//store previews data
+			items_table=db.createObjectStore('preview',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('domain','domain',{unique:false});//domain from link to fastest search
+			items_table.createIndex('time','time',{unique:false});//unixtime for clear cache
+		}
+		else{
+			//new index for preview
+		}
+
 		users_table=update_trx.objectStore('users');
 		if(!db.objectStoreNames.contains('objects')){
 			items_table=db.createObjectStore('objects',{keyPath:'id',autoIncrement:true});
@@ -962,16 +976,6 @@ function load_db(callback){
 			items_table.createIndex('time','time',{unique:false});//unixtime for stored objects
 
 			if(''!=whitelabel_account){//only on genesis
-				for(let i in whitelabel_accounts){
-					let obj={
-						account:whitelabel_accounts[i],
-						start:0,
-						update:0,
-						profile:'{}',
-						status:1,
-					};
-					users_table.add(obj);
-				}
 				whitelabel_init=true;
 			}
 		}
@@ -979,15 +983,10 @@ function load_db(callback){
 			//items_table=update_trx.objectStore('objects');
 			//new index for objects cache
 		}
-		if(''!=current_user){
-			let obj={
-				account:current_user,
-				start:0,
-				update:0,
-				profile:'{}',
-				status:1,
-			};
-			users_table.add(obj);
+		if(!is_safari){
+			if(!is_firefox){
+				update_trx.commit();
+			}
 		}
 	};
 }
@@ -1553,34 +1552,79 @@ function load_preview_data(link,callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
-	let xhr = new XMLHttpRequest();
-	xhr.timeout=5000;
-	xhr.overrideMimeType('text/plain');
-	xhr.open('POST','https://readdle.me/preview/');
-	xhr.setRequestHeader('accept','application/json, text/plain, */*');
-	xhr.setRequestHeader('content-type','application/json');
-	xhr.ontimeout = function() {
-		console.log('load_preview_data timeout',link);
-	};
-	xhr.onreadystatechange = function() {
-		if(4==xhr.readyState && 200==xhr.status){
-			try{
-				let json=JSON.parse(xhr.response);
-				console.log('load_preview_data response',json);
-				callback(json.meta);
+
+	link_domain=link.split('://')[1].split('/')[0];
+
+	//look on cache
+	let t=db.transaction(['preview'],'readonly');
+	let q=t.objectStore('preview');
+	let req=q.index('domain').openCursor(IDBKeyRange.only(link_domain),'next');
+	let find=false;
+	let cursor_end=false;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cursor_end){
+			cur=false;
+		}
+		if(cur){
+			if(cur.value.link==link){
+				find=cur.value;
+				cursor_end=true;
 			}
-			catch(e){
-				console.log('load_preview_data response json error',xhr.response,e);
-				callback(false);
+			cur.continue();
+		}
+		else{
+			if(false!==find){
+				console.log('find in preview cache',link_domain,link);
+				callback(find.meta);
+			}
+			else{
+				console.log('need load preview',link_domain,link);
+				let xhr = new XMLHttpRequest();
+				xhr.timeout=5000;
+				xhr.overrideMimeType('text/plain');
+				xhr.open('POST','https://readdle.me/preview/');
+				xhr.setRequestHeader('accept','application/json, text/plain, */*');
+				xhr.setRequestHeader('content-type','application/json');
+				xhr.ontimeout = function() {
+					console.log('load_preview_data timeout',link);
+				};
+				xhr.onreadystatechange = function() {
+					if(4==xhr.readyState && 200==xhr.status){
+						try{
+							let json=JSON.parse(xhr.response);
+							console.log('load_preview_data response',json);
+							let add_t=db.transaction(['preview'],'readwrite');
+							let add_q=add_t.objectStore('preview');
+							let obj={
+								domain:link_domain,
+								link:link,
+								meta:json.meta,
+								time:parseInt(new Date().getTime()/1000),
+							};
+							add_q.add(obj);
+							if(!is_safari){
+								if(!is_firefox){
+									add_t.commit();
+								}
+							}
+							callback(json.meta);
+						}
+						catch(e){
+							console.log('load_preview_data response json error',xhr.response,e);
+							callback(false);
+						}
+					}
+					if(4==xhr.readyState && 200!=xhr.status){
+						callback(false);
+					}
+				};
+				let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
+				auth_data.link=link;
+				xhr.send(JSON.stringify(auth_data));
 			}
 		}
-		if(4==xhr.readyState && 200!=xhr.status){
-			callback(false);
-		}
 	};
-	let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
-	auth_data.link=link;
-	xhr.send(JSON.stringify(auth_data));
 }
 function ipfs_link(cid){
 	return 'https://cloudflare-ipfs.com/ipfs/'+cid;
@@ -1591,7 +1635,7 @@ function sia_link(skylink){
 function safe_avatar(avatar){
 	let result='';
 	let error=false;
-	console.log(typeof avatar,avatar);
+	//console.log(typeof avatar,avatar);
 	if(0==avatar.indexOf('https://')){
 		result=avatar;
 	}
@@ -4574,7 +4618,29 @@ function get_object(account,block,callback){
 		}
 	};
 }
+function clear_previews_cache(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	let t,q,req;
+	t=db.transaction(['preview'],'readwrite');
+	q=t.objectStore('preview');
+	let time_bound=new Date().getTime() / 1000 | 0;
+	time_bound-=settings.preview_cache_ttl*60;
+	req=q.index('time').openCursor(IDBKeyRange.upperBound(time_bound),'next');
 
+	let result=[];
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			cur.delete();
+			cur.continue();
+		}
+		else{
+			setTimeout(function(){callback()},100);
+		}
+	};
+}
 function clear_objects_cache(callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
@@ -4599,7 +4665,7 @@ function clear_objects_cache(callback){
 			t=db.transaction(['objects'],'readwrite');
 			q=t.objectStore('objects');
 			let time_bound=new Date().getTime() / 1000 | 0;
-			//time_bound-=settings.object_cache_ttl*60;
+			time_bound-=settings.object_cache_ttl*60;
 			req=q.index('time').openCursor(IDBKeyRange.upperBound(time_bound),'next');
 
 			let result=[];
@@ -4948,8 +5014,10 @@ function clear_cache(callback){
 	clearTimeout(clear_cache_timer);
 	clear_objects_cache(function(){
 		clear_users_cache(function(){
-			callback();
-			clear_cache_timer=setTimeout(function(){clear_cache()},300000);//5min
+			clear_previews_cache(function(){
+				callback();
+				clear_cache_timer=setTimeout(function(){clear_cache()},300000);//5min
+			});
 		});
 	});
 }
@@ -5836,6 +5904,7 @@ function view_app_settings(view,path_parts,query,title){
 		tab.find('input[name="user_profile_ttl"]').val(settings.user_profile_ttl);
 		tab.find('input[name="user_cache_ttl"]').val(settings.user_cache_ttl);
 		tab.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
+		tab.find('input[name="preview_cache_ttl"]').val(settings.preview_cache_ttl);
 
 		tab.find('input[name="energy"]').val(settings.energy/100);
 		$('input[name="silent_award"]').prop("checked",settings.silent_award);
@@ -6896,7 +6965,7 @@ function check_object_award(account,block){
 					let path_parts=path.split('/');
 					view=$('.view[data-path="'+path_parts[0]+'"]');
 				}
-				let actions=view.find('.objects .object[data-link="'+current_link+'"] .actions-view')[0];
+				let actions=view.find('.objects .object[data-link="'+current_link+'"] .actions-view');
 				$(actions).find('.award-action').addClass('success');
 				$(actions).find('.award-action').prop('title',ltmp(ltmp_arr.awarded_amount,{amount:result.amount}));
 			}
@@ -7297,7 +7366,10 @@ function render_object(user,object,type,preset_level){
 		},500);
 	}
 	if('share-preview'==type){
+		console.log(object);
 		let text=object.data.d.text;
+		text_first_link=first_link(text);
+
 		text=escape_html(text);
 		text=fast_str_replace("\n",'<br>',text);
 
@@ -7310,6 +7382,7 @@ function render_object(user,object,type,preset_level){
 			reply=ltmp(ltmp_arr.object_type_text_reply_internal,{link:'viz://@'+object.parent_account+'/'+object.parent_block+'/',caption:'@'+object.parent_account});
 		}
 		else{
+			//not reply to object, check reply (r) in data (d)
 			if(typeof object.data.d.r != 'undefined'){
 				let reply_link=object.data.d.r;
 				//reply to external url

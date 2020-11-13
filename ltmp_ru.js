@@ -45,6 +45,10 @@ var ltmp_ru_arr={
 				<p><input type="text" name="object_cache_ttl" placeholder="10" value=""></p>
 				<div class="input-addon">(в минутах после загрузки)</div>
 
+				<p>Длительность хранения превью ссылок:</p>
+				<p><input type="text" name="preview_cache_ttl" placeholder="7200" value=""></p>
+				<div class="input-addon">(в минутах после загрузки)</div>
+
 				<hr>
 				<p>Настройки награждений:</p>
 				<p><label><input type="checkbox" name="silent_award"> &mdash; очищать заметку</label></p>
