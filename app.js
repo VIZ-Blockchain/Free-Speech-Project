@@ -6630,8 +6630,7 @@ function view_path(location,state,save_state,update){
 
 											view.find('.objects').html(object_view);
 											let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
-											view.find('.object[data-link="'+link+'"] .date-view .date').html(show_date(timestamp*1000 - timezone_offset(),false,false,false));
-											view.find('.object[data-link="'+link+'"] .date-view .time').html(show_time(timestamp*1000 - timezone_offset()));
+											set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
 
 											get_replies(user_result.account,object_result.block,function(err,replies_result){
 												for(let i in replies_result){
@@ -6678,6 +6677,115 @@ function view_path(location,state,save_state,update){
 	}
 }
 
+function lang_plural(lang,number){
+	if('ru'==lang){
+		let n=Math.abs(number);
+		n%=100;
+		if(n >= 5 && n <= 20) {
+			return 5;
+		}
+		n%=10;
+		if(n===1){
+			return 1;
+		}
+		if(n>=2 && n<=4){
+			return 2;
+		}
+		return 5;
+	}
+	if('en'==lang){
+		if(1==number){
+			return 1;
+		}
+		return 2;
+	}
+}
+
+function set_date_view(el,full){
+	full=typeof full==='undefined'?false:full;
+	let current_date=new Date();
+	let current_year=current_date.getFullYear();
+	let current_date_str=current_date.getDate()+'.'+(1+current_date.getMonth())+'.'+current_year;
+
+	let timestamp=$(el).data('timestamp');
+	let date=new Date(timestamp*1000 - timezone_offset());
+
+	let day=date.getDate();
+	let month=date.getMonth()+1;
+	let year=date.getFullYear();
+	let check_date=day+'.'+month+'.'+year;
+	let hours=date.getHours();
+	let minutes=date.getMinutes();
+	let times_am=false;
+	if(hours<12){
+		times_am=true;
+		if(''!=ltmp_arr.date.times_pm){
+			if(0==hours){
+				hours=12;
+			}
+		}
+	}
+
+	let time_str=ltmp(ltmp_arr.date.time_format,{hour:hours,min:minutes,times:(times_am?ltmp_arr.date.times_am:ltmp_arr.date.times_pm)});
+	let date_str=ltmp(ltmp_arr.date.date_format,{day:day,short_month:ltmp_arr.date.short_month[month]});
+	let date_str_with_year=date_str+ltmp(ltmp_arr.date.year,{year:year});
+	if(current_year!=year){
+		date_str=date_str_with_year;
+	}
+	let full_date_str=ltmp(ltmp_arr.date.full_format,{time:time_str,date:date_str_with_year});
+	if(full){
+		$(el).html(full_date_str);
+	}
+	else{
+		let view_str=date_str;
+		let aria_str=date_str;
+		if(check_date==current_date_str){
+			view_str=ltmp_arr.date.now;
+			aria_str=ltmp_arr.date.now;
+			let pass=(current_date.getTime() - date.getTime())/1000 | 0;
+			if(pass>=60){
+				let passed_minutes=pass/60 | 0;
+				let passed_hours=0;
+				if(passed_minutes>=60){
+					passed_hours=passed_minutes/60 | 0;
+				}
+				if(passed_hours>0){
+					view_str=ltmp(ltmp_arr.date.passed_hours,{hours:passed_hours});
+					aria_str=ltmp(ltmp_arr.date.aria_passed,{number:passed_hours,plural:ltmp_arr.plural.hours[lang_plural(selected_lang,passed_hours)]});
+				}
+				else{
+					view_str=ltmp(ltmp_arr.date.passed_minutes,{minutes:passed_minutes});
+					aria_str=ltmp(ltmp_arr.date.aria_passed,{number:passed_minutes,plural:ltmp_arr.plural.minutes[lang_plural(selected_lang,passed_minutes)]});
+				}
+			}
+		}
+		$(el).attr('title',full_date_str);
+		$(el).attr('aria-label',aria_str);
+		$(el).attr('dir','auto');
+		$(el).attr('role','link');
+		$(el).data('focusable',true);
+		$(el).html(view_str);
+	}
+}
+function update_short_date(el){
+	el=typeof el==='undefined'?false:el;
+
+	if(false===el){
+		let view=$('.view[data-level="'+level+'"]');
+		if(-1==path.indexOf('viz://')){//look in services views
+			let path_parts=path.split('/');
+			view=$('.view[data-path="'+path_parts[0]+'"]');
+		}
+		console.log('update_short_date for view',view);
+		view.find('.short-date-view').each(function(i,el){
+			set_date_view(el)
+		});
+	}
+	else{
+		console.log('update_short_date for el',el);
+		set_date_view(el)
+	}
+}
 function timezone_offset(){
 	return new Date().getTimezoneOffset()*60000;
 }
@@ -6689,9 +6797,7 @@ function parse_date(str){
 
 function show_time(str,add_seconds){
 	str=typeof str==='undefined'?false:str;
-	add_time=typeof add_time==='undefined'?false:add_time;
 	add_seconds=typeof add_seconds==='undefined'?false:add_seconds;
-	remove_today=typeof remove_today==='undefined'?false:remove_today;
 	var str_date;
 	if(!str){
 		str_date=new Date();
@@ -7035,8 +7141,7 @@ function render_object(user,object,type,preset_level){
 							}
 							load_content.html(sub_render);
 							let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
-							let timestamp=new_object.find('.short-date-view').data('timestamp');
-							new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
+							update_short_date(new_object.find('.short-date-view'));
 						});
 					}
 				});
@@ -7142,8 +7247,7 @@ function render_object(user,object,type,preset_level){
 							}
 							load_content.html(sub_render);
 							let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
-							let timestamp=new_object.find('.short-date-view').data('timestamp');
-							new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
+							update_short_date(new_object.find('.short-date-view'));
 						});
 					}
 				});
@@ -7238,8 +7342,7 @@ function render_object(user,object,type,preset_level){
 			load_content.html(sub_render);
 			let new_object=load_content.find('.object[data-link="viz://@'+user.account+'/'+object.block+'/"]');
 			new_object.addClass('pinned-object');
-			let timestamp=new_object.find('.short-date-view').data('timestamp');
-			new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
+			update_short_date(new_object.find('.short-date-view'));
 		},10);
 	}
 	if('feed'==type){
@@ -7270,8 +7373,7 @@ function render_object(user,object,type,preset_level){
 						}
 						load_content.html(sub_render);
 						let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
-						let timestamp=new_object.find('.short-date-view').data('timestamp');
-						new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
+						update_short_date(new_object.find('.short-date-view'));
 					});
 				}
 			});
@@ -7305,8 +7407,7 @@ function render_object(user,object,type,preset_level){
 						}
 						load_content.html(sub_render);
 						let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
-						let timestamp=new_object.find('.short-date-view').data('timestamp');
-						new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
+						update_short_date(new_object.find('.short-date-view'));
 					});
 				}
 			});
@@ -7922,8 +8023,7 @@ function load_more_objects(indicator,check_level){
 					indicator.before(object_view);
 					let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
 					new_object.css('display','none');
-					let timestamp=new_object.find('.short-date-view').data('timestamp');
-					new_object.find('.objects .short-date-view').html(show_date(timestamp*1000 - timezone_offset(),true,false,false));
+					update_short_date(new_object.find('.short-date-view'));
 					indicator.data('busy','0');
 					profile_filter_by_type();
 					clearTimeout(check_load_more_timer);

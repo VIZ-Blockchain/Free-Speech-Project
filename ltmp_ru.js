@@ -523,7 +523,7 @@ var ltmp_ru_arr={
 				{reply}
 				<div class="content-view">{text}</div>
 				<div class="preview-container"></div>
-				<div class="date-view" data-timestamp="{timestamp}"><div class="time">&hellip;</div><div class="date">&hellip;</div></div>
+				<div class="date-view" data-timestamp="{timestamp}">&hellip;</div>
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
@@ -590,6 +590,45 @@ var ltmp_ru_arr={
 	new_objects:'<a class="new-objects load-new-objects-action" data-items="0">&hellip;</a>',
 	feed_new_objects:'Показать новые обновления: {items}',
 	feed_no_new_objects:'Новых обновлений нет',
+
+	plural:{
+		hours:{
+			'1':'час',
+			'2':'часа',
+			'5':'часов',
+		},
+		minutes:{
+			'1':'минуту',
+			'2':'минуты',
+			'5':'минут',
+		},
+	},
+	date:{
+		now:`только что`,
+		full_format:`{time} · {date}`,
+		time_format:`{hour}:{min}{times}`,
+		times_am:``,//ante meridiem
+		times_pm:``,//post meridiem
+		date_format:`{day}{short_month}{year}`,
+		passed_minutes:`{minutes} мин`,
+		passed_hours:`{hours} ч`,
+		aria_passed:`{number} {plural} назад`,
+		year:` {year} г.`,
+		short_month:{
+			'1':` янв.`,
+			'2':` фев.`,
+			'3':` мар.`,
+			'4':` апр.`,
+			'5':` мая`,
+			'6':` июн.`,
+			'7':` июл.`,
+			'8':` авг.`,
+			'9':` сен.`,
+			'10':` окт.`,
+			'11':` ноя.`,
+			'12':` дек.`,
+		},
+	},
 
 	fast_publish:`
 	<div class="fast-publish-wrapper" data-reply="{reply}" data-share="{share}" tabindex="0" title="Форма быстрой публикации">
