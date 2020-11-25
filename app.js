@@ -9392,61 +9392,97 @@ function render_object(user,object,type,preset_level){
 		},500);
 	}
 	if('share-preview'==type){
-		console.log(object);
-		let text=object.data.d.text;
-		text_first_link=first_link(text);
-
-		text=escape_html(text);
-		text=fast_str_replace("\n",'<br>',text);
-
-		if(typeof object.data.p == 'undefined'){
-			object.data.p=0;
+		if('publication'==object_type){
+			//text=markdown_clear_code(object.data.d.m);//markdown
+			let result='';
+			let image='';
+			let link='';
+			let image_part=(typeof object.data.d.i !== 'undefined');
+			let wrapper_addon=' style="flex-direction:column;"';
+			let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
+			let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
+			link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d});
+			if(image_part){
+				image=ltmp(ltmp_arr.render_preview_article_image,{image:safe_image(object.data.d.i)});
+			}
+			render=ltmp(ltmp_arr.object_type_publication_preview,{
+				author:'@'+user.account,
+				account:user.account,
+				block:object.block,
+				nickname:profile.nickname,
+				avatar:safe_avatar(profile.avatar),
+				previous:object.data.p,
+				is_reply:object.is_reply,
+				is_share:object.is_share,
+				link:'viz://@'+user.account+'/'+object.block+'/',
+				actions:ltmp(ltmp_arr.object_type_text_actions,{
+					//link:link,
+					icon_reply:ltmp_arr.icon_reply,
+					icon_share:ltmp_arr.icon_share,
+					icon_award:ltmp_arr.icon_gem,
+					icon_copy_link:ltmp_arr.icon_copy_link,
+				}),
+				timestamp:object.data.timestamp,
+				context:image+link,
+				addon:wrapper_addon
+			});
 		}
+		if('text'==object_type){
+			let text=object.data.d.text;
+			text_first_link=first_link(text);
 
-		let reply='';
-		if(object.is_reply){
-			reply=ltmp(ltmp_arr.object_type_text_reply_internal,{link:'viz://@'+object.parent_account+'/'+object.parent_block+'/',caption:'@'+object.parent_account});
-		}
-		else{
-			//not reply to object, check reply (r) in data (d)
-			if(typeof object.data.d.r != 'undefined'){
-				let reply_link=object.data.d.r;
-				//reply to external url
-				if(0==reply_link.indexOf('https://')){
-					reply_link=reply_link.toLowerCase();
-					reply_link=escape_html(reply_link);
-					reply_caption=reply_link.substring(8);
-					if(-1!=reply_caption.indexOf('/')){
-						reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
-					}
-					if(''!=reply_caption){
-						if(20<reply_caption.length){
-							reply_caption=reply_caption.substring(0,20)+'...';
+			text=escape_html(text);
+			text=fast_str_replace("\n",'<br>',text);
+
+			if(typeof object.data.p == 'undefined'){
+				object.data.p=0;
+			}
+
+			let reply='';
+			if(object.is_reply){
+				reply=ltmp(ltmp_arr.object_type_text_reply_internal,{link:'viz://@'+object.parent_account+'/'+object.parent_block+'/',caption:'@'+object.parent_account});
+			}
+			else{
+				//not reply to object, check reply (r) in data (d)
+				if(typeof object.data.d.r != 'undefined'){
+					let reply_link=object.data.d.r;
+					//reply to external url
+					if(0==reply_link.indexOf('https://')){
+						reply_link=reply_link.toLowerCase();
+						reply_link=escape_html(reply_link);
+						reply_caption=reply_link.substring(8);
+						if(-1!=reply_caption.indexOf('/')){
+							reply_caption=reply_caption.substring(0,reply_caption.indexOf('/'));
 						}
+						if(''!=reply_caption){
+							if(20<reply_caption.length){
+								reply_caption=reply_caption.substring(0,20)+'...';
+							}
+						}
+						else{
+							reply_caption='URL';
+						}
+						reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
 					}
-					else{
-						reply_caption='URL';
-					}
-					reply=ltmp(ltmp_arr.object_type_text_reply_external,{link:reply_link,caption:reply_caption});
 				}
 			}
-		}
 
-		render=ltmp(ltmp_arr.object_type_text_share_preview,{
-			author:'@'+user.account,
-			nickname:profile.nickname,
-			avatar:safe_avatar(profile.avatar),
-			text:text,
-			link:'viz://@'+user.account+'/'+object.block+'/',
-			actions:ltmp(ltmp_arr.object_type_text_actions,{
-				//link:link,
-				icon_reply:ltmp_arr.icon_reply,
-				icon_share:ltmp_arr.icon_share,
-				icon_award:ltmp_arr.icon_gem,
-				icon_copy_link:ltmp_arr.icon_copy_link,
-			}),
-			timestamp:object.data.timestamp,
-		});
+			render=ltmp(ltmp_arr.object_type_text_share_preview,{
+				author:'@'+user.account,
+				nickname:profile.nickname,
+				avatar:safe_avatar(profile.avatar),
+				text:text,
+				link:'viz://@'+user.account+'/'+object.block+'/',
+				actions:ltmp(ltmp_arr.object_type_text_actions,{
+					//link:link,
+					icon_reply:ltmp_arr.icon_reply,
+					icon_share:ltmp_arr.icon_share,
+					icon_award:ltmp_arr.icon_gem,
+					icon_copy_link:ltmp_arr.icon_copy_link,
+				}),
+				timestamp:object.data.timestamp,
+			});
+		}
 	}
 	setTimeout(function(){
 		check_object_award(user.account,object.block);
