@@ -8775,7 +8775,7 @@ function highlight_links(text){
 		}
 	}
 
-	let sia_protocol_pattern = /sia\:\/\/[A-Za-z0-9\-\.\/]+/g;
+	let sia_protocol_pattern = /sia\:\/\/[A-Za-z0-9_\-\.\/]+/g;
 	let sia_protocol_links=text.match(sia_protocol_pattern);
 	if(null!=sia_protocol_links){
 		for(let i in sia_protocol_links){
@@ -8786,7 +8786,7 @@ function highlight_links(text){
 		}
 	}
 
-	let ipfs_protocol_pattern = /ipfs\:\/\/[A-Za-z0-9\-\.\/]+/g;
+	let ipfs_protocol_pattern = /ipfs\:\/\/[A-Za-z0-9_\-\.\/]+/g;
 	let ipfs_protocol_links=text.match(ipfs_protocol_pattern);
 	if(null!=ipfs_protocol_links){
 		for(let i in ipfs_protocol_links){
