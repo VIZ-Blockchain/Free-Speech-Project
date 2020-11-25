@@ -1644,6 +1644,24 @@ function ipfs_link(cid){
 function sia_link(skylink){
 	return 'https://siasky.net/'+skylink;
 }
+function html_safe_images(html){
+	let arr=html.match(/<img [^>]*src="[^"]*"[^>]*>/gm);
+	for(let i in arr){
+		let img=arr[i];
+		let img_src_pattern=/(.*)src=\"(.*?)\"(.*)/gm;
+		let src=img.replace(img_src_pattern,'$2');
+		let safe_src=safe_image(src);
+		let new_img='';
+		if(false===safe_src){
+			new_img='';
+		}
+		else{
+			new_img=fast_str_replace(src,safe_src,img);
+		}
+		html=fast_str_replace(img,new_img,html);
+	}
+	return html;
+}
 function safe_image(link){
 	let result='';
 	let error=false;
@@ -2621,6 +2639,7 @@ function markdown_decode(text,rewrite_block){
 	while(-1!=text.indexOf("\n\n\n")){
 		text=fast_str_replace("\n\n\n","\n\n",text);
 	}
+	//let images_pattern=/\!\[(.*?)\]\((.*?)\)/gm;
 	let text_arr=text.split("\n\n");
 	let html='';
 	for(let i in text_arr){
@@ -2665,6 +2684,11 @@ function markdown_decode(text,rewrite_block){
 			result='<hr />';
 		}
 		else{
+			/*
+			if(context.test(images_pattern)){
+				block='center';
+			}
+			*/
 			result='<'+block+'>';
 			result+=markdown_code(context);
 			result+='</'+block+'>';
@@ -8911,7 +8935,7 @@ function render_object(user,object,type,preset_level){
 			let image_part=(typeof object.data.d.i !== 'undefined');
 			let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
 			let title='<h1>'+object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>')+'</h1>';
-			let publication_html=title+markdown_decode(object.data.d.m);
+			let publication_html=title+html_safe_images(markdown_decode(object.data.d.m));
 			render=ltmp(ltmp_arr.object_type_publication_full,{
 				author:'@'+user.account,
 				link:'viz://@'+user.account+'/'+object.block+'/',
