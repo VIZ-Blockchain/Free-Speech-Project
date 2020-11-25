@@ -178,10 +178,30 @@ var ltmp_ru_arr={
 	</div>`,
 	publish_interests:`Добавить тэги по вашим интересам:<div class="interests">{interests}</div>`,
 	publish_interests_item:`<a class="publish-add-interest-action" data-hashtag="{hashtag}">#{caption}</a>`,
+	article_settings:`
+	<p>Аннотация к публикации:</p>
+	<p><input type="text" name="description" value=""></p>
+	<div class="input-addon">(просто текст без разметки)</div>
+	<p>Миниатюра изображения:</p>
+	<p><input type="text" name="thumbnail" value=""></p>
+	<div class="input-addon">(загрузить изображение через: <a class="ipfs-upload-article-thumbnail-action">IPFS</a>, <a class="sia-upload-article-thumbnail-action">Sia</a>, допустимы ссылки https://, ipfs://, sia://)</div>
+	<div class="add-interests"></div>
+	`,
 	preset_view_publish:`
 	<div class="object type-text">
 		<div class="object-column">
-			<div class="content-view">
+			<div class="content-view hidden" data-type="article">
+				<div class="article-settings">%%article_settings%%</div>
+				<div class="article-editor">
+					<div class="editor-formatter">%%editor_formatter%%</div>
+					<div class="editor-text article" contenteditable="true">%%editor_text_preset%%</div>
+					<div class="editor-placeholders article">
+						<h1>Название</h1>
+						<p>Просто начните писать&hellip;</p>
+					</div>
+				</div>
+			</div>
+			<div class="content-view" data-type="simple">
 				<div class="object-type-text">
 					<div class="text-addon">
 						<p>Текст сообщения:</p>
@@ -272,6 +292,12 @@ var ltmp_ru_arr={
 		<div class="preview-link-title">{title}</div>
 		<div class="preview-link-descr">{descr}</div>
 		<div class="preview-link-source">{source}</div>
+	</div>`,
+
+	render_preview_article_image:`<div class="preview-article-image"{addon}><img src="{image}" alt="Изображение"></div>`,
+	render_article_preview:`<div class="preview-article-link"{addon}>
+		<div class="preview-article-link-title">{title}</div>
+		<div class="preview-article-link-descr">{descr}</div>
 	</div>`,
 	render_preview_wrapper:`<a tabindex="0" class="preview-wrapper" href="{link}" target="_blank"{addon}>{context}</a>`,
 
@@ -479,6 +505,63 @@ var ltmp_ru_arr={
 	icon_theme_sun:`<i class="icon theme-sun"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></i>`,
 	icon_attach:`<i class="icon attach"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M14.828 7.757l-5.656 5.657a1 1 0 1 0 1.414 1.414l5.657-5.656A3 3 0 1 0 12 4.929l-5.657 5.657a5 5 0 1 0 7.071 7.07L19.071 12l1.414 1.414-5.657 5.657a7 7 0 1 1-9.9-9.9l5.658-5.656a5 5 0 0 1 7.07 7.07L12 16.244A3 3 0 1 1 7.757 12l5.657-5.657 1.414 1.414z"/></svg></i>`,
 
+	article_publish_caption:`Опубликовать`,
+	article_settings_caption:`Настройки`,
+	editor_caption:`Расширенная публикация`,
+	editor_attach_caption:`Добавить файл`,
+	editor_attach_image_caption:`Добавить изображение`,
+	editor_image_caption:`Вставить изображение`,
+	editor_link_caption:`Вставить ссылку`,
+	editor_link_prompt:`Введите адрес для ссылки`,
+	editor_image_prompt:`Введите адрес изображения`,
+	editor_link_placeholder_prompt:`https://`,
+
+	editor_error_empty_title:`Введите название публикации`,
+	editor_error_empty_markdown:`Введите текст публикации`,
+
+	editor_bold_caption:`Полужирный`,
+	editor_italic_caption:`Курсив`,
+	editor_strikethrough_caption:`Зачеркнутый`,
+	editor_header2_caption:`Раздел`,
+	editor_header3_caption:`Подраздел`,
+	editor_code_caption:`Код`,
+	editor_quote_caption:`Цитата`,
+	editor_separator_caption:`Разделитель`,
+
+	editor_text_preset:`<h1><br></h1><p><br></p>`,
+	editor_formatter_separator:`<span class="separator"></span>`,
+	editor_formatter:`
+	<a class="editor-attach-action" tabindex="0" title="%%editor_attach_caption%%">%%icon_attach%%</a>
+	<a class="editor-attach-image-action" tabindex="0" title="%%editor_attach_image_caption%%">%%icon_editor_attach_image%%</a>
+	<a class="editor-image-action" tabindex="0" title="%%editor_image_caption%%">%%icon_editor_image%%</a>
+	<a class="editor-link-action" tabindex="0" title="%%editor_link_caption%%">%%icon_copy_link%%</a>
+	%%editor_formatter_separator%%
+	<a class="editor-bold-action" tabindex="0" title="%%editor_bold_caption%%">%%icon_editor_bold%%</a>
+	<a class="editor-italic-action" tabindex="0" title="%%editor_italic_caption%%">%%icon_editor_italic%%</a>
+	<a class="editor-strikethrough-action" tabindex="0" title="%%editor_strikethrough_caption%%">%%icon_editor_strikethrough%%</a>
+	<a class="editor-code-action" tabindex="0" title="%%editor_code_caption%%">%%icon_editor_code%%</a>
+	%%editor_formatter_separator%%
+	<a class="editor-header2-action" tabindex="0" title="%%editor_header2_caption%%">%%icon_editor_header2%%</a>
+	<a class="editor-header3-action" tabindex="0" title="%%editor_header3_caption%%">%%icon_editor_header3%%</a>
+	<a class="editor-quote-action" tabindex="0" title="%%editor_quote_caption%%">%%icon_editor_quote%%</a>
+	%%editor_formatter_separator%%
+	<a class="editor-separator-action" tabindex="0" title="%%editor_separator_caption%%">%%icon_editor_separator%%</a>
+
+	`,
+	icon_check:`<i class="icon check"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"/></svg></i>`,
+	icon_editor:`<i class="icon editor"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7,17.013l4.413-0.015l9.632-9.54c0.378-0.378,0.586-0.88,0.586-1.414s-0.208-1.036-0.586-1.414l-1.586-1.586 c-0.756-0.756-2.075-0.752-2.825-0.003L7,12.583V17.013z M18.045,4.458l1.589,1.583l-1.597,1.582l-1.586-1.585L18.045,4.458z M9,13.417l6.03-5.973l1.586,1.586l-6.029,5.971L9,15.006V13.417z"></path><path d="M5,21h14c1.103,0,2-0.897,2-2v-8.668l-2,2V19H8.158c-0.026,0-0.053,0.01-0.079,0.01c-0.033,0-0.066-0.009-0.1-0.01H5V5 h6.847l2-2H5C3.897,3,3,3.897,3,5v14C3,20.103,3.897,21,5,21z"></path></svg></i>`,
+	icon_editor_quote:`<i class="icon editor-quote"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M19.417 6.679C20.447 7.773 21 9 21 10.989c0 3.5-2.457 6.637-6.03 8.188l-.893-1.378c3.335-1.804 3.987-4.145 4.247-5.621-.537.278-1.24.375-1.929.311-1.804-.167-3.226-1.648-3.226-3.489a3.5 3.5 0 0 1 3.5-3.5c1.073 0 2.099.49 2.748 1.179zm-10 0C10.447 7.773 11 9 11 10.989c0 3.5-2.457 6.637-6.03 8.188l-.893-1.378c3.335-1.804 3.987-4.145 4.247-5.621-.537.278-1.24.375-1.929.311C4.591 12.322 3.17 10.841 3.17 9a3.5 3.5 0 0 1 3.5-3.5c1.073 0 2.099.49 2.748 1.179z"/></svg></i>`,
+	icon_editor_bold:`<i class="icon editor-bold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M8 11h4.5a2.5 2.5 0 1 0 0-5H8v5zm10 4.5a4.5 4.5 0 0 1-4.5 4.5H6V4h6.5a4.5 4.5 0 0 1 3.256 7.606A4.498 4.498 0 0 1 18 15.5zM8 13v5h5.5a2.5 2.5 0 1 0 0-5H8z"/></svg></i>`,
+	icon_editor_italic:`<i class="icon editor-italic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M15 20H7v-2h2.927l2.116-12H9V4h8v2h-2.927l-2.116 12H15z"/></svg></i>`,
+	icon_editor_strikethrough:`<i class="icon editor-strikethrough"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M13 9h-2V6H5V4h14v2h-6v3zm0 6v5h-2v-5h2zM3 11h18v2H3v-2z"/></svg></i>`,
+	icon_editor_header2:`<i class="icon editor-header2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M4 4v7h7V4h2v16h-2v-7H4v7H2V4h2zm14.5 4c2.071 0 3.75 1.679 3.75 3.75 0 .857-.288 1.648-.772 2.28l-.148.18L18.034 18H22v2h-7v-1.556l4.82-5.546c.268-.307.43-.709.43-1.148 0-.966-.784-1.75-1.75-1.75-.918 0-1.671.707-1.744 1.606l-.006.144h-2C14.75 9.679 16.429 8 18.5 8z"/></svg></i>`,
+	icon_editor_header3:`<i class="icon editor-header3"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M22 8l-.002 2-2.505 2.883c1.59.435 2.757 1.89 2.757 3.617 0 2.071-1.679 3.75-3.75 3.75-1.826 0-3.347-1.305-3.682-3.033l1.964-.382c.156.806.866 1.415 1.718 1.415.966 0 1.75-.784 1.75-1.75s-.784-1.75-1.75-1.75c-.286 0-.556.069-.794.19l-1.307-1.547L19.35 10H15V8h7zM4 4v7h7V4h2v16h-2v-7H4v7H2V4h2z"/></svg></i>`,
+	icon_editor_code:`<i class="icon editor-code"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M23 12l-7.071 7.071-1.414-1.414L20.172 12l-5.657-5.657 1.414-1.414L23 12zM3.828 12l5.657 5.657-1.414 1.414L1 12l7.071-7.071 1.414 1.414L3.828 12z"/></svg></i>`,
+	icon_editor_image:`<i class="icon editor-image"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="7.499" cy="9.5" r="1.5"></circle><path d="M10.499 14L8.999 12 5.999 16 8.999 16 11.999 16 17.999 16 13.499 10z"></path><path d="M19.999,4h-16c-1.103,0-2,0.897-2,2v12c0,1.103,0.897,2,2,2h16c1.103,0,2-0.897,2-2V6C21.999,4.897,21.102,4,19.999,4z M3.999,18V6h16l0.002,12H3.999z"></path>
+			</svg></i>`,
+	icon_editor_attach_image:`<i class="icon editor-image"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M4,5h13v7h2V5c0-1.103-0.897-2-2-2H4C2.897,3,2,3.897,2,5v12c0,1.103,0.897,2,2,2h8v-2H4V5z"></path><path d="M8 11L5 15 16 15 12 9 9 13z"></path><path d="M19 14L17 14 17 17 14 17 14 19 17 19 17 22 19 22 19 19 22 19 22 17 19 17z"></path></svg></i>`,
+	icon_editor_plus:`<i class="icon editor-plus"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M19 11L13 11 13 5 11 5 11 11 5 11 5 13 11 13 11 19 13 19 13 13 19 13z"></path></svg></i>`,
+	icon_editor_separator:`<i class="icon editor-separator"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M2 11h2v2H2v-2zm4 0h12v2H6v-2zm14 0h2v2h-2v-2z"/></svg></i>`,
 	header_back_action:`<a tabindex="0" class="back-action" title="Назад" data-force="{force}">{icon}</a>`,
 	header_link:'<div class="link grow"><div class="header-link-wrapper"><input type="text" class="header-link" value="{link}"><div class="header-link-icons">{icons}</div></div></div>',
 	header_link_icons:`
@@ -513,6 +596,41 @@ var ltmp_ru_arr={
 	publish_success:'Запись успешно опубликована&hellip;',
 	publish_success_link:'Запись успешно опубликована: <a tabindex="0" data-href="viz://@{account}/{block}/">ссылка</a>',
 
+	object_type_publication_full:`
+		<div class="object type-text" data-link="{link}" data-publication="true">
+			<div class="author-view">
+				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
+				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+			</div>
+			<div class="object-column">
+				<div class="article">{context}</div>
+				<div class="date-view" data-timestamp="{timestamp}">&hellip;</div>
+				<div class="actions-view">{actions}</div>
+			</div>
+		</div>`,
+	object_type_publication:`
+		<div class="object type-text" data-link="{link}">
+			<div class="author-view">
+				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
+				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+			</div>
+			<div class="object-column">
+				<a tabindex="0" class="preview-wrapper" data-href="{link}publication/"{addon}>{context}</a>
+				<div class="date-view" data-timestamp="{timestamp}">&hellip;</div>
+				<div class="actions-view">{actions}</div>
+			</div>
+		</div>`,
+	object_type_publication_preview:`
+		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
+			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
+			<div class="object-column">
+				<div class="author-view">
+					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
+				</div>
+				<a tabindex="0" class="preview-article-wrapper" data-href="{link}publication/"{addon}>{context}</a>
+				<div class="actions-view">{actions}</div>
+			</div>
+		</div>`,
 	object_type_text:`
 		<div class="object type-text" data-link="{link}">
 			<div class="author-view">
