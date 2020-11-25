@@ -1130,6 +1130,9 @@ body.dark .new-objects{
 	background:-ms-linear-gradient(top, rgba(243, 250, 254, 0) 0%, rgb(243, 250, 254) 100%);
 	background:linear-gradient(top, rgba(243, 250, 254, 0) 0%, rgb(243, 250, 254) 100%);
 }
+.object.type-text-preview .content-view a{
+	color:#1c98e5;
+}
 .object.type-text .content-view a{
 	color:#1c98e5;
 }
@@ -1150,6 +1153,9 @@ body.midnight .object.type-text-preview:hover .content-view[data-href]:before{
 	background:linear-gradient(top, rgba(20, 38, 54, 0) 0%, rgb(20, 38, 54) 100%);
 }
 body.midnight .object.type-text .content-view a{
+	color:#1c98e5;
+}
+body.midnight .object.type-text-preview .content-view a{
 	color:#1c98e5;
 }
 body.dark .object.type-text-preview .content-view[data-href]:before{
