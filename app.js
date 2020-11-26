@@ -1378,6 +1378,7 @@ function sia_upload(type,callback){
 	upload.setAttribute("type", "file");
 	$(upload).off('change');
 	$(upload).on('change',function(e){
+		callback(true);
 		e.preventDefault();
 		let files = this.files;
 		let file = files[0];
@@ -1409,6 +1410,7 @@ function sia_upload(type,callback){
 			callback(false);
 		}
 	});
+	upload.focus();
 	var event=document.createEvent('MouseEvents');
 	event.initEvent('click',true,true);
 	upload.dispatchEvent(event);
@@ -3310,7 +3312,6 @@ function app_mouse(e){
 	if($(target).hasClass('editor-attach-image-action')){
 		if(!$(target).hasClass('disabled')){
 			if(!$(target).hasClass('positive')){
-				$(target).addClass('positive');
 				let selection=window.getSelection();
 				if(typeof selection !== "undefined"){
 					if(typeof $(selection.focusNode).closest('.editor-text')[0] !== 'undefined'){
@@ -3318,7 +3319,10 @@ function app_mouse(e){
 						sia_upload_percent=0;
 						sia_upload(/image.*/,function(result){
 							if(typeof result == 'boolean'){
-								if(!result){
+								if(result){
+									$(target).addClass('positive');
+								}
+								else{
 									add_notify(false,
 										ltmp_arr.notify_arr.error,
 										ltmp_arr.notify_arr.upload_incorrect_format
@@ -3363,7 +3367,6 @@ function app_mouse(e){
 	if($(target).hasClass('editor-attach-action')){
 		if(!$(target).hasClass('disabled')){
 			if(!$(target).hasClass('positive')){
-				$(target).addClass('positive');
 				let selection=window.getSelection();
 				if(typeof selection !== "undefined"){
 					if(typeof $(selection.focusNode).closest('.editor-text')[0] !== 'undefined'){
@@ -3371,7 +3374,10 @@ function app_mouse(e){
 						sia_upload_percent=0;
 						sia_upload(/.*/,function(result){
 							if(typeof result == 'boolean'){
-								if(!result){
+								if(result){
+									$(target).addClass('positive');
+								}
+								else{
 									add_notify(false,
 										ltmp_arr.notify_arr.error,
 										ltmp_arr.notify_arr.upload_incorrect_format
@@ -3706,14 +3712,16 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('publish-attach-sia-action')){
 		if(!$(target).hasClass('disabled')){
-			$(target).addClass('disabled');
 			let view=$(target).closest('.view');
 			let publish_form=$(target).parent().parent();
 			let text_el=false;
 			sia_upload_percent=0;
 			sia_upload(/.*/,function(result){
 				if(typeof result == 'boolean'){
-					if(!result){
+					if(result){
+						$(target).addClass('disabled');
+					}
+					else{
 						add_notify(false,
 							ltmp_arr.notify_arr.error,
 							ltmp_arr.notify_arr.upload_incorrect_format
@@ -3763,13 +3771,14 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('fast-publish-attach-action')){
 		if(!$(target).hasClass('disabled')){
-			$(target).addClass('disabled');
 			let publish_form=$(target).closest('.fast-publish-wrapper');
-
 			sia_upload_percent=0;
 			sia_upload(/.*/,function(result){
 				if(typeof result == 'boolean'){
-					if(!result){
+					if(result){
+						$(target).addClass('disabled');
+					}
+					else{
 						add_notify(false,
 							ltmp_arr.notify_arr.error,
 							ltmp_arr.notify_arr.upload_incorrect_format
