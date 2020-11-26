@@ -7,6 +7,7 @@ var whitelabel_accounts=[whitelabel_account];//always subscribed to whitelabels 
 var whitelabel_deep=10;//count of max activity loaded for feed on startup
 var whitelabel_redirect=false;//redirect to whitelabel profile on feed loadup
 var whitelabel_app_title='The Free Speech Project';
+var whitelabel_copy_link=false;//rewrite viz:// in copy link action for share content outside
 
 var whitelabel_logo=false;
 
@@ -4249,6 +4250,9 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('copy-link-action')){
 		let text=$(target).closest('.object').data('link');
+		if(false!==whitelabel_copy_link){
+			text=fast_str_replace('viz://',whitelabel_copy_link,text);
+		}
 		$('.text-copy').val(text);
 		$('.text-copy')[0].select();
 		$('.text-copy')[0].setSelectionRange(0,99999);
