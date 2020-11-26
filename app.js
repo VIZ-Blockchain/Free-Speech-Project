@@ -2403,7 +2403,9 @@ function subscribe(el){
 			render+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_arr.icon_subscribed});
 			render+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_arr.icon_unsubscribe});
 
-			feed_load(check_user,false,function(err,result){console.log('feed load by subscribe',err,result);});
+			feed_load(check_user,false,false,true,function(err,result){
+				console.log('feed load by subscribe',err,result);
+			});
 		}
 		else{
 			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
@@ -2441,8 +2443,6 @@ function ignore(el){
 			sync_cloud_put_update('ignore',check_user);
 			render+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_arr.icon_ignored});
 			render+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_arr.icon_unsubscribe});
-
-			feed_load(check_user,false,function(err,result){console.log('feed load by subscribe',err,result);});
 		}
 		else{
 			render+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_arr.icon_subscribe});
@@ -5251,7 +5251,7 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 	});
 }
 
-function feed_load(account,limit,callback){
+function feed_load(account,limit,upper_bound,continued,callback){
 	console.log('feed_load',account);
 	limit=((false===limit)?settings.activity_deep:limit);
 	if(whitelabel_init){
@@ -5266,12 +5266,20 @@ function feed_load(account,limit,callback){
 	let offset=0;
 	let t=db.transaction(['objects'],'readonly');
 	let q=t.objectStore('objects');
-	let req=q.index('object').openCursor(IDBKeyRange.upperBound([account,Number.MAX_SAFE_INTEGER]),'prev');
+	//open_border excludes the endpoint (upper bound) if given (look previous for load unseen range)
+	let open_border=(upper_bound===false?false:true);
+	upper_bound=(upper_bound===false?Number.MAX_SAFE_INTEGER:upper_bound);
+	if(open_border){
+		end_offset=upper_bound;
+	}
+	let req=q.index('object').openCursor(IDBKeyRange.upperBound([account,upper_bound],open_border),'prev');
 	req.onsuccess=function(event){
 		let cur=event.target.result;
 		if(cur){
-			if(account==cur.value.account){
-				end_offset=cur.value.block;
+			if(!continued){//set end offset or use only limit
+				if(account==cur.value.account){
+					end_offset=cur.value.block;
+				}
 			}
 		}
 		get_user(account,true,function(err,user_result){
@@ -5279,7 +5287,12 @@ function feed_load(account,limit,callback){
 				callback(err,0);
 			}
 			else{
-				offset=user_result.start;
+				if(open_border){
+					offset=upper_bound;//start from given upper bound
+				}
+				else{
+					offset=user_result.start;//start from user last activity
+				}
 				if(offset>end_offset){
 					//console.log('start feed_load_more from feed_load, offset, end offset, limit:',account,offset,end_offset,limit);
 					feed_load_more(result,account,offset,end_offset,limit,callback);
@@ -5562,6 +5575,14 @@ function parse_object(account,block,callback){
 								}
 							}
 							add_t.oncomplete=function(e){
+								idb_get_by_id('users','account',account,function(user_data){
+									if(1==user_data.status){//subscribed to account
+										//check feed load for parsed object and previous unseen range
+										feed_load(account,false,block,false,function(err,result){
+											console.log('feed load by parse object',err,result);
+										});
+									}
+								});
 								if(reply){//add to replies
 									idb_get_id('replies','object',[account,block],function(reply_id){
 										if(false===reply_id){//create reply
@@ -5958,7 +5979,7 @@ function update_feed_subscribes(callback){
 					}
 					feed_load_timers[account]=setTimeout(function(){
 						console.log('timer feed_load_timers executed',account);
-						feed_load(account,false,function(err,result){
+						feed_load(account,false,false,false,function(err,result){
 							if(!err){
 								update_feed_result(result);
 							}
