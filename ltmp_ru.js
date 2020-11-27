@@ -425,6 +425,8 @@ var ltmp_ru_arr={
 	search_caption:'Поиск',
 	search_empty_input:'Введите адрес для поиска',
 
+	right_addon_publish_button:'<div taborder="0" data-href="dapp:publish" class="publish-button">%%icon_editor_plus%% Написать</div>',
+
 	gateway_error:'Ошибка, попробуйте позже',
 	account_not_found:'Пользователь не найден',
 	object_not_found:'Объект не найден',
