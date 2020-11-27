@@ -1,8 +1,8 @@
 var ltmp_ru_arr={
-	preset_view_account_settings:`
+	preset_view_account:`
 	<div class="object type-text">
 		<div class="object-column">
-			<div class="content-view">
+			<div class="content-view" data-tab="credentials">
 				<p>Аккаунт в VIZ:</p>
 				<p><input type="text" name="viz_account" value=""></p>
 				<div class="input-addon">(регистрация через <a href="https://start.viz.plus/" target="_blank">start.viz.plus</a>)</div>
@@ -15,8 +15,43 @@ var ltmp_ru_arr={
 				<hr>
 				<p><a class="button neutral-button remove-account-action">Очистить</a></p>
 			</div>
+			<div class="content-view" data-tab="profile">
+				<p>Имя:</p>
+				<p><input type="text" name="nickname" value=""></p>
+				<div class="input-addon">(будет отображаться рядом с аккаунтом <span class="viz_account">&hellip;</span>)</div>
+
+				<p>Немного о себе:</p>
+				<p><input type="text" name="about" value=""></p>
+				<div class="input-addon">(отображается в вашем профиле)</div>
+
+				<p>Ссылка на аватар:</p>
+				<p><input type="text" name="avatar" value="" placeholder="https://"></p>
+				<div class="input-addon">(загрузить изображение через: <a class="ipfs-upload-profile-avatar-action">IPFS</a>, <a class="sia-upload-profile-avatar-action">Sia</a>, допустимы ссылки https://, ipfs://, sia://, минимальный размер изображения 49x49 пикселей)</div>
+
+				<p>Интересы:</p>
+				<p><input type="text" name="interests" value=""></p>
+				<div class="input-addon">(перечислите через запятую, будут преобразованы в тэги для категоризации публикаций в профиле)</div>
+
+				<p>Закрепленная запись:</p>
+				<p><input type="text" name="pinned_object" value=""></p>
+				<div class="input-addon">(укажите ссылку вида viz://@account/block/)</div>
+
+				<p>Телеграм:</p>
+				<p><input type="text" name="telegram" value=""></p>
+				<div class="input-addon">(укажите имя пользователя без символа «@»)</div>
+
+				<p>GitHub:</p>
+				<p><input type="text" name="github" value=""></p>
+				<div class="input-addon">(укажите имя пользователя)</div>
+
+				<p class="error save-profile-error"></p>
+				<p class="success save-profile-success"></p>
+				<p><a class="button save-profile-action">Сохранить</a><span class="submit-button-ring"></span></p>
+				<p><em>Внимание! Вся информация будет записана в блокчейн, её можно заменить, но невозможно будет «удалить» или «стереть» из истории.</em></p>
+			</div>
 		</div>
-	</div>`,
+	</div>
+	`,
 	preset_view_app_settings:`
 	<div class="object type-text">
 		<div class="object-column">
@@ -134,45 +169,6 @@ var ltmp_ru_arr={
 				<p class="error sync-import-error"></p>
 				<p><a class="button sync-import-file-action">Импортировать из файла</a><span class="submit-button-ring" rel="import-file"></span></p>
 				<p><a class="button sync-import-cloud-action">Сброс и синхронизация из облака</a><span class="submit-button-ring" rel="import-cloud"></span></p>
-			</div>
-		</div>
-	</div>`,
-	preset_view_edit_profile:`
-	<div class="object type-text">
-		<div class="object-column">
-			<div class="content-view">
-				<p>Имя:</p>
-				<p><input type="text" name="nickname" value=""></p>
-				<div class="input-addon">(будет отображаться рядом с аккаунтом <span class="viz_account">&hellip;</span>)</div>
-
-				<p>Немного о себе:</p>
-				<p><input type="text" name="about" value=""></p>
-				<div class="input-addon">(отображается в вашем профиле)</div>
-
-				<p>Ссылка на аватар:</p>
-				<p><input type="text" name="avatar" value="" placeholder="https://"></p>
-				<div class="input-addon">(загрузить изображение через: <a class="ipfs-upload-profile-avatar-action">IPFS</a>, <a class="sia-upload-profile-avatar-action">Sia</a>, допустимы ссылки https://, ipfs://, sia://, минимальный размер изображения 49x49 пикселей)</div>
-
-				<p>Интересы:</p>
-				<p><input type="text" name="interests" value=""></p>
-				<div class="input-addon">(перечислите через запятую, будут преобразованы в тэги для категоризации публикаций в профиле)</div>
-
-				<p>Закрепленная запись:</p>
-				<p><input type="text" name="pinned_object" value=""></p>
-				<div class="input-addon">(укажите ссылку вида viz://@account/block/)</div>
-
-				<p>Телеграм:</p>
-				<p><input type="text" name="telegram" value=""></p>
-				<div class="input-addon">(укажите имя пользователя без символа «@»)</div>
-
-				<p>GitHub:</p>
-				<p><input type="text" name="github" value=""></p>
-				<div class="input-addon">(укажите имя пользователя)</div>
-
-				<p class="error save-profile-error"></p>
-				<p class="success save-profile-success"></p>
-				<p><a class="button save-profile-action">Сохранить</a><span class="submit-button-ring"></span></p>
-				<p><em>Внимание! Вся информация будет записана в блокчейн, её можно заменить, но невозможно будет «удалить» или «стереть» из истории.</em></p>
 			</div>
 		</div>
 	</div>`,
@@ -294,10 +290,10 @@ var ltmp_ru_arr={
 		<div class="preview-link-source">{source}</div>
 	</div>`,
 
-	render_preview_article_image:`<div class="preview-article-image"{addon}><img src="{image}" alt="Изображение"></div>`,
+	render_preview_article_image:`<a tabindex="0" data-href="{link}publication/" class="preview-article-image"{addon}><img src="{image}" alt="Изображение"></a>`,
 	render_article_preview:`<div class="preview-article-link"{addon}>
-		<div class="preview-article-link-title">{title}</div>
-		<div class="preview-article-link-descr">{descr}</div>
+		<a tabindex="0" data-href="{link}publication/" class="preview-article-link-title">{title}</a>
+		<a tabindex="0" data-href="{link}publication/" class="preview-article-link-descr">{descr}</a>
 	</div>`,
 	render_preview_wrapper:`<a tabindex="0" class="preview-wrapper" href="{link}" target="_blank"{addon}>{context}</a>`,
 
@@ -373,7 +369,7 @@ var ltmp_ru_arr={
 
 	awarded_amount:'Награждено на {amount} Ƶ',
 
-	menu_session_empty:'<div class="avatar"><img src="{avatar}" data-href="dapp:account_settings"></div><a tabindex="0" data-href="dapp:account_settings">{caption}</a>',
+	menu_session_empty:'<div class="avatar"><img src="{avatar}" data-href="dapp:account"></div><a tabindex="0" data-href="dapp:account">{caption}</a>',
 	menu_session_login:'Войти',
 	menu_session_error:'<span class="error">Ошибка</span>',
 	menu_session_account:'<div class="avatar"><div class="shadow" data-href="viz://@{account}/"></div><img src="{avatar}"></div><div class="account"><a class="account-name" tabindex="0" data-href="viz://@{account}/">{nickname}</a><a class="account-login" tabindex="0" data-href="viz://@{account}/">{account}</a></div>',
@@ -399,13 +395,15 @@ var ltmp_ru_arr={
 
 	icon_counter:`<div class="icon-counter counter-{name}">{count}</div>`,
 
-	account_settings:'<a tabindex="0" data-href="dapp:account_settings" title="Настройки аккаунта">{icon_account_settings}</a>',
+	account_settings:'<a tabindex="0" data-href="dapp:account" title="Настройки аккаунта">{icon_account_settings}</a>',
 	account_settings_caption:'Настройки аккаунта',
 	account_settings_empty_account:'Введите аккаунт',
 	account_settings_empty_regular_key:'Введите регулярный ключ',
 	account_settings_account_not_found:'Аккаунт не найден',
 	account_settings_saved:'Данные аккаунта сохранены',
 	account_settings_reset:'Данные аккаунта удалены',
+	account_credentials_tab:'Учетная запись',
+	account_profile_tab:'Профиль',
 
 	notifications_caption:'Уведомления',
 	awards_caption:'Награждения',
@@ -459,8 +457,7 @@ var ltmp_ru_arr={
 	menu_primary:`<div><a tabindex="0" data-href="{link}" class="{class}">{icon}<span>{caption}</span></a></div>`,
 	menu_primary_pinned_tags:`<div class="adaptive-pinned-tags"></div>`,
 	menu_primary_pinned_tags_caption:`Закрепленные тэги:`,
-	menu_feed:'Лента новостей',
-	menu_view_profile:'Профиль',
+	menu_feed:'Лента',
 	menu_hashtags:'Тэги',
 	menu_users:'Пользователи',
 	menu_notifications:'Уведомления',
@@ -585,8 +582,7 @@ var ltmp_ru_arr={
 	ignore_link:'<a tabindex="0" class="ignore-action" title="Игнорировать пользователя">{icon}</a>',
 	ignored_link:'<a tabindex="0" class="ignored-action negative" title="Вы игнорируете пользователя">{icon}</a>',
 	unignore_link:'<a tabindex="0" class="unignore-action" title="Прекратить игнорировать пользователя">{icon}</a>',
-	edit_profile_link:'<a tabindex="0" data-href="dapp:edit_profile" title="Изменить профиль">{icon_edit_profile}</a>',
-	edit_profile_caption:'Настройка профиля',
+	edit_profile_link:'<a tabindex="0" data-href="dapp:account/profile" title="Изменить профиль">{icon_edit_profile}</a>',
 	edit_profile_saved:'Профиль сохранен',
 	profile_default_avatar:'data:image/png;base64,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',//default.png
 	new_object_link:'<a tabindex="0" data-href="dapp:publish" title="Написать">{icon_new_object}</a>',
@@ -615,7 +611,7 @@ var ltmp_ru_arr={
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
 			</div>
 			<div class="object-column">
-				<a tabindex="0" class="preview-wrapper" data-href="{link}publication/"{addon}>{context}</a>
+				<div class="preview-wrapper"{addon}>{context}</div>
 				<div class="date-view" data-timestamp="{timestamp}">&hellip;</div>
 				<div class="actions-view">{actions}</div>
 			</div>
@@ -627,7 +623,7 @@ var ltmp_ru_arr={
 				<div class="author-view">
 					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
 				</div>
-				<a tabindex="0" class="preview-article-wrapper" data-href="{link}publication/"{addon}>{context}</a>
+				<div class="preview-article-wrapper"{addon}>{context}</div>
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,

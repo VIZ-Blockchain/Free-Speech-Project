@@ -1180,7 +1180,7 @@ function save_account_settings(view,login,regular_key){
 							update_user_profile(current_user,function(){
 								render_session();
 								render_menu();
-								document.location.hash='dapp:edit_profile';
+								document.location.hash='dapp:account/profile';
 								//init sync cloud
 								clearTimeout(check_sync_cloud_activity_timer);
 								check_sync_cloud_activity_timer=setTimeout(function(){
@@ -1193,7 +1193,7 @@ function save_account_settings(view,login,regular_key){
 						update_user_profile(current_user,function(){
 							render_session();
 							render_menu();
-							document.location.hash='dapp:edit_profile';
+							document.location.hash='dapp:account/profile';
 							//init sync cloud
 							clearTimeout(check_sync_cloud_activity_timer);
 							check_sync_cloud_activity_timer=setTimeout(function(){
@@ -1277,10 +1277,9 @@ function render_menu(){
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:notifications',class:(path=='dapp:notifications'?'current':''),icon:ltmp_arr.icon_notify+ltmp(ltmp_arr.icon_counter,{name:'notifications',count:'0'}),caption:ltmp_arr.menu_notifications});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:awards',class:(path=='dapp:awards'?'current':''),icon:ltmp_arr.icon_gem,caption:ltmp_arr.menu_awards});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:users',class:(path=='dapp:users'?'current':''),icon:ltmp_arr.icon_users,caption:ltmp_arr.menu_users});
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:edit_profile',class:(path=='dapp:edit_profile'?'current':''),icon:ltmp_arr.icon_edit_profile,caption:ltmp_arr.menu_view_profile});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:hashtags',class:(path=='dapp:hashtags'?'current adaptive-show-inline':'adaptive-show-inline'),icon:ltmp_arr.icon_hashtag,caption:ltmp_arr.menu_hashtags});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:app_settings',class:(path=='dapp:app_settings'?'current':''),icon:ltmp_arr.icon_settings,caption:ltmp_arr.menu_app_settings});
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:account_settings',class:(path=='dapp:account_settings'?'current':''),icon:ltmp_arr.icon_account_settings,caption:ltmp_arr.menu_account_settings});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:account',class:(path=='dapp:account'?'current':''),icon:ltmp_arr.icon_account_settings,caption:ltmp_arr.menu_account_settings});
 		primary_menu+=ltmp_arr.menu_primary_pinned_tags;
 	}
 	$('div.menu .primary').html(primary_menu);
@@ -4031,21 +4030,21 @@ function app_mouse(e){
 								}
 								else{
 									tab.find('.sync-import-error').html(ltmp_arr.account_settings_empty_regular_key);
-									tab.find('.sync-import-error').attr('data-href','dapp:account_settings');
+									tab.find('.sync-import-error').attr('data-href','dapp:account/credentials');
 									add_notify(false,
 										ltmp_arr.notify_arr.error,
 										ltmp_arr.account_settings_empty_regular_key,
-										'dapp:account_settings'
+										'dapp:account/credentials'
 									);
 								}
 							}
 							else{
 								tab.find('.sync-import-error').html(ltmp_arr.account_settings_empty_regular_key);
-								tab.find('.sync-import-error').attr('data-href','dapp:account_settings');
+								tab.find('.sync-import-error').attr('data-href','dapp:account/credentials');
 								add_notify(false,
 									ltmp_arr.notify_arr.error,
 									ltmp_arr.account_settings_empty_regular_key,
-									'dapp:account_settings'
+									'dapp:account/credentials'
 								);
 							}
 
@@ -4935,7 +4934,7 @@ function import_cloud(data){
 							add_notify(false,
 								ltmp_arr.notify_arr.error,
 								ltmp_arr.account_settings_empty_regular_key,
-								'dapp:account_settings'
+								'dapp:account/credentials'
 							);
 						}
 					}
@@ -4943,7 +4942,7 @@ function import_cloud(data){
 						add_notify(false,
 							ltmp_arr.notify_arr.error,
 							ltmp_arr.account_settings_empty_regular_key,
-							'dapp:account_settings'
+							'dapp:account/credentials'
 						);
 					}
 
@@ -6161,16 +6160,17 @@ function get_user(account,forced_update,callback){
 }
 
 function save_profile(view){
-	let nickname=view.find('input[name="nickname"]').val();
+	let tab=view.find('.content-view[data-tab="profile"]');
+	let nickname=tab.find('input[name="nickname"]').val();
 	nickname=nickname.trim();
 
-	let about=view.find('input[name="about"]').val();
+	let about=tab.find('input[name="about"]').val();
 	about=about.trim();
 
-	let avatar=view.find('input[name="avatar"]').val();
+	let avatar=tab.find('input[name="avatar"]').val();
 	avatar=avatar.trim();
 
-	let interests_str=view.find('input[name="interests"]').val();
+	let interests_str=tab.find('input[name="interests"]').val();
 	interests_str+=',';
 	let interests_arr=interests_str.split(',');
 	let interests=[];
@@ -6181,21 +6181,21 @@ function save_profile(view){
 		}
 	}
 
-	let telegram=view.find('input[name="telegram"]').val();
+	let telegram=tab.find('input[name="telegram"]').val();
 	telegram=telegram.trim();
 
-	let github=view.find('input[name="github"]').val();
+	let github=tab.find('input[name="github"]').val();
 	github=github.trim();
 
-	let pinned_object=view.find('input[name="pinned_object"]').val();
+	let pinned_object=tab.find('input[name="pinned_object"]').val();
 	pinned_object=pinned_object.trim();
 
 	viz.api.getAccount(current_user,app_protocol,function(err,response){
 		if(err){
 			console.log(err);
-			view.find('.submit-button-ring').removeClass('show');
-			view.find('.error').html(ltmp_arr.gateway_error);
-			view.find('.button').removeClass('disabled');
+			tab.find('.submit-button-ring').removeClass('show');
+			tab.find('.error').html(ltmp_arr.gateway_error);
+			tab.find('.button').removeClass('disabled');
 			return;
 		}
 		else{
@@ -6270,9 +6270,9 @@ function save_profile(view){
 
 			viz.broadcast.accountMetadata(users[current_user].regular_key,current_user,new_json_metadata,function(err,result){
 				if(result){
-					view.find('.submit-button-ring').removeClass('show');
-					view.find('.success').html(ltmp_arr.edit_profile_saved);
-					view.find('.button').removeClass('disabled');
+					tab.find('.submit-button-ring').removeClass('show');
+					tab.find('.success').html(ltmp_arr.edit_profile_saved);
+					tab.find('.button').removeClass('disabled');
 					setTimeout(function(){
 						get_user(current_user,true,function(err,result){
 							if(err){
@@ -6286,9 +6286,9 @@ function save_profile(view){
 				}
 				else{
 					console.log(err);
-					view.find('.submit-button-ring').removeClass('show');
-					view.find('.error').html(ltmp_arr.gateway_error);
-					view.find('.button').removeClass('disabled');
+					tab.find('.submit-button-ring').removeClass('show');
+					tab.find('.error').html(ltmp_arr.gateway_error);
+					tab.find('.button').removeClass('disabled');
 					return;
 				}
 			});
@@ -6986,55 +6986,6 @@ function view_publish(view,path_parts,query,title){
 				}
 			}
 		}
-	});
-}
-
-function view_edit_profile(view,path_parts,query,title){
-	document.title=ltmp_arr.edit_profile_caption+' - '+title;
-	let header='';
-	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
-	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.edit_profile_caption});
-	view.find('.header').html(header);
-
-	view.find('.button').removeClass('disabled');
-	view.find('.submit-button-ring').removeClass('show');
-	view.find('.error').html('');
-	view.find('.success').html('');
-	view.find('.viz_account').html('@'+current_user);
-
-	view.find('input').val('');
-	get_user(current_user,true,function(err,result){
-		if(err){
-			view.find('.error').html(ltmp_arr.gateway_error);
-		}
-		else{
-			let profile=JSON.parse(result.profile);
-			if(0<Object.keys(profile).length){
-				if(typeof profile.nickname != 'undefined'){
-					view.find('input[name=nickname]').val(profile.nickname);
-				}
-				if(typeof profile.about != 'undefined'){
-					view.find('input[name=about]').val(profile.about);
-				}
-				if(typeof profile.avatar != 'undefined'){
-					view.find('input[name=avatar]').val(profile.avatar);
-				}
-				if(typeof profile.interests != 'undefined'){
-					view.find('input[name=interests]').val(profile.interests.join(', '));
-				}
-				if(typeof profile.pinned != 'undefined'){
-					view.find('input[name=pinned_object]').val(profile.pinned);
-				}
-				if(typeof profile.telegram != 'undefined'){
-					view.find('input[name=telegram]').val(profile.telegram);
-				}
-				if(typeof profile.github != 'undefined'){
-					view.find('input[name=github]').val(profile.github);
-				}
-			}
-		}
-		$('.loader').css('display','none');
-		view.css('display','block');
 	});
 }
 
@@ -7785,37 +7736,96 @@ function apply_theme_mode(){
 	apply_theme_mode_timer=setTimeout(function(){apply_theme_mode();},60000);
 }
 
-function view_account_settings(view,path_parts,query,title){
+function view_account(view,path_parts,query,title){
 	document.title=ltmp_arr.account_settings_caption+' - '+title;
 	let header='';
 	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.account_settings_caption});
 	view.find('.header').html(header);
 
-	view.find('.button').removeClass('disabled');
-	view.find('.submit-button-ring').removeClass('show');
-	view.find('.error').html('');
-	view.find('.success').html('');
-
-	view.find('input').val('');
-
-	if(''!=current_user){
-		view.find('input[name=viz_account]').val(current_user);
-		if(typeof users[current_user] !== 'undefined'){
-			if(typeof users[current_user].regular_key !== 'undefined'){
-				view.find('input[name=viz_regular_key]').val(users[current_user].regular_key);
-			}
-			else{
-				view.find('.error').html(ltmp_arr.account_settings_empty_regular_key);
-				view.find('.error').css('color','red');
-			}
-		}
-		else{
-			view.find('.error').html(ltmp_arr.account_settings_empty_regular_key);
-			view.find('.error').css('color','red');
-		}
+	let current_tab='credentials';
+	if((typeof path_parts[1] != 'undefined')&&(''!=path_parts[1])){
+		current_tab=path_parts[1];
 	}
 
+	document.title=ltmp_arr['account_'+current_tab+'_tab']+' - '+document.title;
+
+	let tabs='';
+	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:account/credentials',class:('credentials'==current_tab?'current':''),caption:ltmp_arr.account_credentials_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:account/profile',class:('profile'==current_tab?'current':''),caption:ltmp_arr.account_profile_tab});
+	view.find('.tabs').html(tabs);
+
+	console.log(current_tab);
+	view.find('.content-view').css('display','none');
+	view.find('.content-view[data-tab="'+current_tab+'"]').css('display','block');
+
+	let tab=view.find('.content-view[data-tab="'+current_tab+'"]');
+	if('credentials'==current_tab){
+		tab.find('.button').removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+		tab.find('.error').html('');
+		tab.find('.success').html('');
+
+		tab.find('input').val('');
+
+		if(''!=current_user){
+			tab.find('input[name=viz_account]').val(current_user);
+			if(typeof users[current_user] !== 'undefined'){
+				if(typeof users[current_user].regular_key !== 'undefined'){
+					tab.find('input[name=viz_regular_key]').val(users[current_user].regular_key);
+				}
+				else{
+					tab.find('.error').html(ltmp_arr.account_settings_empty_regular_key);
+					tab.find('.error').css('color','red');
+				}
+			}
+			else{
+				tab.find('.error').html(ltmp_arr.account_settings_empty_regular_key);
+				tab.find('.error').css('color','red');
+			}
+		}
+	}
+	if('profile'==current_tab){
+		tab.find('.button').removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+		tab.find('.error').html('');
+		tab.find('.success').html('');
+		tab.find('.viz_account').html('@'+current_user);
+
+		tab.find('input').val('');
+		get_user(current_user,true,function(err,result){
+			if(err){
+				tab.find('.error').html(ltmp_arr.gateway_error);
+			}
+			else{
+				let profile=JSON.parse(result.profile);
+				if(0<Object.keys(profile).length){
+					if(typeof profile.nickname != 'undefined'){
+						tab.find('input[name=nickname]').val(profile.nickname);
+					}
+					if(typeof profile.about != 'undefined'){
+						tab.find('input[name=about]').val(profile.about);
+					}
+					if(typeof profile.avatar != 'undefined'){
+						tab.find('input[name=avatar]').val(profile.avatar);
+					}
+					if(typeof profile.interests != 'undefined'){
+						tab.find('input[name=interests]').val(profile.interests.join(', '));
+					}
+					if(typeof profile.pinned != 'undefined'){
+						tab.find('input[name=pinned_object]').val(profile.pinned);
+					}
+					if(typeof profile.telegram != 'undefined'){
+						tab.find('input[name=telegram]').val(profile.telegram);
+					}
+					if(typeof profile.github != 'undefined'){
+						tab.find('input[name=github]').val(profile.github);
+					}
+				}
+			}
+			$('.loader').css('display','none');
+		});
+	}
 	$('.loader').css('display','none');
 	view.css('display','block');
 }
@@ -9047,9 +9057,9 @@ function render_object(user,object,type,preset_level){
 				let wrapper_addon=' style="flex-direction:column;"';
 				let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
 				let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
-				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d});
+				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d,link:'viz://@'+user.account+'/'+object.block+'/'});
 				if(image_part){
-					image=ltmp(ltmp_arr.render_preview_article_image,{image:safe_image(object.data.d.i)});
+					image=ltmp(ltmp_arr.render_preview_article_image,{image:safe_image(object.data.d.i),link:'viz://@'+user.account+'/'+object.block+'/'});
 				}
 				render=ltmp(ltmp_arr.object_type_publication,{
 					author:'@'+user.account,
@@ -9185,9 +9195,9 @@ function render_object(user,object,type,preset_level){
 				let wrapper_addon=' style="flex-direction:column;"';
 				let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
 				let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
-				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d});
+				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d,link:'viz://@'+user.account+'/'+object.block+'/'});
 				if(image_part){
-					image=ltmp(ltmp_arr.render_preview_article_image,{image:safe_image(object.data.d.i)});
+					image=ltmp(ltmp_arr.render_preview_article_image,{image:safe_image(object.data.d.i),link:'viz://@'+user.account+'/'+object.block+'/'});
 				}
 				render=ltmp(ltmp_arr.object_type_publication_preview,{
 					author:'@'+user.account,
@@ -9435,9 +9445,9 @@ function render_object(user,object,type,preset_level){
 			let wrapper_addon=' style="flex-direction:column;"';
 			let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
 			let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
-			link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d});
+			link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d,link:'viz://@'+user.account+'/'+object.block+'/'});
 			if(image_part){
-				image=ltmp(ltmp_arr.render_preview_article_image,{image:safe_image(object.data.d.i)});
+				image=ltmp(ltmp_arr.render_preview_article_image,{image:safe_image(object.data.d.i),link:'viz://@'+user.account+'/'+object.block+'/'});
 			}
 			render=ltmp(ltmp_arr.object_type_publication_preview,{
 				author:'@'+user.account,
@@ -10075,7 +10085,7 @@ function check_current_user(callback){
 			add_notify(false,
 				ltmp_arr.notify_arr.error,
 				ltmp_arr.account_settings_empty_regular_key,
-				'dapp:account_settings'
+				'dapp:account/credentials'
 			);
 		}
 		else{
@@ -10083,7 +10093,7 @@ function check_current_user(callback){
 				add_notify(false,
 					ltmp_arr.notify_arr.error,
 					ltmp_arr.account_settings_empty_regular_key,
-					'dapp:account_settings'
+					'dapp:account/credentials'
 				);
 			}
 		}
@@ -10121,7 +10131,7 @@ function init_users(callback){
 }
 
 function preset_view(){
-	let preset_view=['account_settings','app_settings','edit_profile','publish'];
+	let preset_view=['account','app_settings','publish'];
 	for(let i in preset_view){
 		let view_name=preset_view[i];
 		let view=$('.view[data-path="dapp:'+view_name+'"]');

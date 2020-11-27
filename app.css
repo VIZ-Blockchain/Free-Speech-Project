@@ -1708,35 +1708,35 @@ body.dark .preview-article-wrapper{
 }
 .preview-article-link{
 	position:relative;
-	pointer-events:none;
+	cursor:pointer;
 }
-.preview-article-link div{
+.preview-article-link a{
+	display:block;
 	color:#000;
 	text-decoration:none;
 	margin:5px 10px;
 }
-body.dark .preview-article-link div{
+body.dark .preview-article-link a{
 	color:#fff;
 }
-body.midnight .preview-article-link div{
+body.midnight .preview-article-link a{
 	color:#fff;
 }
 .preview-article-link .preview-article-link-title{
 	font-size:18px;
-	pointer-events:none;
 }
 .preview-article-link .preview-article-link-descr{
 	opacity:0.8;
 	margin-bottom:10px;
-	pointer-events:none;
 }
 .preview-article-image{
 	position:relative;
 	display:flex;
-	pointer-events:none;
+	cursor:pointer;
 }
 .preview-article-image img{
 	width:100%;
+	pointer-events:none;
 }
 
 .preview-wrapper{
