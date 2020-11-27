@@ -4412,7 +4412,20 @@ function app_mouse(e){
 		}
 	}
 	if($(target).hasClass('back-action')){
+		let view=$(target).closest('.view');
+		let path_parts=path.split('/');
 		let force_path=false;
+		if('dapp:publish'==path_parts[0]){
+			if(view.find('.article-editor-action').hasClass('positive')){
+				if(view.find('.article-settings-action').hasClass('positive')){
+					view.find('.article-settings-action')[0].click();
+				}
+				else{
+					view.find('.article-editor-action')[0].click();
+				}
+				return;
+			}
+		}
 		if(''!=$(target).data('force')){
 			force_path=$(target).data('force');
 		}
@@ -4424,7 +4437,6 @@ function app_mouse(e){
 			$('.view[data-level="'+level+'"]').remove();
 		}
 		else{//if service view check forced update
-			let path_parts=path.split('/');
 			if(0!=$('.view[data-path="'+path_parts[0]+'"]').length){
 				need_update=(true==$('.view[data-path="'+path_parts[0]+'"]').data('update'));
 			}
