@@ -2508,11 +2508,11 @@ function markdown_decode_text(text){
 	return text;
 }
 function markdown_code(text){
-	let bold_pattern=/\*\*(.*?)\*\*/gm;
+	let bold_pattern=/\*\*(.[\s\S]*?)\*\*/gm;
 	text=text.replace(bold_pattern,'<b>$1</b>');
-	let italic_pattern=/\_\_(.*?)\_\_/gm;
+	let italic_pattern=/\_\_(.[\s\S]*?)\_\_/gm;
 	text=text.replace(italic_pattern,'<i>$1</i>');
-	let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
+	let strikethrough_pattern=/\~\~(.[\s\S]*?)\~\~/gm;
 	text=text.replace(strikethrough_pattern,'<strike>$1</strike>');
 	let inline_code_pattern=/\`(.*?)\`/gm;
 	text=text.replace(inline_code_pattern,'<code>$1</code>');
