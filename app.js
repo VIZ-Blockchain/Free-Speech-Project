@@ -2533,7 +2533,7 @@ function markdown_code(text){
 						text=text.replace(link,'<a data-section="'+link_arr[2].substr(1)+'">'+link_arr[1]+'</a>');
 					}
 					else{
-						text=text.replace(link,'<a href="'+link_arr[2]+'">'+link_arr[1]+'</a>');
+						text=text.replace(link,'<a href="'+link_arr[2]+'" target="_blank">'+link_arr[1]+'</a>');
 					}
 				}
 			}
