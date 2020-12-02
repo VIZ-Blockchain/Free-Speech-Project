@@ -303,10 +303,14 @@ var ltmp_ru_arr={
 		<source src="{link}" type="{mime}">
 		Your browser does not support the audio element.
 	</audio>
-	<a class="audio-toggle-action">%%icon_player_play%%</a>
-	<div class="audio-progress"><div class="fill-range"><div class="fill-level"></div></div></div>
-	<time>0 / 0</time>
+	<a class="audio-toggle-action" tabindex="0" title="%%audio_player_play_caption%%">%%icon_player_play%%</a>
+	<div class="audio-progress" tabindex="0" role="slider" aria-label="%%audio_player_progress_caption%%" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="00:00"><div class="fill-range"><div class="fill-level"></div></div></div>
+	<time title="%%audio_player_duration_caption%%">0 / 0</time>
 	`,
+	audio_player_play_caption:`Воспроизвести`,
+	audio_player_pause_caption:`Пауза`,
+	audio_player_progress_caption:`Ползунок позиции`,
+	audio_player_duration_caption:`Длительность`,
 
 	hashtags_addon_caption:'# Тэги',
 	hashtags_addon_button:'<a tabindex="0" data-href="dapp:hashtags" title="Управление тэгами">{icon}</a>',

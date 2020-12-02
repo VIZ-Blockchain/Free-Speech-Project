@@ -1525,7 +1525,7 @@ function render_time_duration(sec){
 	if(min>=1){
 		return min+':'+sec;
 	}
-	return sec;
+	return '00:'+sec;
 }
 function render_preview_data(account,block,obj){
 	if(typeof account == 'undefined'){
@@ -1535,7 +1535,6 @@ function render_preview_data(account,block,obj){
 		return;
 	}
 	let json=obj.meta;
-	console.log('AUDIO!',obj);
 	if(false===json){
 		if(typeof obj.mime !== 'undefined'){
 			if(obj.mime.match(/audio.*/)){
@@ -1563,14 +1562,22 @@ function render_preview_data(account,block,obj){
 					let percent=0;
 					if(isNaN(duration)){
 						duration='&mdash;';
+						$(player).find('.audio-progress').attr('aria-valuemax',0);
+						$(player).find('.audio-progress').attr('aria-valuenow',0);
 					}
 					else{
+						$(player).find('.audio-progress').attr('aria-valuemax',duration);
+						$(player).find('.audio-progress').attr('aria-valuenow',time);
 						percent=100*time/duration;
 					}
+					$(player).find('.audio-progress').attr('aria-valuetext',render_time_duration(time));
+
 					$(player).find('.audio-progress .fill-level').css('width',percent+'%');
 					$(player).find('time').html(render_time_duration(time)+' / '+render_time_duration(duration));
+					$(player).find('time').attr('title',ltmp_arr.audio_player_duration_caption+' '+render_time_duration(duration));
 					if(audio.ended){
 						$(player).find('.audio-toggle-action').html(ltmp_arr.icon_player_play);
+						$(player).find('.audio-toggle-action').attr('title',ltmp_arr.audio_player_play_caption);
 					}
 				});
 				$(actions).find('.audio-source')[0].load();
@@ -3681,10 +3688,12 @@ function app_mouse(e){
 		if(audio.paused){
 			audio.play();
 			$(target).html(ltmp_arr.icon_player_pause);
+			$(player).find('.audio-toggle-action').attr('title',ltmp_arr.audio_player_pause_caption);
 		}
 		else{
 			audio.pause();
 			$(target).html(ltmp_arr.icon_player_play);
+			$(player).find('.audio-toggle-action').attr('title',ltmp_arr.audio_player_play_caption);
 		}
 	}
 	if($(target).hasClass('theme-action')){

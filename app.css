@@ -2008,6 +2008,7 @@ body.midnight .editor-formatter{
 	padding:0;
 	overflow:hidden;
 	cursor:pointer;
+	outline:0;
 }
 .audio-progress:hover .fill-range{
 	background:rgb(28,152,229,0.2);
