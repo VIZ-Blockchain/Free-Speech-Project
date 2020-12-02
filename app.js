@@ -2521,7 +2521,25 @@ function markdown_code(text){
 	text=text.replace(images_pattern,'<img src="$2" alt="$1"/>');
 
 	let links_pattern=/\[(.*?)\]\((.*?)\)/gm;
-	text=text.replace(links_pattern,'<a href="$2">$1</a>');
+	let link_pattern=/\[(.*?)\]\((.*?)\)/m;
+	let links_arr=text.match(links_pattern);
+	if(null!==links_arr){
+		if(typeof links_arr[0] != 'undefined'){
+			for(let i in links_arr){
+				let link=links_arr[i];
+				link_arr=link.match(link_pattern);
+				if(null!==link_arr){
+					if('#'==link_arr[2].substr(0,1)){//link to section
+						text=text.replace(link,'<a data-section="'+link_arr[2].substr(1)+'">'+link_arr[1]+'</a>');
+					}
+					else{
+						text=text.replace(link,'<a href="'+link_arr[2]+'">'+link_arr[1]+'</a>');
+					}
+				}
+			}
+		}
+	}
+	//text=text.replace(links_pattern,'<a href="$2">$1</a>');
 
 	text=markdown_decode_text(text);
 	text=text.trim();
@@ -2637,6 +2655,11 @@ function markdown_encode(element,level){
 	return result;
 }
 function markdown_decode(text,rewrite_block){
+	let set_id=false;
+	let section=false;
+	let subsection=false;
+	let section_num=1;
+	let subsection_num=1;
 	rewrite_block=typeof rewrite_block==='undefined'?false:rewrite_block;
 	text=text.trim();
 	while(-1!=text.indexOf("\n\n\n")){
@@ -2646,6 +2669,9 @@ function markdown_decode(text,rewrite_block){
 	let text_arr=text.split("\n\n");
 	let html='';
 	for(let i in text_arr){
+		set_id=false;
+		section=false;
+		subsection=false;
 		let el=text_arr[i];
 		let first=false;
 		let context=false;
@@ -2664,10 +2690,14 @@ function markdown_decode(text,rewrite_block){
 			else
 			if('##'==first){
 				block='h2';
+				set_id=true;
+				section=true;
 			}
 			else
 			if('###'==first){
 				block='h3';
+				set_id=true;
+				subsection=true;
 			}
 			else{
 				first=false;
@@ -2687,12 +2717,24 @@ function markdown_decode(text,rewrite_block){
 			result='<hr />';
 		}
 		else{
-			/*
-			if(context.test(images_pattern)){
-				block='center';
+			let id_addon='';
+			if(set_id){
+				id_addon+=' id="';
+				if(section){
+					id_addon+='section-'+section_num;
+					section_num++;
+					subsection_num=1;
+				}
+				if(subsection){
+					id_addon+='section-'+Math.max(section_num-1,1)+'-'+subsection_num;
+					subsection_num++;
+				}
+				id_addon+='"';
+				set_id=false;
+				section=false;
+				subsection=false;
 			}
-			*/
-			result='<'+block+'>';
+			result='<'+block+id_addon+'>';
 			result+=markdown_code(context);
 			result+='</'+block+'>';
 		}
@@ -2951,6 +2993,13 @@ function app_mouse(e){
 			}
 		}
 		view_path(href,{back:back_to},true,false);
+		e.preventDefault();
+	}
+	if(typeof $(target).attr('data-section') != 'undefined'){
+		let view=$(target).closest('.view');
+		let section=$(target).attr('data-section');
+		let section_el=view.find('#'+section);
+		$(window)[0].scrollTo({behavior:'smooth',top:section_el.offset().top-15});
 		e.preventDefault();
 	}
 	if($(target).hasClass('read-notify-action')){
@@ -10213,6 +10262,27 @@ function main_app(){
 				$('.view[data-level="'+level+'"]').data('scroll',Math.ceil(window.pageYOffset));
 			}
 		}
+		$('.publication-readline').each(function(i,el){
+			let object_link=$(el).data('object');
+			let object_el=$(el).closest('.view').find('.object[data-link="'+object_link+'"]');
+			if(object_el){
+				let min_y=object_el.offset().top;
+				let max_y=object_el.offset().top+object_el.height()-window.innerHeight;
+				let next_context=object_el.offset().top+object_el.height()+(window.innerHeight/2);//+1/2 of screen
+				let percent=0;
+				if(Math.ceil(window.pageYOffset)>=min_y){
+					percent=Math.ceil(100*window.pageYOffset/max_y);
+				}
+				percent=Math.min(percent,100);
+				$(el).find('.fill-level').css('width',percent+'%');
+				if(Math.ceil(window.pageYOffset)>=next_context){
+					$(el).find('.fill-level').css('opacity','0');
+				}
+				else{
+					$(el).find('.fill-level').css('opacity','1');
+				}
+			}
+		});
 		check_load_more();
 	});
 	window.onresize=function(init){

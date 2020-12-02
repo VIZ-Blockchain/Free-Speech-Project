@@ -1949,9 +1949,38 @@ body.midnight .editor-formatter{
 }
 .editor-placeholders{
 	position: absolute;
-	top:50px;
+	top:40px;
 	pointer-events:none;
 	opacity:0.4;
+}
+.publication-readline{
+	position:sticky;
+	height:6px;
+	margin:0;
+	padding:0;
+	top:0;
+	z-index:1;
+	overflow:hidden;
+}
+.publication-readline .fill-level{
+	display:block;
+	position:relative;
+	width:0vh;
+	height:4px;
+	background:#1c98e5;
+	border-bottom:2px solid #1a83c4;
+
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+
+	user-select:none;
+	-moz-user-select:none;
+	-khtml-user-select:none;
+	-webkit-user-select:none;
+	-o-user-select:none;
 }
 .article{
 	font-size:20px;

@@ -595,6 +595,7 @@ var ltmp_ru_arr={
 	publish_success_link:'Запись успешно опубликована: <a tabindex="0" data-href="viz://@{account}/{block}/">ссылка</a>',
 
 	object_type_publication_full:`
+		<div class="publication-readline" data-object="{link}"><div class="fill-level"></div></div>
 		<div class="object type-text" data-link="{link}" data-publication="true">
 			<div class="author-view">
 				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
