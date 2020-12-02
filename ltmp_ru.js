@@ -297,6 +297,17 @@ var ltmp_ru_arr={
 	</div>`,
 	render_preview_wrapper:`<a tabindex="0" class="preview-wrapper" href="{link}" target="_blank"{addon}>{context}</a>`,
 
+	render_audio_wrapper:`<div tabindex="0" class="preview-wrapper audio-player" title="Аудио">{context}</div>`,
+	render_audio_player:`
+	<audio class="audio-source">
+		<source src="{link}" type="{mime}">
+		Your browser does not support the audio element.
+	</audio>
+	<a class="audio-toggle-action">%%icon_player_play%%</a>
+	<div class="audio-progress"><div class="fill-range"><div class="fill-level"></div></div></div>
+	<time>0 / 0</time>
+	`,
+
 	hashtags_addon_caption:'# Тэги',
 	hashtags_addon_button:'<a tabindex="0" data-href="dapp:hashtags" title="Управление тэгами">{icon}</a>',
 	hashtags_pinned_caption:'Закрепленные',
@@ -503,6 +514,9 @@ var ltmp_ru_arr={
 	icon_theme_full_moon:`<i class="icon theme-full-moon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12,11.807C9.349,9.155,8.7,5.261,10.049,2c-1.875,0.37-3.666,1.281-5.12,2.735c-3.905,3.905-3.905,10.237,0,14.142	c3.906,3.906,10.237,3.905,14.143,0c1.454-1.454,2.364-3.244,2.735-5.119C18.545,15.106,14.651,14.458,12,11.807z"/></svg></i>`,
 	icon_theme_sun:`<i class="icon theme-sun"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></i>`,
 	icon_attach:`<i class="icon attach"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M14.828 7.757l-5.656 5.657a1 1 0 1 0 1.414 1.414l5.657-5.656A3 3 0 1 0 12 4.929l-5.657 5.657a5 5 0 1 0 7.071 7.07L19.071 12l1.414 1.414-5.657 5.657a7 7 0 1 1-9.9-9.9l5.658-5.656a5 5 0 0 1 7.07 7.07L12 16.244A3 3 0 1 1 7.757 12l5.657-5.657 1.414 1.414z"/></svg></i>`,
+
+	icon_player_play:`<i class="icon player-play"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7 6L7 18 17 12z"></path></svg></i>`,
+	icon_player_pause:`<i class="icon player-pause"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 7H11V17H8zM13 7H16V17H13z"></path></svg></i>`,
 
 	article_publish_caption:`Опубликовать`,
 	article_settings_caption:`Настройки`,

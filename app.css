@@ -1965,7 +1965,7 @@ body.midnight .editor-formatter{
 .publication-readline .fill-level{
 	display:block;
 	position:relative;
-	width:0vh;
+	width:0%;
 	height:4px;
 	background:#1c98e5;
 	border-bottom:2px solid #1a83c4;
@@ -1981,6 +1981,62 @@ body.midnight .editor-formatter{
 	-khtml-user-select:none;
 	-webkit-user-select:none;
 	-o-user-select:none;
+}
+.audio-player{
+	outline:none;
+	line-height:30px;
+	user-select:none;
+	-moz-user-select:none;
+	-khtml-user-select:none;
+	-webkit-user-select:none;
+	-o-user-select:none;
+}
+.audio-player time{
+	opacity:0.8;
+	font-size:14px;
+	line-height:34px;
+	margin:0 10px;
+}
+.audio-player i.icon:hover{
+	background:none;
+}
+.audio-progress{
+	display:inline-block;
+	flex-grow:1;
+	height:25px;
+	margin:5px;
+	padding:0;
+	overflow:hidden;
+	cursor:pointer;
+}
+.audio-progress:hover .fill-range{
+	background:rgb(28,152,229,0.2);
+
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+}
+.audio-progress .fill-level{
+	display:block;
+	position:relative;
+	width:0%;
+	margin-top:12px;
+	height:1px;
+	background:#1c98e5;
+	border-bottom:1px solid #1a83c4;
+	border-radius:2px;
+
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+}
+.audio-progress:hover .fill-level{
+	margin-top:10px;
+	height:4px;
 }
 .article{
 	font-size:20px;
