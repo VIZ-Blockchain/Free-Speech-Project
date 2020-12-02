@@ -1573,7 +1573,12 @@ function render_preview_data(account,block,obj){
 					$(player).find('.audio-progress').attr('aria-valuetext',render_time_duration(time));
 
 					$(player).find('.audio-progress .fill-level').css('width',percent+'%');
-					$(player).find('time').html(render_time_duration(time)+' / '+render_time_duration(duration));
+					if(typeof duration === 'number'){
+						$(player).find('time').html(render_time_duration(time)+' / '+render_time_duration(duration));
+					}
+					else{
+						$(player).find('time').html(time+' / '+duration);
+					}
 					$(player).find('time').attr('title',ltmp_arr.audio_player_duration_caption+' '+render_time_duration(duration));
 					if(audio.ended){
 						$(player).find('.audio-toggle-action').html(ltmp_arr.icon_player_play);
