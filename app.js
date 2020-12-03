@@ -1545,6 +1545,20 @@ function render_preview_data(account,block,obj){
 	let json=obj.meta;
 	if(false===json){
 		if(typeof obj.mime !== 'undefined'){
+			if(obj.mime.match(/image\/gif/)){
+				let current_link='viz://@'+account+'/'+block+'/';
+				let view=$('.view[data-level="'+level+'"]');
+				if(-1==path.indexOf('viz://')){//look in services views
+					let path_parts=path.split('/');
+					view=$('.view[data-path="'+path_parts[0]+'"]');
+				}
+				let actions=view.find('.objects .object[data-link="'+current_link+'"] .preview-container');
+				let result='';
+
+				result=ltmp(ltmp_arr.render_preview_wrapper,{link:obj.link,context:ltmp(ltmp_arr.render_preview_image,{addon:' style="max-height:100vh"',image:safe_image(obj.link)})});
+				$(actions).html(result);
+			}
+			else
 			if(obj.mime.match(/audio.*/)){
 				let result='';
 				let player=ltmp(ltmp_arr.render_audio_player,{link:obj.link,mime:obj.mime});
