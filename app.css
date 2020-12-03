@@ -2039,6 +2039,37 @@ body.midnight .editor-formatter{
 	margin-top:10px;
 	height:4px;
 }
+
+.toggle-publish-addons{
+	font-size:16px;
+	margin:5px 0;
+	padding-top:5px;
+	border-top:1px solid rgba(204, 204, 221, 0.5);
+
+	user-select:none;
+	-moz-user-select:none;
+	-khtml-user-select:none;
+	-webkit-user-select:none;
+	-o-user-select:none;
+}
+.publish-addons{
+	display:none;
+}
+.beneficiaries-list{
+	font-size:16px;
+}
+.beneficiaries-list-caption{
+	font-size:18px;
+}
+.beneficiaries-item{
+	margin:5px 0;
+}
+.beneficiaries-item input{
+	display:inline-block;
+	width:30%;
+	margin-right:10px;
+}
+
 .article{
 	font-size:20px;
 	word-break:break-word;

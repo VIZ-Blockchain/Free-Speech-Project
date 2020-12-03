@@ -182,7 +182,25 @@ var ltmp_ru_arr={
 	<p><input type="text" name="thumbnail" value=""></p>
 	<div class="input-addon">(загрузить изображение через: <a class="ipfs-upload-article-thumbnail-action">IPFS</a>, <a class="sia-upload-article-thumbnail-action">Sia</a>, допустимы ссылки https://, ipfs://, sia://)</div>
 	<div class="add-interests"></div>
+	<div class="toggle-publish-addons"><a tabindex="0" class="toggle-publish-addons-action">%%open_publish_addons%%</a></div>
+	<div class="publish-addons">%%publish_addons%%</div>
 	`,
+
+	open_publish_addons:`&#x25B8; Дополнительные настройки`,
+	close_publish_addons:`&#x25BE; Дополнительные настройки`,
+	publish_addons:`
+	<div class="beneficiaries-list">
+		<div class="beneficiaries-list-caption">%%beneficiaries_list_caption%%</div>
+		<div class="beneficiaries-list-desription">%%beneficiaries_list_description%%</div>
+		%%beneficiaries_list_add%%
+	</div>`,
+
+	beneficiaries_list_caption:`Бенефициары`,
+	beneficiaries_list_description:`Укажите пользователей, которые будут получать часть награждений.`,
+	beneficiaries_list_add:`%%beneficiaries_item%% %%beneficiaries_add_item%%`,
+	beneficiaries_item:`<div class="beneficiaries-item"><input type="text" name="account" class="round" placeholder="Логин"><input type="text" name="weight" class="round" placeholder="Процент от награды"></div>`,
+	beneficiaries_add_item:`<a tabindex="0" class="beneficiaries-add-item-action" title="Добавить бенефициара">%%icon_editor_plus%%</a>`,
+
 	preset_view_publish:`
 	<div class="object type-text">
 		<div class="object-column">
@@ -231,6 +249,8 @@ var ltmp_ru_arr={
 				<p class="success publish-success"></p>
 				<p><a class="button publish-action">Опубликовать</a><span class="submit-button-ring"></span></p>
 				<p><em>Внимание! Вся информация будет записана в блокчейн от аккаунта <span class="viz_account">&hellip;</span>, её невозможно будет «удалить».</em></p>
+				<div class="toggle-publish-addons"><a tabindex="0" class="toggle-publish-addons-action">%%open_publish_addons%%</a></div>
+				<div class="publish-addons">%%publish_addons%%</div>
 			</div>
 		</div>
 	</div>`,
@@ -376,6 +396,7 @@ var ltmp_ru_arr={
 		idb_error:'Сбой в базе данных, перезагрузка приложения',
 		upload_incorrect_format:'Недопустимый формат файла',
 		upload_percent:'Статус загрузки: {percent}%',
+		beneficiaries_summary_weight:'Проверьте суммарный процент бенефициаров',
 	},
 	notifications_all_tab:'Все',
 	notifications_new_tab:'Новые',

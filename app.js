@@ -372,6 +372,14 @@ function sync_cloud_put_update(type_str,value,callback){
 	}
 }
 
+function compare_account_name(a,b) {
+	if (a.account < b.account)
+		return -1;
+	if (a.account > b.account)
+		return 1;
+	return 0;
+}
+
 var mute_notifications=false;
 if(null!=localStorage.getItem(storage_prefix+'mute_notifications')){
 	mute_notifications=parseInt(localStorage.getItem(storage_prefix+'mute_notifications'));
@@ -1842,96 +1850,107 @@ function render_session(){
 }
 
 function award(account,block,callback){
-	let link='viz://@'+account+'/'+block+'/';
-	let beneficiaries_list=[];
-	let energy=settings.energy;
-	let memo=link;
-	if(settings.silent_award){
-		memo='';
-	}
-	let new_energy=0;
-	viz.api.getAccount(current_user,app_protocol,function(err,response){
-		if(err){
-			console.log(err,response);
-			callback(false);
+	idb_get_by_id('objects','object',[account,block],function(object){
+		let link='viz://@'+account+'/'+block+'/';
+		let beneficiaries_list=[];
+		let energy=settings.energy;
+		let memo=link;
+		if(settings.silent_award){
+			memo='';
 		}
-		else{
-			let vesting_shares=parseFloat(response.vesting_shares);
-			let delegated_vesting_shares=parseFloat(response.delegated_vesting_shares);
-			let received_vesting_shares=parseFloat(response.received_vesting_shares);
-			let effective_vesting_shares=vesting_shares + received_vesting_shares - delegated_vesting_shares;
-
-			let last_vote_time=parse_date(response.last_vote_time);
-			let delta_time=parseInt((new Date().getTime() - last_vote_time + timezone_offset())/1000);
-			let current_energy=response.energy;
-			let new_energy=parseInt(current_energy+(delta_time*10000/432000));//CHAIN_ENERGY_REGENERATION_SECONDS 5 days
-			if(new_energy>10000){
-				new_energy=10000;
+		let new_energy=0;
+		if(false!==object){
+			if(typeof object.data !== 'undefined'){
+				if(typeof object.data.d !== 'undefined'){
+					if(typeof object.data.d.b !== 'undefined'){
+						beneficiaries_list=object.data.d.b;
+					}
+				}
 			}
-			new_energy-=energy;
-			let effective_vesting_shares_int=parseInt(effective_vesting_shares*1000000);//to int shares
-			let current_rshares=parseInt(effective_vesting_shares_int*energy/10000);
-			let total_reward_shares=parseInt(dgp.total_reward_shares);
-			total_reward_shares+=current_rshares;
-			let total_reward_fund=parseInt(parseFloat(dgp.total_reward_fund)*1000);//to int tokens
-			let predicted_reward=(total_reward_fund*current_rshares)/total_reward_shares;
-			predicted_reward=predicted_reward*0.9995;//decrease expectations 0.005%
-			predicted_reward=Math.ceil(predicted_reward)/1000;//to float tokens
-			if(isNaN(predicted_reward)){
-				predicted_reward=0;
+		}
+		viz.api.getAccount(current_user,app_protocol,function(err,response){
+			if(err){
+				console.log(err,response);
+				callback(false);
 			}
-			viz.broadcast.award(users[current_user].regular_key,current_user,account,energy,0,memo,beneficiaries_list,function(err,result){
-				if(!err){
-					add_notify(
-						false,
-						ltmp(ltmp_arr.notify_arr.award_success,{account:account}),
-						ltmp(ltmp_arr.notify_arr.award_info,{amount:predicted_reward,percent:(new_energy/100)+'%'})
-					);
+			else{
+				let vesting_shares=parseFloat(response.vesting_shares);
+				let delegated_vesting_shares=parseFloat(response.delegated_vesting_shares);
+				let received_vesting_shares=parseFloat(response.received_vesting_shares);
+				let effective_vesting_shares=vesting_shares + received_vesting_shares - delegated_vesting_shares;
 
-					//store awards item
-					let read_t=db.transaction(['awards'],'readwrite');
-					let read_q=read_t.objectStore('awards');
-					let req=read_q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
-					let find=false;
-					let obj={
-						account:account,
-						block:block,
-						amount:0
-					};
-					req.onsuccess=function(event){
-						let cur=event.target.result;
-						if(cur){
-							let obj=cur.value;
-							find=true;
-							obj.amount+=predicted_reward;
-							obj.amount=Math.ceil(obj.amount*1000)/1000;
-							cur.update(obj);
-							cur.continue();
-						}
-						else{
-							if(!find){
-								let add_t=db.transaction(['awards'],'readwrite');
-								let add_q=add_t.objectStore('awards');
+				let last_vote_time=parse_date(response.last_vote_time);
+				let delta_time=parseInt((new Date().getTime() - last_vote_time + timezone_offset())/1000);
+				let current_energy=response.energy;
+				let new_energy=parseInt(current_energy+(delta_time*10000/432000));//CHAIN_ENERGY_REGENERATION_SECONDS 5 days
+				if(new_energy>10000){
+					new_energy=10000;
+				}
+				new_energy-=energy;
+				let effective_vesting_shares_int=parseInt(effective_vesting_shares*1000000);//to int shares
+				let current_rshares=parseInt(effective_vesting_shares_int*energy/10000);
+				let total_reward_shares=parseInt(dgp.total_reward_shares);
+				total_reward_shares+=current_rshares;
+				let total_reward_fund=parseInt(parseFloat(dgp.total_reward_fund)*1000);//to int tokens
+				let predicted_reward=(total_reward_fund*current_rshares)/total_reward_shares;
+				predicted_reward=predicted_reward*0.9995;//decrease expectations 0.005%
+				predicted_reward=Math.ceil(predicted_reward)/1000;//to float tokens
+				if(isNaN(predicted_reward)){
+					predicted_reward=0;
+				}
+				viz.broadcast.award(users[current_user].regular_key,current_user,account,energy,0,memo,beneficiaries_list,function(err,result){
+					if(!err){
+						add_notify(
+							false,
+							ltmp(ltmp_arr.notify_arr.award_success,{account:account}),
+							ltmp(ltmp_arr.notify_arr.award_info,{amount:predicted_reward,percent:(new_energy/100)+'%'})
+						);
+
+						//store awards item
+						let read_t=db.transaction(['awards'],'readwrite');
+						let read_q=read_t.objectStore('awards');
+						let req=read_q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
+						let find=false;
+						let obj={
+							account:account,
+							block:block,
+							amount:0
+						};
+						req.onsuccess=function(event){
+							let cur=event.target.result;
+							if(cur){
+								let obj=cur.value;
+								find=true;
 								obj.amount+=predicted_reward;
-								add_q.add(obj);
-								if(!is_safari){
-									if(!is_firefox){
-										add_t.commit();
+								obj.amount=Math.ceil(obj.amount*1000)/1000;
+								cur.update(obj);
+								cur.continue();
+							}
+							else{
+								if(!find){
+									let add_t=db.transaction(['awards'],'readwrite');
+									let add_q=add_t.objectStore('awards');
+									obj.amount+=predicted_reward;
+									add_q.add(obj);
+									if(!is_safari){
+										if(!is_firefox){
+											add_t.commit();
+										}
 									}
 								}
 							}
-						}
-					};
+						};
 
-					callback(true);
-				}
-				else{
-					add_notify(false,'',ltmp(ltmp_arr.notify_arr.award_error,{account:account}));
-					console.log(err);
-					callback(false);
-				}
-			});
-		}
+						callback(true);
+					}
+					else{
+						add_notify(false,'',ltmp(ltmp_arr.notify_arr.award_error,{account:account}));
+						console.log(err);
+						callback(false);
+					}
+				});
+			}
+		});
 	});
 }
 
@@ -2111,6 +2130,7 @@ function publish(view){
 			//new_object.t='text';//optional, this is the default
 			//new_object.u=new Date().getTime() /1000 | 0;//for delayed publication
 
+			let error=false;
 			let data={};
 			data.text=text;
 			if(false!=reply){
@@ -2121,41 +2141,77 @@ function publish(view){
 				data.s=share;
 			}
 
+			let beneficiaries_list=[];
+			let beneficiaries_summary_weight=0;
+			view.find('.beneficiaries-list .beneficiaries-item').each(function(i,el){
+				if(beneficiaries_summary_weight<10000){
+					let account=$(el).find('input[name="account"]').val();
+					if(''!=account){
+						let weight=parseInt(parseFloat($(el).find('input[name="weight"]').val().replace(',','.'))*100);
+						if(0<weight){
+							if(beneficiaries_summary_weight+weight<=10000){
+								beneficiaries_list.push({account,weight});
+								beneficiaries_summary_weight+=weight;
+							}
+							else{
+								error=ltmp_arr.notify_arr.beneficiaries_summary_weight;
+							}
+						}
+					}
+				}
+			});
+			beneficiaries_list.sort(compare_account_name);
+			if(beneficiaries_list.length>0){
+				data.b=beneficiaries_list;
+			}
+
 			new_object.d=data;
 			let object_json=JSON.stringify(new_object);
 
-			viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
-				if(result){
-					console.log(result);
-					view.find('.success').html(ltmp_arr.publish_success);
+			if(false===error){
+				viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
+					if(result){
+						console.log(result);
+						view.find('.success').html(ltmp_arr.publish_success);
 
-					view.find('input').val('');
-					view.find('textarea').val('');
+						view.find('input').val('');
+						view.find('textarea').val('');
 
-					view.find('.submit-button-ring').removeClass('show');
-					view.find('.button').removeClass('disabled');
-					setTimeout(function(){
-						get_user(current_user,true,function(err,result){
-							if(!err){
-								if(result.start!=previous){
-									get_object(current_user,result.start,function(err,object_result){
-										if(!err){
-											view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:result.start}));
-										}
-									});
+						view.find('.submit-button-ring').removeClass('show');
+						view.find('.button').removeClass('disabled');
+						setTimeout(function(){
+							get_user(current_user,true,function(err,result){
+								if(!err){
+									if(result.start!=previous){
+										get_object(current_user,result.start,function(err,object_result){
+											if(!err){
+												view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:result.start}));
+											}
+										});
+									}
 								}
-							}
-						});
-					},3000);
-				}
-				else{
-					console.log(err);
-					view.find('.submit-button-ring').removeClass('show');
-					view.find('.error').html(ltmp_arr.gateway_error);
-					view.find('.button').removeClass('disabled');
-					return;
-				}
-			});
+							});
+						},3000);
+					}
+					else{
+						console.log(err);
+						view.find('.submit-button-ring').removeClass('show');
+						view.find('.error').html(ltmp_arr.gateway_error);
+						view.find('.button').removeClass('disabled');
+						return;
+					}
+				});
+			}
+			else{
+				add_notify(false,
+					ltmp_arr.notify_arr.error,
+					error
+				);
+				view.find('.submit-button-ring').removeClass('show');
+				view.find('.error').html(ltmp_arr.gateway_error);
+				view.find('.button').removeClass('disabled');
+				return;
+			}
 		}
 	});
 }
@@ -3687,6 +3743,30 @@ function app_mouse(e){
 			}
 		}
 	}
+	if($(target).hasClass('toggle-publish-addons-action')){
+		let view=$(target).closest('.content-view');
+		if('none'==view.find('.publish-addons').css('display')){
+			$(target).html(ltmp_arr.close_publish_addons);
+			view.find('.publish-addons').css('display','block');
+		}
+		else{
+			$(target).html(ltmp_arr.open_publish_addons);
+			view.find('.publish-addons').css('display','none');
+		}
+	}
+	if($(target).hasClass('beneficiaries-add-item-action')){
+		let view=$(target).closest('.content-view');
+		view.find('.beneficiaries-list .beneficiaries-item').each(function(i,el){
+			if(i>0){
+				if(''==$(el).find('input[name="account"]').val()){
+					if(''==$(el).find('input[name="weight"]').val()){
+						el.remove();
+					}
+				}
+			}
+		});
+		$(target).before(ltmp(ltmp_arr.beneficiaries_item));
+	}
 	if($(target).hasClass('audio-toggle-action')){
 		let player=$(target).closest('.audio-player');
 		let audio=player.find('.audio-source')[0];
@@ -4438,12 +4518,39 @@ function app_mouse(e){
 			if(typeof $('.article-editor .editor-text p')[0] !== 'undefined'){
 				first_paragraph=$('.article-editor .editor-text p')[0].textContent;
 			}
+
+			let error=false;
 			let article_obj={
 				t:title,
 				m:markdown,
 				d:$('.article-settings input[name="description"]').val(),
 				i:$('.article-settings input[name="thumbnail"]').val(),//image
 			};
+
+			let beneficiaries_list=[];
+			let beneficiaries_summary_weight=0;
+			$('.article-settings .beneficiaries-list .beneficiaries-item').each(function(i,el){
+				if(beneficiaries_summary_weight<10000){
+					let account=$(el).find('input[name="account"]').val();
+					if(''!=account){
+						let weight=parseInt(parseFloat($(el).find('input[name="weight"]').val().replace(',','.'))*100);
+						if(0<weight){
+							if(beneficiaries_summary_weight+weight<=10000){
+								beneficiaries_list.push({account,weight});
+								beneficiaries_summary_weight+=weight;
+							}
+							else{
+								error=ltmp_arr.notify_arr.beneficiaries_summary_weight;
+							}
+						}
+					}
+				}
+			});
+			beneficiaries_list.sort(compare_account_name);
+			if(beneficiaries_list.length>0){
+				article_obj.b=beneficiaries_list;
+			}
+
 			if(''==article_obj.i){
 				if(''!==first_image){
 					article_obj.i=first_image;
@@ -4460,7 +4567,7 @@ function app_mouse(e){
 					delete article_obj.d;
 				}
 			}
-			let error=false;
+
 			if(''==article_obj.m.trim()){
 				error=ltmp_arr.editor_error_empty_markdown;
 			}
@@ -4508,7 +4615,6 @@ function app_mouse(e){
 								console.log(err);
 								add_notify(false,'',ltmp_arr.gateway_error);
 								$(target).removeClass('disabled');
-								return;
 							}
 						});
 					}
@@ -4527,7 +4633,7 @@ function app_mouse(e){
 		if(!$(target).hasClass('disabled')){
 			$(target).addClass('disabled');
 
-			let view=$(target).closest('.view');
+			let view=$(target).closest('.content-view');
 			view.find('.submit-button-ring').addClass('show');
 			view.find('.error').html('');
 			view.find('.success').html('');
