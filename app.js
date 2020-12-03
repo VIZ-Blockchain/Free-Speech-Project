@@ -8118,10 +8118,80 @@ function view_account(view,path_parts,query,title){
 	view.css('display','block');
 }
 
+var audio_player_position=false;
+function audio_player_offset(audio,direction){
+	if(!audio.paused){
+		audio.pause();
+	}
+	if(direction){
+		audio_player_position=audio_player_position+1;
+	}
+	else{
+		audio_player_position=audio_player_position-1;
+		audio_player_position=Math.max(audio_player_position,0);
+	}
+}
+function audio_player_set_offset(audio){
+	audio.currentTime=audio_player_position;
+	audio_player_position=false;
+	if(audio.paused){
+		audio.play();
+	}
+}
+function app_keyboard_down(e){
+	if(!e)e=window.event;
+	var key=(e.charCode)?e.charCode:((e.keyCode)?e.keyCode:((e.which)?e.which:0));
+	let char=String.fromCharCode(key);
+	if($(document.activeElement).hasClass('audio-progress')){
+		let player=$(document.activeElement).closest('.audio-player');
+		let audio=player.find('.audio-source')[0];
+		let duration=Math.ceil(audio.duration);
+		let time=Math.ceil(audio.currentTime);
+		if(key==32){//space
+			e.preventDefault();
+			return;
+		}
+		if(key==37){//left arrow
+			e.preventDefault();
+			if(false===audio_player_position){
+				audio_player_position=time;
+			}
+			audio_player_offset(audio,false);
+			return;
+		}
+		if(key==39){//right arrow
+			e.preventDefault();
+			if(false===audio_player_position){
+				audio_player_position=time;
+			}
+			audio_player_offset(audio,true);
+			return;
+		}
+	}
+}
 function app_keyboard(e){
 	if(!e)e=window.event;
 	var key=(e.charCode)?e.charCode:((e.keyCode)?e.keyCode:((e.which)?e.which:0));
 	let char=String.fromCharCode(key);
+	if($(document.activeElement).hasClass('audio-progress')){
+		let player=$(document.activeElement).closest('.audio-player');
+		let audio=player.find('.audio-source')[0];
+		let duration=Math.ceil(audio.duration);
+		let time=Math.ceil(audio.currentTime);
+		if(key==32){//space
+			e.preventDefault();
+			$(player).find('.audio-toggle-action')[0].click();
+			return;
+		}
+		if(key==37){//left arrow
+			e.preventDefault();
+			audio_player_set_offset(audio);
+		}
+		if(key==39){//right arrow
+			e.preventDefault();
+			audio_player_set_offset(audio);
+		}
+	}
 	if(key==13){//enter
 		e.preventDefault();
 		if($(document.activeElement).hasClass('header-link')){
@@ -10480,6 +10550,7 @@ function main_app(){
 
 	document.addEventListener('click',app_mouse,false);
 	document.addEventListener('tap',app_mouse,false);
+	document.addEventListener('keydown',app_keyboard_down,false);
 	document.addEventListener('keyup',app_keyboard,false);
 
 	document.addEventListener('scroll',function(){
