@@ -2157,6 +2157,8 @@ body.dark .article code{
 	font-family:"PT Serif",serif;
 	font-weight:400;
 	margin-bottom:15px;
+	letter-spacing:0.005em;
+	line-height:1.5em;
 }
 .article p:after{
 	clear:both;
