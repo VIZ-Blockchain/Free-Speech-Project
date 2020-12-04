@@ -7189,6 +7189,7 @@ function view_publish(view,path_parts,query,title){
 	$('.article-settings input[name="thumbnail"]').off('paste');
 	document.removeEventListener('selectionchange',editor_selection);
 	if('publication'==query){
+		$('body').addClass('publication-mode');
 		let article_json=localStorage.getItem(storage_prefix+'article_draft');
 		if(null!==article_json){
 			let article_obj=JSON.parse(article_json);
@@ -8249,6 +8250,7 @@ var check_account='';
 
 var mobile_hide_menu_timer=0;
 function view_path(location,state,save_state,update){
+	$('body').removeClass('publication-mode');
 	if('dapp:publish/'==path){//exit from publish view
 		if('article'==query){//exit from article mode
 			document.removeEventListener('selectionchange',editor_selection);
@@ -8841,6 +8843,9 @@ function view_path(location,state,save_state,update){
 													view.find('.objects').append(reply_render);
 												}
 											});
+
+											//publication content view mode
+											$('body').addClass('publication-mode');
 
 											$('.loader').css('display','none');
 											view.css('display','block');

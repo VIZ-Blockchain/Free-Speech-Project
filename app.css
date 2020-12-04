@@ -53,6 +53,10 @@ body.dark input,body.dark textarea{
 	z-index:1;
 	position:relative;
 }
+body.publication-mode .content{
+	width:auto;
+	max-width:800px;
+}
 body.loaded .content{
 	display:block;
 }
@@ -64,6 +68,9 @@ body.loaded .content{
 	border:1px solid rgba(204, 204, 221, 0.5);
 	border-top:0;
 	border-bottom:0;
+}
+body.publication-mode .view{
+	width:auto;
 }
 
 i.icon{
@@ -161,6 +168,9 @@ div.right-addon{
 	min-width:275px;
 	max-width:275px;
 }
+body.publication-mode div.right-addon{
+	display:none !important;
+}
 div.right-addon .box:first-child{
 	margin-top:65px;
 }
@@ -245,6 +255,9 @@ div.menu{
 	line-height:50px;
 	font-size:19px;
 	min-width:275px;
+}
+body.publication-mode div.menu{
+	display:none;
 }
 div.menu a,.header a,.actions-view a,.tabs a,.contacts a,.fast-publish-action{
 	-webkit-touch-callout:none;
