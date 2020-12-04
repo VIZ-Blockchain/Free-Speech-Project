@@ -5443,99 +5443,108 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 				next_offset=0;
 			}
 			if(object_result.account!=current_user){
-				let feed=false;
-				let check_ignore=false;
-				if(settings.feed_subscribe_text){
-					if(!object_result.is_reply){
-						if(!object_result.is_share){
-							feed=true;
+				let processed=false;
+				if(typeof object_result.processed !== 'undefined'){
+					processed=object_result.processed;
+				}
+				if(processed){//already processed, don't need trigger events
+					feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
+				}
+				else{//need check conditions for adding to feed and notificy events
+					let feed=false;
+					let check_ignore=false;
+					if(settings.feed_subscribe_text){
+						if(!object_result.is_reply){
+							if(!object_result.is_share){
+								feed=true;
+							}
 						}
 					}
-				}
-				if(settings.feed_subscribe_shares){
-					if(object_result.is_share){
-						feed=true;
-						if(object_result.parent_account==current_user){
-							let link='viz://@'+object_result.account+'/'+object_result.block+'/';
-							let share_text='';
-							if(typeof object_result.data.d.text !== 'udnefined'){
-								share_text=object_result.data.d.text;
+					if(settings.feed_subscribe_shares){
+						if(object_result.is_share){
+							feed=true;
+							if(object_result.parent_account==current_user){
+								let link='viz://@'+object_result.account+'/'+object_result.block+'/';
+								let share_text='';
+								if(typeof object_result.data.d.text !== 'udnefined'){
+									share_text=object_result.data.d.text;
+								}
+								add_notify(true,ltmp(ltmp_arr.notify_arr.new_share,{account:object_result.account}),share_text,link);
 							}
-							add_notify(true,ltmp(ltmp_arr.notify_arr.new_share,{account:object_result.account}),share_text,link);
+							else{
+								check_ignore=object_result.parent_account;
+							}
 						}
-						else{
+					}
+					if(settings.feed_subscribe_replies){
+						if(object_result.is_reply){
+							feed=true;
 							check_ignore=object_result.parent_account;
 						}
 					}
-				}
-				if(settings.feed_subscribe_replies){
-					if(object_result.is_reply){
-						feed=true;
-						check_ignore=object_result.parent_account;
-					}
-				}
-				else{
-					if(object_result.is_reply){
-						feed=false;
-						if(object_result.parent_account==current_user){
-							let link='viz://@'+object_result.account+'/'+object_result.block+'/';
-							let reply_text=object_result.data.d.text;
-							add_notify(true,ltmp(ltmp_arr.notify_arr.new_reply,{account:object_result.account}),reply_text,link);
-							feed=true;
-						}
-					}
-				}
-				if(settings.feed_subscribe_mentions){
-					let object_type='text';//by default
-					if(typeof object_result.data.t !== 'undefined'){
-						if(-1!=object_types_list.indexOf(object_result.data.t)){
-							if(typeof object_types_arr[object_result.data.t] !== 'undefined'){
-								object_type=object_types_arr[object_result.data.t];
-							}
-							else{
-								object_type=object_result.data.t;
-							}
-						}
-					}
-					if('text'==object_type){
-						if(typeof object_result.data.d.text !== 'undefined'){
-							if(-1!=object_result.data.d.text.indexOf('@'+current_user)){//mention
+					else{
+						if(object_result.is_reply){
+							feed=false;
+							if(object_result.parent_account==current_user){
 								let link='viz://@'+object_result.account+'/'+object_result.block+'/';
 								let reply_text=object_result.data.d.text;
-								add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
+								add_notify(true,ltmp(ltmp_arr.notify_arr.new_reply,{account:object_result.account}),reply_text,link);
 								feed=true;
 							}
 						}
 					}
-					if('publication'==object_type){
-						if(typeof object_result.data.d.m !== 'undefined'){
-							if(-1!=object_result.data.d.m.indexOf('@'+current_user)){//mention
-								let link='viz://@'+object_result.account+'/'+object_result.block+'/';
-								let reply_text=object_result.data.d.t;//title
-								add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
-								feed=true;
-							}
-						}
-					}
-				}
-				if(feed){
-					if(!check_ignore){
-						result.push({block:object_result.block,time:object_result.data.timestamp});
-						feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
-					}
-					else{
-						get_user(check_ignore,false,function(check_err,check_result){
-							if(!check_err){
-								if(2!=check_result.status){//not ignored
-									result.push({block:object_result.block,time:object_result.data.timestamp});
+					if(settings.feed_subscribe_mentions){
+						let object_type='text';//by default
+						if(typeof object_result.data.t !== 'undefined'){
+							if(-1!=object_types_list.indexOf(object_result.data.t)){
+								if(typeof object_types_arr[object_result.data.t] !== 'undefined'){
+									object_type=object_types_arr[object_result.data.t];
+								}
+								else{
+									object_type=object_result.data.t;
 								}
 							}
-							feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
-						});
+						}
+						if('text'==object_type){
+							if(typeof object_result.data.d.text !== 'undefined'){
+								if(-1!=object_result.data.d.text.indexOf('@'+current_user)){//mention
+									let link='viz://@'+object_result.account+'/'+object_result.block+'/';
+									let reply_text=object_result.data.d.text;
+									add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
+									feed=true;
+								}
+							}
+						}
+						if('publication'==object_type){
+							if(typeof object_result.data.d.m !== 'undefined'){
+								if(-1!=object_result.data.d.m.indexOf('@'+current_user)){//mention
+									let link='viz://@'+object_result.account+'/'+object_result.block+'/';
+									let reply_text=object_result.data.d.t;//title
+									add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
+									feed=true;
+								}
+							}
+						}
 					}
-				}
-				else{
-					feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
+					if(feed){
+						if(!check_ignore){
+							result.push({block:object_result.block,time:object_result.data.timestamp});
+							feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
+						}
+						else{
+							get_user(check_ignore,false,function(check_err,check_result){
+								if(!check_err){
+									if(2!=check_result.status){//not ignored
+										result.push({block:object_result.block,time:object_result.data.timestamp});
+									}
+								}
+								feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
+							});
+						}
+					}
+					else{
+						feed_load_result(result,account,object_result.block,next_offset,end_offset,(limit-1),callback);
+					}
 				}
 			}
 		}
@@ -5984,6 +5993,7 @@ function get_object(account,block,callback){
 		let cur=event.target.result;
 		if(cur){
 			result=cur.value;
+			result.processed=true;
 			find=true;
 			cur.continue();
 		}
