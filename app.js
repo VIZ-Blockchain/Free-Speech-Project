@@ -1302,7 +1302,7 @@ function render_menu(){
 	}
 }
 
-let render_right_addon_flag=false;
+var render_right_addon_flag=false;
 function render_right_addon(){
 	if(!render_right_addon_flag){
 		render_right_addon_flag=true;
