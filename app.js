@@ -1302,80 +1302,85 @@ function render_menu(){
 	}
 }
 
+let render_right_addon_flag=false;
 function render_right_addon(){
-	$('div.right-addon').html('');
-	if(''!=current_user){
-		let hashtags_addon='';
-		let hashtags_context='';
-		//pinned
-		let read_t=db.transaction(['hashtags'],'readonly');
-		let read_q=read_t.objectStore('hashtags');
-		let req=read_q.index('pinned_order').openCursor(IDBKeyRange.lowerBound([1,0]),'next');
-		let find=false;
-		let cursor_end=false;
-		let container_context='';
-		let adaptive_container_context='';
-		let pinned_arr=[];
-		req.onsuccess=function(event){
-			let cur=event.target.result;
-			if(cursor_end){
-				cur=false;
-			}
-			if(cur){
-				if(1==cur.value.status){//pinned
-					let hashtag_data=cur.value;
-					find=true;
+	if(!render_right_addon_flag){
+		render_right_addon_flag=true;
+		$('div.right-addon').html('');
+		if(''!=current_user){
+			let hashtags_addon='';
+			let hashtags_context='';
+			//pinned
+			let read_t=db.transaction(['hashtags'],'readonly');
+			let read_q=read_t.objectStore('hashtags');
+			let req=read_q.index('pinned_order').openCursor(IDBKeyRange.lowerBound([1,0]),'next');
+			let find=false;
+			let cursor_end=false;
+			let container_context='';
+			let adaptive_container_context='';
+			let pinned_arr=[];
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cursor_end){
+					cur=false;
+				}
+				if(cur){
+					if(1==cur.value.status){//pinned
+						let hashtag_data=cur.value;
+						find=true;
 
-					container_context+=ltmp(ltmp_arr.box_item,{link:'dapp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
-					adaptive_container_context+=ltmp(ltmp_arr.box_item,{link:'dapp:hashtags/'+hashtag_data.tag,caption:ltmp_arr.icon_hashtag+uppercase_first_symbol(hashtag_data.tag)});
+						container_context+=ltmp(ltmp_arr.box_item,{link:'dapp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
+						adaptive_container_context+=ltmp(ltmp_arr.box_item,{link:'dapp:hashtags/'+hashtag_data.tag,caption:ltmp_arr.icon_hashtag+uppercase_first_symbol(hashtag_data.tag)});
 
-					pinned_arr.push(hashtag_data.id);
-				}
-				else{
-					cursor_end=true;
-				}
-				cur.continue();
-			}
-			else{
-				if(find){
-					$('.adaptive-pinned-tags').html(ltmp_arr.menu_primary_pinned_tags_caption+adaptive_container_context);
-					hashtags_context+=ltmp(ltmp_arr.box_container,{context:container_context,caption:ltmp_arr.hashtags_pinned_caption})
-				}
-				//popular
-				let read_t2=db.transaction(['hashtags'],'readonly');
-				let read_q2=read_t2.objectStore('hashtags');
-				let req2=read_q2.index('count').openCursor(null,'prev');
-				let find2=false;
-				let popular_count=0;
-				let container_context2='';
-				let cursor_end=false;
-				req2.onsuccess=function(event){
-					let cur=event.target.result;
-					if(cursor_end){
-						cur=false;
-					}
-					if(cur){
-						if(0==cur.value.status){
-							let hashtag_data=cur.value;
-							find2=true;
-							container_context2+=ltmp(ltmp_arr.box_item,{link:'dapp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
-							popular_count++;
-							if(popular_count>=settings.hashtags_addon_popular_limit){
-								cursor_end=true;
-							}
-						}
-						cur.continue();
+						pinned_arr.push(hashtag_data.id);
 					}
 					else{
-						if(find2){
-							hashtags_context+=ltmp(ltmp_arr.box_container,{context:container_context2,caption:ltmp_arr.hashtags_popular_caption})
-						}
-						hashtags_addon=ltmp(ltmp_arr.box_addon,{caption:ltmp_arr.hashtags_addon_caption,button:ltmp(ltmp_arr.hashtags_addon_button,{icon:ltmp_arr.icon_settings}),context:hashtags_context});
-						$('div.right-addon').html($('div.right-addon').html()+hashtags_addon);
+						cursor_end=true;
 					}
-				};
-			}
-		};
+					cur.continue();
+				}
+				else{
+					if(find){
+						$('.adaptive-pinned-tags').html(ltmp_arr.menu_primary_pinned_tags_caption+adaptive_container_context);
+						hashtags_context+=ltmp(ltmp_arr.box_container,{context:container_context,caption:ltmp_arr.hashtags_pinned_caption})
+					}
+					//popular
+					let read_t2=db.transaction(['hashtags'],'readonly');
+					let read_q2=read_t2.objectStore('hashtags');
+					let req2=read_q2.index('count').openCursor(null,'prev');
+					let find2=false;
+					let popular_count=0;
+					let container_context2='';
+					let cursor_end=false;
+					req2.onsuccess=function(event){
+						let cur=event.target.result;
+						if(cursor_end){
+							cur=false;
+						}
+						if(cur){
+							if(0==cur.value.status){
+								let hashtag_data=cur.value;
+								find2=true;
+								container_context2+=ltmp(ltmp_arr.box_item,{link:'dapp:hashtags/'+hashtag_data.tag,caption:uppercase_first_symbol(hashtag_data.tag)});
+								popular_count++;
+								if(popular_count>=settings.hashtags_addon_popular_limit){
+									cursor_end=true;
+								}
+							}
+							cur.continue();
+						}
+						else{
+							if(find2){
+								hashtags_context+=ltmp(ltmp_arr.box_container,{context:container_context2,caption:ltmp_arr.hashtags_popular_caption})
+							}
+							hashtags_addon=ltmp(ltmp_arr.box_addon,{caption:ltmp_arr.hashtags_addon_caption,button:ltmp(ltmp_arr.hashtags_addon_button,{icon:ltmp_arr.icon_settings}),context:hashtags_context});
+							$('div.right-addon').html($('div.right-addon').html()+hashtags_addon);
+							render_right_addon_flag=false;
+						}
+					};
+				}
+			};
+		}
 	}
 }
 
