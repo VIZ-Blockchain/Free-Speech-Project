@@ -5448,6 +5448,7 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 				next_offset=0;
 			}
 			if(object_result.account!=current_user){
+				//console.log('!!! check processed object_result by feed_load_more',object_result);
 				let processed=false;
 				if(typeof object_result.processed !== 'undefined'){
 					processed=object_result.processed;
@@ -5757,6 +5758,7 @@ function parse_object(account,block,callback){
 					if(cur){
 						result=cur.value;
 						result.time=obj.time;
+						result.processed=true;//already on store
 						find=true;
 						update_req=cur.update(result);
 						update_req.onsuccess=function(e){
