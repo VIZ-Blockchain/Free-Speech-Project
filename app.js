@@ -4140,6 +4140,74 @@ function app_mouse(e){
 			subscribe(target);
 		}
 	}
+	if($(target).hasClass('publish-add-category-action')){
+		let hashtag_str=fast_str_replace(' ','_',$(target).html());
+		let hashtag_lower_str=hashtag_str.toLowerCase();
+		let publish_form=$(target).closest('.add-categories').parent();
+		let text_el=false;
+		let editor=false;
+		let founded=false;
+
+		if(publish_form.hasClass('article-settings')){
+			text_el=false;
+			editor=$(target).closest('.view').find('.content-view[data-type="article"]').find('.editor-text');;
+		}
+		if(publish_form.hasClass('text-addon')){
+			text_el=publish_form.find('textarea');
+		}
+		if(publish_form.hasClass('comment-addon')){
+			text_el=publish_form.find('input[name=comment]');
+		}
+		publish_form.find('.publish-add-category-action').each(function(i,el){
+			let category_el=el;
+			let category_hashtag_str=fast_str_replace(' ','_',$(category_el).html());
+			let category_hashtag_lower_str=category_hashtag_str.toLowerCase();
+			if(false!==text_el){
+				let search_text=text_el.val();
+				console.log('category position:',search_text.toLowerCase().indexOf(category_hashtag_lower_str));
+				if(-1!==search_text.toLowerCase().indexOf(category_hashtag_lower_str)){
+					$(category_el).addClass('selected');
+					founded=true;
+				}
+				else{
+					$(category_el).removeClass('selected');
+				}
+			}
+			if(false!==editor){
+				let search_text=editor.html();
+				console.log('category position:',search_text.toLowerCase().indexOf(category_hashtag_lower_str));
+				if(-1!==search_text.toLowerCase().indexOf(category_hashtag_lower_str)){
+					$(category_el).addClass('selected');
+					founded=true;
+				}
+				else{
+					$(category_el).removeClass('selected');
+				}
+			}
+		});
+		if(!founded){
+			if(false!==text_el){
+				let search_text=text_el.val();
+				if(-1==search_text.toLowerCase().indexOf(hashtag_lower_str)){
+					text_el.val((search_text.trim()+' '+hashtag_str).trim());
+				}
+			}
+			if(false!==editor){
+				if(!$(target).hasClass('selected')){
+					$(target).addClass('selected');
+					let search_text=editor.html();
+					if(-1==search_text.toLowerCase().indexOf(hashtag_lower_str)){
+						let p_count=editor.find('p').length;
+						$(editor.find('p')[p_count-1]).append(' <a>'+hashtag_str+'</a>');
+						editor_change();
+					}
+				}
+			}
+		}
+		else{
+			add_notify(false,ltmp_arr.notify_arr.error,ltmp_arr.notify_arr.category_is_founded);
+		}
+	}
 	if($(target).hasClass('publish-add-interest-action')){
 		let hashtag_str=fast_str_replace(' ','_',$(target).html());
 		let hashtag_lower_str=hashtag_str.toLowerCase();
@@ -4177,6 +4245,18 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('profile-select-interest-action')){
 		if(!$(target).hasClass('selected')){
+			$(target).addClass('selected');
+			profile_filter_by_type();
+		}
+		else{
+			$(target).removeClass('selected');
+			profile_filter_by_type();
+		}
+	}
+	if($(target).hasClass('profile-select-category-action')){
+		let view=$(target).closest('.view');
+		if(!$(target).hasClass('selected')){
+			view.find('.profile-select-category-action').removeClass('selected');
 			$(target).addClass('selected');
 			profile_filter_by_type();
 		}
@@ -5322,6 +5402,9 @@ function update_user_profile(account,callback){
 				}
 				if(typeof json_metadata.profile.interests != 'undefined'){
 					profile_obj.interests=json_metadata.profile.interests;
+				}
+				if(typeof json_metadata.profile.categories != 'undefined'){
+					profile_obj.categories=json_metadata.profile.categories;
 				}
 				if(typeof json_metadata.profile.pinned != 'undefined'){
 					profile_obj.pinned=json_metadata.profile.pinned;
@@ -6486,6 +6569,17 @@ function save_profile(view){
 		}
 	}
 
+	let categories_str=tab.find('input[name="categories"]').val();
+	categories_str+=',';
+	let categories_arr=categories_str.split(',');
+	let categories=[];
+	for(let i in categories_arr){
+		let interest=escape_html(categories_arr[i].trim());
+		if(''!=interest){
+			categories.push(interest);
+		}
+	}
+
 	let telegram=tab.find('input[name="telegram"]').val();
 	telegram=telegram.trim();
 
@@ -6546,6 +6640,15 @@ function save_profile(view){
 			}
 			else{
 				json_metadata.profile.interests=interests;
+			}
+
+			if(categories.length==0){
+				if(typeof json_metadata.profile.categories !== 'undefined'){
+					delete json_metadata.profile.categories;
+				}
+			}
+			else{
+				json_metadata.profile.categories=categories;
 			}
 
 			if(''==pinned_object){
@@ -7272,12 +7375,26 @@ function view_publish(view,path_parts,query,title){
 	view.find('.viz_account').html('@'+current_user);
 
 	view.find('.add-interests').html('');
+	view.find('.add-categories').html('');
 	$('.loader').css('display','none');
 	view.css('display','block');
 
 	get_user(current_user,true,function(err,result){
 		if(!err){
 			let profile=JSON.parse(result.profile);
+			if(typeof profile.categories != 'undefined'){
+				if(profile.categories.length>0){
+					let categories_view='';
+					for(let i in profile.categories){
+						let category_caption=profile.categories[i];
+						if(category_caption.length>0){
+							let category_hashtag=category_caption.replace(' ','_').trim().toLowerCase();
+							categories_view+=ltmp(ltmp_arr.publish_categories_item,{caption:category_caption,hashtag:category_hashtag});
+						}
+					}
+					view.find('.add-categories').html(ltmp(ltmp_arr.publish_categories,{categories:categories_view}));
+				}
+			}
 			if(typeof profile.interests != 'undefined'){
 				if(profile.interests.length>0){
 					let interests_view='';
@@ -8118,6 +8235,9 @@ function view_account(view,path_parts,query,title){
 					if(typeof profile.interests != 'undefined'){
 						tab.find('input[name=interests]').val(profile.interests.join(', '));
 					}
+					if(typeof profile.categories != 'undefined'){
+						tab.find('input[name=categories]').val(profile.categories.join(', '));
+					}
 					if(typeof profile.pinned != 'undefined'){
 						tab.find('input[name=pinned_object]').val(profile.pinned);
 					}
@@ -8458,6 +8578,20 @@ function view_path(location,state,save_state,update){
 								if(typeof profile.about != 'undefined'){
 									profile_view+=ltmp(ltmp_arr.profile_about,{about:profile.about});
 									profile_found=true;
+								}
+								if(typeof profile.categories != 'undefined'){
+									if(profile.categories.length>0){
+										let categories_view='';
+										for(let i in profile.categories){
+											let category_caption=profile.categories[i];
+											if(category_caption.length>0){
+												let category_hashtag=category_caption.replace(' ','_').trim().toLowerCase();
+												categories_view+=ltmp(ltmp_arr.profile_categories_item,{caption:category_caption,hashtag:category_hashtag});
+											}
+										}
+										profile_view+=ltmp(ltmp_arr.profile_categories,{categories:categories_view});
+										profile_found=true;
+									}
 								}
 								if(typeof profile.interests != 'undefined'){
 									if(profile.interests.length>0){
@@ -9961,7 +10095,13 @@ function profile_filter_by_type(){
 			});
 			hashtags_filter=array_unique(hashtags_filter);
 
-			if(0==hashtags_filter.length){
+			//selected interests as hashtags filter
+			let hashtags_unique_filter=false;
+			view.find('.profile .categories a.selected').each(function(i,el){
+				hashtags_unique_filter=$(el).data('hashtag');
+			});
+
+			if(0==hashtags_filter.length && false===hashtags_unique_filter){
 				if('main'==type){
 					view.find('.objects>.object').css('display','flex');
 					view.find('.objects .pinned-object').css('display','flex');
@@ -10007,8 +10147,13 @@ function profile_filter_by_type(){
 				},50);
 			}
 			else{//filter by selected interests
+				console.log(hashtags_filter.length,hashtags_unique_filter)
+				let hashtags_unique_id_filter=0;
 				let hashtags_id_filter=[];
 				let hashtags_id_counter=hashtags_filter.length;
+				if(false!==hashtags_unique_filter){
+					hashtags_id_counter++;
+				}
 				let hashtags_filter_t,hashtags_filter_q,hashtags_filter_req;
 				hashtags_filter_t=db.transaction(['hashtags'],'readonly');
 				hashtags_filter_q=hashtags_filter_t.objectStore('hashtags');
@@ -10021,6 +10166,12 @@ function profile_filter_by_type(){
 					}
 					if(cur){
 						let item=cur.value;
+						if(false!==hashtags_unique_filter){
+							if(hashtags_unique_filter==cur.value.tag){
+								hashtags_unique_id_filter=cur.value.id;
+								hashtags_id_counter--;
+							}
+						}
 						if(-1!=hashtags_filter.indexOf(cur.value.tag)){
 							hashtags_id_filter.push(cur.value.id);
 							hashtags_id_counter--;
@@ -10032,8 +10183,11 @@ function profile_filter_by_type(){
 					}
 					else{
 						//console.log(hashtags_id_filter,hashtags_id_filter.length);
-						if(hashtags_id_filter.length>0){
+						if(hashtags_id_filter.length>0 || false!==hashtags_unique_filter){
 							hashtags_id_filter_str=hashtags_id_filter.join(',');
+							if(false!==hashtags_unique_filter){
+								hashtags_id_filter_str+='!'+hashtags_unique_id_filter;
+							}
 							let objects_counter=view.find('.objects>.object').length;
 							view.find('.objects>.object').each(function(i,el){
 								let search_object=el;
@@ -10069,6 +10223,13 @@ function profile_filter_by_type(){
 										search_object_q=search_object_t.objectStore('hashtags_feed');
 										search_object_req=search_object_q.index('object').openCursor(IDBKeyRange.only([$(search_object).data('account'),$(search_object).data('block')]),'prev');
 										let find_object=false;
+										if(0==hashtags_id_filter.length){
+											find_object=true;//don't need to search not-unique interest
+										}
+										let find_unique_object=false;
+										if(false===hashtags_unique_filter){
+											find_unique_object=true;//don't need to search unique category
+										}
 										let cursor_end=false;
 										search_object_req.onsuccess=function(event){
 											let cur=event.target.result;
@@ -10076,14 +10237,21 @@ function profile_filter_by_type(){
 												cur=false;
 											}
 											if(cur){
+												if(false!==hashtags_unique_filter){
+													if(hashtags_unique_id_filter==cur.value.tag){
+														find_unique_object=true;
+													}
+												}
 												if(-1!=hashtags_id_filter.indexOf(cur.value.tag)){
 													find_object=true;
+												}
+												if(find_object && find_unique_object){
 													cursor_end=true;
 												}
 												cur.continue();
 											}
 											else{
-												if(!find_object){
+												if(!find_object || !find_unique_object){
 													$(search_object).css('display','none');
 													$(search_object).data('filter',hashtags_id_filter_str);
 													$(search_object).data('filtered',1);

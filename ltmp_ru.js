@@ -30,6 +30,10 @@ var ltmp_ru_arr={
 
 				<p>Интересы:</p>
 				<p><input type="text" name="interests" value=""></p>
+				<div class="input-addon">(перечислите через запятую, будут преобразованы в тэги для поиска в профиле)</div>
+
+				<p>Категории:</p>
+				<p><input type="text" name="categories" value=""></p>
 				<div class="input-addon">(перечислите через запятую, будут преобразованы в тэги для категоризации публикаций в профиле)</div>
 
 				<p>Закрепленная запись:</p>
@@ -174,6 +178,8 @@ var ltmp_ru_arr={
 	</div>`,
 	publish_interests:`Добавить тэги по вашим интересам:<div class="interests">{interests}</div>`,
 	publish_interests_item:`<a class="publish-add-interest-action" data-hashtag="{hashtag}">#{caption}</a>`,
+	publish_categories:`Добавить тэг по вашим категориям:<div class="categories">{categories}</div>`,
+	publish_categories_item:`<a class="publish-add-category-action" data-hashtag="{hashtag}">#{caption}</a>`,
 	article_settings:`
 	<p>Аннотация к публикации:</p>
 	<p><input type="text" name="description" value=""></p>
@@ -181,6 +187,7 @@ var ltmp_ru_arr={
 	<p>Миниатюра изображения:</p>
 	<p><input type="text" name="thumbnail" value=""></p>
 	<div class="input-addon">(загрузить изображение через: <a class="ipfs-upload-article-thumbnail-action">IPFS</a>, <a class="sia-upload-article-thumbnail-action">Sia</a>, допустимы ссылки https://, ipfs://, sia://)</div>
+	<div class="add-categories"></div>
 	<div class="add-interests"></div>
 	<div class="toggle-publish-addons"><a tabindex="0" class="toggle-publish-addons-action">%%open_publish_addons%%</a></div>
 	<div class="publish-addons">%%publish_addons%%</div>
@@ -222,12 +229,14 @@ var ltmp_ru_arr={
 						<p><textarea name="text"></textarea></p>
 						<div class="input-addon">(просто текст без разметки, прикрепить файл: <a tabindex="0" class="publish-attach-sia-action">sia</a>)</div>
 						<div class="add-interests"></div>
+						<div class="add-categories"></div>
 					</div>
 					<div class="comment-addon">
 						<p>Текст комментария:</p>
 						<p><input type="text" name="comment" value=""></p>
 						<div class="input-addon">(просто текст без разметки)</div>
 						<div class="add-interests"></div>
+						<div class="add-categories"></div>
 					</div>
 					<div class="reply-addon">
 						<p>Комментируемый объект:</p>
@@ -397,6 +406,7 @@ var ltmp_ru_arr={
 		upload_incorrect_format:'Недопустимый формат файла',
 		upload_percent:'Статус загрузки: {percent}%',
 		beneficiaries_summary_weight:'Проверьте суммарный процент бенефициаров',
+		category_is_founded:'В тексте уже найдена категория',
 	},
 	notifications_all_tab:'Все',
 	notifications_new_tab:'Новые',
@@ -482,6 +492,8 @@ var ltmp_ru_arr={
 	profile_about:'<div class="about">{about}</div>',
 	profile_interests:'<div class="interests">{interests}</div>',
 	profile_interests_item:`<a class="profile-select-interest-action" data-hashtag="{hashtag}">#{caption}</a>`,
+	profile_categories:'<div class="categories">{categories}</div>',
+	profile_categories_item:`<a class="profile-select-category-action" data-hashtag="{hashtag}">#{caption}</a>`,
 	profile_contacts:'<div class="contacts">{contacts}</div>',
 	profile_contacts_github:'<a href="https://github.com/{github}" target="_blank" class="profile-contacts-github" title="GitHub">{icon_github}</a>',
 	profile_contacts_telegram:'<a href="tg://resolve?domain={telegram}" target="_blank" class="profile-contacts-telegram" title="Telegram">{icon_telegram}</a>',

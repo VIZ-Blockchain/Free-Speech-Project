@@ -1740,6 +1740,47 @@ body.dark .interests a{
 	color:#000 !important;
 }
 
+.categories{
+	margin:5px 0;
+}
+.categories a{
+	display:inline-block;
+	white-space:nowrap;
+	max-width:300px;
+	text-overflow:ellipsis;
+    overflow:hidden;
+    background:#e51c1c;
+    border-radius:5px;
+    padding:0 5px;
+    padding-bottom:2px;
+    margin-right:5px;
+    color:#fff !important;
+    font-size:15px;
+    line-height:25px;
+    -webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+	opacity:0.6;
+}
+.categories a:hover{
+	opacity:1;
+}
+.categories a.selected{
+	text-decoration:underline;
+	opacity:1;
+}
+.categories a:first-child{
+	margin-left:0 !important;
+}
+body.midnight .categories a{
+	color:#000 !important;
+}
+body.dark .categories a{
+	color:#000 !important;
+}
+
 .preview-container{
 	position:relative;
 	box-sizing:border-box;
