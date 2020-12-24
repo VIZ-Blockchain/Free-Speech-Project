@@ -3093,11 +3093,11 @@ function app_mouse(e){
 	if(debug){
 		console.log('event',e);
 		console.log('target',target);
-		console.log('window.getSelection',window.getSelection());
+		console.log('document.getSelection',document.getSelection());
 	}
 	if(is_safari){
 		if(1==$(target).closest('.editor-text').length){
-			last_editor_range=window.getSelection().getRangeAt(0);
+			last_editor_range=document.getSelection().getRangeAt(0);
 		}
 	}
 	//add header link element input behaviour to select all text on first focus
@@ -3249,7 +3249,7 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('editor-header2-action')){
 		if(!$(target).hasClass('disabled')){
-			let selection=window.getSelection();
+			let selection=document.getSelection();
 			if(is_safari){
 				if(false!==last_editor_range){
 					if(!last_editor_range.collapsed){
@@ -3321,7 +3321,7 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('editor-header3-action')){
 		if(!$(target).hasClass('disabled')){
-			let selection=window.getSelection();
+			let selection=document.getSelection();
 			if(is_safari){
 				if(false!==last_editor_range){
 					if(!last_editor_range.collapsed){
@@ -3393,7 +3393,7 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('editor-quote-action')){
 		if(!$(target).hasClass('disabled')){
-			let selection=window.getSelection();
+			let selection=document.getSelection();
 			if(is_safari){
 				if(false!==last_editor_range){
 					if(!last_editor_range.collapsed){
@@ -3467,7 +3467,7 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('editor-code-action')){
 		if(!$(target).hasClass('disabled')){
-			let selection=window.getSelection();
+			let selection=document.getSelection();
 			if(is_safari){
 				if(false!==last_editor_range){
 					if(!last_editor_range.collapsed){
@@ -3521,7 +3521,7 @@ function app_mouse(e){
 		if(!$(target).hasClass('disabled')){
 			if($(target).hasClass('positive')){
 				$(target).removeClass('positive');
-				let selection=window.getSelection();
+				let selection=document.getSelection();
 				if(is_safari){
 					if(false!==last_editor_range){
 						if(!last_editor_range.collapsed){
@@ -3562,7 +3562,7 @@ function app_mouse(e){
 	if($(target).hasClass('editor-image-action')){
 		if(!$(target).hasClass('disabled')){
 			if(!$(target).hasClass('positive')){
-				let selection=window.getSelection();
+				let selection=document.getSelection();
 				if(is_safari){
 					if(false!==last_editor_range){
 						if(!last_editor_range.collapsed){
@@ -3589,7 +3589,7 @@ function app_mouse(e){
 	if($(target).hasClass('editor-attach-image-action')){
 		if(!$(target).hasClass('disabled')){
 			if(!$(target).hasClass('positive')){
-				let selection=window.getSelection();
+				let selection=document.getSelection();
 				if(is_safari){
 					if(false!==last_editor_range){
 						if(!last_editor_range.collapsed){
@@ -3652,7 +3652,7 @@ function app_mouse(e){
 	if($(target).hasClass('editor-attach-action')){
 		if(!$(target).hasClass('disabled')){
 			if(!$(target).hasClass('positive')){
-				let selection=window.getSelection();
+				let selection=document.getSelection();
 				if(is_safari){
 					if(false!==last_editor_range){
 						if(!last_editor_range.collapsed){
@@ -3720,7 +3720,7 @@ function app_mouse(e){
 		if(!$(target).hasClass('disabled')){
 			if($(target).hasClass('positive')){
 				$(target).removeClass('positive');
-				let selection=window.getSelection();
+				let selection=document.getSelection();
 				if(is_safari){
 					if(false!==last_editor_range){
 						if(!last_editor_range.collapsed){
@@ -3762,7 +3762,7 @@ function app_mouse(e){
 		if(!$(target).hasClass('disabled')){
 			if($(target).hasClass('positive')){
 				$(target).removeClass('positive');
-				let selection=window.getSelection();
+				let selection=document.getSelection();
 				if(is_safari){
 					if(false!==last_editor_range){
 						if(!last_editor_range.collapsed){
@@ -3804,7 +3804,7 @@ function app_mouse(e){
 		if(!$(target).hasClass('disabled')){
 			if($(target).hasClass('positive')){
 				$(target).removeClass('positive');
-				let selection=window.getSelection();
+				let selection=document.getSelection();
 				if(is_safari){
 					if(false!==last_editor_range){
 						if(!last_editor_range.collapsed){
@@ -6986,7 +6986,7 @@ function editor_change(e){
 function selection_insert_tag(tag,text){
 	text=typeof text==='undefined'?false:text;
 	let range, element;
-	let selection=window.getSelection();
+	let selection=document.getSelection();
 	if(is_safari){
 		if(false!==last_editor_range){
 			if(!last_editor_range.collapsed){
@@ -7016,7 +7016,7 @@ function selection_insert_tag(tag,text){
 }
 function get_selection_html(by_event){
 	by_event=typeof by_event==='undefined'?false:by_event;
-	let selection=window.getSelection();
+	let selection=document.getSelection();
 	if(!by_event){
 		if(is_safari){
 			if(false!==last_editor_range){
@@ -7065,7 +7065,7 @@ function editor_selection(e){
 	$('.editor-formatter > a').addClass('disabled');
 	$('.editor-formatter > a').removeClass('positive');
 	$('.editor-formatter > a').removeClass('positive-alt');
-	let selection=window.getSelection();
+	let selection=document.getSelection();
 	if(typeof selection !== "undefined"){
 		if(typeof $(selection.focusNode).closest('.editor-text')[0] !== 'undefined'){
 			let element_type=$(selection.focusNode)[0].nodeName;
