@@ -3106,6 +3106,10 @@ function app_mouse(e){
 	}
 
 	if(editor_buttons){
+		//go parent element, if event on icon
+		if($(target).hasClass('icon')){
+			target=$(target).parent();
+		}
 		if($(target).hasClass('editor-separator-action')){
 			if(!$(target).hasClass('disabled')){
 				e.preventDefault();

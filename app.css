@@ -1992,9 +1992,6 @@ body.midnight .editor-formatter{
 .editor-formatter .icon{
 	border-radius:3px;
 }
-.editor-formatter i.icon{
-	pointer-events:none;
-}
 .editor-formatter a.positive .icon{
 	background:rgba(38, 196, 9, 0.1);
 	color:#26be0a;
