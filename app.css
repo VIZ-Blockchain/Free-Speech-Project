@@ -1954,6 +1954,12 @@ body.midnight .preview-link div{
 	border-bottom:1px solid rgba(204, 204, 221, 0.5);
 	overflow-x:auto;
 	white-space:nowrap;
+
+	user-select:none;
+	-moz-user-select:none;
+	-khtml-user-select:none;
+	-webkit-user-select:none;
+	-o-user-select:none;
 }
 body.dark .editor-formatter{
 	background:#18191c;
@@ -1987,11 +1993,7 @@ body.midnight .editor-formatter{
 	border-radius:3px;
 }
 .editor-formatter i.icon{
-	user-select:all;
-	-moz-user-select:all;
-	-khtml-user-select:all;
-	-webkit-user-select:all;
-	-o-user-select:all;
+	pointer-events:none;
 }
 .editor-formatter a.positive .icon{
 	background:rgba(38, 196, 9, 0.1);
