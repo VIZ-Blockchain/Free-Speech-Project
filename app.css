@@ -68,6 +68,7 @@ body.loaded .content{
 	border:1px solid rgba(204, 204, 221, 0.5);
 	border-top:0;
 	border-bottom:0;
+	padding-bottom:30vh;
 }
 body.publication-mode .view{
 	width:auto;
@@ -1055,6 +1056,36 @@ body.dark .share-view a{
 }
 .fast-publish-wrapper .button i.icon:hover{
 	background:none;
+}
+.fast-publish-wrapper .text{
+	display:block;
+	border:0;
+
+	height:100%;
+	min-width:100%;
+	max-width:100%;
+	min-height:15vh;
+	max-height:80vh;
+	font-size:18px;
+	line-height:22px;
+	padding:15px 80px;
+	padding-bottom:50px;
+
+	width:100%;
+	border-bottom:9px solid rgba(204, 204, 221, 0.5);
+	margin:0;
+
+	overflow-y:auto;
+	scrollbar-width:thin;
+	outline:none;
+}
+.fast-publish-wrapper .placeholder{
+	position:absolute;
+	font-size:18px;
+	line-height:22px;
+	padding:15px 80px;
+	color:#aaa;
+	pointer-events:none;
 }
 .fast-publish-wrapper textarea{
 	display:block;

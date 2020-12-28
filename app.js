@@ -2008,7 +2008,10 @@ function wait_publish(last_id,callback){
 	});
 }
 function fast_publish(publish_form){
-	let text=publish_form.find('textarea[name="text"]').val();
+	let text_html=publish_form.find('.text').html();
+	let text=fast_str_replace('<br>',"\n",text_html);
+	text=fast_str_replace('</div>',"\n",text);
+	text=text.replaceAll(/<(.[^>]*)>/gm,'');
 	let action=false;
 	text=text.trim();
 	let ignore_text=false;
@@ -2083,7 +2086,7 @@ function fast_publish(publish_form){
 		});
 	}
 	else{
-		publish_form.find('textarea[name="text"]')[0].focus();
+		publish_form.find('.text')[0].focus();
 		publish_form.find('.fast-publish-action').removeClass('disabled');
 		add_notify(false,'',ltmp_arr.publish_empty_text);
 	}
@@ -4096,11 +4099,11 @@ function app_mouse(e){
 						}
 						else
 						if(typeof result == 'string'){
-							let text=publish_form.find('textarea[name="text"]').val();
+							let text=publish_form.find('.text').html();
 							text=text.trim();
 							text+="\n"+'sia://'+result;
 							text=text.trim();
-							publish_form.find('textarea[name="text"]').val(text);
+							publish_form.find('.text').html(text);
 							$(target).removeClass('disabled');
 							sia_upload_percent=0;
 						}
@@ -4581,7 +4584,7 @@ function app_mouse(e){
 						placeholder:ltmp_arr.fast_publish_reply,
 						button:ltmp_arr.fast_publish_button,
 					}));
-					$('.fast-publish-wrapper[data-reply="'+link+'"] textarea')[0].focus();
+					$('.fast-publish-wrapper[data-reply="'+link+'"] .text')[0].focus();
 				}
 				//view_path('dapp:publish/reply/?'+link,{},true,false);
 			}
@@ -4606,7 +4609,7 @@ function app_mouse(e){
 						placeholder:ltmp_arr.fast_publish_share,
 						button:ltmp_arr.fast_publish_button,
 					}));
-					$('.fast-publish-wrapper[data-share="'+link+'"] textarea')[0].focus();
+					$('.fast-publish-wrapper[data-share="'+link+'"] .text')[0].focus();
 				}
 				//view_path('dapp:publish/share/?'+link,{},true,false);
 			}
@@ -8339,6 +8342,11 @@ function app_keyboard_down(e){
 	if(!e)e=window.event;
 	var key=(e.charCode)?e.charCode:((e.keyCode)?e.keyCode:((e.which)?e.which:0));
 	let char=String.fromCharCode(key);
+	if($(document.activeElement).hasClass('text')){
+		if($(document.activeElement).data('placeholder')){
+			$(document.activeElement).parent().find('.placeholder').css('display','none');
+		}
+	}
 	if($(document.activeElement).hasClass('audio-progress')){
 		let player=$(document.activeElement).closest('.audio-player');
 		let audio=player.find('.audio-source')[0];
@@ -8370,6 +8378,15 @@ function app_keyboard(e){
 	if(!e)e=window.event;
 	var key=(e.charCode)?e.charCode:((e.keyCode)?e.keyCode:((e.which)?e.which:0));
 	let char=String.fromCharCode(key);
+	if($(document.activeElement).hasClass('text')){
+		if($(document.activeElement).data('placeholder')){
+			let text_html=$(document.activeElement).html();
+			let text=fast_str_replace('<br>',"\n",text_html);
+			text=fast_str_replace('</div>',"\n",text);
+			text=text.replaceAll(/<(.[^>]*)>/gm,'');
+			$(document.activeElement).parent().find('.placeholder').css('display',(0===text.length)?'block':'none');
+		}
+	}
 	if($(document.activeElement).hasClass('audio-progress')){
 		let player=$(document.activeElement).closest('.audio-player');
 		let audio=player.find('.audio-source')[0];

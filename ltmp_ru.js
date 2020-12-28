@@ -801,7 +801,8 @@ var ltmp_ru_arr={
 	fast_publish:`
 	<div class="fast-publish-wrapper" data-reply="{reply}" data-share="{share}" tabindex="0" title="Форма быстрой публикации">
 		<div class="avatar" alt=""><img src="{avatar}"></div>
-		<textarea name="text" placeholder="{placeholder}"></textarea>
+		<div class="placeholder">{placeholder}</div>
+		<div class="text" data-placeholder="true" contenteditable="true"></div>
 		<div class="buttons">
 			<div tabindex="0" class="button fast-publish-attach-action" title="Добавить файл">{attach}</div>
 			<div tabindex="0" class="button fast-publish-action" title="Опубликовать">{button}</div>
