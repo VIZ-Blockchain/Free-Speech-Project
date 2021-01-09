@@ -2073,6 +2073,9 @@ function fast_publish(publish_form){
 									action.removeClass('success');
 									publish_form.remove();
 								}
+								else{
+									publish_form.find('.text').html('');
+								}
 							});
 						},3000);
 					}
@@ -8557,7 +8560,6 @@ function view_path(location,state,save_state,update){
 		header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp_arr.header_link_icons});
 		view.find('.header').html(header);
 		if(0<view.find('.fast-publish-wrapper').length){
-			view.find('.fast-publish-wrapper textarea').val('');
 			view.find('.fast-publish-wrapper .button').removeClass('disabled');
 			if(''==current_user){
 				view.find('.fast-publish-wrapper').css('display','none');
