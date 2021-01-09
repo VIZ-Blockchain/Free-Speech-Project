@@ -8237,7 +8237,9 @@ function view_account(view,path_parts,query,title){
 
 	let tabs='';
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:account/credentials',class:('credentials'==current_tab?'current':''),caption:ltmp_arr.account_credentials_tab});
-	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:account/profile',class:('profile'==current_tab?'current':''),caption:ltmp_arr.account_profile_tab});
+	if(''!=current_user){
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:account/profile',class:('profile'==current_tab?'current':''),caption:ltmp_arr.account_profile_tab});
+	}
 	view.find('.tabs').html(tabs);
 
 	console.log(current_tab);
@@ -8556,6 +8558,12 @@ function view_path(location,state,save_state,update){
 		if(0<view.find('.fast-publish-wrapper').length){
 			view.find('.fast-publish-wrapper textarea').val('');
 			view.find('.fast-publish-wrapper .button').removeClass('disabled');
+			if(''==current_user){
+				view.find('.fast-publish-wrapper').css('display','none');
+			}
+			else{
+				view.find('.fast-publish-wrapper').css('display','block');
+			}
 		}
 		else{
 			if(''!=current_user){
