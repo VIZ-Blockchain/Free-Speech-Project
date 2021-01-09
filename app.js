@@ -2012,6 +2012,7 @@ function fast_publish(publish_form){
 	let text=fast_str_replace('<br>',"\n",text_html);
 	text=fast_str_replace('</div>',"\n",text);
 	text=text.replaceAll(/<(.[^>]*)>/gm,'');
+	text=fast_str_replace('&nbsp;',' ',text);
 	let action=false;
 	text=text.trim();
 	let ignore_text=false;
