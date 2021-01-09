@@ -1872,6 +1872,7 @@ body.midnight .preview-article-link a{
 .preview-article-image img{
 	width:100%;
 	pointer-events:none;
+	align-self:flex-start;
 }
 
 .preview-wrapper{
@@ -1939,6 +1940,7 @@ body.midnight .preview-link div{
 	position:relative;
 	z-index:2;
 	box-sizing:border-box;
+	align-self:flex-start;
 }
 .preview-large-image{
 	position:relative;
@@ -1946,6 +1948,7 @@ body.midnight .preview-link div{
 }
 .preview-large-image img{
 	width:100%;
+	align-self:flex-start;
 }
 .preview-image-background{
 	position:absolute;
