@@ -2825,7 +2825,20 @@ function markdown_encode(element,level){
 		}
 	}
 	if('IMG'==element.nodeName){
-		result='!['+markdown_encode_text(element.getAttribute('alt'))+']('+markdown_encode_text(element.getAttribute('src'))+')';
+		let alt='';
+		if(null!==element.getAttribute('alt')){
+			alt=markdown_encode_text(element.getAttribute('alt'));
+		}
+		let src='';
+		if(null!==element.getAttribute('src')){
+			src=markdown_encode_text(element.getAttribute('src'));
+		}
+		if(''!=src){
+			result='!['+alt+']('+markdown_encode_text(element.getAttribute('src'))+')';
+		}
+		else{
+			result='';
+		}
 	}
 	return result;
 }
