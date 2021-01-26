@@ -9385,8 +9385,43 @@ function array_unique(arr) {
 	});
 }
 
-function highlight_links(text){
+function highlight_links(text,is_html){
 	console.log(text);
+	is_html=typeof is_html==='undefined'?false:is_html;
+
+	let summary_html=[];
+	let html_num=0;
+
+	if(is_html){
+		let html_img_pattern = /<img(.[^>]*)>/gim;
+		let html_href_pattern = /<a (.[^>]*)>/gim;
+		let html_arr=text.match(html_img_pattern);
+		if(null!=html_arr){
+			for(let i in html_arr){
+				if(1<html_arr[i].length){
+					summary_html[html_num]=html_arr[i];
+					html_num++;
+				}
+			}
+		}
+		html_arr=text.match(html_href_pattern);
+		if(null!=html_arr){
+			for(let i in html_arr){
+				if(1<html_arr[i].length){
+					summary_html[html_num]=html_arr[i];
+					html_num++;
+				}
+			}
+		}
+
+		summary_html=array_unique(summary_html);
+		summary_html.sort(sort_by_length_asc);
+
+		for(let i in summary_html){
+			text=fast_str_replace(summary_html[i],'<REPLACE_HTML_'+i+'>',text);
+		}
+	}
+
 	let summary_links=[];
 	let num=0;
 
@@ -9517,6 +9552,12 @@ function highlight_links(text){
 		text=fast_str_replace('<REPLACE_MNEMONIC_'+i+'>',summary_mnemonics[i],text);
 	}
 
+	if(is_html){
+		for(let i in summary_html){
+			text=fast_str_replace('<REPLACE_HTML_'+i+'>',summary_html[i],text);
+		}
+	}
+
 	return text;
 }
 
@@ -9594,6 +9635,7 @@ function render_object(user,object,type,preset_level){
 			let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
 			let title='<h1>'+object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>')+'</h1>';
 			let publication_html=title+html_safe_images(markdown_decode(object.data.d.m));
+			publication_html=highlight_links(publication_html,true);//ignore html tags (images and links)
 			render=ltmp(ltmp_arr.object_type_publication_full,{
 				author:'@'+user.account,
 				link:'viz://@'+user.account+'/'+object.block+'/',
