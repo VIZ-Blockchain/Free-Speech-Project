@@ -172,6 +172,21 @@ div.right-addon{
 	min-width:275px;
 	max-width:275px;
 }
+div.right-addon .links{
+	font-size:14px;
+	text-align:center;
+	color:#1c98e5;
+	word-break:break-word;
+	opacity:0.5;
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+}
+div.right-addon:hover .links{
+	opacity:1;
+}
 body.publication-mode div.right-addon{
 	display:none !important;
 }
@@ -1978,6 +1993,13 @@ body.dark .menu-notice, body.midnight .menu-notice{
 	border:1px solid rgba(110,200,255,0.9);
 	background:rgba(190,235,250,0.9);
 	color:#0952ab;
+}
+
+.content-view ul{
+	line-height:26px;
+	margin-bottom:20px;
+	list-style-type:disc;
+	margin-left:1.5em;
 }
 
 .object.type-text .content-view[data-type="article"]{

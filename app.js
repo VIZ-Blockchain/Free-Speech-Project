@@ -1289,6 +1289,7 @@ function render_menu(){
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:hashtags',class:(path=='dapp:hashtags'?'current adaptive-show-inline':'adaptive-show-inline'),icon:ltmp_arr.icon_hashtag,caption:ltmp_arr.menu_hashtags});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:app_settings',class:(path=='dapp:app_settings'?'current':''),icon:ltmp_arr.icon_settings,caption:ltmp_arr.menu_app_settings});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:account',class:(path=='dapp:account'?'current':''),icon:ltmp_arr.icon_account_settings,caption:ltmp_arr.menu_account_settings});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:manual',class:(path=='dapp:manual'?'current adaptive-show-inline':'adaptive-show-inline'),icon:ltmp_arr.icon_question,caption:ltmp_arr.menu_manual});
 		primary_menu+=ltmp(ltmp_arr.right_addon_publish_button);
 		primary_menu+=ltmp_arr.menu_primary_pinned_tags;
 	}
@@ -1378,7 +1379,7 @@ function render_right_addon(){
 								hashtags_context+=ltmp(ltmp_arr.box_container,{context:container_context2,caption:ltmp_arr.hashtags_popular_caption})
 							}
 							hashtags_addon=ltmp(ltmp_arr.box_addon,{caption:ltmp_arr.hashtags_addon_caption,button:ltmp(ltmp_arr.hashtags_addon_button,{icon:ltmp_arr.icon_settings}),context:hashtags_context});
-							$('div.right-addon').html($('div.right-addon').html()+hashtags_addon);
+							$('div.right-addon').html($('div.right-addon').html()+hashtags_addon+ltmp_arr.right_addon_links);
 							render_right_addon_flag=false;
 						}
 					};
@@ -6773,6 +6774,60 @@ function save_profile(view){
 			});
 		}
 	});
+}
+
+function view_manual(view,path_parts,query,title){
+	document.title=ltmp_arr.manual_caption+' - '+title;
+
+	let current_item='contents';
+	if((typeof path_parts[1] != 'undefined')&&(''!=path_parts[1])){
+		current_item=path_parts[1];
+		document.title=ltmp_arr.manual_arr[current_item]['title']+' - '+document.title;
+	}
+	let next_item=false;
+	for(let i in ltmp_arr.manual_arr){
+		if(true===next_item){
+			next_item=i;
+		}
+		if(i==current_item){
+			next_item=true;
+		}
+	}
+	if(true===next_item){
+		next_item=false;
+	}
+
+	let header='';
+	let header_caption=ltmp_arr.manual_caption;
+	if('contents'!=current_item){
+		header_caption=ltmp_arr.manual_arr[current_item]['title']+' - '+header_caption;
+		header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:'dapp:manual'});
+	}
+	else{
+		header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
+	}
+	header+=ltmp(ltmp_arr.header_caption,{caption:header_caption});
+	view.find('.header').html(header);
+
+	if('contents'==current_item){
+		let contents='<ul>';
+		for(let i in ltmp_arr.manual_arr){
+			contents+='<li><a tabIndex="0" data-href="dapp:manual/'+i+'/">'+ltmp_arr.manual_arr[i]['title']+'</a></li>';
+		}
+		contents+='</ul>';
+		view.find('.objects').html(ltmp(ltmp_arr.manual_item,{'name':current_item,'context':contents}));
+	}
+	else{
+		let context=ltmp(ltmp_arr.manual_arr[current_item]['html']);
+		if(false!=next_item){
+			context+=ltmp(ltmp_arr.manual_next_link,{item:next_item});
+		}
+		context+=ltmp_arr.manual_contents_link;
+		view.find('.objects').html(ltmp(ltmp_arr.manual_item,{'name':current_item,'context':context}));
+	}
+
+	$('.loader').css('display','none');
+	view.css('display','block');
 }
 
 function view_search(view,path_parts,query,title){
