@@ -1292,6 +1292,9 @@ function render_menu(){
 		primary_menu+=ltmp(ltmp_arr.right_addon_publish_button);
 		primary_menu+=ltmp_arr.menu_primary_pinned_tags;
 	}
+	else{
+		primary_menu+=ltmp(ltmp_arr.dapp_notice);
+	}
 	$('div.menu .primary').html(primary_menu);
 	let toggle_menu=ltmp(ltmp_arr.toggle_menu_icon,{title:ltmp_arr.toggle_menu_title,icon:('full'==menu_status?ltmp_arr.icon_menu_collapse:ltmp_arr.icon_menu_expand)});
 	let toggle_theme=ltmp(ltmp_arr.toggle_theme_icon,{title:ltmp_arr.toggle_theme_title,icon:($('body').hasClass('light')?ltmp_arr.icon_theme_sun:ltmp_arr.icon_theme_moon)});

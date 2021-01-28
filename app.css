@@ -1964,6 +1964,21 @@ body.midnight .preview-link div{
 	background-repeat:no-repeat;
 	background-size:cover;
 }
+.menu-notice{
+	font-size:14px;
+	line-height:1.2em;
+	max-width:235px;
+	padding:1em;
+	border:1px solid rgba(255,200,120,0.6);
+	background:rgba(255,240,210,0.6);
+	color:#e3792f;
+	text-align:center;
+}
+body.dark .menu-notice, body.midnight .menu-notice{
+	border:1px solid rgba(110,200,255,0.9);
+	background:rgba(190,235,250,0.9);
+	color:#0952ab;
+}
 
 .object.type-text .content-view[data-type="article"]{
 	min-height:calc( 100vh - 50px - 41px );

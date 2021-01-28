@@ -271,6 +271,7 @@ var ltmp_ru_arr={
 			<div class="content-view">{content}</div>
 		</div>
 	</div>`,
+	dapp_notice:`<div class="menu-notice">Чтобы формировать ленту новостей вам необходимо войти, найти и подписаться на интересных вам пользователей (аналогично новому номеру телефону — общей адресной книги нет, нужно заносить новый контакт вручную).</div>`,
 	settings_item:`
 	<p>{caption}:</p>
 	<p><input type="text" name="{prop}" placeholder="{placeholder}" value="{value}"></p>
