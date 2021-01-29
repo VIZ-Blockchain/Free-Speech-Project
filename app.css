@@ -2330,6 +2330,25 @@ body.dark .article a{
 	-webkit-user-select:auto;
 	user-select:all;
 }
+
+.nsfw-content{
+	opacity:0.2;
+}
+.nsfw-warning{
+	line-height:1.2em;
+	margin:1em 0;
+	padding:2.5em 0;
+	border:1px solid rgba(255,200,120,0.6);
+	background:rgba(255,240,210,0.6);
+	color:#e3792f;
+	text-align:center;
+	cursor:pointer;
+}
+body.dark .nsfw-warning, body.midnight .nsfw-warning{
+	border:1px solid rgba(65,150,200,0.6);
+	background:rgba(50,150,190,0.6);
+	color:#aaddff;
+}
 @media only screen and (min-width:751px) and (max-width:1200px){
 	body{
 		font-size:16px;

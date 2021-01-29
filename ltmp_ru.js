@@ -763,7 +763,7 @@ var ltmp_ru_arr={
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
 			</div>
 			<div class="object-column">
-				<div class="preview-wrapper"{addon}>{context}</div>
+				<div class="preview-wrapper{class_addon}"{addon}>{context}</div>
 				<div class="date-view" data-timestamp="{timestamp}">&hellip;</div>
 				<div class="actions-view">{actions}</div>
 			</div>
@@ -775,7 +775,7 @@ var ltmp_ru_arr={
 				<div class="author-view">
 					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
 				</div>
-				<div class="preview-article-wrapper"{addon}>{context}</div>
+				<div class="preview-article-wrapper{class_addon}"{addon}>{context}</div>
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
@@ -787,8 +787,8 @@ var ltmp_ru_arr={
 			</div>
 			<div class="object-column">
 				{reply}
-				<div class="content-view">{text}</div>
-				<div class="preview-container"></div>
+				<div class="content-view{class_addon}">{text}</div>
+				<div class="preview-container{class_addon}"></div>
 				<div class="date-view" data-timestamp="{timestamp}">&hellip;</div>
 				<div class="actions-view">{actions}</div>
 			</div>
@@ -816,8 +816,8 @@ var ltmp_ru_arr={
 					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
 				</div>
 				{reply}
-				<div class="content-view" data-href="{link}">{text}</div>
-				<div class="preview-container"></div>
+				<div class="content-view{class_addon}" data-href="{link}">{text}</div>
+				<div class="preview-container{class_addon}"></div>
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
@@ -828,8 +828,8 @@ var ltmp_ru_arr={
 				<div class="author-view">
 					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
 				</div>
-				<div class="content-view" data-href="{link}">{text}</div>
-				<div class="preview-container"></div>
+				<div class="content-view{class_addon}" data-href="{link}">{text}</div>
+				<div class="preview-container{class_addon}"></div>
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
@@ -841,7 +841,7 @@ var ltmp_ru_arr={
 				<div class="author-view">
 					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
 				</div>
-				<div class="content-view" data-href="{link}">{text}</div>
+				<div class="content-view{class_addon}" data-href="{link}">{text}</div>
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>
@@ -856,6 +856,8 @@ var ltmp_ru_arr={
 	new_objects:'<a class="new-objects load-new-objects-action" data-items="0">&hellip;</a>',
 	feed_new_objects:'Показать новые обновления: {items}',
 	feed_no_new_objects:'Новых обновлений нет',
+
+	nsfw_warning:'<div class="nsfw-warning nsfw-reveal-action">Данный контент может содержать контент для взрослых.<br>Нажмите, чтобы показать.</div>',
 
 	plural:{
 		hours:{

@@ -560,6 +560,8 @@ var default_settings={
 	sync_awards:true,
 	sync_settings:true,
 	sync_size:100,
+	nsfw_warning:true,
+	nsfw_hashtags:['nsfw','sex','porn'],
 };
 var settings=default_settings;
 
@@ -3876,6 +3878,12 @@ function app_mouse(e){
 					$(player).find('.audio-toggle-action').attr('title',ltmp_arr.audio_player_play_caption);
 				}
 			}
+			if($(target).hasClass('nsfw-reveal-action')){
+				let target_object=$(target).closest('.object');
+				target_object.find('.nsfw-warning').remove();
+				target_object.find('.nsfw-content').css('display','block');
+				target_object.find('.nsfw-content').css('opacity','1');
+			}
 			if($(target).hasClass('theme-action')){
 				$('body').removeClass('light');
 				$('body').removeClass('night');
@@ -5879,12 +5887,14 @@ function parse_object(account,block,callback){
 						}
 					}
 				}
+				let nsfw=0;
 				let obj={
 					account:account,
 					block:block,
 					data:item,
 					is_reply:0,
 					is_share:0,
+					nsfw:nsfw,
 				};
 				if('text'==type){
 					if(reply){
@@ -6026,6 +6036,25 @@ function parse_object(account,block,callback){
 									}
 								}
 							}
+
+							/* check nsfw hashtags in object texts */
+							let nsfw_text='';
+							if('text'==type){
+								nsfw_text=obj.data.d.text;
+							}
+							if('publication'==type){
+								nsfw_text=markdown_clear_code(obj.data.d.m);//markdown
+								nsfw_text=markdown_decode_text(hashtags_text);
+								let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+								nsfw_text=nsfw_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
+							}
+							for(let i in settings.nsfw_hashtags){
+								let search_hashtag='#'+settings.nsfw_hashtags[i];
+								if(-1!=nsfw_text.indexOf(search_hashtag)){
+									nsfw=1;
+								}
+							}
+							obj.nsfw=nsfw;
 
 							let add_t,add_q;
 							add_t=db.transaction(['objects'],'readwrite');
@@ -9731,6 +9760,7 @@ function render_object(user,object,type,preset_level){
 					caption:'@'+user.account,
 					comment:ltmp(ltmp_arr.object_type_text_share_comment,{comment:text})
 				}),
+				class_addon:(1==object.nsfw?' nsfw-content':''),
 			});
 			setTimeout(function(){
 				let view=$('.view[data-level="'+preset_level+'"]');
@@ -9789,7 +9819,8 @@ function render_object(user,object,type,preset_level){
 					}),
 					timestamp:object.data.timestamp,
 					context:image+link,
-					addon:wrapper_addon
+					addon:wrapper_addon,
+					class_addon:(1==object.nsfw?' nsfw-content':''),
 				});
 			}
 			if('text'==object_type){
@@ -9844,6 +9875,7 @@ function render_object(user,object,type,preset_level){
 						icon_copy_link:ltmp_arr.icon_copy_link,
 					}),
 					timestamp:object.data.timestamp,
+					class_addon:(1==object.nsfw?' nsfw-content':''),
 				});
 			}
 		}
@@ -9932,7 +9964,8 @@ function render_object(user,object,type,preset_level){
 					}),
 					timestamp:object.data.timestamp,
 					context:image+link,
-					addon:wrapper_addon
+					addon:wrapper_addon,
+					class_addon:(1==object.nsfw?' nsfw-content':''),
 				});
 			}
 			if('text'==object_type){
@@ -9994,6 +10027,7 @@ function render_object(user,object,type,preset_level){
 						icon_copy_link:ltmp_arr.icon_copy_link,
 					}),
 					timestamp:object.data.timestamp,
+					class_addon:(1==object.nsfw?' nsfw-content':''),
 				});
 			}
 		}
@@ -10120,6 +10154,7 @@ function render_object(user,object,type,preset_level){
 				icon_copy_link:ltmp_arr.icon_copy_link,
 			}),
 			timestamp:object.data.timestamp,
+			class_addon:(1==object.nsfw?' nsfw-content':''),
 		});
 		setTimeout(function(){
 			let view=$('.view[data-level="'+preset_level+'"]');
@@ -10182,7 +10217,8 @@ function render_object(user,object,type,preset_level){
 				}),
 				timestamp:object.data.timestamp,
 				context:image+link,
-				addon:wrapper_addon
+				addon:wrapper_addon,
+				class_addon:(1==object.nsfw?' nsfw-content':''),
 			});
 		}
 		if('text'==object_type){
@@ -10239,12 +10275,34 @@ function render_object(user,object,type,preset_level){
 					icon_copy_link:ltmp_arr.icon_copy_link,
 				}),
 				timestamp:object.data.timestamp,
+				class_addon:(1==object.nsfw?' nsfw-content':''),
 			});
 		}
 	}
 	setTimeout(function(){
 		check_object_award(user.account,object.block);
 		console.log('render_object timeout check first link',type,text_first_link);
+		if(1==object.nsfw){
+			let check_nsfw=function(account,block){
+				let current_link='viz://@'+account+'/'+block+'/';
+				let view=$('.view[data-level="'+level+'"]');
+				if(-1==path.indexOf('viz://')){//look in services views
+					let path_parts=path.split('/');
+					view=$('.view[data-path="'+path_parts[0]+'"]');
+				}
+				let object_view=view.find('.objects .object[data-link="'+current_link+'"]');
+
+				if(settings.nsfw_warning){
+					object_view.find('.nsfw-content').css('display','none');
+					$(object_view.find('.nsfw-content')[0]).before(ltmp_arr.nsfw_warning);
+				}
+				else{
+					object_view.find('.nsfw-content').css('display','block');
+					object_view.find('.nsfw-content').css('opacity','1');
+				}
+			}
+			check_nsfw(user.account,object.block);
+		}
 		if(false!==text_first_link){
 			text_first_link=link_to_http_gate(text_first_link);
 			if(false!==text_first_link){
