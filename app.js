@@ -10134,6 +10134,8 @@ function render_object(user,object,type,preset_level){
 		let current_link='viz://@'+user.account+'/'+object.block+'/';
 
 		let text=object.data.d.text;
+		text_first_link=first_link(text);
+
 		text=escape_html(text);
 		text=fast_str_replace("\n",'<br>',text);
 

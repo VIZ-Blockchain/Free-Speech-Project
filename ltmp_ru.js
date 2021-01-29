@@ -842,6 +842,7 @@ var ltmp_ru_arr={
 					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
 				</div>
 				<div class="content-view{class_addon}" data-href="{link}">{text}</div>
+				<div class="preview-container{class_addon}"></div>
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>
