@@ -6044,7 +6044,7 @@ function parse_object(account,block,callback){
 							}
 							if('publication'==type){
 								nsfw_text=markdown_clear_code(obj.data.d.m);//markdown
-								nsfw_text=markdown_decode_text(hashtags_text);
+								nsfw_text=markdown_decode_text(nsfw_text);
 								let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
 								nsfw_text=nsfw_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
 							}
