@@ -2711,10 +2711,10 @@ function markdown_code(text){
 				link_arr=link.match(link_pattern);
 				if(null!==link_arr){
 					if('#'==link_arr[2].substr(0,1)){//link to section
-						text=text.replace(link,'<a data-section="'+link_arr[2].substr(1)+'">'+link_arr[1]+'</a>');
+						text=text.replaceAll(link,'<a data-section="'+link_arr[2].substr(1)+'">'+link_arr[1]+'</a>');
 					}
 					else{
-						text=text.replace(link,'<a href="'+link_arr[2]+'" target="_blank">'+link_arr[1]+'</a>');
+						text=text.replaceAll(link,'<a href="'+link_arr[2]+'" target="_blank">'+link_arr[1]+'</a>');
 					}
 				}
 			}
@@ -2724,7 +2724,7 @@ function markdown_code(text){
 
 	text=markdown_decode_text(text);
 	text=text.trim();
-	text=text.replace("\n","\n<br />\n");
+	text=text.replaceAll("\n","\n<br />\n");
 	return text;
 }
 function markdown_clear_code(text){
@@ -7554,7 +7554,7 @@ function view_publish(view,path_parts,query,title){
 					for(let i in profile.categories){
 						let category_caption=profile.categories[i];
 						if(category_caption.length>0){
-							let category_hashtag=category_caption.replace(' ','_').trim().toLowerCase();
+							let category_hashtag=category_caption.replaceAll(' ','_').trim().toLowerCase();
 							categories_view+=ltmp(ltmp_arr.publish_categories_item,{caption:category_caption,hashtag:category_hashtag});
 						}
 					}
@@ -7567,7 +7567,7 @@ function view_publish(view,path_parts,query,title){
 					for(let i in profile.interests){
 						let interest_caption=profile.interests[i];
 						if(interest_caption.length>0){
-							let interest_hashtag=interest_caption.replace(' ','_').trim().toLowerCase();
+							let interest_hashtag=interest_caption.replaceAll(' ','_').trim().toLowerCase();
 							interests_view+=ltmp(ltmp_arr.publish_interests_item,{caption:interest_caption,hashtag:interest_hashtag});
 						}
 					}
@@ -8772,7 +8772,7 @@ function view_path(location,state,save_state,update){
 										for(let i in profile.categories){
 											let category_caption=profile.categories[i];
 											if(category_caption.length>0){
-												let category_hashtag=category_caption.replace(' ','_').trim().toLowerCase();
+												let category_hashtag=category_caption.replaceAll(' ','_').trim().toLowerCase();
 												categories_view+=ltmp(ltmp_arr.profile_categories_item,{caption:category_caption,hashtag:category_hashtag});
 											}
 										}
@@ -8786,7 +8786,7 @@ function view_path(location,state,save_state,update){
 										for(let i in profile.interests){
 											let interest_caption=profile.interests[i];
 											if(interest_caption.length>0){
-												let interest_hashtag=interest_caption.replace(' ','_').trim().toLowerCase();
+												let interest_hashtag=interest_caption.replaceAll(' ','_').trim().toLowerCase();
 												interests_view+=ltmp(ltmp_arr.profile_interests_item,{caption:interest_caption,hashtag:interest_hashtag});
 											}
 										}
