@@ -857,7 +857,7 @@ var ltmp_ru_arr={
 	feed_new_objects:'Показать новые обновления: {items}',
 	feed_no_new_objects:'Новых обновлений нет',
 
-	nsfw_warning:'<div class="nsfw-warning nsfw-reveal-action">Данный контент может содержать контент для взрослых.<br>Нажмите, чтобы показать.</div>',
+	nsfw_warning:'<div class="nsfw-warning nsfw-reveal-action">Данный контент может содержать информацию для взрослых.<br>Нажмите, чтобы показать.</div>',
 
 	plural:{
 		hours:{
