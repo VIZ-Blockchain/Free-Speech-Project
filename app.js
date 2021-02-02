@@ -1492,7 +1492,13 @@ function first_link(text){
 	if(typeof links[0] === 'undefined'){
 		return false;
 	}
-	return links[0];
+	let link=links[0];
+	if(-1!=link.indexOf(')')){
+		if(-1==link.indexOf('(')){
+			link=link.substring(0,link.indexOf(')'));
+		}
+	}
+	return link;
 }
 function link_to_http_gate(link){
 	let result='';
@@ -9600,6 +9606,13 @@ function highlight_links(text,is_html){
 		}
 	}
 
+	for(let i in summary_links){
+		if(-1!=summary_links[i].indexOf(')')){
+			if(-1==summary_links[i].indexOf('(')){
+				summary_links[i]=summary_links[i].substring(0,summary_links[i].indexOf(')'));
+			}
+		}
+	}
 	summary_links=array_unique(summary_links);
 	summary_links.sort(sort_by_length_desc);
 
