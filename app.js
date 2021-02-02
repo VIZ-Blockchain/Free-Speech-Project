@@ -672,6 +672,19 @@ function save_settings(view){
 	}
 	tab.find('input[name="preview_cache_ttl"]').val(settings.preview_cache_ttl);
 
+	settings.nsfw_warning=tab.find('input[name="nsfw_warning"]').prop('checked');
+	let new_nsfw_hashtags=[];
+	if(-1!=tab.find('input[name="nsfw_hashtags"]').val().indexOf(',')){
+		new_nsfw_hashtags=tab.find('input[name="nsfw_hashtags"]').val().split(',')
+	}
+	new_nsfw_hashtags=new_nsfw_hashtags.map(function(value){
+		return value.trim().toLowerCase().replaceAll('#','').replaceAll(' ','_').trim();
+	});
+	new_nsfw_hashtags=array_unique(new_nsfw_hashtags);
+	new_nsfw_hashtags.sort(sort_by_length_desc);
+	settings.nsfw_hashtags=new_nsfw_hashtags;
+	tab.find('input[name="nsfw_hashtags"]').val(settings.nsfw_hashtags.join(', '));
+
 	let energy_str=tab.find('input[name="energy"]').val();
 	energy_str=fast_str_replace(',','.',energy_str);
 	settings.energy=parseInt(parseFloat(energy_str)*100);
@@ -8150,6 +8163,9 @@ function view_app_settings(view,path_parts,query,title){
 		tab.find('input[name="user_cache_ttl"]').val(settings.user_cache_ttl);
 		tab.find('input[name="object_cache_ttl"]').val(settings.object_cache_ttl);
 		tab.find('input[name="preview_cache_ttl"]').val(settings.preview_cache_ttl);
+
+		tab.find('input[name="nsfw_warning"]').prop('checked',settings.nsfw_warning);
+		tab.find('input[name="nsfw_hashtags"]').val(settings.nsfw_hashtags.join(', '));
 
 		tab.find('input[name="energy"]').val(settings.energy/100);
 		$('input[name="silent_award"]').prop("checked",settings.silent_award);
