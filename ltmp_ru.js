@@ -89,7 +89,7 @@ var ltmp_ru_arr={
 				<div class="input-addon">(в минутах после загрузки)</div>
 
 				<hr>
-				<p>Настройки <span class="tooltop" title="Not safe/suitable for work — контент содержащий информацию для взрослых">NSFW-контента</span>:</p>
+				<p>Настройки <span class="tooltip" title="Not safe/suitable for work — контент содержащий информацию для взрослых">NSFW-контента</span>:</p>
 				<p><label><input type="checkbox" name="nsfw_warning"> &mdash; скрывать за спойлер с предупреждением</label></p>
 				<div class="input-addon">(при нажатии контент будет показан)</div>
 
