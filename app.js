@@ -2610,6 +2610,9 @@ function subscribe(el){
 
 			feed_load(check_user,false,false,true,function(err,result){
 				console.log('feed load by subscribe',err,result);
+				if(!err){
+					update_feed_result(result);
+				}
 			});
 		}
 		else{
@@ -6101,6 +6104,9 @@ function parse_object(account,block,callback){
 										//check feed load for parsed object and previous unseen range
 										feed_load(account,false,block,false,function(err,result){
 											console.log('parse_object: feed load (not founded)',err,result);
+											if(!err){
+												update_feed_result(result);
+											}
 										});
 									}
 								});
