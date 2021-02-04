@@ -1659,10 +1659,10 @@ function render_preview_data(account,block,obj){
 	let result='';
 	let image='';
 	let link='';
-	let image_part=(typeof json.image !== 'undefined');
-	if(image_part){
-		if(false===json.image){
-			image_part=false;
+	let image_part=false;
+	if(typeof json.image !== 'undefined'){
+		if(false!==json.image){
+			image_part=true;
 		}
 	}
 	let link_part=(typeof json.title !== 'undefined');
