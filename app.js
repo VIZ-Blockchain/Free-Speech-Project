@@ -896,14 +896,19 @@ function load_db(callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
+	console.log('+ load_db');
 	db=false;
 	db_req=false;
 	db_req=idb.open(storage_prefix+'social_network',db_version);
+	console.log('load_db',storage_prefix+'social_network',db_version);
 	db_req.onerror=idb_error;
 	db_req.onblocked=idb_error;
 	db_req.onsuccess=function(event){
 		console.log('onsuccess!');
 		db=event.target.result;
+		db.addEventListener('versionchange',event=>{
+			console.log('The version of this database has changed');
+		});
 		callback();
 	};
 	db_req.onupgradeneeded=function(event){
@@ -1014,6 +1019,7 @@ function load_db(callback){
 			}
 		}
 	};
+	console.log('- load_db');
 }
 
 function idb_get_id(container,index,search,callback){
@@ -1186,8 +1192,6 @@ function save_account_settings(view,login,regular_key){
 					result.status=obj.status;
 					find=true;
 					update_req=cur.update(result);
-					update_req.onsuccess=function(e){
-					}
 					cur.continue();
 				}
 				else{
@@ -2340,7 +2344,7 @@ function hashtag_update(hashtag,status,callback){
 					hashtag_add_t.commit();
 				}
 			}
-			hashtag_add_req.onsuccess=function(e){
+			hashtag_add_req.oncomplete=function(e){
 				idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
 					if(false!==hashtag_id){
 						callback(true);
@@ -5740,7 +5744,7 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 }
 
 function feed_load(account,limit,upper_bound,continued,callback){
-	console.log('feed_load',account);
+	console.log('feed_load',account,'limit:',limit,'upper_bound:',upper_bound,'continued:',continued);
 	limit=((false===limit)?settings.activity_deep:limit);
 	if(whitelabel_init){
 		limit=whitelabel_deep;
@@ -5764,6 +5768,7 @@ function feed_load(account,limit,upper_bound,continued,callback){
 	req.onsuccess=function(event){
 		let cur=event.target.result;
 		if(cur){
+			console.log('feed_load cur',cur.value);
 			if(!continued){//set end offset or use only limit
 				if(account==cur.value.account){
 					end_offset=cur.value.block;
@@ -5775,13 +5780,16 @@ function feed_load(account,limit,upper_bound,continued,callback){
 				callback(err,0);
 			}
 			else{
+				console.log('feed_load get_user',user_result);
 				if(open_border){
 					offset=upper_bound;//start from given upper bound
 				}
 				else{
 					offset=user_result.start;//start from user last activity
 				}
+				console.log('feed_load check offset>end_offset',offset>end_offset,offset,end_offset);
 				if(offset>end_offset){
+					console.log('feed_load going to feed_load_more in range',offset,end_offset,account);
 					//console.log('start feed_load_more from feed_load, offset, end offset, limit:',account,offset,end_offset,limit);
 					feed_load_more(result,account,offset,end_offset,limit,callback);
 				}
@@ -5942,12 +5950,15 @@ function parse_object(account,block,callback){
 					if(cur){
 						result=cur.value;
 						result.time=obj.time;
-						result.processed=true;//already on store
+						result.processed=false;
 						find=true;
-						update_req=cur.update(result);
-						update_req.onsuccess=function(e){
+						idb_get_id('feed','object',[account,block],function(feed_id){
+							if(false!==feed_id){
+								result.processed=true;//already in feed
+							}
+							console.log('parse_object: find in objects cache: '+account+' '+block+(result.processed?' (processed in feed)':' (not processed in feed)'));
 							callback(false,result);
-						}
+						});
 						cur.continue();
 					}
 					else{
@@ -6089,7 +6100,7 @@ function parse_object(account,block,callback){
 									if(1==user_data.status){//subscribed to account
 										//check feed load for parsed object and previous unseen range
 										feed_load(account,false,block,false,function(err,result){
-											console.log('feed load by parse object',err,result);
+											console.log('parse_object: feed load (not founded)',err,result);
 										});
 									}
 								});
@@ -6203,14 +6214,19 @@ function get_object(account,block,callback){
 		let cur=event.target.result;
 		if(cur){
 			result=cur.value;
-			result.processed=true;
+			result.processed=false;
 			find=true;
 			cur.continue();
 		}
 		else{
 			if(find){
-				console.log('find in objects cache: '+account+' '+block);
-				callback(false,result);
+				idb_get_id('feed','object',[account,block],function(feed_id){
+					if(false!==feed_id){
+						result.processed=true;
+					}
+					console.log('get_object: find in objects cache: '+account+' '+block+(result.processed?' (processed in feed)':' (not processed in feed)'));
+					callback(false,result);
+				});
 			}
 			else{
 				console.log('need parse object: '+account+' '+block);
@@ -6624,6 +6640,7 @@ function clear_cache(callback){
 }
 
 function get_user(account,forced_update,callback){
+	console.log('get_user',account,forced_update);
 	forced_update=typeof forced_update==='undefined'?false:forced_update;
 	if(typeof callback==='undefined'){
 		callback=function(){};
@@ -10961,7 +10978,9 @@ function init_users(callback){
 		callback=function(){};
 	}
 	check_current_user(()=>{
+		console.log('Startup: init_users check_current_user +');
 		check_whitelabel_account(()=>{
+			console.log('Startup: init_users check_whitelabel_account +');
 			callback();
 		})
 	});
