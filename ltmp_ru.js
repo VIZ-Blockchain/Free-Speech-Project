@@ -577,7 +577,8 @@ var ltmp_ru_arr={
 	search_caption:'Поиск',
 	search_empty_input:'Введите адрес для поиска',
 
-	right_addon_publish_button:'<div taborder="0" data-href="dapp:publish" class="publish-button">%%icon_editor_plus%% Написать</div>',
+	left_addon_publish_button:'<div taborder="0" data-href="dapp:publish" class="publish-button">%%icon_editor_plus%% Написать</div>',
+	footer_publish_button:'<div taborder="0" data-href="dapp:publish" class="publish-button">%%icon_editor_plus%%</div>',
 
 	gateway_error:'Ошибка, попробуйте позже',
 	account_not_found:'Пользователь не найден',
@@ -622,6 +623,8 @@ var ltmp_ru_arr={
 	menu_account_settings:'Аккаунт',
 	menu_manual:'Справочник',
 
+	footer_link:`<div><a tabindex="0" data-href="{link}" class="{class}">{icon}</a></div>`,
+	icon_scroll_top:`<i class="icon scroll"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 10.828l-4.95 4.95-1.414-1.414L12 8l6.364 6.364-1.414 1.414z"/></svg></i>`,
 	icon_back:`<i class="icon back"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></i>`,
 	icon_gem:`<i class="icon gem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6.3499998 6.3500002" height="24" width="24" fill="none" stroke="currentColor" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"><path d="m 1.019418,1.20416 1.108597,0.36953 m 4.0648556,0.86224 -0.8622424,-1.23177 m -5.17345221,1.23177 3.07943611,3.07944 2.9562585,-3.07944 -1.6013069,0.49271 -1.3549516,2.58673 -1.4781293,-2.58673 -1.60130681,-0.49271 0.86224211,-1.23177 1.2317745,-0.36953 h 1.8476616 l 1.231774,0.36953 -1.1085967,0.36953 H 2.128015 l -0.3695322,1.35495 h 2.8330809 l -0.3695322,-1.35495"/></svg></i>`,
 	icon_reply:`<i class="icon reply"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M14 22.5L11.2 19H6a1 1 0 0 1-1-1V7.103a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1h-5.2L14 22.5zm1.839-5.5H21V8.103H7V17H12.161L14 19.298 15.839 17zM2 2h17v2H3v11H1V3a1 1 0 0 1 1-1z"/></svg></i>`,

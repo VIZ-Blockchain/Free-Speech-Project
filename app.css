@@ -130,6 +130,10 @@ i.icon.telegram svg{
 i.icon.copy svg{
 	margin-top:7px;
 }
+i.icon.scroll svg{
+	margin-top:3px;
+	margin-left:1px;
+}
 .header a.positive i.icon{
 	background:rgba(38, 196, 9, 0.1);
 	color:#26be0a;
@@ -152,6 +156,10 @@ div.icon-counter{
 	margin-top:4px;
 	display:none;
 	border-bottom:0;
+}
+.footer div.icon-counter{
+	margin-left:-18px;
+	margin-top:17px;
 }
 div.icon-counter.show{
 	display:inline-block;
@@ -278,7 +286,7 @@ div.menu{
 body.publication-mode div.menu{
 	display:none;
 }
-div.menu a,.header a,.actions-view a,.tabs a,.contacts a,.fast-publish-action{
+div.menu a,.header a,.actions-view a,.tabs a,.contacts a,.fast-publish-action,.footer a,.publish-button{
 	-webkit-touch-callout:none;
 	-webkit-user-select:none;
 	-khtml-user-select:none;
@@ -406,6 +414,22 @@ div.publish-button i.icon{
 	margin-top:2px;
 	background:none;
 }
+.footer div.publish-button{
+	width:38px;
+	height:38px;
+	vertical-align:middle;
+	padding:0;
+	margin:0;
+	flex-direction:column;
+	flex-basis:auto;
+	line-height:52px;
+	align-self:center;
+}
+.footer div.publish-button i.icon{
+	display:block;
+	margin-top:1px;
+	margin-left:2px;
+}
 div.publish-button span{
 	display:inline-block;
 }
@@ -486,6 +510,61 @@ body.midnight .header{
 body.dark .header{
 	background:#18191c;
 	color:#fff;
+}
+.footer{
+	height:50px;
+	border-top:1px solid rgba(204, 204, 221, 0.6);
+	padding:0 15px;
+	font-size:20px;
+	line-height:40px;
+	display:flex;
+	flex-direction:row;
+	-webkit-box-pack:justify;
+	justify-content:auto;
+	-webkit-box-align:stretch;
+	align-items:stretch;
+	-webkit-box-direction:normal;
+	-webkit-box-orient:horizontal;
+
+	background:#fff;
+	color #fff;
+	display:none;
+}
+body.midnight .footer{
+	background:#14202c;
+	color:#fff;
+}
+body.dark .footer{
+	background:#18191c;
+	color:#fff;
+}
+.footer a {
+    color:#1c98e5;
+}
+body.dark .footer a{
+	color:#3daff5;
+}
+.footer.space-between{
+	justify-content:space-between;
+}
+.footer.space-around{
+	justify-content:space-around;
+}
+.footer div,.footer a{
+	flex-direction:column;
+	flex-basis:auto;
+}
+.footer a{
+	margin:0 5px;
+}
+.footer a:first-child{
+	margin-left:0;
+}
+.footer a:last-child{
+	margin-right:0;
+}
+.footer .grow{
+	flex-grow:1;
 }
 .header.space-between{
 	justify-content:space-between;
@@ -2371,6 +2450,10 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 		height:60px;
 		line-height:52px;
 	}
+	.footer{
+		height:60px;
+		line-height:52px;
+	}
 	.header .caption{
 		line-height:58px;
 	}
@@ -2431,6 +2514,20 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 		position:sticky;
 		top:0;
 		z-index:5;
+	}
+	.footer{
+		display:flex;
+		height:60px;
+		line-height:52px;
+
+		position:fixed;
+		bottom:0;
+		left:0;
+		right:0;
+		z-index:5;
+	}
+	.footer.hidden{
+		display:none;
 	}
 	.header .caption{
 		line-height:58px;

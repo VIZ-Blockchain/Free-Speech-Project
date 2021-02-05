@@ -1309,7 +1309,7 @@ function render_menu(){
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:app_settings',class:(path=='dapp:app_settings'?'current':''),icon:ltmp_arr.icon_settings,caption:ltmp_arr.menu_app_settings});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:account',class:(path=='dapp:account'?'current':''),icon:ltmp_arr.icon_account_settings,caption:ltmp_arr.menu_account_settings});
 		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:manual',class:(path=='dapp:manual'?'current adaptive-show-inline':'adaptive-show-inline'),icon:ltmp_arr.icon_question,caption:ltmp_arr.menu_manual});
-		primary_menu+=ltmp(ltmp_arr.right_addon_publish_button);
+		primary_menu+=ltmp(ltmp_arr.left_addon_publish_button);
 		primary_menu+=ltmp_arr.menu_primary_pinned_tags;
 	}
 	else{
@@ -1324,6 +1324,15 @@ function render_menu(){
 	if('full'!=menu_status){
 		$('div.menu').addClass(menu_status);
 	}
+
+	let footer='';
+	footer+=ltmp(ltmp_arr.footer_link,{class:'scroll-top-action',icon:ltmp_arr.icon_scroll_top});
+	if(''!=current_user){
+		footer+=ltmp(ltmp_arr.footer_link,{link:'viz://',class:(path=='viz://'?'current':''),icon:ltmp_arr.icon_feed+ltmp(ltmp_arr.icon_counter,{name:'feed',count:'0'}),caption:ltmp_arr.menu_feed});
+		footer+=ltmp(ltmp_arr.footer_link,{link:'dapp:notifications',class:(path=='dapp:notifications'?'current':''),icon:ltmp_arr.icon_notify+ltmp(ltmp_arr.icon_counter,{name:'notifications',count:'0'}),caption:ltmp_arr.menu_notifications});
+		footer+=ltmp(ltmp_arr.footer_publish_button);
+	}
+	$('div.footer').html(footer);
 }
 
 var render_right_addon_flag=false;
@@ -3747,6 +3756,12 @@ function app_mouse(e){
 			//go parent element, if event on icon
 			if($(target).hasClass('icon')){
 				target=$(target).parent();
+			}
+			if($(target).hasClass('scroll-top-action')){
+				console.log('HERE');
+				$(window)[0].scrollTo({top:0});
+				e.preventDefault();
+				return;
 			}
 			if(typeof $(target).attr('data-href') != 'undefined'){
 				let href=$(target).attr('data-href');
@@ -8624,7 +8639,9 @@ var check_account='';
 var mobile_hide_menu_timer=0;
 function view_path(location,state,save_state,update){
 	$('body').removeClass('publication-mode');
+	$('.footer').removeClass('hidden');
 	if('dapp:publish/'==path){//exit from publish view
+		$('.footer').addClass('hidden');
 		if('article'==query){//exit from article mode
 			document.removeEventListener('selectionchange',editor_selection);
 		}
