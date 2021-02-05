@@ -5594,13 +5594,22 @@ function feed_load_final(result,account,callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
+
+	let feed_time=0;
+	if(typeof $('.view[data-level="0"] .objects').data('feed-time') !== 'undefined'){
+		feed_time=parseInt($('.view[data-level="0"] .objects').data('feed-time'));
+	}
+
 	let count=0;
 	console.log('feed_load_final',result);
 	for(let i in result){
 		let item=result[i];
 		feed_add(account,item.block,item.time);
-		count++;
+		if(item.time>feed_time){
+			count++;
+		}
 	}
+	console.log('feed_load_final feed_time',feed_time,count);
 	setTimeout(function(){callback(false,{account:account,items:count})},100);
 }
 
