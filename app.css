@@ -475,6 +475,17 @@ div.menu.short .primary a .icon{
 	align-items:stretch;
 	-webkit-box-direction:normal;
 	-webkit-box-orient:horizontal;
+
+	background:#fff;
+	color #fff;
+}
+body.midnight .header{
+	background:#14202c;
+	color:#fff;
+}
+body.dark .header{
+	background:#18191c;
+	color:#fff;
 }
 .header.space-between{
 	justify-content:space-between;
@@ -2416,6 +2427,10 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 	.header{
 		height:60px;
 		line-height:52px;
+
+		position:sticky;
+		top:0;
+		z-index:5;
 	}
 	.header .caption{
 		line-height:58px;
