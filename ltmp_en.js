@@ -50,7 +50,7 @@ var ltmp_en_arr = {
 
 				<p class="error save-profile-error"></p>
 				<p class="success save-profile-success"></p>
-				<p><a class="button save-profile-action">Сохранить</a><span class="submit-button-ring"></span></p>
+				<p><a class="button save-profile-action">Save</a><span class="submit-button-ring"></span></p>
 				<p><em>Attention! All information will be recorded in the blockchain, it can be replaced, but it will not be possible to «delete» or «erase» from history.</em></p>
 			</div>
 		</div>
@@ -283,11 +283,11 @@ var ltmp_en_arr = {
     dapp_notice: `<div class="menu-notice">Чтобы формировать ленту новостей вам необходимо войти, найти и подписаться на интересных вам пользователей (аналогично новому номеру телефона — общей адресной книги нет, нужно заносить новый контакт вручную).</div>`,
     brand_caption: `Readdle.Me`,
     brand_link: `https://readdle.me/`,
-    right_addon_links: `<div class="links"><a tabindex="0" data-href="dapp:manual">Справочник</a></div>`,
-    manual_caption: `Справочник`,
+    right_addon_links: `<div class="links"><a tabindex="0" data-href="dapp:manual">Manual</a></div>`,
+    manual_caption: `Manual`,
     manual_arr: {
         introduction: {
-            title: 'Введение', html: `
+            title: 'Introduction', html: `
 			<p>Добро пожаловать в справочник по dApp The Free Speech Project под брендом <a href="%%brand_link%%" target="_blank">%%brand_caption%%</a>.</p>
 			<p>Здесь вы найдете ответы на часто задаваемые вопросы и помощь при использовании данного приложения.</p>
 			<p>Вы используете Decentralized Application — Децентрализованное Приложение (коротко dApp, произносится как диАпп), цель которого предоставить участникам блокчейна Виз (VIZ) общаться и взаимодействовать в распределенной социальной сети через протокол V (Voice).</p>
@@ -411,7 +411,7 @@ var ltmp_en_arr = {
     users_settings_buttons: `
 	<p class="error save-users-settings-error"></p>
 	<p class="success save-users-settings-success"></p>
-	<p><a class="button save-users-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
+	<p><a class="button save-users-settings-action">Save</a><span class="submit-button-ring"></span></p>
 	<hr>
 	<p><a class="button neutral-button reset-users-settings-action">Сброс</a></p>`,
     box_addon: `
@@ -508,20 +508,20 @@ var ltmp_en_arr = {
         attention: 'Attention!',
         upload: 'Upload',
         sync: 'Sync',
-        sync_import: 'Происходит синхронизация с облаком&hellip;',
-        sync_import_error: 'Неверный формат данных',
-        sync_import_success: 'Перенос данных успешно завершен',
-        award_success: 'Вы наградили @{account}',
+        sync_import: 'Synchronizing with the cloud &hellip;',
+        sync_import_error: 'Invalid data format ',
+        sync_import_success: 'Data transfer completed successfully ',
+        award_success: 'You awarded @{account}',
         award_info: '≈{amount}Ƶ [{percent}]',
-        award_error: 'Ошибка при награждении @{account}',
-        new_reply: 'Новый ответ от @{account}',
-        new_share: 'Репост от @{account}',
-        new_mention: 'Упоминание от @{account}',
-        idb_error: 'Сбой в базе данных, перезагрузка приложения',
-        upload_incorrect_format: 'Недопустимый формат файла',
-        upload_percent: 'Статус загрузки: {percent}%',
-        beneficiaries_summary_weight: 'Проверьте суммарный процент бенефициаров',
-        category_is_founded: 'В тексте уже найдена категория',
+        award_error: 'Error when awarding @{account}',
+        new_reply: 'New answer from @{account}',
+        new_share: 'Repost from @{account}',
+        new_mention: 'Mention from @{account}',
+        idb_error: 'Database crash, application restarted',
+        upload_incorrect_format: 'Invalid file format',
+        upload_percent: 'Uploading: {percent}%',
+        beneficiaries_summary_weight: 'Check the total beneficiaries percentage',
+        category_is_founded: 'Category already found in the text',
     },
     notifications_all_tab: 'All',
     notifications_new_tab: 'New',
@@ -584,18 +584,18 @@ var ltmp_en_arr = {
     not_found_regular_key: 'The provided key does not match',
 
     search_caption: 'Search',
-    search_empty_input: 'Введите адрес для поиска',
+    search_empty_input: 'Enter address to search',
 
     left_addon_publish_button: '<div taborder="0" data-href="dapp:publish" class="publish-button">%%icon_editor_plus%% Post</div>',
     footer_publish_button: '<div taborder="0" data-href="dapp:publish" class="publish-button">%%icon_editor_plus%%</div>',
 
-    gateway_error: 'Ошибка, попробуйте позже',
-    account_not_found: 'Пользователь не найден',
-    object_not_found: 'Объект не найден',
-    block_not_found: 'Блок не найден, попробуйте позже',
-    data_not_found: 'Данные не найдены',
-    hashtags_not_found: 'Тэг не найден',
-    users_not_found: 'Пользователи не найдены',
+    gateway_error: 'Error, please try later',
+    account_not_found: 'User not found',
+    object_not_found: 'Object not found',
+    block_not_found: 'Block not found, please try later',
+    data_not_found: 'No data found',
+    hashtags_not_found: 'Tag not found',
+    users_not_found: 'No users found',
 
     view: `
 		<div class="view" data-level="{level}" data-path="{path}" data-query="{query}">
