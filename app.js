@@ -3056,7 +3056,7 @@ function notify_add_timer(event){
 	notify_timers['c'+id]=setTimeout(function(){
 		notify_close(id);
 	},1500);
-	console.log('notify_add_timer',event,id);
+	//console.log('notify_add_timer',event,id);
 }
 function notify_show(id){
 	let notify=$('.notify-wrapper[data-id="'+id+'"]');
@@ -3095,43 +3095,63 @@ function add_notify(store,title,text,link,service){
 		}
 	}
 	if(store){
-		let obj={
-			title:title,
-			text:text,
-			link:link,
-			status:0
-		};
-		let add_t=db.transaction(['notifications'],'readwrite');
-		let add_q=add_t.objectStore('notifications');
-		add_q.add(obj);
-		if(!is_safari){
-			if(!is_firefox){
-				add_t.commit();
-			}
-		}
-		add_t.oncomplete=function(e){
-			clearTimeout(load_notifications_count_timer);
-			load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
-
-			let read_t=db.transaction(['notifications'],'readonly');
-			let read_q=read_t.objectStore('notifications');
-			let req=read_q.openCursor(null,'prev');
-			let find=false;
-			req.onsuccess=function(event){
-				let cur=event.target.result;
-				if(cur){
-					let notify_id=cur.value.id;
-					let notify=ltmp(ltmp_arr.notify,{id:notify_id,addon:(line?' line':''),context:render});
-					$('.notifications').prepend(notify);
-					setTimeout(function(){
-						notify_show(notify_id);
-					},20);
-					notify_timers['c'+notify_id]=setTimeout(function(){
-						notify_close(notify_id);
-					},3000);
+		let search_t=db.transaction(['notifications'],'readonly');
+		let search_q=search_t.objectStore('notifications');
+		let search_req=search_q.openCursor(null,'prev');
+		let search_limit=50;
+		let found_same=false;
+		search_req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				if(''!=link){
+					if(link===cur.value.link){
+						found_same=true;
+					}
 				}
-			};
-		}
+				cur.continue();
+			}
+			else{
+				if(!found_same){//need to store (and show), the same link was not found
+					let obj={
+						title:title,
+						text:text,
+						link:link,
+						status:0
+					};
+					let add_t=db.transaction(['notifications'],'readwrite');
+					let add_q=add_t.objectStore('notifications');
+					add_q.add(obj);
+					if(!is_safari){
+						if(!is_firefox){
+							add_t.commit();
+						}
+					}
+					add_t.oncomplete=function(e){
+						clearTimeout(load_notifications_count_timer);
+						load_notifications_count_timer=setTimeout(function(){load_notifications_count();},100);
+
+						let read_t=db.transaction(['notifications'],'readonly');
+						let read_q=read_t.objectStore('notifications');
+						let req=read_q.openCursor(null,'prev');
+						let find=false;
+						req.onsuccess=function(event){
+							let cur=event.target.result;
+							if(cur){
+								let notify_id=cur.value.id;
+								let notify=ltmp(ltmp_arr.notify,{id:notify_id,addon:(line?' line':''),context:render});
+								$('.notifications').prepend(notify);
+								setTimeout(function(){
+									notify_show(notify_id);
+								},20);
+								notify_timers['c'+notify_id]=setTimeout(function(){
+									notify_close(notify_id);
+								},3000);
+							}
+						};
+					}
+				}
+			}
+		};
 	}
 	else{
 		let notify_id=notify_counter;
@@ -9880,6 +9900,11 @@ function render_object(user,object,type,preset_level){
 				let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
 				let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
 				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d,link:'viz://@'+user.account+'/'+object.block+'/'});
+				if(typeof object.data.d.i !== 'undefined'){
+					if(false===safe_image(object.data.d.i)){
+						image_part=false;
+					}
+				}
 				if(image_part){
 					image=ltmp(ltmp_arr.render_preview_article_image,{image:safe_image(object.data.d.i),link:'viz://@'+user.account+'/'+object.block+'/'});
 				}
@@ -10020,6 +10045,11 @@ function render_object(user,object,type,preset_level){
 				let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
 				let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
 				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d,link:'viz://@'+user.account+'/'+object.block+'/'});
+				if(typeof object.data.d.i !== 'undefined'){
+					if(false===safe_image(object.data.d.i)){
+						image_part=false;
+					}
+				}
 				if(image_part){
 					image=ltmp(ltmp_arr.render_preview_article_image,{image:safe_image(object.data.d.i),link:'viz://@'+user.account+'/'+object.block+'/'});
 				}
@@ -10275,6 +10305,11 @@ function render_object(user,object,type,preset_level){
 			let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
 			let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
 			link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d,link:'viz://@'+user.account+'/'+object.block+'/'});
+			if(typeof object.data.d.i !== 'undefined'){
+				if(false===safe_image(object.data.d.i)){
+					image_part=false;
+				}
+			}
 			if(image_part){
 				image=ltmp(ltmp_arr.render_preview_article_image,{image:safe_image(object.data.d.i),link:'viz://@'+user.account+'/'+object.block+'/'});
 			}
