@@ -185,6 +185,7 @@ var ltmp_en_arr = {
 			</div>
 		</div>
 	</div>`,
+	install_caption: `Install as App on Home screen`,
     publish_interests: `Добавить тэги по вашим интересам:<div class="interests">{interests}</div>`,
     publish_interests_item: `<a class="publish-add-interest-action" data-hashtag="{hashtag}">#{caption}</a>`,
     publish_categories: `Добавить тэг по вашим категориям:<div class="categories">{categories}</div>`,
