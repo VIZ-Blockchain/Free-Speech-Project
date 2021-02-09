@@ -35,16 +35,16 @@ if(null!=localStorage.getItem(storage_prefix+'sync_cloud_update')){
 }
 
 var install_event;
+window.addEventListener('beforeinstallprompt',(e)=>{
+	e.preventDefault();
+	install_event=e;
+	if(1!=localStorage.getItem(storage_prefix+'install_close')){
+		$('.install-notice').addClass('show');
+	}
+});
 if('serviceWorker' in navigator){
-	navigator.serviceWorker.register('/sw.js').then(()=>{
+	navigator.serviceWorker.register('/sw.js',{scope:'/',registrationStrategy:'registerImmediately'}).then(()=>{
 		console.log('Service Worker Registered');
-	});
-	window.addEventListener('beforeinstallprompt',(e)=>{
-		e.preventDefault();
-		install_event=e;
-		if(1!=localStorage.getItem(storage_prefix+'install_close')){
-			$('.install-notice').addClass('show');
-		}
 	});
 }
 

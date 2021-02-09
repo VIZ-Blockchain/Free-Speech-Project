@@ -1,6 +1,7 @@
 var app_version = 1;
-var old_app_shell = storage_prefix+(app_version-1);
-var app_shell = storage_prefix+app_version;
+var storage_prefix='viz_voice_';
+var old_app_shell=storage_prefix+(app_version-1);
+var app_shell=storage_prefix+app_version;
 var cache_list=[];
 
 self.addEventListener('activate',function(e){
