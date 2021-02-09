@@ -1,0 +1,9 @@
+{
+	"name": "The Free Speech Project Web App",
+	"short_name": "FSP",
+	"description": "The Free Speech Project is V (Voice) protocol runs on VIZ Blockchain.",
+	"start_url": "dapp.html",
+	"display": "fullscreen",
+	"theme_color": "#fff",
+	"background_color": "#fff"
+}

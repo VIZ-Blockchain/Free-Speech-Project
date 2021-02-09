@@ -2444,6 +2444,43 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 .tooltip{
 	border-bottom:1px dashed #000;
 }
+.install-notice{
+	display:none;
+	position:fixed;
+	bottom:0;
+	left:0;
+	right:0;
+	height:60px;
+	line-height:54px;
+	border:1px solid rgba(255,200,120,0.6);
+	background:rgba(255,240,210,1);
+	color:#e3792f;
+	z-index:10;
+	text-align:center;
+	font-size:20px;
+}
+.install-notice.show{
+	display:block;
+}
+.install-close-action{
+	cursor:pointer;
+	display:block;
+	position:absolute;
+	right:10px;
+	color:#b15210;
+	user-select: none;
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-o-user-select: none;
+}
+.install-close-action i.icon:hover{
+	background:rgba(255,161,79,0.4);
+}
+.install-action{
+	border-bottom:1px dashed #e3792f;
+	padding:5px 10px;
+}
 @media only screen and (min-width:751px) and (max-width:1200px){
 	body{
 		font-size:16px;
@@ -2527,6 +2564,9 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 		left:0;
 		right:0;
 		z-index:5;
+	}
+	.install-notice{
+		bottom:60px;
 	}
 	.footer.hidden{
 		display:none;

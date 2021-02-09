@@ -34,6 +34,20 @@ if(null!=localStorage.getItem(storage_prefix+'sync_cloud_update')){
 	}
 }
 
+var install_event;
+if('serviceWorker' in navigator){
+	navigator.serviceWorker.register('/sw.js').then(()=>{
+		console.log('Service Worker Registered');
+	});
+	window.addEventListener('beforeinstallprompt',(e)=>{
+		e.preventDefault();
+		install_event=e;
+		if(1!=localStorage.getItem(storage_prefix+'install_close')){
+			$('.install-notice').addClass('show');
+		}
+	});
+}
+
 function auth_signature_data(domain,action,account,authority,nonce){
 	return domain+':'+action+':'+account+':'+authority+':'+(new Date().getTime() / 1000 | 0)+':'+nonce;
 }
@@ -3776,6 +3790,28 @@ function app_mouse(e){
 			//go parent element, if event on icon
 			if($(target).hasClass('icon')){
 				target=$(target).parent();
+			}
+			if($(target).hasClass('install-close-action')){
+				e.preventDefault();
+				$('.install-notice').removeClass('show');
+				localStorage.setItem(storage_prefix+'install_close',1);
+				return;
+			}
+			if($(target).hasClass('install-action')){
+				e.preventDefault();
+				$('.install-notice').removeClass('show');
+				install_event.prompt();
+				install_event.userChoice.then((choice)=>{
+					if('accepted'===choice.outcome){
+						console.log('User accepted the A2HS prompt');
+						localStorage.setItem(storage_prefix+'install_close',1);
+					}else{
+						console.log('User dismissed the A2HS prompt');
+						localStorage.setItem(storage_prefix+'install_close',0);
+					}
+					install_event=null;
+				});
+				return;
 			}
 			if($(target).hasClass('scroll-top-action')){
 				console.log('HERE');
