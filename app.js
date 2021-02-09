@@ -11096,7 +11096,7 @@ function preset_view(){
 		let view=$('.view[data-path="dapp:'+view_name+'"]');
 		view.find('.objects').html(ltmp(ltmp_arr['preset_view_'+view_name]));
 	}
-	$('.install-notice').html(ltmp_arr.install_caption);
+	$('.install-action').html(ltmp_arr.install_caption);
 }
 
 var dapp_loaded_timer=0;
