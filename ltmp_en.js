@@ -148,6 +148,18 @@ var ltmp_en_arr = {
 				<p class="success save-theme-settings-success"></p>
 				<p><a class="button save-theme-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
 			</div>
+			<div class="content-view" data-tab="connection">
+				<p>Select node from the list:</p>
+				<div class="api-gates-list">
+				</div>
+				<p>Set the node address manually:</p>
+				<p><input type="text" name="api_gate_str" placeholder="https://" value=""></p>
+				<div class="input-addon">(it is recommended to use the HTTPS protocol for privacy)</div>
+				<hr>
+				<p class="error save-connection-settings-error"></p>
+				<p class="success save-connection-settings-success"></p>
+				<p><a class="button save-connection-settings-action">Save</a><span class="submit-button-ring"></span></p>
+			</div>
 			<div class="content-view" data-tab="sync">
 				<p><label><input type="checkbox" name="sync-cloud"> &mdash; автоматическая синхронизация с облаком</label></p><hr>
 				<p>
@@ -185,6 +197,15 @@ var ltmp_en_arr = {
 			</div>
 		</div>
 	</div>`,
+	api_list_item:`<p><label><input type="radio" name="api_gate" value="{value}"{selected}> &mdash; {domain}</label></p>`,
+
+	node_request:'Sending a request to a node&hellip;',
+	node_not_respond:'Node is not responding',
+	node_wrong_response:'Node response does not match the format',
+	node_protocol_error:'Address must contain the protocol (http/https/ws/wss)',
+	node_empty_error:'Address cannot be empty',
+	node_success:'Node is set as the default',
+
 	install_caption: `Install as App on Home screen`,
     publish_interests: `Добавить тэги по вашим интересам:<div class="interests">{interests}</div>`,
     publish_interests_item: `<a class="publish-add-interest-action" data-hashtag="{hashtag}">#{caption}</a>`,
@@ -578,6 +599,8 @@ var ltmp_en_arr = {
     app_settings_feed_tab: 'News Feed',
     app_settings_theme_tab: 'Decoration',
     app_settings_sync_tab: 'Data Transfer',
+	app_settings_connection_tab: 'Connection',
+
 
     view_profile: '<a tabindex="0" data-href="viz://@{account}/" title="Просмотреть профиль">{icon_view_profile}</a>',
 

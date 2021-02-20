@@ -424,28 +424,130 @@ var api_gates=[
 	'https://viz-node.dpos.space/',
 	'https://node.viz.media/',
 ];
+var select_best_api_gate=true;
 var default_api_gate=api_gates[0];
 var best_gate=-1;
 var best_gate_latency=-1;
+if(null!=localStorage.getItem(storage_prefix+'api_gate')){
+	default_api_gate=localStorage.getItem(storage_prefix+'api_gate');
+	select_best_api_gate=false;
+}
 var api_gate=default_api_gate;
 console.log('using default node',default_api_gate);
 viz.config.set('websocket',default_api_gate);
 
-select_best_gate();
+if(select_best_api_gate){
+	select_best_gate();
+}
 
 var dgp={};
 
-function update_api_gate(value=false){
+function update_api_gate(value=false,latency){
 	if(false==value){
 		api_gate=api_gates[best_gate];
 	}
 	else{
 		api_gate=value;
 	}
-	console.log('using new node',api_gate,'latency: ',best_gate_latency);
+	console.log('using new node',api_gate,'latency: ',(typeof latency !== 'undefined')?latency:best_gate_latency);
 	viz.config.set('websocket',api_gate);
+	localStorage.setItem(storage_prefix+'api_gate',api_gate);
 }
-
+var check_api_timer=0;
+function check_api_gate(node,callback){
+	if(''!=node){
+		let protocol='none';
+		let node_protocol=node.substring(0,node.indexOf(':'));
+		if('http'==node_protocol||'https'==node_protocol){
+			protocol='http';
+		}
+		if('ws'==node_protocol||'wss'==node_protocol){
+			protocol='websocket';
+		}
+		if('websocket'==protocol){
+			callback(ltmp_arr.node_request,true);
+			let socket=new WebSocket(node);
+			clearTimeout(check_api_timer);
+			check_api_timer=setTimeout(function(){
+				callback(ltmp_arr.node_not_respond);
+				socket.close();
+			},3000);
+			let latency_start=new Date().getTime();
+			let latency=-1;
+			socket.onmessage=function(event){
+				latency=new Date().getTime() - latency_start;
+				//console.log(event);
+				try{
+					json=JSON.parse(event.data);
+					if((typeof json.result!='undefined')&&(typeof json.result.head_block_number!='undefined')){
+						update_api_gate(node,latency);
+						callback(false,ltmp_arr.node_success);
+					}
+					else{
+						callback(ltmp_arr.node_wrong_response);
+						console.log(json);
+					}
+				}
+				catch(err){
+					callback(ltmp_arr.node_wrong_response);
+					console.log(err);
+				}
+				socket.close();
+			}
+			socket.onerror=function(){
+				callback(ltmp_arr.node_not_respond);
+			};
+			socket.onopen=function(){
+				socket.send('{"id":1,"method":"call","jsonrpc":"2.0","params":["database_api","get_dynamic_global_properties",[]]}');
+			};
+		}
+		if('http'==protocol){
+			callback(ltmp_arr.node_request,true);
+			let xhr=new XMLHttpRequest();
+			xhr.timeout=3000;
+			let latency_start=new Date().getTime();
+			let latency=-1;
+			xhr.overrideMimeType('text/plain');
+			xhr.open('POST',node);
+			xhr.setRequestHeader('accept','application/json, text/plain, */*');
+			xhr.setRequestHeader('content-type','application/json');
+			xhr.ontimeout=function(){
+				callback(ltmp_arr.node_not_respond);
+			};
+			xhr.onerror=function(){
+				callback(ltmp_arr.node_not_respond);
+			};
+			xhr.onreadystatechange=function(){
+				if(4==xhr.readyState && 200==xhr.status){
+					latency=new Date().getTime() - latency_start;
+					try{
+						json=JSON.parse(xhr.responseText);
+						if((typeof json.result!='undefined')&&(typeof json.result.head_block_number!='undefined')){
+							update_api_gate(node,latency);
+							callback(false,ltmp_arr.node_success);
+						}
+						else{
+							callback(ltmp_arr.node_wrong_response);
+							console.log(json);
+							console.log(xhr);
+						}
+					}
+					catch(err){
+						callback(ltmp_arr.node_wrong_response);
+						console.log(err);
+					}
+				}
+			}
+			xhr.send('{"id":1,"method":"call","jsonrpc":"2.0","params":["database_api","get_dynamic_global_properties",[]]}');
+		}
+		if('none'==protocol){
+			callback(ltmp_arr.node_protocol_error);
+		}
+	}
+	else{
+		callback(ltmp_arr.node_empty_error);
+	}
+}
 function select_best_gate(){
 	for(i in api_gates){
 		let current_gate=i;
@@ -4476,6 +4578,41 @@ function app_mouse(e){
 					load_nested_replies(target);
 				}
 			}
+			if($(target).hasClass('save-connection-settings-action')){
+				if(!$(target).hasClass('disabled')){
+					let view=$(target).closest('.view');
+					let tab=view.find('.content-view[data-tab="connection"]');
+
+					let api_gate_str=tab.find('input[name="api_gate_str"]').val();
+
+					$(target).addClass('disabled');
+					tab.find('.save-connection-settings-error').html('');
+					tab.find('.save-connection-settings-success').html('');
+					tab.find('.submit-button-ring[rel="import-cloud"]').addClass('show');
+					tab.find('input[name="api_gate"]').prop('checked',false);
+					tab.find('input[name="api_gate"][value="'+api_gate_str+'"]').prop('checked',true);
+
+					check_api_gate(api_gate_str,(err,result)=>{
+						result=typeof result==='undefined'?false:result;
+						tab.find('.save-connection-settings-success').html('');
+						tab.find('.save-connection-settings-error').html('');
+						tab.find('.api-gates-list p').removeClass('positive');
+						tab.find('.api-gates-list p').removeClass('negative');
+						if(false!==err){
+							tab.find('.save-connection-settings-error').html(err);
+							if(false===result){
+								tab.find('.api-gates-list input[value="'+api_gate_str+'"]').closest('p').addClass('negative');
+							}
+						}
+						else{
+							tab.find('.save-connection-settings-success').html(result);
+							tab.find('.api-gates-list input[value="'+api_gate_str+'"]').closest('p').addClass('positive');
+						}
+						$(target).removeClass('disabled');
+						view.find('.submit-button-ring[rel="import-cloud"]').removeClass('show');
+					});
+				}
+			}
 			if($(target).hasClass('sync-export-file-action')){
 				if(!$(target).hasClass('disabled')){
 					$(target).addClass('disabled');
@@ -8244,6 +8381,7 @@ function view_app_settings(view,path_parts,query,title){
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/main',class:('main'==current_tab?'current':''),caption:ltmp_arr.app_settings_main_tab});
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/theme',class:('theme'==current_tab?'current':''),caption:ltmp_arr.app_settings_theme_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/connection',class:('connection'==current_tab?'current':''),caption:ltmp_arr.app_settings_connection_tab});
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/sync',class:('sync'==current_tab?'current':''),caption:ltmp_arr.app_settings_sync_tab});
 	view.find('.tabs').html(tabs);
 
@@ -8322,6 +8460,42 @@ function view_app_settings(view,path_parts,query,title){
 			apply_theme_mode();
 		});
 	}
+	if('connection'==current_tab){
+		tab.find('.button').removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+		tab.find('.error').html('');
+		tab.find('.success').html('');
+		tab.find('.api-gates-list').html('');
+		let api_list='';
+		for(let i in api_gates){
+			let value=api_gates[i];
+			let api_domain=api_gates[i];
+			if(-1!=api_domain.indexOf('//')){
+				api_domain=api_domain.substr(api_domain.indexOf('//')+2);
+			}
+			if(-1!=api_domain.indexOf('/')){
+				api_domain=api_domain.substr(0,api_domain.indexOf('/'));
+			}
+			let api_selected=false;
+			if(api_gate==value){
+				api_selected=true;
+			}
+			console.log('check value',value,api_gate,api_selected);
+			api_list+=ltmp(ltmp_arr.api_list_item,{value:value,domain:api_domain,selected:api_selected?' checked':''});
+		}
+		tab.find('input[name="api_gate_str"]').val(api_gate);
+
+		tab.find('.api-gates-list').html(api_list);
+
+		tab.find('input[name="api_gate"]').off('change');
+		tab.find('input[name="api_gate"]').on('change',function(){
+			if($(this).prop('checked')){
+				tab.find('input[name="api_gate_str"]').val($(this).val());
+				$('.save-connection-settings-action')[0].click();
+			}
+		});
+	}
+
 	if('sync'==current_tab){
 		tab.find('.button').removeClass('disabled');
 		tab.find('.submit-button-ring').removeClass('show');
@@ -8850,7 +9024,7 @@ function view_path(location,state,save_state,update){
 			if(''==path_parts[1]){//profile page
 				if('@'==path_parts[0].substring(0,1)){//check account link
 					//preload account for view with +1 level
-					get_user(check_account,false,function(err,result){
+					get_user(check_account,true,function(err,result){
 						if(err){
 							console.log(err);
 							document.title=ltmp_arr.error_title+' - '+title;
