@@ -2488,6 +2488,22 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 .api-gates-list p.negative{
 	color:#be0a0a;
 }
+
+.gate-connection-error{
+	position:sticky;
+	top:0px;
+	border:1px solid rgba(255,200,120,0.6);
+	background:rgba(255,240,210,1);
+	color:#eb3314;
+	z-index:10;
+	text-align:center;
+	font-size:20px;
+	line-height:26px;
+	padding:10px 0;
+}
+.gate-connection-error a{
+	border-bottom:1px dashed #eb3314;
+}
 @media only screen and (min-width:751px) and (max-width:1200px){
 	body{
 		font-size:16px;
@@ -2560,6 +2576,10 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 		position:sticky;
 		top:0;
 		z-index:5;
+	}
+	.gate-connection-error{
+		position:sticky;
+		top:60px;
 	}
 	.footer{
 		display:flex;

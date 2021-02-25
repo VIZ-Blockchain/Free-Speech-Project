@@ -206,6 +206,8 @@ var ltmp_ru_arr = {
 	node_empty_error:'Адрес ноды не может быть пустым',
 	node_success:'Нода установлена использумой по умолчанию',
 
+	gate_connection_error:'<div class="gate-connection-error">Ошибка в подключении, <a tabindex="0" data-href="dapp:app_settings/connection/">проверьте соединение&hellip;</a></div>',
+
 	install_caption: `Установить приложение`,
 	publish_interests: `Добавить тэги по вашим интересам:<div class="interests">{interests}</div>`,
 	publish_interests_item: `<a class="publish-add-interest-action" data-hashtag="{hashtag}">#{caption}</a>`,

@@ -620,12 +620,34 @@ function select_best_gate(){
 	}
 }
 
+function gate_connection_status(){
+	let view=$('.view[data-level="'+level+'"]');
+	if(-1==path.indexOf('viz://')){//look in services views
+		let path_parts=path.split('/');
+		view=$('.view[data-path="'+path_parts[0]+'"]');
+	}
+	if(true===dgp_error){
+		if(0==view.find('.gate-connection-error').length){
+			view.find('.header').after(ltmp(ltmp_arr.gate_connection_error));
+		}
+	}
+	else{
+		$('.gate-connection-error').remove();
+	}
+}
+
 var dgp_timer=0;
+var dgp_error=false;
 function update_dgp(auto=false){
 	viz.api.getDynamicGlobalProperties(function(err,response){
+		if(err){
+			dgp_error=true;
+		}
 		if(response){
+			dgp_error=false;
 			dgp=response;
 		}
+		gate_connection_status();
 	});
 	setTimeout(function(){if(0==Object.keys(dgp).length){select_best_gate();}},5000);//5sec after request
 	if(auto){
@@ -4607,6 +4629,8 @@ function app_mouse(e){
 						else{
 							tab.find('.save-connection-settings-success').html(result);
 							tab.find('.api-gates-list input[value="'+api_gate_str+'"]').closest('p').addClass('positive');
+							dgp_error=false;
+							gate_connection_status();
 						}
 						$(target).removeClass('disabled');
 						view.find('.submit-button-ring[rel="import-cloud"]').removeClass('show');

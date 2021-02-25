@@ -206,6 +206,8 @@ var ltmp_en_arr = {
 	node_empty_error:'Address cannot be empty',
 	node_success:'Node is set as the default',
 
+	gate_connection_error:'<div class="gate-connection-error">Connection error, <a tabindex="0" data-href="dapp:app_settings/connection/">check the settings&hellip;</a></div>',
+
 	install_caption: `Install as App on Home screen`,
     publish_interests: `Добавить тэги по вашим интересам:<div class="interests">{interests}</div>`,
     publish_interests_item: `<a class="publish-add-interest-action" data-hashtag="{hashtag}">#{caption}</a>`,
