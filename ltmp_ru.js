@@ -165,6 +165,12 @@ var ltmp_ru_arr = {
 				<p class="success save-connection-settings-success"></p>
 				<p><a class="button save-connection-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
 			</div>
+			<div class="content-view" data-tab="languages">
+				<p>Выберите предпочтительный язык для заголовков, кнопок и другого текста:</p>
+				<div class="languages-list">
+				</div>
+				<p><a class="button save-languages-settings-action">Сохранить</a></p>
+			</div>
 			<div class="content-view" data-tab="sync">
 				<p><label><input type="checkbox" name="sync-cloud"> &mdash; автоматическая синхронизация с облаком</label></p><hr>
 				<p>
@@ -203,6 +209,7 @@ var ltmp_ru_arr = {
 		</div>
 	</div>`,
 	api_list_item:`<p><label><input type="radio" name="api_gate" value="{value}"{selected}> &mdash; {domain}</label></p>`,
+	languages_list_item:`<p><label><input type="radio" name="language" value="{value}"{selected}> &mdash; {caption}</label></p>`,
 
 	node_request:'Отправляем запрос ноде&hellip;',
 	node_not_respond:'Нода не отвечает',
@@ -607,7 +614,7 @@ var ltmp_ru_arr = {
 	app_settings_theme_tab: 'Оформление',
 	app_settings_sync_tab: 'Перенос данных',
 	app_settings_connection_tab: 'Подключение',
-
+	app_settings_languages_tab: 'Языки',
 
 	view_profile: '<a tabindex="0" data-href="viz://@{account}/" title="Просмотреть профиль">{icon_view_profile}</a>',
 

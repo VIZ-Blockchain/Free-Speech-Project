@@ -125,7 +125,7 @@ var ltmp_en_arr = {
 				<p>Adding to the news feed:</p>
 				<p><label><input type="checkbox" name="feed_subscribe_text"> &mdash; posts</label></p>
 				<p><label><input type="checkbox" name="feed_subscribe_shares"> &mdash; reposts</label></p>
-				<p><label><input type="checkbox" name="feed_subscribe_mentions"> &mdash; mentitions</label></p>
+				<p><label><input type="checkbox" name="feed_subscribe_mentions"> &mdash; mentions</label></p>
 				<p><label><input type="checkbox" name="feed_subscribe_replies"> &mdash; replies to other users</label></p>
 
 				<p class="error save-feed-settings-error"></p>
@@ -165,6 +165,12 @@ var ltmp_en_arr = {
 				<p class="success save-connection-settings-success"></p>
 				<p><a class="button save-connection-settings-action">Save</a><span class="submit-button-ring"></span></p>
 			</div>
+			<div class="content-view" data-tab="languages">
+				<p>Select your preferred language for headlines, buttons, and other text:</p>
+				<div class="languages-list">
+				</div>
+				<p><a class="button save-languages-settings-action">Save</a></p>
+			</div>
 			<div class="content-view" data-tab="sync">
 				<p><label><input type="checkbox" name="sync-cloud"> &mdash; automatic synchronization with the cloud</label></p><hr>
 				<p>
@@ -203,6 +209,7 @@ var ltmp_en_arr = {
 		</div>
 	</div>`,
 	api_list_item:`<p><label><input type="radio" name="api_gate" value="{value}"{selected}> &mdash; {domain}</label></p>`,
+	languages_list_item:`<p><label><input type="radio" name="language" value="{value}"{selected}> &mdash; {caption}</label></p>`,
 
 	node_request:'Sending a request to a node&hellip;',
 	node_not_respond:'Node is not responding',
@@ -312,17 +319,17 @@ var ltmp_en_arr = {
     dapp_notice: `<div class="menu-notice">To fill out a news feed, you need to log in, find and subscribe to users you are interested in (similar to the new phone number - there is no shared address book, you need to enter a new contact manually).</div>`,
     brand_caption: `Readdle.Me`,
     brand_link: `https://readdle.me/`,
-    right_addon_links: `<div class="links"><a tabindex="0" data-href="dapp:manual">Manual</a></div>`,
-    manual_caption: `Manual`,
+    right_addon_links: `<div class="links"><a tabindex="0" data-href="dapp:manual">Help</a></div>`,
+    manual_caption: `Help`,
     manual_arr: {
         introduction: {
             title: 'Introduction', html: `
 			<p>Welcome to the dApp The Free Speech Project guide under the <a href="%%brand_link%%" target="_blank">%%brand_caption%%</a> brand.</p>
 			<p>Here you will find answers to frequently asked questions and help in using this application.</p>
 			<p>You are using a Decentralized Application (short: dApp), which aims to allow VIZ blockchain participants to communicate and interact in a distributed social network via the V (Voice) protocol.</p>
-			<p>The distributed social network paradigm is different from the usual centralized one. The basis of such a concept is the rejection of intermediaries. To do this, it is necessary to take the familiar and necessary elements of society to a new level. For example, a news feed. If in the modern world the provider of the social network generates the feed for its users, he can also edit it by hiding some posts or adding advertising. In order not to depend on other people's decisions, you have to take responsibility and play a role yourself.</p>
-			<p>You are using experimental Software, where the social networking algorithm is embedded in the code. You have to find the users you are interested in and subscribe to them yourself. Moreover, no one will know about it unless you publicly announce it. There is no list of subscribers, because it's up to you who to read and when.</p>
-			<p>When you send notes, publications, comments, profile updates - the data is written to the blockchain. <b>It will not be possible to delete them.</b> You can remain anonymous if you wish, but if you disclose any information about yourself, that's your area of responsibility. Be vigilant!</p>
+			<p>The distributed social network paradigm is different from the usual centralized one. The basis of such a concept is the rejection of intermediaries. To do this, it is necessary to take the familiar and necessary elements of society to a new level. For example, a news feed. If in the modern world the provider of the social network generates the feed for its users, he can also edit it by hiding some posts or adding advertising. In order not to depend on other people’s decisions, you have to take responsibility and play a role yourself.</p>
+			<p>You are using experimental Software, where the social networking algorithm is embedded in the code. You have to find the users you are interested in and subscribe to them yourself. Moreover, no one will know about it unless you publicly announce it. There is no list of subscribers, because it’s up to you who to read and when.</p>
+			<p>When you send notes, publications, comments, profile updates - the data is written to the blockchain. <b>It will not be possible to delete them.</b> You can remain anonymous if you wish, but if you disclose any information about yourself, that’s your area of responsibility. Be vigilant!</p>
 			<p>Now we will continue the adventure and understand the different terms and nuances of dApp.</p>
 		`},
         viz: {
@@ -336,14 +343,14 @@ var ltmp_en_arr = {
 			<li>Ability to create new protocols and write data directly to the blockchain</li>
 			</ul>
 			</p>
-			<p>The dApp leverages all of VIZ's strengths for user interaction - its own V (Voice) protocol, storage and modification of user profile metadata, links to recent activity in the protocol to check and load records to build your news feed. And, of course, rewarding the authors of your favorite posts.</p>
+			<p>The dApp leverages all of VIZ’s strengths for user interaction - its own V (Voice) protocol, storage and modification of user profile metadata, links to recent activity in the protocol to check and load records to build your news feed. And, of course, rewarding the authors of your favorite posts.</p>
 			<p>To reward a user, just click on the crystal icon %%icon_gem%%, and you will see a approximately calculated reward amount (digital social capital symbol Ƶ) in a pop-up notification.</p>
 			<p>Learn more about VIZ and its concept at <a href="https://viz.plus/" target="_blank">viz.plus</a> and <a href="https://about.viz.plus/" target="_blank">about.viz.plus</a>.</p>
 		`},
         users: {
             title: 'Users', html: `
 			<p>By default you are subscribed to the users defined in the application itself (for example, to <a tabindex="0" data-href="viz://@readdle/">@readdle</a> or <a tabindex="0" data-href="viz://@on1x/">@on1x</a>).</p>
-			<p>You won't get bored with spammers, annoying service sellers, and weird personalities. On the other hand, you will have to build your own social network by adding people you know step by step.</p>
+			<p>You won’t get bored with spammers, annoying service sellers, and weird personalities. On the other hand, you will have to build your own social network by adding people you know step by step.</p>
 			<p>You can expand your list of users in another way - meet their mentions, reposts, or replies from your existing subscriptions, or visit them through an external link.</p>
 			<p>Over time, there may be services that provide user-friendly searches by various parameters (since public profiles are quite extensible and accessible in the blockchain).</p>
 			<p>To subscribe to a user, just click on his avatar and click on the icon %%icon_subscribe%% in the header of his profile.</p>
@@ -353,7 +360,7 @@ var ltmp_en_arr = {
             title: 'Main menu', html: `
 			<p>%%icon_feed%% "Feed" of activities or news shows the last records of the users you are subscribed to. When new posts appear, a button will be shown to notify you of this (if activated, they will appear above it).</p>
 			<hr><p>The %%icon_notify%% "Notifications" item allows you to manage recent updates (such as replies to your posts or mentions).</p>
-			<hr><p>In the %%icon_users%% "Users" section, you can see all of the members you've met. For example, you can find there the profiles of those whose posts have been reposted by users to whom you are subscribed.</p>
+			<hr><p>In the %%icon_users%% "Users" section, you can see all of the members you’ve met. For example, you can find there the profiles of those whose posts have been reposted by users to whom you are subscribed.</p>
 			<p>Note that other members of the network do not know who you are subscribed to or who is on the ignore list.</p>
 			<hr><p>The  %%icon_gem%% "Rewards" item stores a personal directory of notes that you have awarded. The amount of rewards can be viewed on the PC by hovering your cursor over the crystal icon.</p>
 			<hr><p>In the %%icon_settings%% "Settings" section, you can change the parameters related to the frequency of loading user activity, the time of storage in the cache of unknown profiles and their record, the percentage of energy consumed for awards.</p>
@@ -391,7 +398,7 @@ var ltmp_en_arr = {
 		`},
         storage: {
             title: 'File storage', html: `
-			<p>The problem of downloading and storing files on the Internet has always been an issue. In today's Internet, storage costs are charged to services that make money by selling advertising or user data. But what to do for users who have taken responsibility for the service themselves?</p>
+			<p>The problem of downloading and storing files on the Internet has always been an issue. In today’s Internet, storage costs are charged to services that make money by selling advertising or user data. But what to do for users who have taken responsibility for the service themselves?</p>
 			<p>The answer is simple — store the files yourself. But there are not many solutions. Either create your own file storage (ftp/web), or rent space and bandwidth from hosting providers.</p>
 			<p>There are not many technological solutions: IPFS, Filecoin, Storj, SIA. And all of them are controversial.</p>
 			<p>IPFS is the closest to a possible solution, but its difficulty lies in the lack of an economic model. This is meant to be solved by other projects that use their own token on top of IPFS for file space leasing deals, but they have many limitations, including the lack of libraries to implement client-side (browser-side) interaction.</p>
@@ -486,7 +493,7 @@ var ltmp_en_arr = {
     audio_player_duration_caption: `Duration`,
 
     hashtags_addon_caption: '# Tags',
-    hashtags_addon_button: '<a tabindex="0" data-href="dapp:hashtags" title="Tag management">{icon}</a>',
+    hashtags_addon_button: '<a tabindex="0" data-href="dapp:hashtags" title="Tags management">{icon}</a>',
     hashtags_pinned_caption: 'Pinned',
     hashtags_popular_caption: 'Popular',
     hashtags_main_tab: 'Everyone',
@@ -607,7 +614,7 @@ var ltmp_en_arr = {
     app_settings_theme_tab: 'Decoration',
     app_settings_sync_tab: 'Data Transfer',
 	app_settings_connection_tab: 'Connection',
-
+	app_settings_languages_tab: 'Languages',
 
     view_profile: '<a tabindex="0" data-href="viz://@{account}/" title="View profile">{icon_view_profile}</a>',
 
@@ -617,7 +624,7 @@ var ltmp_en_arr = {
     search_caption: 'Search',
     search_empty_input: 'Enter address to search',
 
-    left_addon_publish_button: '<div taborder="0" data-href="dapp:publish" class="publish-button">%%icon_editor_plus%% Post</div>',
+    left_addon_publish_button: '<div taborder="0" data-href="dapp:publish" class="publish-button">%%icon_editor_plus%% Publish</div>',
     footer_publish_button: '<div taborder="0" data-href="dapp:publish" class="publish-button">%%icon_editor_plus%%</div>',
 
     gateway_error: 'Error, please try later',
@@ -661,7 +668,7 @@ var ltmp_en_arr = {
     menu_awards: 'Awards',
     menu_app_settings: 'Settings',
     menu_account_settings: 'Account',
-    menu_manual: 'Manual',
+    menu_manual: 'Help',
 
     footer_link: `<div><a tabindex="0" data-href="{link}" class="{class}">{icon}</a></div>`,
     icon_scroll_top: `<i class="icon scroll"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 10.828l-4.95 4.95-1.414-1.414L12 8l6.364 6.364-1.414 1.414z"/></svg></i>`,
@@ -717,8 +724,8 @@ var ltmp_en_arr = {
     editor_image_prompt: `Enter image url`,
     editor_link_placeholder_prompt: `https://`,
 
-    editor_error_empty_title: `Please enter a post title`,
-    editor_error_empty_markdown: `Enter post text`,
+    editor_error_empty_title: `Type the title of the publication`,
+    editor_error_empty_markdown: `Type the publication text`,
 
     editor_bold_caption: `Bold`,
     editor_italic_caption: `Italic`,
@@ -789,7 +796,7 @@ var ltmp_en_arr = {
     edit_profile_link: '<a tabindex="0" data-href="dapp:account/profile" title="Edit Profile">{icon_edit_profile}</a>',
     edit_profile_saved: 'Profile saved',
     profile_default_avatar: 'data:image/png;base64,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',//default.png
-    new_object_link: '<a tabindex="0" data-href="dapp:publish" title="Post">{icon_new_object}</a>',
+    new_object_link: '<a tabindex="0" data-href="dapp:publish" title="Publish">{icon_new_object}</a>',
 
     publish_caption: 'Publish',
     publish_empty_text: 'Enter publish text',
@@ -962,7 +969,7 @@ var ltmp_en_arr = {
 			<div tabindex="0" class="button fast-publish-action" title="Publish">{button}</div>
 		</div>
 	</div>`,
-    fast_publish_feed: `What's new?`,
+    fast_publish_feed: `What’s new?`,
     fast_publish_reply: `Post a reply`,
     fast_publish_share: `Add comment`,
     fast_publish_button: `Submit`,

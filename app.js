@@ -1404,13 +1404,13 @@ function ltmp(ltmp_str,ltmp_args){
 }
 
 var langs_arr={
-	//'en-US':'en',
-	//'en':'en',
+	'en-US':'en',
+	'en':'en',
 	'ru-RU':'ru',
 	'ru':'ru',
 };
 var available_langs={
-	//'en':'English',
+	'en':'English',
 	'ru':'Русский',
 };
 var default_lang='ru';
@@ -4619,7 +4619,7 @@ function app_mouse(e){
 					$(target).addClass('disabled');
 					tab.find('.save-connection-settings-error').html('');
 					tab.find('.save-connection-settings-success').html('');
-					tab.find('.submit-button-ring[rel="import-cloud"]').addClass('show');
+					tab.find('.submit-button-ring').addClass('show');
 					tab.find('input[name="api_gate"]').prop('checked',false);
 					tab.find('input[name="api_gate"][value="'+api_gate_str+'"]').prop('checked',true);
 
@@ -4642,8 +4642,35 @@ function app_mouse(e){
 							gate_connection_status();
 						}
 						$(target).removeClass('disabled');
-						view.find('.submit-button-ring[rel="import-cloud"]').removeClass('show');
+						view.find('.submit-button-ring').removeClass('show');
 					});
+				}
+			}
+			if($(target).hasClass('save-languages-settings-action')){
+				if(!$(target).hasClass('disabled')){
+					let view=$(target).closest('.view');
+					let tab=view.find('.content-view[data-tab="languages"]');
+
+					let language_str=tab.find('input[name="language"]:checked').val();
+					console.log(language_str);
+
+					$(target).addClass('disabled');
+					tab.find('input[name="language"]').prop('checked',false);
+					tab.find('input[name="language"][value="'+language_str+'"]').prop('checked',true);
+					tab.find('.languages-list p').removeClass('positive');
+					tab.find('.languages-list p').removeClass('negative');
+
+					if(typeof available_langs[language_str] !== 'undefined'){
+						selected_lang=language_str;
+						localStorage.setItem(storage_prefix+'lang',selected_lang);
+						ltmp_arr=window['ltmp_'+selected_lang+'_arr'];
+					}
+					render_session();
+					render_menu();
+					render_right_addon();
+					preset_view();
+					view_path('dapp:app_settings/languages/',{},true,false);
+					$(target).removeClass('disabled');
 				}
 			}
 			if($(target).hasClass('sync-export-file-action')){
@@ -8430,6 +8457,7 @@ function view_app_settings(view,path_parts,query,title){
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/theme',class:('theme'==current_tab?'current':''),caption:ltmp_arr.app_settings_theme_tab});
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/connection',class:('connection'==current_tab?'current':''),caption:ltmp_arr.app_settings_connection_tab});
+	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/languages',class:('languages'==current_tab?'current':''),caption:ltmp_arr.app_settings_languages_tab});
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/sync',class:('sync'==current_tab?'current':''),caption:ltmp_arr.app_settings_sync_tab});
 	view.find('.tabs').html(tabs);
 
@@ -8540,6 +8568,32 @@ function view_app_settings(view,path_parts,query,title){
 			if($(this).prop('checked')){
 				tab.find('input[name="api_gate_str"]').val($(this).val());
 				$('.save-connection-settings-action')[0].click();
+			}
+		});
+	}
+	if('languages'==current_tab){
+		tab.find('.button').removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+		tab.find('.error').html('');
+		tab.find('.success').html('');
+		tab.find('.languages-list').html('');
+		let languages_list='';
+		for(let i in available_langs){
+			let value=i;
+			let language=available_langs[i];
+			let language_selected=false;
+			if(selected_lang==value){
+				language_selected=true;
+			}
+			languages_list+=ltmp(ltmp_arr.languages_list_item,{value:value,caption:language,selected:language_selected?' checked':''});
+		}
+		tab.find('.languages-list').html(languages_list);
+		tab.find('.languages-list input[value="'+selected_lang+'"]').closest('p').addClass('positive');
+
+		tab.find('input[name="language"]').off('change');
+		tab.find('input[name="language"]').on('change',function(){
+			if($(this).prop('checked')){
+				$('.save-languages-settings-action')[0].click();
 			}
 		});
 	}

@@ -1542,8 +1542,8 @@ body.dark .actions-view a:hover{
 	overflow-x:auto;
 }
 .tabs::-webkit-scrollbar{
-	width:2px;
-	height:2px;
+	width:8px;
+	height:8px;
 }
 .tabs::-webkit-scrollbar-track{
 	background:rgba(200, 200, 220, 0.3);
@@ -1559,7 +1559,7 @@ body.dark .actions-view a:hover{
 	text-align:center;
 	flex-direction:column;
 	flex-basis:25%;
-	padding:14px 8px;
+	padding:14px 10px;
 	white-space:nowrap;
 }
 .tabs a:hover{
@@ -2488,6 +2488,9 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 }
 .api-gates-list p.negative{
 	color:#be0a0a;
+}
+.languages-list p.positive{
+	color:#26be0a;
 }
 
 .gate-connection-error{
