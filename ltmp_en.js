@@ -60,93 +60,93 @@ var ltmp_en_arr = {
 	<div class="object type-text">
 		<div class="object-column">
 			<div class="content-view" data-tab="main">
-				<p>Максимальное количество хранимых записей пользователя:</p>
+				<p>Maximum number of stored user activity:</p>
 				<p><input type="text" name="activity_size" placeholder="0" value=""></p>
-				<div class="input-addon">(0 — без ограничений)</div>
+				<div class="input-addon">(0 — unrestricted)</div>
 
-				<p>Частота загрузки активности пользователей:</p>
+				<p>Frequency of loading user activity:</p>
 				<p><input type="text" name="activity_period" placeholder="30" value=""></p>
-				<div class="input-addon">(в минутах после обновления)</div>
+				<div class="input-addon">(in minutes after the update)</div>
 
-				<p>Глубина загрузки активности пользователей:</p>
+				<p>Load depth of user activity:</p>
 				<p><input type="text" name="activity_deep" placeholder="50" value=""></p>
-				<div class="input-addon">(действует при активации обновления)</div>
+				<div class="input-addon">(applies when the update is triggered)</div>
 
-				<p>Частота обновления профилей пользователей:</p>
+				<p>Frequency of user profile updates:</p>
 				<p><input type="text" name="user_profile_ttl" placeholder="60" value=""></p>
-				<div class="input-addon">(в минутах после последнего обновления)</div>
+				<div class="input-addon">(in minutes after the update)</div>
 
-				<p>Длительность хранения кэша незнакомых пользователей:</p>
+				<p>Duration of storage of cache of unknown users:</p>
 				<p><input type="text" name="user_cache_ttl" placeholder="10" value=""></p>
-				<div class="input-addon">(в минутах после загрузки)</div>
+				<div class="input-addon">(in minutes after loading)</div>
 
-				<p>Длительность хранения записей незнакомых пользователей:</p>
+				<p>Duration of storage of activity of unknown users:</p>
 				<p><input type="text" name="object_cache_ttl" placeholder="10" value=""></p>
-				<div class="input-addon">(в минутах после загрузки)</div>
+				<div class="input-addon">(in minutes after loading)</div>
 
-				<p>Длительность хранения превью ссылок:</p>
+				<p>Duration of link preview storage:</p>
 				<p><input type="text" name="preview_cache_ttl" placeholder="7200" value=""></p>
-				<div class="input-addon">(в минутах после загрузки)</div>
+				<div class="input-addon">(in minutes after loading)</div>
 
 				<hr>
-				<p>Настройки <span class="tooltip" title="Not safe/suitable for work — контент содержащий информацию для взрослых">NSFW-контента</span>:</p>
-				<p><label><input type="checkbox" name="nsfw_warning"> &mdash; скрывать за спойлер с предупреждением</label></p>
-				<div class="input-addon">(при нажатии контент будет показан)</div>
+				<p>Settings for <span class="tooltip" title="Not safe/suitable for work — content containing information for adults">NSFW content</span>:</p>
+				<p><label><input type="checkbox" name="nsfw_warning"> &mdash; hide behind a spoiler with a warning</label></p>
+				<div class="input-addon">(when clicked, the content will be shown)</div>
 
-				<p>Тэги для пометки записей как содержащий NSFW-контент:</p>
+				<p>Tags for marking records as containing NSFW content:</p>
 				<p><input type="text" name="nsfw_hashtags" placeholder="nsfw, sex, porn..." value=""></p>
-				<div class="input-addon">(перечислите через запятую, применимо к новым объектам)</div>
+				<div class="input-addon">(list, separated by commas, applicable to new items)</div>
 
 				<hr>
-				<p>Настройки награждений:</p>
-				<p><label><input type="checkbox" name="silent_award"> &mdash; очищать заметку</label></p>
-				<div class="input-addon">(никто не будет знать за что получена награда)</div>
+				<p>Award settings:</p>
+				<p><label><input type="checkbox" name="silent_award"> &mdash; clear the memo</label></p>
+				<div class="input-addon">(no one will know what the award is for)</div>
 
-				<p>Используемый процент энергии при награждении:</p>
+				<p>The percentage of energy used for the award:</p>
 				<p><input type="text" name="energy" placeholder="1%" value=""></p>
-				<div class="input-addon">(регенерируется 20% за сутки)</div>
+				<div class="input-addon">(regenerates 20% per day)</div>
 
 				<p class="error save-settings-error"></p>
 				<p class="success save-settings-success"></p>
-				<p><a class="button save-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
+				<p><a class="button save-settings-action">Save</a><span class="submit-button-ring"></span></p>
 				<hr>
-				<p><a class="button neutral-button reset-settings-action">Сбросить все настройки</a></p>
-				<p><a class="button neutral-button reset-database-action">Сбросить состояние базы данных</a></p>
+				<p><a class="button neutral-button reset-settings-action">Reset all settings</a></p>
+				<p><a class="button neutral-button reset-database-action">Reset database state</a></p>
 			</div>
 			<div class="content-view" data-tab="feed">
-				<p>Максимальное количество записей в ленте новостей:</p>
+				<p>Maximum number of entries in the news feed:</p>
 				<p><input type="text" name="feed_size" placeholder="10000" value=""></p>
 				<hr>
-				<p>Добавление в ленту новостей:</p>
-				<p><label><input type="checkbox" name="feed_subscribe_text"> &mdash; посты</label></p>
-				<p><label><input type="checkbox" name="feed_subscribe_shares"> &mdash; репосты</label></p>
-				<p><label><input type="checkbox" name="feed_subscribe_mentions"> &mdash; упоминания</label></p>
-				<p><label><input type="checkbox" name="feed_subscribe_replies"> &mdash; ответы другим пользователям</label></p>
+				<p>Adding to the news feed:</p>
+				<p><label><input type="checkbox" name="feed_subscribe_text"> &mdash; posts</label></p>
+				<p><label><input type="checkbox" name="feed_subscribe_shares"> &mdash; reposts</label></p>
+				<p><label><input type="checkbox" name="feed_subscribe_mentions"> &mdash; mentitions</label></p>
+				<p><label><input type="checkbox" name="feed_subscribe_replies"> &mdash; replies to other users</label></p>
 
 				<p class="error save-feed-settings-error"></p>
 				<p class="success save-feed-settings-success"></p>
-				<p><a class="button save-feed-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
+				<p><a class="button save-feed-settings-action">Save</a><span class="submit-button-ring"></span></p>
 			</div>
 			<div class="content-view" data-tab="theme">
-				<p>Используемая тема:</p>
-				<p><label><input type="radio" name="theme-mode" value="light"> &mdash; дневная</label></p>
-				<p><label><input type="radio" name="theme-mode" value="night"> &mdash; ночная</label></p>
-				<p><label><input type="radio" name="theme-mode" value="auto"> &mdash; автоматический режим</label></p>
+				<p>Theme used:</p>
+				<p><label><input type="radio" name="theme-mode" value="light"> &mdash; light</label></p>
+				<p><label><input type="radio" name="theme-mode" value="night"> &mdash; night</label></p>
+				<p><label><input type="radio" name="theme-mode" value="auto"> &mdash; automatic mode</label></p>
 				<hr>
-				<p>Ночная тема:</p>
-				<p><label><input type="radio" name="theme-night-mode" value="midnight"> &mdash; полночь</label></p>
-				<p><label><input type="radio" name="theme-night-mode" value="dark"> &mdash; тьма</label></p>
+				<p>Night theme:</p>
+				<p><label><input type="radio" name="theme-night-mode" value="midnight"> &mdash; midnight</label></p>
+				<p><label><input type="radio" name="theme-night-mode" value="dark"> &mdash; dark</label></p>
 				<hr>
-				<p>Автоматический режим</p>
-				<p>День начинается:</p>
+				<p>Automatic mode</p>
+				<p>The day starts:</p>
 				<p><input type="text" name="theme-auto-light" placeholder="06:00" value=""></p>
-				<p>Ночь начинается:</p>
+				<p>The night starts:</p>
 				<p><input type="text" name="theme-auto-night" placeholder="21:00" value=""></p>
-				<div class="input-addon">(время в формате HH:MM)</div>
+				<div class="input-addon">(time in HH:MM format)</div>
 
 				<p class="error save-theme-settings-error"></p>
 				<p class="success save-theme-settings-success"></p>
-				<p><a class="button save-theme-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
+				<p><a class="button save-theme-settings-action">Save</a><span class="submit-button-ring"></span></p>
 			</div>
 			<div class="content-view" data-tab="connection">
 				<p>Select node from the list:</p>
@@ -161,39 +161,39 @@ var ltmp_en_arr = {
 				<p><a class="button save-connection-settings-action">Save</a><span class="submit-button-ring"></span></p>
 			</div>
 			<div class="content-view" data-tab="sync">
-				<p><label><input type="checkbox" name="sync-cloud"> &mdash; автоматическая синхронизация с облаком</label></p><hr>
+				<p><label><input type="checkbox" name="sync-cloud"> &mdash; automatic synchronization with the cloud</label></p><hr>
 				<p>
-					<strong>Внимание!</strong>
-					Экспорт направлен на сохранение последних и актуальных записей из базы данных приложения, приватный ключ не сохраняется.
+					<strong>Attention!</strong>
+					The export is focused on saving the latest items from the application database, the private key is not saved.
 				</p>
 				<p>
-					Синхронизация с облачным хранилищем проверяет наличие подписи данных приватным ключом аккаунта и позволяет синхронизировать последние изменения подписок между несколькими экземплярами приложений (например, на ПК и смартфоне). Для этого достаточно войти в приложение на другом устройстве и подождать, когда синхронизация будет закончена.
+					Synchronization with cloud storage verifies that the data is signed with the account private key and allows you to synchronize the latest subscription changes between multiple instances of the app (for example, on a PC and a smartphone). To do this, simply sign in to the app on the other device and wait until synchronization is complete.
 				</p>
 				<p>
-					Если у вас включена синхронизация с облаком, то действия с пользователями и тэгами будут восстановлены на другом экземпляре приложения. Сохранение резервной копии является новой точкой отсчета (синхронизация будет начинаться с неё).
+					If you have synchronization with the cloud enabled, actions with users and tags will be restored on another instance of the application. Saving the backup is a new reference point (synchronization will start from it).
 				</p>
-				<p><label><input type="checkbox" name="sync-users"> &mdash; пользователи</label></p>
-				<p><label><input type="checkbox" name="sync-feed"> &mdash; лента новостей</label></p>
-				<p><label><input type="checkbox" name="sync-replies"> &mdash; ответы</label></p>
-				<p><label><input type="checkbox" name="sync-hashtags"> &mdash; тэги</label></p>
-				<p><label><input type="checkbox" name="sync-awards"> &mdash; награждения</label></p>
-				<p><label><input type="checkbox" name="sync-settings"> &mdash; настройки</label></p>
-				<p>Максимальное количество записей:</p>
+				<p><label><input type="checkbox" name="sync-users"> &mdash; users</label></p>
+				<p><label><input type="checkbox" name="sync-feed"> &mdash; news feed</label></p>
+				<p><label><input type="checkbox" name="sync-replies"> &mdash; replies</label></p>
+				<p><label><input type="checkbox" name="sync-hashtags"> &mdash; tags</label></p>
+				<p><label><input type="checkbox" name="sync-awards"> &mdash; awards</label></p>
+				<p><label><input type="checkbox" name="sync-settings"> &mdash; settings</label></p>
+				<p>Maximum number of items:</p>
 				<p><input type="text" name="sync-size" placeholder="" value=""></p>
-				<div class="input-addon">(для ленты новостей, ответов, тэгов, награждений)</div>
+				<div class="input-addon">(for news feed, replies, tags, awards)</div>
 
 				<p class="error sync-export-error"></p>
 				<p class="success sync-export-success"></p>
-				<p><a class="button sync-export-file-action">Экспортировать в файл</a><span class="submit-button-ring" rel="export-file"></span></p>
-				<p><a class="button sync-export-cloud-action">Сохранить резервную копию в облако</a><span class="submit-button-ring" rel="export-cloud"></span></p>
+				<p><a class="button sync-export-file-action">Export to file</a><span class="submit-button-ring" rel="export-file"></span></p>
+				<p><a class="button sync-export-cloud-action">Save the backup to the cloud</a><span class="submit-button-ring" rel="export-cloud"></span></p>
 				<hr>
 				<p>
-					Импортирование сохраненного состояния происходит в несколько этапов, старые данные приложения будут удалены, новые восстановлены, а приложение будет планово перезапущено.
+					Importing the saved state is done in several steps, old application data will be deleted, new data will be restored, and the application will be restarted automatically.
 				</p>
 				<p class="success sync-import-success"></p>
 				<p class="error sync-import-error"></p>
-				<p><a class="button sync-import-file-action">Импортировать из файла</a><span class="submit-button-ring" rel="import-file"></span></p>
-				<p><a class="button sync-import-cloud-action">Сброс и синхронизация из облака</a><span class="submit-button-ring" rel="import-cloud"></span></p>
+				<p><a class="button sync-import-file-action">Import from a file</a><span class="submit-button-ring" rel="import-file"></span></p>
+				<p><a class="button sync-import-cloud-action">Reset and sync from the cloud</a><span class="submit-button-ring" rel="import-cloud"></span></p>
 			</div>
 		</div>
 	</div>`,
@@ -209,9 +209,9 @@ var ltmp_en_arr = {
 	gate_connection_error:'<div class="gate-connection-error">Connection error, <a tabindex="0" data-href="dapp:app_settings/connection/">check the settings&hellip;</a></div>',
 
 	install_caption: `Install as App on Home screen`,
-    publish_interests: `Добавить тэги по вашим интересам:<div class="interests">{interests}</div>`,
+    publish_interests: `Add tags for your interests:<div class="interests">{interests}</div>`,
     publish_interests_item: `<a class="publish-add-interest-action" data-hashtag="{hashtag}">#{caption}</a>`,
-    publish_categories: `Добавить тэг по вашим категориям:<div class="categories">{categories}</div>`,
+    publish_categories: `Add a tag for your categories:<div class="categories">{categories}</div>`,
     publish_categories_item: `<a class="publish-add-category-action" data-hashtag="{hashtag}">#{caption}</a>`,
     article_settings: `
 	<p>Annotation for publication:</p>
@@ -304,7 +304,7 @@ var ltmp_en_arr = {
 			<div class="content-view">{content}</div>
 		</div>
 	</div>`,
-    dapp_notice: `<div class="menu-notice">Чтобы формировать ленту новостей вам необходимо войти, найти и подписаться на интересных вам пользователей (аналогично новому номеру телефона — общей адресной книги нет, нужно заносить новый контакт вручную).</div>`,
+    dapp_notice: `<div class="menu-notice">To fill out a news feed, you need to log in, find and subscribe to users you are interested in (similar to the new phone number - there is no shared address book, you need to enter a new contact manually).</div>`,
     brand_caption: `Readdle.Me`,
     brand_link: `https://readdle.me/`,
     right_addon_links: `<div class="links"><a tabindex="0" data-href="dapp:manual">Manual</a></div>`,
@@ -312,94 +312,94 @@ var ltmp_en_arr = {
     manual_arr: {
         introduction: {
             title: 'Introduction', html: `
-			<p>Добро пожаловать в справочник по dApp The Free Speech Project под брендом <a href="%%brand_link%%" target="_blank">%%brand_caption%%</a>.</p>
-			<p>Здесь вы найдете ответы на часто задаваемые вопросы и помощь при использовании данного приложения.</p>
-			<p>Вы используете Decentralized Application — Децентрализованное Приложение (коротко dApp, произносится как диАпп), цель которого предоставить участникам блокчейна Виз (VIZ) общаться и взаимодействовать в распределенной социальной сети через протокол V (Voice).</p>
-			<p>Парадигма распределенной социальной сети отличается от привычной централизованной. Основа такой концепции — отказ от посредников. Для этого необходимо вынести привычные и необходимые обществу элементы на новый уровень. Например, лента новостей. Если в современном мире провайдер социальной сети формирует для своих пользователей ленту, он же и может редактировать ее, скрывая какие-то посты или добавляя рекламу. Чтобы не зависеть от чужих решений необходимо взять на себя ответственность и самим выполнять ту или иную роль.</p>
-			<p>Вы используете экспериментальное Программное Обеспечение, где алгоритм социальной сети заложен в код. Вы сами должны найти интересных вам пользователей, подписаться на них. Более того, никто об этом не узнает, если вы публично об этом не заявите. Тут нет списка подписчиков, так как это сугубо ваше дело, кого и когда читать.</p>
-			<p>При отправке заметок, публикаций, комментариев, обновлении профиля — данные записываются в блокчейн. <b>Их невозможно будет удалить.</b> Вы можете сохранять анонимность, при желании, но если вы раскроете какие-то данные о себе — это ваша зона ответственности. Проявляйте бдительность!</p>
-			<p>А теперь мы продолжим приключение и разберемся в разных терминах и нюансах при работе с dApp.</p>
+			<p>Welcome to the dApp The Free Speech Project guide under the <a href="%%brand_link%%" target="_blank">%%brand_caption%%</a> brand.</p>
+			<p>Here you will find answers to frequently asked questions and help in using this application.</p>
+			<p>You are using a Decentralized Application (short: dApp), which aims to allow VIZ blockchain participants to communicate and interact in a distributed social network via the V (Voice) protocol.</p>
+			<p>The distributed social network paradigm is different from the usual centralized one. The basis of such a concept is the rejection of intermediaries. To do this, it is necessary to take the familiar and necessary elements of society to a new level. For example, a news feed. If in the modern world the provider of the social network generates the feed for its users, he can also edit it by hiding some posts or adding advertising. In order not to depend on other people's decisions, you have to take responsibility and play a role yourself.</p>
+			<p>You are using experimental Software, where the social networking algorithm is embedded in the code. You have to find the users you are interested in and subscribe to them yourself. Moreover, no one will know about it unless you publicly announce it. There is no list of subscribers, because it's up to you who to read and when.</p>
+			<p>When you send notes, publications, comments, profile updates - the data is written to the blockchain. <b>It will not be possible to delete them.</b> You can remain anonymous if you wish, but if you disclose any information about yourself, that's your area of responsibility. Be vigilant!</p>
+			<p>Now we will continue the adventure and understand the different terms and nuances of dApp.</p>
 		`},
         viz: {
             title: 'VIZ', html: `
-			<p>Блокчейн Виз (VIZ) это социальная платформа работающая на технологии распределенного реестра (DLT). Именно на нем и работает данное приложение, поэтому вам нужен аккаунт в Виз и регулярный приватный ключ (аккаунт можно зарегистрировать через сервис <a href="https://start.viz.plus/" target="_blank">start.viz.plus</a>).</p>
-			<p>Виз быстрый (блок генерируется каждые 3 секунды), управляется через ДАО (выбор делегатов, голосование в комитете, конкуренция за фонд наград) и предоставляет уникальные возможности, такие как:
+			<p>Blockchain VIZ is a social platform based on distributed ledger technology (DLT). It is what this application runs on, so you need a VIZ account and a regular private key (account can be registered through the service <a href="https://start.viz.plus/" target="_blank">start.viz.plus</a>).</p>
+			<p>VIZ is fast (the block is generated every 3 seconds), is managed through the DAO (witness selection, committee voting, competition for the reward fund), and provides unique features such as:
 			<ul>
-			<li>Единое пространство имен учетных записей</li>
-			<li>Экономика распределения цифрового социального капитала из казначейства на основе справедливой конкуренции (фонд наград)</li>
-			<li>Владение долей пропускной способности сети</li>
-			<li>Возможность создания новых протоколов и записи данных непосредственно в блокчейн</li>
+			<li>Unified namespace for accounts</li>
+			<li>The economics of distributing digital social capital from the treasury based on fair competition (reward fund)</li>
+			<li>Ownership of a share of the network bandwidth</li>
+			<li>Ability to create new protocols and write data directly to the blockchain</li>
 			</ul>
 			</p>
-			<p>dApp использует все сильные стороны Виз для взаимодействия пользователей — собственный протокол V (Voice), хранение и изменение метаданных профиля пользователя, ссылки на последнюю активность в протоколе для проверки и загрузки записей для формирования ленты новостей. И, конечно же, награждение авторов понравившихся записей.</p>
-			<p>Чтобы наградить пользователя, достаточно нажать на иконку кристалла %%icon_gem%%, и вы увидите примерно расчитанную сумму награждения (символ цифрового социального капитала Ƶ) в всплывающем уведомлении.</p>
-			<p>Подробнее узнать про Виз и его концепцию можно на сайте <a href="https://viz.plus/" target="_blank">viz.plus</a> и <a href="https://about.viz.plus/" target="_blank">about.viz.plus</a>.</p>
+			<p>The dApp leverages all of VIZ's strengths for user interaction - its own V (Voice) protocol, storage and modification of user profile metadata, links to recent activity in the protocol to check and load records to build your news feed. And, of course, rewarding the authors of your favorite posts.</p>
+			<p>To reward a user, just click on the crystal icon %%icon_gem%%, and you will see a approximately calculated reward amount (digital social capital symbol Ƶ) in a pop-up notification.</p>
+			<p>Learn more about VIZ and its concept at <a href="https://viz.plus/" target="_blank">viz.plus</a> and <a href="https://about.viz.plus/" target="_blank">about.viz.plus</a>.</p>
 		`},
         users: {
             title: 'Users', html: `
-			<p>По умолчанию вы подписаны на пользователей заданных в самом приложении (например, на <a tabindex="0" data-href="viz://@readdle/">@readdle</a> или <a tabindex="0" data-href="viz://@readdle/">@on1x</a>).</p>
-			<p>Вас не будут утомлять спамеры, назойливые продавцы услуг и странные личности. С другой стороны, вам самим нужно будет построить свою социальную сеть, добавляя знакомых шаг за шагом.</p>
-			<p>Расширить список пользователей можно и другим способом — встретить их упоминание, репосты или ответы от уже существующих ваших подписок или перейти на них по внешней ссылке.</p>
-			<p>Со временем могут появиться сервисы, предоставляющие удобный поиск по пользователям по разным параметрам (так как публичные профили довольно расширяемы и доступны в блокчейне).</p>
-			<p>Для подписки на пользователя достаточно нажать на его аватарке и нажать на иконку %%icon_subscribe%% в шапке его профиля.</p>
-			<p>Если же вы не хотите видеть пользователя, его посты, которые репостят ваши общие знакомые — то достаточно нажать на иконку %%icon_ignore%% для добавление его в список игнорирования.</p>
+			<p>By default you are subscribed to the users defined in the application itself (for example, to <a tabindex="0" data-href="viz://@readdle/">@readdle</a> or <a tabindex="0" data-href="viz://@on1x/">@on1x</a>).</p>
+			<p>You won't get bored with spammers, annoying service sellers, and weird personalities. On the other hand, you will have to build your own social network by adding people you know step by step.</p>
+			<p>You can expand your list of users in another way - meet their mentions, reposts, or replies from your existing subscriptions, or visit them through an external link.</p>
+			<p>Over time, there may be services that provide user-friendly searches by various parameters (since public profiles are quite extensible and accessible in the blockchain).</p>
+			<p>To subscribe to a user, just click on his avatar and click on the icon %%icon_subscribe%% in the header of his profile.</p>
+			<p>If you do not want to see the user, his posts, which are reposted by your mutual friends - just click on the icon %%icon_ignore%% to add him to the ignore list.</p>
 		`},
         settings: {
             title: 'Main menu', html: `
-			<p>%%icon_feed%% «Лента» активностей или новостей показывает последние записи пользователей, на которых вы подписаны. При появлении новых записей будет показана кнопка извещающая об этом (при активации они появятся выше нее).</p>
-			<hr><p>Пункт %%icon_notify%% «Уведомления» позволяет управлять последними обновлениями (такими как ответы на ваши записи или упоминания).</p>
-			<hr><p>В разделе %%icon_users%% «Пользователи» отображаются все встреченные вами участники сети. Например, вы там можете найти профили тех, чьи публикации репостили пользователи на которых вы подписаны.</p>
-			<p>Обратите внимание, что другие участники сети не знают на кого вы подписаны или кто внесен в список игнорирования.</p>
-			<hr><p>Пункт %%icon_gem%% «Награждения» хранит персональный каталог заметок, которые вы награждали. Сумму награждений можно посмотреть на ПК, для этого нужно навести курсор на иконку кристалла.</p>
-			<hr><p>В разделе %%icon_settings%% «Настройки» вы можете изменить параметры связанные с периодичностью загрузки активности пользователей, время хранения в кэше незнакомых профилей и их записе, процент энергии затрачиваемый для награждений.</p>
-			<p>Отдельно настраивается тема оформления. Есть возможность задать расписание для переключение между ночным и дневным режимами.</p>
-			<p>Вкладка «Перенос данных» позволяет настроить синхронизацию с облаком и сделать отдельно бекап данных для переноса на другое устройство.</p>
-			<hr><p>%%icon_account_settings%% «Аккаунт» позволяет удалить данные об используемом аккаунте или изменить приватный ключ. В отдельном табе доступно изменение публичного профиля.</p>
+			<p>%%icon_feed%% "Feed" of activities or news shows the last records of the users you are subscribed to. When new posts appear, a button will be shown to notify you of this (if activated, they will appear above it).</p>
+			<hr><p>The %%icon_notify%% "Notifications" item allows you to manage recent updates (such as replies to your posts or mentions).</p>
+			<hr><p>In the %%icon_users%% "Users" section, you can see all of the members you've met. For example, you can find there the profiles of those whose posts have been reposted by users to whom you are subscribed.</p>
+			<p>Note that other members of the network do not know who you are subscribed to or who is on the ignore list.</p>
+			<hr><p>The  %%icon_gem%% "Rewards" item stores a personal directory of notes that you have awarded. The amount of rewards can be viewed on the PC by hovering your cursor over the crystal icon.</p>
+			<hr><p>In the %%icon_settings%% "Settings" section, you can change the parameters related to the frequency of loading user activity, the time of storage in the cache of unknown profiles and their record, the percentage of energy consumed for awards.</p>
+			<p>The design theme is separately configurable. It is possible to set a schedule for switching between night and light themes.</p>
+			<p>The "Data Transfer" tab allows you to set up synchronization with the cloud and make a separate data backup to transfer to another device.</p>
+			<hr><p>%%icon_account_settings%% "Account" allows you to delete data about the used account or change the private key. In a separate tab you can modify the public profile.</p>
 		`},
         tags: {
             title: 'Tags', html: `
-			<p>%%icon_hashtag%% Хэштэги (или просто тэги) являются хорошим способом для дополнительной рубрикации разрозненного контента.</p>
-			<p>Для их использования достаточно добавить символ решетки «#» перед ключевым словом в заметке.</p>
-			<p>Рекомендуется заменять пробелы на символ нижнего подчеркивания «_» если нужно сделать тэг из словосочетания.</p>
-			<p>dApp обрабатывает все загруженные записи и проверяет их на наличие тэгов. После чего создается связь между записью и тэгом. После чего в любой записи можно нажать на тэг и получить выборку всех постов связанных с ним.</p>
-			<hr><p>Тэги можно %%icon_pin%% закрепить или добавить в %%icon_eye_ignore%% игнорируемые, для этого нужно перейти в существующий тэг и нажать соответствующую иконку в шапке.</p>
-			<p>Закрепленные тэги будут отображаться в правом меню на ПК версии и ниже основного меню на мобильной версии.</p>
-			<hr><p>При редактировании профиля можно задать интересы (пересекающиеся тэги) и категории (уникальные тэги), которые будут доступны при просмотре вашего профиля другим участникам. Используя их они смогут делать быструю выборку по вашим заметкам и публикациям.</p>
-			<hr><p>В настройках можно задать тэги, которые будут маркировать новые объекты как NSFW-контент (содержащий информацию для взрослых). По умолчанию заданы тэги: nsfw, porn, sex. Такой контент скрывается за спойлер с предупреждением и возможностью показать его при нажатии. Спойлер можно отключить, чтобы подобный контент отображался сразу.</p>
+			<p>%%icon_hashtag%% Hashtags (or just tags) are a good way to further organize disparate content.</p>
+			<p>To use them, just add the "#" grating symbol before the keyword in the note.</p>
+			<p>It is recommended to replace spaces with the underscore character "_" if you want to make a tag from a phrase.</p>
+			<p>The dApp processes all loaded records and checks them for tags. After that, it creates a link between the record and the tag. Then you can click on a tag in any record and get a selection of all posts associated with it.</p>
+			<hr><p>Tags can be %%icon_pin%% pinned or %%icon_eye_ignore%% ignored, to do this, go to an existing tag and click the appropriate icon in the header.</p>
+			<p>The pinned tags will be displayed in the right-hand menu on the PC version and below the main menu on the mobile version.</p>
+			<hr><p>When editing your profile, you can set up interests (overlapping tags) and categories (unique tags) that will be available to other members when they view your profile. Using these, they will be able to make quick selections for your notes and publications.</p>
+			<hr><p>In the settings, you can set tags that will mark new objects as NSFW content (containing information for adults). The default tags are: nsfw, porn, sex. Such content is hidden behind a spoiler with a warning and an option to show it when clicked. The spoiler can be disabled to display such content immediately.</p>
 		`},
         publish: {
             title: 'Publications', html: `
-			<p>Публикации бывают двух видов — в виде коротких заметок или в виде записи с расширенной разметкой, специально созданной для статей.</p>
-			<p>Формы для публикации коротких заметок доступны как из ленты, так и при ответе или репосте других записей.</p>
-			<p>Расширенная разметка доступна через иконку %%icon_editor%% редактора (<a tabindex="0" href="dapp:publish">«Post»</a> в меню).</p>
-			<p>Редактор позволяет оформить полноценную публикацию с заголовком, подзагаловками, ссылками, изображениями и цитатами. В настройках необходимо указать аннотацию, ссылку на миниатюру и опционально добавить тэги из вашего профиля.</p>
-			<p>Также можно указать бенефициаров в дополнительных настройках, для этого нужно задать аккаунты, которые будут делить получаемую награду и проценты для ее распределения.</p>
-			<p>Расширенные публикации имеют отдельный просмотрщик в версии для ПК и напоминают популярные блог-платформы.</p>
+			<p>Publications come in two varieties — as short notes or as a record with extended markup specifically created for articles.</p>
+			<p>Forms for publishing short notes are available both from the feed and by replying or reposting other posts.</p>
+			<p>Advanced markup is available through the editor icon %%icon_editor%% (<a tabindex="0" href="dapp:publish">«Post»</a> menu item).</p>
+			<p>The editor allows you to design a complete publication with a header, subheadings, links, images and quotes. In the settings you need to specify an annotation, a link to a thumbnail and optionally add tags from your profile.</p>
+			<p>You can also specify the beneficiaries in the advanced settings by specifying the accounts that will share the reward you receive and the percentages to distribute it.</p>
+			<p>Extended Publications has a separate viewer in the PC version and feels like a popular blogging platform.</p>
 		`},
         uri: {
             title: 'VIZ links', html: `
-			<p>Для работы с протоколом в Виз было решено сделать собственную схему viz для <a href="https://ru.wikipedia.org/wiki/URI" target="_blank">URI</a>. Ссылка содержит указатель на аккаунт и номер блока, в котором хранится запись в протоколе V (Voice).</p>
-			<p>Публичный профиль доступен по ссылке вида viz://@login/</p>
-			<p>Запись по ссылке viz://@login/[block]/</p>
-			<p>Публикация по ссылке viz://@login/[block]/publication/</p>
-			<p>Если вы хотите прикрепить запись в своем профиле, вам следует скопировать ссылку в схеме viz, и вставить ее в поле «Закрепленная запись» настройках свой профиль.</p>
+			<p>To work with the protocol in VIZ, it was decided to make its own scheme viz for  <a href="https://ru.wikipedia.org/wiki/URI" target="_blank">URI</a>. The link contains a pointer to the account and the block number where the V (Voice) protocol entry is stored.</p>
+			<p>The public profile is available at the link like viz://@login/</p>
+			<p>Record at the link viz://@login/[block]/</p>
+			<p>Publication at viz://@login/[block]/publication/</p>
+			<p>If you want to pin an entry on your profile, you should copy the link in the viz diagram, and paste it into the "Pinned entry" field of your profile settings.</p>
 		`},
         storage: {
             title: 'File storage', html: `
-			<p>Проблема загрузки и хранения файлов в интернете всегда была актуальна. В современном интернете издержки за хранение данных берут на себя сервисы, которые зарабатывают на продаже рекламе или пользовательских данных. Но что делать для пользователей которые взяли сами на себя ответственность за сервис?</p>
-			<p>Ответ простой — хранить файлы самостоятельно. Но решений не так много. Либо создавать свое файловое хранилище (ftp/web), либо арендовать место и пропускную способность у хостинг провайдеров.</p>
-			<p>Технологических решений не так много: IPFS, Filecoin, Storj, SIA. И все они спорные.</p>
-			<p>IPFS ближе всего к возможному решению, но в нем сложность заключается в отсутсвиии экономической модели. Это призваны решить другие проекты, которые использует собственный токен поверх IPFS для сделок по аренде места под хранение файлов, но в них существуют много ограничений, в том числе отсутствуют библиотеки для внедрения взаимодействия на стороне клиента (браузера).</p>
-			<p>Временным решением послужили IPFS и SIA провайдеры, которые пока позволяют загружать файлы бесплатно.</p>
-			<p>Они довольно часто лагают, сбоят и зависают на пару минут, но это самое доступное на данный момент.</p>
-			<p>В качестве альтернативы пользователи всегда могут загрузить файлы на классические хостинг-провайдеры и вставить стандартную ссылку.</p>
+			<p>The problem of downloading and storing files on the Internet has always been an issue. In today's Internet, storage costs are charged to services that make money by selling advertising or user data. But what to do for users who have taken responsibility for the service themselves?</p>
+			<p>The answer is simple — store the files yourself. But there are not many solutions. Either create your own file storage (ftp/web), or rent space and bandwidth from hosting providers.</p>
+			<p>There are not many technological solutions: IPFS, Filecoin, Storj, SIA. And all of them are controversial.</p>
+			<p>IPFS is the closest to a possible solution, but its difficulty lies in the lack of an economic model. This is meant to be solved by other projects that use their own token on top of IPFS for file space leasing deals, but they have many limitations, including the lack of libraries to implement client-side (browser-side) interaction.</p>
+			<p>A temporary solution was provided by IPFS and SIA providers, which, for now, allow free downloads.</p>
+			<p>They quite often lag, crash and hang for a couple of minutes, but this is the most available at the moment.</p>
+			<p>Alternatively, users can always upload files to classic hosting providers and insert a standard link.</p>
 		`},
         services: {
             title: 'Microservices', html: `
-			<p>Часть привычных сервисов просто недоступны на стороне браузера. Из актуальных проблем — формирование превью ссылок и синхронизация между устройствами.</p>
-			<p>Для решения этих проблем могут быть разработаны дополнительные микросервисы. Например, в ReaddleMe используется беспарольная аутентификация для записи и загрузки действий аккаунта (такие как подписка на пользователей, игнорирование тэгов, установка параметров).</p>
-			<p>Отдельный микросервис создает предпросмотр для ссылок, сообщая браузеру мета-информацию о запрашиваемом url. Например, на основе этого формируется проигрыватель для аудио файлов.</p>
-			<p>В будущем возможно будет вынести провайдера микросервисов в отдельное приложение, добавив к этому хранение файлов и записей с возможностью их удаления в соответствии с GDRP.</p>
+			<p>Some of the usual services are simply not available on the browser side. Some of the current problems are link previews and synchronization between devices.</p>
+			<p>Additional microservices can be developed to solve these problems. For example, ReaddleMe uses passwordless authentication to store and load account actions (such as subscribing to users, ignoring tags, settings).</p>
+			<p>A separate microservice creates a preview for links, telling the browser the meta-information about the requested url. For example, this provides a player for audio files.</p>
+			<p>In the future, it may be possible to bring the microservices provider into a separate application, adding to this the storage of files and records with the ability to delete them according to GDRP.</p>
 		`},
     },
     manual_next_link: `<br><p><a tabIndex="0" data-href="dapp:manual/{item}/">Continue &rarr;</a></p>`,
@@ -437,7 +437,7 @@ var ltmp_en_arr = {
 	<p class="success save-users-settings-success"></p>
 	<p><a class="button save-users-settings-action">Save</a><span class="submit-button-ring"></span></p>
 	<hr>
-	<p><a class="button neutral-button reset-users-settings-action">Сброс</a></p>`,
+	<p><a class="button neutral-button reset-users-settings-action">Reset</a></p>`,
     box_addon: `
 	<div class="box">
 		<div class="box-header">
@@ -449,23 +449,23 @@ var ltmp_en_arr = {
 		{context}
 	</div>`,
 
-    render_preview_image: `<div class="preview-image"{addon}>{prepand}<img src="{image}" alt="Изображение"></div>`,
+    render_preview_image: `<div class="preview-image"{addon}>{prepand}<img src="{image}" alt="Image"></div>`,
     render_preview_image_addon: `<div class="preview-image-background" style="background-image:url('{image}');"></div>`,
-    render_preview_large_image: `<div class="preview-large-image"{addon}><img src="{image}" alt="Изображение"></div>`,
+    render_preview_large_image: `<div class="preview-large-image"{addon}><img src="{image}" alt="Image"></div>`,
     render_preview_link: `<div class="preview-link"{addon}>
 		<div class="preview-link-title">{title}</div>
 		<div class="preview-link-descr">{descr}</div>
 		<div class="preview-link-source">{source}</div>
 	</div>`,
 
-    render_preview_article_image: `<a tabindex="0" data-href="{link}publication/" class="preview-article-image"{addon}><img src="{image}" alt="Изображение"></a>`,
+    render_preview_article_image: `<a tabindex="0" data-href="{link}publication/" class="preview-article-image"{addon}><img src="{image}" alt="Image"></a>`,
     render_article_preview: `<div class="preview-article-link"{addon}>
 		<a tabindex="0" data-href="{link}publication/" class="preview-article-link-title">{title}</a>
 		<a tabindex="0" data-href="{link}publication/" class="preview-article-link-descr">{descr}</a>
 	</div>`,
     render_preview_wrapper: `<a tabindex="0" class="preview-wrapper" href="{link}" target="_blank"{addon}>{context}</a>`,
 
-    render_audio_wrapper: `<div tabindex="0" class="preview-wrapper audio-player" title="Аудио">{context}</div>`,
+    render_audio_wrapper: `<div tabindex="0" class="preview-wrapper audio-player" title="Audio">{context}</div>`,
     render_audio_player: `
 	<audio class="audio-source">
 		<source src="{link}" type="{mime}">
@@ -481,13 +481,13 @@ var ltmp_en_arr = {
     audio_player_duration_caption: `Duration`,
 
     hashtags_addon_caption: '# Tags',
-    hashtags_addon_button: '<a tabindex="0" data-href="dapp:hashtags" title="Управление тэгами">{icon}</a>',
+    hashtags_addon_button: '<a tabindex="0" data-href="dapp:hashtags" title="Tag management">{icon}</a>',
     hashtags_pinned_caption: 'Pinned',
     hashtags_popular_caption: 'Popular',
     hashtags_main_tab: 'Everyone',
     hashtags_pinned_tab: 'Pinned',
     hashtags_ignored_tab: 'Ignored',
-    hashtags_objects_header: `<div class="hashtag-item nohover"><div class="hashtag-item-num">№</div><div class="hashtag-item-caption">Тэг</div><div class="hashtag-item-count">Количество</div></div>`,
+    hashtags_objects_header: `<div class="hashtag-item nohover"><div class="hashtag-item-num">№</div><div class="hashtag-item-caption">Tag</div><div class="hashtag-item-count">Count</div></div>`,
     hashtags_objects_item: `<div class="hashtag-item" data-hashtag-id="{id}"><div class="hashtag-item-num">{num}</div><div class="hashtag-item-caption"><a data-href="dapp:hashtags/{tag}">#{tag}{addon}</a></div><div class="hashtag-item-count">{count}</div></div>`,
 
     found_results: 'Found: {count}',
@@ -502,7 +502,7 @@ var ltmp_en_arr = {
     users_ignored_tab: 'Ignored',
     users_objects_box: `<div class="user-item-box">{context}</div>`,
     users_objects_header: `
-	<div class="user-item-box"><input type="text" class="user-item-search" placeholder="Быстрый поиск" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+	<div class="user-item-box"><input type="text" class="user-item-search" placeholder="Quick Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
 	<div class="user-item-box search-results"></div>
 	`,
     users_objects_item: `
@@ -559,7 +559,7 @@ var ltmp_en_arr = {
     menu_session_error: '<span class="error">Error</span>',
     menu_session_account: '<div class="avatar"><div class="shadow" data-href="viz://@{account}/"></div><img src="{avatar}"></div><div class="account"><a class="account-name" tabindex="0" data-href="viz://@{account}/">{nickname}</a><a class="account-login" tabindex="0" data-href="viz://@{account}/">{account}</a></div>',
 
-    none_notice: '<div class="none-notice"><em>News feed is not working yet, please try searching.<!--<br>Ничего не найдено.--></em></div>',
+    none_notice: '<div class="none-notice"><em>News feed is not working yet, please try searching.<!--<br>Nothing found.--></em></div>',
     whitelabel_notice: `<div class="load-more-end-notice"><em>Loading recent posts @{account}&hellip;</em><span class="submit-button-ring"></span></div>`,
     feed_end_notice: '<div class="load-more-end-notice"><em>End of feed.</em></div>',
     load_more_end_notice: '<div class="load-more-end-notice"><em>Nothing else found.</em></div>',
@@ -604,7 +604,7 @@ var ltmp_en_arr = {
 	app_settings_connection_tab: 'Connection',
 
 
-    view_profile: '<a tabindex="0" data-href="viz://@{account}/" title="Просмотреть профиль">{icon_view_profile}</a>',
+    view_profile: '<a tabindex="0" data-href="viz://@{account}/" title="View profile">{icon_view_profile}</a>',
 
     invalid_regular_key: 'The provided key is invalid',
     not_found_regular_key: 'The provided key does not match',
@@ -758,11 +758,11 @@ var ltmp_en_arr = {
     icon_editor_attach_image: `<i class="icon editor-image"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M4,5h13v7h2V5c0-1.103-0.897-2-2-2H4C2.897,3,2,3.897,2,5v12c0,1.103,0.897,2,2,2h8v-2H4V5z"></path><path d="M8 11L5 15 16 15 12 9 9 13z"></path><path d="M19 14L17 14 17 17 14 17 14 19 17 19 17 22 19 22 19 19 22 19 22 17 19 17z"></path></svg></i>`,
     icon_editor_plus: `<i class="icon editor-plus"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M19 11L13 11 13 5 11 5 11 11 5 11 5 13 11 13 11 19 13 19 13 13 19 13z"></path></svg></i>`,
     icon_editor_separator: `<i class="icon editor-separator"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M2 11h2v2H2v-2zm4 0h12v2H6v-2zm14 0h2v2h-2v-2z"/></svg></i>`,
-    header_back_action: `<a tabindex="0" class="back-action" title="Назад" data-force="{force}">{icon}</a>`,
+    header_back_action: `<a tabindex="0" class="back-action" title="Back" data-force="{force}">{icon}</a>`,
     header_link: '<div class="link grow"><div class="header-link-wrapper"><input type="text" class="header-link" value="{link}"><div class="header-link-icons">{icons}</div></div></div>',
     header_link_icons: `
 		<i tabindex="0" class="icon copy icon-copy-action" title="Copy address"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20,2H10C8.897,2,8,2.897,8,4v4H4c-1.103,0-2,0.897-2,2v10c0,1.103,0.897,2,2,2h10c1.103,0,2-0.897,2-2v-4h4 c1.103,0,2-0.897,2-2V4C22,2.897,21.103,2,20,2z M4,20V10h10l0.002,10H4z M20,14h-4v-4c0-1.103-0.897-2-2-2h-4V4h10V14z"/></svg></i>
-		<i tabindex="0" class="icon search icon-search-action" title="Перейти"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.023,16.977c-0.513-0.488-1.004-0.997-1.367-1.384c-0.372-0.378-0.596-0.653-0.596-0.653l-2.8-1.337 C15.34,12.37,16,10.763,16,9c0-3.859-3.14-7-7-7S2,5.141,2,9s3.14,7,7,7c1.763,0,3.37-0.66,4.603-1.739l1.337,2.8 c0,0,0.275,0.224,0.653,0.596c0.387,0.363,0.896,0.854,1.384,1.367c0.494,0.506,0.988,1.012,1.358,1.392 c0.362,0.388,0.604,0.646,0.604,0.646l2.121-2.121c0,0-0.258-0.242-0.646-0.604C20.035,17.965,19.529,17.471,19.023,16.977z M9,14 c-2.757,0-5-2.243-5-5s2.243-5,5-5s5,2.243,5,5S11.757,14,9,14z"/></svg></i>`,
+		<i tabindex="0" class="icon search icon-search-action" title="Go to"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.023,16.977c-0.513-0.488-1.004-0.997-1.367-1.384c-0.372-0.378-0.596-0.653-0.596-0.653l-2.8-1.337 C15.34,12.37,16,10.763,16,9c0-3.859-3.14-7-7-7S2,5.141,2,9s3.14,7,7,7c1.763,0,3.37-0.66,4.603-1.739l1.337,2.8 c0,0,0.275,0.224,0.653,0.596c0.387,0.363,0.896,0.854,1.384,1.367c0.494,0.506,0.988,1.012,1.358,1.392 c0.362,0.388,0.604,0.646,0.604,0.646l2.121-2.121c0,0-0.258-0.242-0.646-0.604C20.035,17.965,19.529,17.471,19.023,16.977z M9,14 c-2.757,0-5-2.243-5-5s2.243-5,5-5s5,2.243,5,5S11.757,14,9,14z"/></svg></i>`,
     header_caption: '<div class="caption grow">{caption}</div>',
     header_caption_link: '<a data-href="{link}" tabindex="0" class="caption grow">{caption}</a>',
     icon_link: '<a tabindex="0" class="{action}-action{addon}" title="{caption}">{icon}</a>',
@@ -775,14 +775,14 @@ var ltmp_en_arr = {
 
     user_actions_open: '<div class="user-actions" data-user="{user}">',
     user_actions_close: '</div>',
-    subscribe_link: '<a tabindex="0" class="subscribe-action" title="Подписаться на пользователя">{icon}</a>',
-    subscribed_link: '<a tabindex="0" class="subscribed-action positive" title="Вы подписаны на пользователя">{icon}</a>',
-    unsubscribe_link: '<a tabindex="0" class="unsubscribe-action" title="Отписаться от пользователя">{icon}</a>',
-    ignore_link: '<a tabindex="0" class="ignore-action" title="Игнорировать пользователя">{icon}</a>',
-    ignored_link: '<a tabindex="0" class="ignored-action negative" title="Вы игнорируете пользователя">{icon}</a>',
-    unignore_link: '<a tabindex="0" class="unignore-action" title="Прекратить игнорировать пользователя">{icon}</a>',
-    edit_profile_link: '<a tabindex="0" data-href="dapp:account/profile" title="Изменить профиль">{icon_edit_profile}</a>',
-    edit_profile_saved: 'Профиль сохранен',
+    subscribe_link: '<a tabindex="0" class="subscribe-action" title="Subscribe to this user">{icon}</a>',
+    subscribed_link: '<a tabindex="0" class="subscribed-action positive" title="You are subscribed to this user">{icon}</a>',
+    unsubscribe_link: '<a tabindex="0" class="unsubscribe-action" title="Unsubscribe from user">{icon}</a>',
+    ignore_link: '<a tabindex="0" class="ignore-action" title="Ignore user">{icon}</a>',
+    ignored_link: '<a tabindex="0" class="ignored-action negative" title="You are ignoring this user">{icon}</a>',
+    unignore_link: '<a tabindex="0" class="unignore-action" title="Stop ignoring this user">{icon}</a>',
+    edit_profile_link: '<a tabindex="0" data-href="dapp:account/profile" title="Edit Profile">{icon_edit_profile}</a>',
+    edit_profile_saved: 'Profile saved',
     profile_default_avatar: 'data:image/png;base64,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',//default.png
     new_object_link: '<a tabindex="0" data-href="dapp:publish" title="Post">{icon_new_object}</a>',
 
@@ -842,18 +842,18 @@ var ltmp_en_arr = {
 			</div>
 		</div>`,
     object_type_text_actions: `
-	<a tabindex="0" class="reply-action" title="Комментировать">{icon_reply}</a>
-	<a tabindex="0" class="share-action" title="Поделиться">{icon_share}</a>
-	<a tabindex="0" class="award-action" title="Наградить">{icon_award}</a>
-	<a tabindex="0" class="copy-link-action" title="Копировать ссылку">{icon_copy_link}</a>`,
+	<a tabindex="0" class="reply-action" title="Comment">{icon_reply}</a>
+	<a tabindex="0" class="share-action" title="Share">{icon_share}</a>
+	<a tabindex="0" class="award-action" title="Award">{icon_award}</a>
+	<a tabindex="0" class="copy-link-action" title="Copy link">{icon_copy_link}</a>`,
     object_type_text_pinned: `<div class="object type-text-loading pinned-object" data-link="{link}">{context}</div>`,
     object_type_text_pinned_caption: `
-	<div class="share-view">{icon} Закрепленная запись</div>
+	<div class="share-view">{icon} Pinned post</div>
 	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
     object_type_text_loading: `<div class="object type-text-loading" data-account="{account}" data-block="{block}" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">{context}</div>`,
     object_type_text_wait_loading: `<div class="object type-text-wait-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
     object_type_text_share: `
-	<div class="share-view"><a tabindex="0" data-href="{link}">{caption}</a> поделился:{comment}</div>
+	<div class="share-view"><a tabindex="0" data-href="{link}">{caption}</a> shared:{comment}</div>
 	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
     object_type_text_share_comment: ` <div class="comment-view">{comment}</div>`,
     object_type_text_preview: `
@@ -897,10 +897,10 @@ var ltmp_en_arr = {
 		<div class="nested-replies"></div>
 		</div>
 		`,
-    object_type_text_reply_nested_count: '<a tabindex="0" class="load-nested-replies-action"><div class="branch-more">&bull;</div>Количество ответов: <span class="nested-replies-count">{count}</span></a>',
+    object_type_text_reply_nested_count: '<a tabindex="0" class="load-nested-replies-action"><div class="branch-more">&bull;</div>Number of responses: <span class="nested-replies-count">{count}</span></a>',
     object_type_text_reply_branch_line: '<div class="branch-line"></div>',
-    object_type_text_reply_internal: '<div class="reply-view">В ответ <a tabindex="0" data-href="{link}">{caption}</a></div>',
-    object_type_text_reply_external: '<div class="reply-view">Ответ на <a tabindex="0" href="{link}" target="_blank">{caption}</a></div>',
+    object_type_text_reply_internal: '<div class="reply-view">Replying to <a tabindex="0" data-href="{link}">{caption}</a></div>',
+    object_type_text_reply_external: '<div class="reply-view">Reply to <a tabindex="0" href="{link}" target="_blank">{caption}</a></div>',
 
     new_objects: '<a class="new-objects load-new-objects-action" data-items="0">&hellip;</a>',
     feed_new_objects: 'Show new updates: {items}',
@@ -948,7 +948,7 @@ var ltmp_en_arr = {
     },
 
     fast_publish: `
-	<div class="fast-publish-wrapper" data-reply="{reply}" data-share="{share}" tabindex="0" title="Форма быстрой публикации">
+	<div class="fast-publish-wrapper" data-reply="{reply}" data-share="{share}" tabindex="0" title="Fast publication form">
 		<div class="avatar" alt=""><img src="{avatar}"></div>
 		<div class="placeholder">{placeholder}</div>
 		<div class="text" data-placeholder="true" contenteditable="true"></div>
