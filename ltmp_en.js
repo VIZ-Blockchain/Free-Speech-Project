@@ -1,11 +1,16 @@
 var ltmp_en_arr = {
+	reg_service_domain: `start.viz.plus`,
+	reg_service_link: `https://start.viz.plus/`,
+	reg_service_caption: `Sign Up`,
+	left_addon_reg_button: '<div taborder="0" class="reg-button">%%reg_service_caption%%</div>',
+
     preset_view_account: `
 	<div class="object type-text">
 		<div class="object-column">
 			<div class="content-view" data-tab="credentials">
 				<p>VIZ account:</p>
 				<p><input type="text" name="viz_account" value=""></p>
-				<div class="input-addon">(registration via <a href="https://start.viz.plus/" target="_blank">start.viz.plus</a>)</div>
+				<div class="input-addon">(registration via <a href="%%reg_service_link%%" target="_blank">%%reg_service_domain%%</a>)</div>
 				<p>Private regular key:</p>
 				<p><input type="password" name="viz_regular_key" value=""></p>
 				<div class="input-addon">(regular private key)</div>
@@ -322,7 +327,7 @@ var ltmp_en_arr = {
 		`},
         viz: {
             title: 'VIZ', html: `
-			<p>Blockchain VIZ is a social platform based on distributed ledger technology (DLT). It is what this application runs on, so you need a VIZ account and a regular private key (account can be registered through the service <a href="https://start.viz.plus/" target="_blank">start.viz.plus</a>).</p>
+			<p>Blockchain VIZ is a social platform based on distributed ledger technology (DLT). It is what this application runs on, so you need a VIZ account and a regular private key (account can be registered through the service <a href="%%reg_service_link%%" target="_blank">%%reg_service_domain%%</a>).</p>
 			<p>VIZ is fast (the block is generated every 3 seconds), is managed through the DAO (witness selection, committee voting, competition for the reward fund), and provides unique features such as:
 			<ul>
 			<li>Unified namespace for accounts</li>

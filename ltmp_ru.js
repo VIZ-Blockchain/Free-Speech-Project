@@ -1,11 +1,16 @@
 var ltmp_ru_arr = {
+	reg_service_domain: `start.viz.plus`,
+	reg_service_link: `https://start.viz.plus/`,
+	reg_service_caption: `Регистрация`,
+	left_addon_reg_button: '<div taborder="0" class="reg-button">%%reg_service_caption%%</div>',
+
 	preset_view_account: `
 	<div class="object type-text">
 		<div class="object-column">
 			<div class="content-view" data-tab="credentials">
 				<p>Аккаунт в VIZ:</p>
 				<p><input type="text" name="viz_account" value=""></p>
-				<div class="input-addon">(регистрация через <a href="https://start.viz.plus/" target="_blank">start.viz.plus</a>)</div>
+				<div class="input-addon">(регистрация через <a href="%%reg_service_link%%" target="_blank">%%reg_service_domain%%</a>)</div>
 				<p>Приватный обычный ключ:</p>
 				<p><input type="password" name="viz_regular_key" value=""></p>
 				<div class="input-addon">(regular private key)</div>
@@ -322,7 +327,7 @@ var ltmp_ru_arr = {
 		`},
 		viz: {
 			title: 'VIZ', html: `
-			<p>Блокчейн Виз (VIZ) это социальная платформа работающая на технологии распределенного реестра (DLT). Именно на нем и работает данное приложение, поэтому вам нужен аккаунт в Виз и регулярный приватный ключ (аккаунт можно зарегистрировать через сервис <a href="https://start.viz.plus/" target="_blank">start.viz.plus</a>).</p>
+			<p>Блокчейн Виз (VIZ) это социальная платформа работающая на технологии распределенного реестра (DLT). Именно на нем и работает данное приложение, поэтому вам нужен аккаунт в Виз и регулярный приватный ключ (аккаунт можно зарегистрировать через сервис <a href="%%reg_service_link%%" target="_blank">%%reg_service_domain%%</a>).</p>
 			<p>Виз быстрый (блок генерируется каждые 3 секунды), управляется через ДАО (выбор делегатов, голосование в комитете, конкуренция за фонд наград) и предоставляет уникальные возможности, такие как:
 			<ul>
 			<li>Единое пространство имен учетных записей</li>

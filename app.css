@@ -286,7 +286,7 @@ div.menu{
 body.publication-mode div.menu{
 	display:none;
 }
-div.menu a,.header a,.actions-view a,.tabs a,.contacts a,.fast-publish-action,.footer a,.publish-button{
+div.menu a,.header a,.actions-view a,.tabs a,.contacts a,.fast-publish-action,.footer a,.publish-button,.reg-button{
 	-webkit-touch-callout:none;
 	-webkit-user-select:none;
 	-khtml-user-select:none;
@@ -300,6 +300,7 @@ div.menu .toggle-menu{
 	display:none;
 }
 div.menu .session{
+	padding-top:5px;
 	line-height:55px;
 	height:55px;
 }
@@ -385,7 +386,7 @@ div.menu .primary a i.icon svg{
 	margin:0;
 	margin-top:4px;
 }
-div.publish-button{
+div.publish-button,div.reg-button{
 	display:block;
 	cursor:pointer;
 	background:#1c98e5;
@@ -435,7 +436,7 @@ div.publish-button i.icon{
 div.publish-button span{
 	display:inline-block;
 }
-div.publish-button:hover{
+div.publish-button:hover,div.reg-button:hover{
 	background:#1a83c4;
 }
 div.menu.short div.publish-button{
@@ -468,7 +469,7 @@ div.menu.short .primary a span{
 	display:none;
 }
 div.menu.short .session .avatar{
-	margin-right:0;
+	margin-right:5px;
 }
 
 div.menu.short .primary{
@@ -2560,6 +2561,9 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 	body{
 		font-size:18px;
 	}
+	.menu-notice{
+		max-width:none;
+	}
 	.content{
 		width:100vw;
 		min-width:auto;
@@ -2643,6 +2647,7 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 	div.menu .session{
 		height:auto;
 		text-align:center;
+		padding-top:10px;
 		padding-bottom:10px;
 		border-bottom:10px solid rgba(204, 204, 221, 0.5);
 	}

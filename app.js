@@ -1453,6 +1453,8 @@ function render_menu(){
 		primary_menu+=ltmp_arr.menu_primary_pinned_tags;
 	}
 	else{
+		primary_menu+=ltmp(ltmp_arr.left_addon_reg_button);
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:manual',class:(path=='dapp:manual'?'current adaptive-show-inline':'adaptive-show-inline'),icon:ltmp_arr.icon_question,caption:ltmp_arr.menu_manual});
 		primary_menu+=ltmp(ltmp_arr.dapp_notice);
 	}
 	$('div.menu .primary').html(primary_menu);
@@ -3868,6 +3870,11 @@ function app_mouse(e){
 	}
 	else{//not editor buttons
 		if(!ignore){
+			if($(target).hasClass('reg-button')){
+				e.preventDefault();
+				Object.assign(document.createElement('a'),{target:'_blank',href:ltmp_arr.reg_service_link}).click();
+				return;
+			}
 			//add header link element input behaviour to select all text on first focus
 			if($(target).hasClass('header-link')){
 				if(!$(target).hasClass('focused')){
