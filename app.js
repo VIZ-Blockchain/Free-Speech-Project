@@ -1454,8 +1454,8 @@ function render_menu(){
 	}
 	else{
 		primary_menu+=ltmp(ltmp_arr.left_addon_reg_button);
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:manual',class:(path=='dapp:manual'?'current adaptive-show-inline':'adaptive-show-inline'),icon:ltmp_arr.icon_question,caption:ltmp_arr.menu_manual});
 		primary_menu+=ltmp(ltmp_arr.dapp_notice);
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:manual',class:(path=='dapp:manual'?'current':''),icon:ltmp_arr.icon_question,caption:ltmp_arr.menu_manual});
 	}
 	$('div.menu .primary').html(primary_menu);
 	let toggle_menu=ltmp(ltmp_arr.toggle_menu_icon,{title:ltmp_arr.toggle_menu_title,icon:('full'==menu_status?ltmp_arr.icon_menu_collapse:ltmp_arr.icon_menu_expand)});
