@@ -4907,7 +4907,17 @@ function app_mouse(e){
 						placeholder:ltmp_arr.fast_publish_reply,
 						button:ltmp_arr.fast_publish_button,
 					}));
-					$('.fast-publish-wrapper[data-reply="'+link+'"] .text')[0].focus();
+					let note_el_path='.fast-publish-wrapper[data-reply="'+link+'"] .text';
+					$(note_el_path)[0].focus();
+					note_load(note_el_path,false);
+					if(0==notes_save_draft_timer){
+						notes_save_draft_timer_stop=false;
+						note_save_draft(note_el_path,false,true);
+					}
+					else{
+						notes_save_draft_timer_stop=true;
+						notes_save_draft_timer_next={el_path:note_el_path,textarea:false,auto:true};
+					}
 				}
 				//view_path('dapp:publish/reply/?'+link,{},true,false);
 			}
@@ -4932,7 +4942,17 @@ function app_mouse(e){
 						placeholder:ltmp_arr.fast_publish_share,
 						button:ltmp_arr.fast_publish_button,
 					}));
-					$('.fast-publish-wrapper[data-share="'+link+'"] .text')[0].focus();
+					let note_el_path='.fast-publish-wrapper[data-share="'+link+'"] .text';
+					$(note_el_path)[0].focus();
+					note_load(note_el_path,false);
+					if(0==notes_save_draft_timer){
+						notes_save_draft_timer_stop=false;
+						note_save_draft(note_el_path,false,true);
+					}
+					else{
+						notes_save_draft_timer_stop=true;
+						notes_save_draft_timer_next={el_path:note_el_path,textarea:false,auto:true};
+					}
 				}
 				//view_path('dapp:publish/share/?'+link,{},true,false);
 			}
@@ -7266,6 +7286,118 @@ function editor_clear_elements(parent,level){
 		editor_clear_elements(parent,level);
 	}
 }
+var notes_save_draft_timer=0;
+var notes_save_draft_timeout=1000;
+var notes_save_draft_timer_stop=false;
+var notes_save_draft_timer_clear={el_path:'',textarea:false,auto:false};
+var notes_save_draft_timer_next=notes_save_draft_timer_clear;
+var notes_obj=[];
+if(null!=localStorage.getItem(storage_prefix+'notes_draft')){
+	notes_obj=JSON.parse(localStorage.getItem(storage_prefix+'notes_draft'));
+	let notes_obj_clean_up_timeout=new Date().getTime()/1000|0;
+	notes_obj_clean_up_timeout-=604800;//7 days
+	let notes_obj_changed=false;
+	for(let i=notes_obj.length-1;i>=0;i--){
+		if(notes_obj[i].time<notes_obj_clean_up_timeout){
+			notes_obj.splice(i,1);
+			notes_obj_changed=true;
+		}
+	}
+	if(notes_obj_changed){
+		let notes_json=JSON.stringify(notes_obj);
+		localStorage.setItem(storage_prefix+'notes_draft',notes_json);
+	}
+}
+function note_load(el_path,textarea){
+	console.log('try note_load',el_path,textarea);
+	for(let i in notes_obj){
+		if(notes_obj[i].path==el_path){
+			console.log('>> find',notes_obj[i].text);
+			if(textarea){
+				$(el_path).val(notes_obj[i].text);
+				$(el_path).parent().find('.placeholder').css('display',(0===notes_obj[i].text.length)?'block':'none');
+			}
+			else{
+				$(el_path).html(notes_obj[i].text);
+				let text_html=notes_obj[i].text;
+				let text=fast_str_replace('<br>',"\n",text_html);
+				text=fast_str_replace('</div>',"\n",text);
+				text=text.replaceAll(/<(.[^>]*)>/gm,'');
+				$(el_path).parent().find('.placeholder').css('display',(0===text.length)?'block':'none');
+			}
+		}
+	}
+}
+function note_save_draft(el_path,textarea,auto){
+	let note_text='';
+	let note_clear=false;
+	if($(el_path).length>0){
+		if(textarea){
+			note_text=$(el_path).val();
+			if(0===note_text.length){
+				note_clear=true;
+			}
+		}
+		else{
+			note_text=$(el_path).html();
+			let text=fast_str_replace('<br>',"\n",note_text);
+			text=fast_str_replace('</div>',"\n",text);
+			text=text.replaceAll(/<(.[^>]*)>/gm,'');
+			if(0===text.length){
+				note_text='';
+				note_clear=true;
+			}
+		}
+		let note_obj={
+			path:el_path,
+			text:note_text,
+			time:new Date().getTime()/1000|0,//unixtime for clearup
+		};
+		//console.log('note_save_draft with',note_obj,textarea,auto);
+		let find_note=false;
+		for(let i in notes_obj){
+			if(notes_obj[i].path==el_path){
+				notes_obj[i]=note_obj;
+				find_note=true;
+				if(note_clear){
+					notes_obj.splice(i,1);
+				}
+				break;
+			}
+		}
+		if(!find_note){
+			if(!note_clear){
+				notes_obj.push(note_obj);
+			}
+		}
+		let notes_json=JSON.stringify(notes_obj);
+		localStorage.setItem(storage_prefix+'notes_draft',notes_json);
+		if(true===auto){
+			clearTimeout(notes_save_draft_timer);
+			notes_save_draft_timer=0;
+			//console.log('>> notes_save_draft_timer_stop=',notes_save_draft_timer_stop);
+			if(!notes_save_draft_timer_stop){
+				notes_save_draft_timer=setTimeout(note_save_draft,notes_save_draft_timeout,el_path,textarea,auto);
+			}
+			else{
+				//console.log('>>>> notes_save_draft_timer_next=',notes_save_draft_timer_next);
+				notes_save_draft_timer_stop=false;
+				if(''!=notes_save_draft_timer_next.el_path){
+					notes_save_draft_timer=setTimeout(note_save_draft,notes_save_draft_timeout,notes_save_draft_timer_next.el_path,notes_save_draft_timer_next.textarea,notes_save_draft_timer_next.auto);
+					notes_save_draft_timer_next=notes_save_draft_timer_clear;
+				}
+			}
+		}
+		else{
+			notes_save_draft_timer=0;
+		}
+	}
+	else{
+		notes_save_draft_timer_stop=false;
+		clearTimeout(notes_save_draft_timer);
+		notes_save_draft_timer=0;
+	}
+}
 var editor_save_draft_timer=0;
 function editor_save_draft(){
 	let article_obj={
@@ -7786,6 +7918,11 @@ function view_publish(view,path_parts,query,title){
 	view.find('.error').html('');
 	view.find('.success').html('');
 
+	//prevent clear note draft when go to extended editor
+	notes_save_draft_timer_stop=false;
+	clearTimeout(notes_save_draft_timer);
+	notes_save_draft_timer=0;
+
 	view.find('input').val('');
 	view.find('textarea').val('');
 
@@ -7834,6 +7971,18 @@ function view_publish(view,path_parts,query,title){
 		document.removeEventListener('selectionchange',editor_selection);
 		document.addEventListener('selectionchange',editor_selection);
 		editor_change();
+	}
+	else{
+		let note_el_path='.view[data-path="dapp:publish"] .content-view[data-type="simple"] textarea';
+		note_load(note_el_path,true);
+		if(0==notes_save_draft_timer){
+			notes_save_draft_timer_stop=false;
+			note_save_draft(note_el_path,true,true);
+		}
+		else{
+			notes_save_draft_timer_stop=true;
+			notes_save_draft_timer_next={el_path:note_el_path,textarea:true,auto:true};
+		}
 	}
 
 	view.find('.text-addon').css('display','none');
@@ -8855,6 +9004,31 @@ function app_keyboard_down(e){
 		if($(document.activeElement).data('placeholder')){
 			$(document.activeElement).parent().find('.placeholder').css('display','none');
 		}
+		if($(document.activeElement).parent().hasClass('fast-publish-wrapper')){
+			let fast_publish_wrapper=$(document.activeElement).parent();
+			let data_key='';
+			let link='';
+			if(''!=fast_publish_wrapper.data('reply')){
+				data_key='reply';
+				link=fast_publish_wrapper.data('reply');
+			}
+			if(''!=fast_publish_wrapper.data('share')){
+				data_key='share';
+				link=fast_publish_wrapper.data('share');
+			}
+			let note_el_path='.fast-publish-wrapper[data-'+data_key+'="'+link+'"] .text';
+			if(''==link){
+				note_el_path='.view[data-level="0"] .fast-publish-wrapper[data-reply=""][data-share=""] .text';
+			}
+			if(0==notes_save_draft_timer){
+				notes_save_draft_timer_stop=false;
+				note_save_draft(note_el_path,false,true);
+			}
+			else{
+				notes_save_draft_timer_stop=true;
+				notes_save_draft_timer_next={el_path:note_el_path,textarea:false,auto:true};
+			}
+		}
 	}
 	if($(document.activeElement).hasClass('audio-progress')){
 		let player=$(document.activeElement).closest('.audio-player');
@@ -8974,6 +9148,7 @@ var mobile_hide_menu_timer=0;
 function view_path(location,state,save_state,update){
 	$('body').removeClass('publication-mode');
 	$('.footer').removeClass('hidden');
+	notes_save_draft_timer_stop=true;
 	if('dapp:publish/'==path){//exit from publish view
 		$('.footer').addClass('hidden');
 		if('article'==query){//exit from article mode
@@ -9081,6 +9256,18 @@ function view_path(location,state,save_state,update){
 					placeholder:ltmp_arr.fast_publish_feed,
 					button:ltmp_arr.fast_publish_button,
 				}));
+			}
+		}
+		if(0<view.find('.fast-publish-wrapper').length){
+			let note_el_path='.view[data-level="0"] .fast-publish-wrapper[data-reply=""][data-share=""] .text';
+			note_load(note_el_path,false);
+			if(0==notes_save_draft_timer){
+				notes_save_draft_timer_stop=false;
+				note_save_draft(note_el_path,false,true);
+			}
+			else{
+				notes_save_draft_timer_stop=true;
+				notes_save_draft_timer_next={el_path:note_el_path,textarea:false,auto:true};
 			}
 		}
 		let clear=view.data('clear');
