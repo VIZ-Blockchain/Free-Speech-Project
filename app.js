@@ -9252,6 +9252,7 @@ function view_path(location,state,save_state,update){
 			if(''!=current_user){
 				view.find('.objects').before(ltmp(ltmp_arr.fast_publish,{
 					avatar:safe_avatar(user_profile.avatar),
+					avatar_addon:ltmp(ltmp_arr.fast_publish_avatar_addon,{account:current_user}),
 					attach:ltmp_arr.icon_attach,
 					placeholder:ltmp_arr.fast_publish_feed,
 					button:ltmp_arr.fast_publish_button,

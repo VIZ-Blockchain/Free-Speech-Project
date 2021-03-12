@@ -961,7 +961,7 @@ var ltmp_ru_arr = {
 
 	fast_publish: `
 	<div class="fast-publish-wrapper" data-reply="{reply}" data-share="{share}" tabindex="0" title="Форма быстрой публикации">
-		<div class="avatar" alt=""><img src="{avatar}"></div>
+		<div class="avatar" alt=""{avatar_addon}><img src="{avatar}"></div>
 		<div class="placeholder">{placeholder}</div>
 		<div class="text" data-placeholder="true" contenteditable="true"></div>
 		<div class="buttons">
@@ -969,6 +969,7 @@ var ltmp_ru_arr = {
 			<div tabindex="0" class="button fast-publish-action" title="Опубликовать">{button}</div>
 		</div>
 	</div>`,
+	fast_publish_avatar_addon:' data-href="viz://@{account}/" tabindex="0" title="Перейти в профиль"',
 	fast_publish_feed: `Что нового?`,
 	fast_publish_reply: `Написать в ответ`,
 	fast_publish_share: `Добавить комментарий`,

@@ -1137,6 +1137,14 @@ body.dark .share-view a{
 	position:absolute;
 	left:15px;
 	margin-top:10px;
+	outline:none;
+}
+.fast-publish-wrapper .avatar[data-href]{
+	cursor:pointer;
+	pointer-events:all;
+}
+.fast-publish-wrapper .avatar[data-href] img{
+	pointer-events:none;
 }
 .fast-publish-wrapper .buttons{
 	position:absolute;
