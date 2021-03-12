@@ -156,6 +156,7 @@ div.icon-counter{
 	margin-top:4px;
 	display:none;
 	border-bottom:0;
+	pointer-events:none;
 }
 .footer div.icon-counter{
 	margin-left:-18px;
