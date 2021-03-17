@@ -2430,7 +2430,7 @@ body.dark .article a{
 }
 [contenteditable]{
 	-webkit-user-select:auto;
-	user-select:all;
+	user-select:auto;
 }
 
 .nsfw-content{

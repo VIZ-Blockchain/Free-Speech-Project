@@ -7329,6 +7329,7 @@ function note_load(el_path,textarea){
 	}
 }
 function note_save_draft(el_path,textarea,auto){
+	//console.log('! note_save_draft',el_path,textarea,auto);
 	let note_text='';
 	let note_clear=false;
 	if($(el_path).length>0){
@@ -9000,6 +9001,7 @@ function app_keyboard_down(e){
 	if(!e)e=window.event;
 	var key=(e.charCode)?e.charCode:((e.keyCode)?e.keyCode:((e.which)?e.which:0));
 	let char=String.fromCharCode(key);
+	//console.log('! app_keyboard_down',key,char,document.activeElement);
 	if($(document.activeElement).hasClass('text')){
 		if($(document.activeElement).data('placeholder')){
 			$(document.activeElement).parent().find('.placeholder').css('display','none');
@@ -9037,7 +9039,7 @@ function app_keyboard_down(e){
 		let time=Math.ceil(audio.currentTime);
 		if(key==32){//space
 			e.preventDefault();
-			return;
+			return false;
 		}
 		if(key==37){//left arrow
 			e.preventDefault();
@@ -9045,7 +9047,7 @@ function app_keyboard_down(e){
 				audio_player_position=time;
 			}
 			audio_player_offset(audio,false);
-			return;
+			return false;
 		}
 		if(key==39){//right arrow
 			e.preventDefault();
@@ -9053,14 +9055,16 @@ function app_keyboard_down(e){
 				audio_player_position=time;
 			}
 			audio_player_offset(audio,true);
-			return;
+			return false;
 		}
 	}
+	return true;
 }
 function app_keyboard(e){
 	if(!e)e=window.event;
 	var key=(e.charCode)?e.charCode:((e.keyCode)?e.keyCode:((e.which)?e.which:0));
 	let char=String.fromCharCode(key);
+	//console.log('! app_keyboard',key,char,document.activeElement);
 	if($(document.activeElement).hasClass('text')){
 		if($(document.activeElement).data('placeholder')){
 			let text_html=$(document.activeElement).html();
@@ -9070,6 +9074,7 @@ function app_keyboard(e){
 			$(document.activeElement).parent().find('.placeholder').css('display',(0===text.length)?'block':'none');
 		}
 	}
+	else
 	if($(document.activeElement).hasClass('audio-progress')){
 		let player=$(document.activeElement).closest('.audio-player');
 		let audio=player.find('.audio-source')[0];
@@ -9089,9 +9094,10 @@ function app_keyboard(e){
 			audio_player_set_offset(audio);
 		}
 	}
+	else
 	if(key==13){//enter
-		e.preventDefault();
 		if($(document.activeElement).hasClass('header-link')){
+			e.preventDefault();
 			let search=$(document.activeElement).val();
 			search=search.trim();
 			if(''!=search){
@@ -9108,21 +9114,21 @@ function app_keyboard(e){
 			else{
 				view_path('viz://',{},true,false);
 			}
+			return false;
 		}
 		else{
+			e.preventDefault();
 			document.activeElement.click();
+			return false;
 		}
 	}
+	else
 	if(key==32){//space
 		e.preventDefault();
 		document.activeElement.click();
+		return false;
 	}
-	//console.log(key,char);
-	/*
-	if(key==27){
-		e.preventDefault();
-	}
-	*/
+	return true;
 }
 
 function parse_fullpath(){
