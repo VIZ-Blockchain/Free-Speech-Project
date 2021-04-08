@@ -854,7 +854,7 @@ var ltmp_ru_arr = {
 			</div>
 		</div>`,
 	object_type_text_actions: `
-	<a tabindex="0" class="reply-action" title="Комментировать">{icon_reply}</a>
+	<a tabindex="0" class="reply-action" title="Комментировать">{icon_reply}<span class="replies-count"></span></a>
 	<a tabindex="0" class="share-action" title="Поделиться">{icon_share}</a>
 	<a tabindex="0" class="award-action" title="Наградить">{icon_award}</a>
 	<a tabindex="0" class="copy-link-action" title="Копировать ссылку">{icon_copy_link}</a>`,

@@ -1190,6 +1190,45 @@ function idb_get_id(container,index,search,callback){
 	}
 }
 
+function idb_get_count(container,index,search,filter,callback){
+	let count=0;
+	let t,q,req;
+	if(db.objectStoreNames.contains(container)){
+		t=db.transaction([container],'readonly');
+		q=t.objectStore(container);
+		if(false!==index){
+			req=q.index(index).openCursor(IDBKeyRange.only(search),'next');
+		}
+		else{
+			req=q.openCursor(IDBKeyRange.only(search),'next');
+		}
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				let find_filter=true;
+				if(false!==filter){
+					find_filter=false;
+					for(let filter_i in filter){
+						if(cur.value[filter_i]==filter[filter_i]){
+							find_filter=true;
+						}
+					}
+				}
+				if(find_filter){
+					count++;
+				}
+				cur.continue();
+			}
+			else{
+				callback(count);
+			}
+		}
+	}
+	else{
+		callback(count);
+	}
+}
+
 function idb_get_id_filter(container,index,search,filter,callback){
 	let find=false;
 	let t,q,req;
@@ -1426,6 +1465,7 @@ else{
 			let try_lang=langs_arr[window.navigator.languages[i]];
 			if(typeof available_langs[try_lang] !== 'undefined'){
 				selected_lang=langs_arr[try_lang];
+				break;
 			}
 		}
 	}
@@ -10933,6 +10973,22 @@ function render_object(user,object,type,preset_level){
 				});
 			}
 		}
+		let current_link='viz://@'+user.account+'/'+object.block+'/';
+		idb_get_count('replies','parent',[user.account,parseInt(object.block)],false,function(replies_count){
+			if(99<replies_count){
+				replies_count='99+';
+			}
+			if(0==replies_count){
+				replies_count='';
+			}
+			let view=$('.view[data-level="'+level+'"]');
+			if(-1==path.indexOf('viz://')){//look in services views
+				let path_parts=path.split('/');
+				view=$('.view[data-path="'+path_parts[0]+'"]');
+			}
+			let object_view=view.find('.objects .object[data-link="'+current_link+'"]');
+			object_view.find('.replies-count').html(replies_count);
+		});
 	},100);
 
 	return render;

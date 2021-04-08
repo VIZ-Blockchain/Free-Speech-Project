@@ -854,7 +854,7 @@ var ltmp_en_arr = {
 			</div>
 		</div>`,
     object_type_text_actions: `
-	<a tabindex="0" class="reply-action" title="Comment">{icon_reply}</a>
+	<a tabindex="0" class="reply-action" title="Comment">{icon_reply}<span class="replies-count"></span></a>
 	<a tabindex="0" class="share-action" title="Share">{icon_share}</a>
 	<a tabindex="0" class="award-action" title="Award">{icon_award}</a>
 	<a tabindex="0" class="copy-link-action" title="Copy link">{icon_copy_link}</a>`,
