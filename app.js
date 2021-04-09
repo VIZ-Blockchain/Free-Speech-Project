@@ -33,6 +33,7 @@ if(null!=localStorage.getItem(storage_prefix+'sync_cloud_update')){
 		localStorage.removeItem(storage_prefix+'sync_cloud_update');
 	}
 }
+var preview_url='https://readdle.me/preview/';
 
 var install_event;
 window.addEventListener('beforeinstallprompt',(e)=>{
@@ -63,16 +64,111 @@ function auth_signature_check(hex){
 	return false;
 }
 
-function paswordless_auth(account,regular_key){
-	var nonce=0;
-	var data='';
-	var signature='';
-	while(!auth_signature_check(signature)){
-		data=auth_signature_data(sync_cloud_domain,'auth',account,'regular',nonce);
-		signature=viz.auth.signature.sign(data,regular_key).toHex();
-		nonce++;
+let passwordless_auth_sessions=[];
+function passwordless_auth(account,regular_key,ignore_session){
+	ignore_session=typeof ignore_session==='undefined'?false:ignore_session;
+	let unixtime=new Date().getTime() / 1000 | 0;//unixtime
+	let session=false;
+	if(!ignore_session){
+		for(let i in passwordless_auth_sessions){
+			if(passwordless_auth_sessions[i]['account']==account){
+				if(passwordless_auth_sessions[i]['expire']>unixtime){
+					session=passwordless_auth_sessions[i]['session'];
+				}
+				else{//clear expired sessions
+					passwordless_auth_sessions.splice(i,1);
+				}
+			}
+		}
 	}
-	return {data,signature};
+	if(false===session){
+		var nonce=0;
+		var data='';
+		var signature='';
+		while(!auth_signature_check(signature)){
+			data=auth_signature_data(sync_cloud_domain,'auth',account,'regular',nonce);
+			signature=viz.auth.signature.sign(data,regular_key).toHex();
+			nonce++;
+		}
+
+		clearTimeout(passwordless_auth_session_update_timer);
+		passwordless_auth_session_update_timer=setTimeout(function(){
+			passwordless_auth_session_update();
+		},100);
+
+		return {data,signature};
+	}
+	else{
+		return {session};
+	}
+}
+
+var passwordless_auth_session_update_interval=10*60*1000-10;//10min-10sec
+var passwordless_auth_session_update_timer=0;
+function passwordless_auth_session_update(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	if(''==current_user){
+		return;
+	}
+	if(typeof users[current_user] === 'undefined'){
+		return;
+	}
+	if(typeof users[current_user].regular_key === 'undefined'){
+		return;
+	}
+	if(false===sync_cloud_domain){
+		return;
+	}
+	let xhr = new XMLHttpRequest();
+	xhr.timeout=5000;
+	xhr.overrideMimeType('text/plain');
+	xhr.open('POST',sync_cloud_url);
+	xhr.setRequestHeader('accept','application/json, text/plain, */*');
+	xhr.setRequestHeader('content-type','application/json');
+	xhr.ontimeout = function() {
+		console.log('passwordless_auth_session_update timeout',sync_cloud_url);
+	};
+	xhr.onreadystatechange = function() {
+		if(4==xhr.readyState && 200==xhr.status){
+			try{
+				let json=JSON.parse(xhr.response);
+				//console.log('passwordless_auth_session_update response',json);
+				if(typeof json.session !== 'undefined'){
+					if(typeof json.expire !== 'undefined'){
+						for(let i in passwordless_auth_sessions){//clear old sessions
+							if(passwordless_auth_sessions[i]['account']==current_user){
+								passwordless_auth_sessions.splice(i,1);
+							}
+						}
+						passwordless_auth_sessions.push({account:current_user,session:json.session,expire:json.expire})
+					}
+				}
+				clearTimeout(passwordless_auth_session_update_timer);
+				passwordless_auth_session_update_timer=setTimeout(function(){
+					passwordless_auth_session_update();
+				},passwordless_auth_session_update_interval);
+
+				callback(json.session);
+			}
+			catch(e){
+				console.log('passwordless_auth_session_update response json error',xhr.response,e);
+				callback(false);
+			}
+		}
+		if(4==xhr.readyState && 200!=xhr.status){
+			callback(false);
+		}
+	};
+	let auth_data=passwordless_auth(current_user,users[current_user].regular_key,true);
+	auth_data.action='session';
+	xhr.send(JSON.stringify(auth_data));
+
+	clearTimeout(passwordless_auth_session_update_timer);
+	passwordless_auth_session_update_timer=setTimeout(function(){
+		passwordless_auth_session_update();
+	},passwordless_auth_session_update_interval);
 }
 
 var check_sync_cloud_activity_interval=5*60*1000;
@@ -130,7 +226,7 @@ function check_sync_cloud_activity(callback){
 			callback(false);
 		}
 	};
-	let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
+	let auth_data=passwordless_auth(current_user,users[current_user].regular_key);
 	auth_data.action='activity';
 	xhr.send(JSON.stringify(auth_data));
 
@@ -317,7 +413,7 @@ function load_sync_cloud_get_updates(){
 				load_sync_cloud_update_busy=false;
 			}
 		};
-		let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
+		let auth_data=passwordless_auth(current_user,users[current_user].regular_key);
 		auth_data.action='get_updates';
 		auth_data.activity=sync_cloud_activity;
 		auth_data.update=sync_cloud_update;
@@ -376,7 +472,7 @@ function sync_cloud_put_update(type_str,value,callback){
 				callback(false);
 			}
 		};
-		let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
+		let auth_data=passwordless_auth(current_user,users[current_user].regular_key);
 		auth_data.action='put_update';
 		auth_data.type=types_arr[type_str];
 		auth_data.value=value;
@@ -1191,6 +1287,7 @@ function idb_get_id(container,index,search,callback){
 }
 
 function idb_get_count(container,index,search,filter,callback){
+	//console.log('idb_get_count',container,index,search,filter);
 	let count=0;
 	let t,q,req;
 	if(db.objectStoreNames.contains(container)){
@@ -1935,7 +2032,7 @@ function load_preview_data(link,callback){
 				let xhr = new XMLHttpRequest();
 				xhr.timeout=5000;
 				xhr.overrideMimeType('text/plain');
-				xhr.open('POST','https://readdle.me/preview/');
+				xhr.open('POST',preview_url);
 				xhr.setRequestHeader('accept','application/json, text/plain, */*');
 				xhr.setRequestHeader('content-type','application/json');
 				xhr.ontimeout = function() {
@@ -1974,7 +2071,7 @@ function load_preview_data(link,callback){
 						callback(false);
 					}
 				};
-				let auth_data=paswordless_auth(current_user,users[current_user].regular_key);
+				let auth_data=passwordless_auth(current_user,users[current_user].regular_key);
 				auth_data.link=link;
 				xhr.send(JSON.stringify(auth_data));
 			}
@@ -2288,14 +2385,28 @@ function fast_publish(publish_form){
 						console.log(result);
 						setTimeout(function(){
 							wait_publish(previous,function(object_block){
-								view_path('viz://@'+current_user+'/'+object_block+'/',{},true,false);
+								let note_el_path='.view[data-level="0"] .fast-publish-wrapper[data-reply=""][data-share=""] .text';
 								if(false!==action){
+									let data_key='';
+									let link='';
+									if(''!=publish_form.data('reply')){
+										data_key='reply';
+										link=publish_form.data('reply');
+									}
+									if(''!=publish_form.data('share')){
+										data_key='share';
+										link=publish_form.data('share');
+									}
+									note_el_path='.fast-publish-wrapper[data-'+data_key+'="'+link+'"] .text';
+
 									action.removeClass('success');
 									publish_form.remove();
 								}
 								else{
 									publish_form.find('.text').html('');
 								}
+								note_clear_draft(note_el_path);
+								view_path('viz://@'+current_user+'/'+object_block+'/',{},true,false);
 							});
 						},3000);
 					}
@@ -7368,6 +7479,21 @@ function note_load(el_path,textarea){
 		}
 	}
 }
+function note_clear_draft(el_path){
+	//console.log('note_clear_draft',el_path);
+	let find_note=false;
+	for(let i in notes_obj){
+		if(notes_obj[i].path==el_path){
+			find_note=true;
+			notes_obj.splice(i,1);
+			break;
+		}
+	}
+	if(find_note){
+		let notes_json=JSON.stringify(notes_obj);
+		localStorage.setItem(storage_prefix+'notes_draft',notes_json);
+	}
+}
 function note_save_draft(el_path,textarea,auto){
 	//console.log('! note_save_draft',el_path,textarea,auto);
 	let note_text='';
@@ -10973,22 +11099,24 @@ function render_object(user,object,type,preset_level){
 				});
 			}
 		}
-		let current_link='viz://@'+user.account+'/'+object.block+'/';
-		idb_get_count('replies','parent',[user.account,parseInt(object.block)],false,function(replies_count){
-			if(99<replies_count){
-				replies_count='99+';
-			}
-			if(0==replies_count){
-				replies_count='';
-			}
-			let view=$('.view[data-level="'+level+'"]');
-			if(-1==path.indexOf('viz://')){//look in services views
-				let path_parts=path.split('/');
-				view=$('.view[data-path="'+path_parts[0]+'"]');
-			}
-			let object_view=view.find('.objects .object[data-link="'+current_link+'"]');
-			object_view.find('.replies-count').html(replies_count);
-		});
+		if(typeof user.account !== 'undefined'){
+			let current_link='viz://@'+user.account+'/'+object.block+'/';
+			idb_get_count('replies','parent',[user.account,parseInt(object.block)],false,function(replies_count){
+				if(99<replies_count){
+					replies_count='99+';
+				}
+				if(0==replies_count){
+					replies_count='';
+				}
+				let view=$('.view[data-level="'+level+'"]');
+				if(-1==path.indexOf('viz://')){//look in services views
+					let path_parts=path.split('/');
+					view=$('.view[data-path="'+path_parts[0]+'"]');
+				}
+				let object_view=view.find('.objects .object[data-link="'+current_link+'"]');
+				object_view.find('.replies-count').html(replies_count);
+			});
+		}
 	},100);
 
 	return render;
