@@ -6,6 +6,9 @@ var pwa=false;
 if(window.matchMedia('(display-mode: standalone)').matches){
 	pwa=true;
 }
+if(window.matchMedia('(display-mode: fullscreen)').matches){
+	pwa=true;
+}
 
 var whitelabel_account='';//main whitelabel account to redirect
 var whitelabel_accounts=[whitelabel_account];//always subscribed to whitelabels accounts
@@ -5162,6 +5165,7 @@ function app_mouse(e){
 							share_account=share_account[0].substr(1);
 							share_block=parseInt(fast_str_replace('/','',share_block[1]));
 							get_object(share_account,share_block,function(err,object_result){
+								console.log(object_result.data.d);
 								let share_obj={
 									title:'@'+object_result.account+' on Readdle.Me',
 								};
@@ -5182,17 +5186,19 @@ function app_mouse(e){
 									}
 								}
 								if('publication'==object_type){
+									share_obj['title']=object_result.data.d.t;
+									share_obj['text']='';
+									share_obj['text']+=object_result.data.d.t;
 									if(typeof object_result.data.d.m !== 'undefined'){
-										share_obj['title']=object_result.data.d.t;
-										share_obj['text']='';
 										if(typeof object_result.data.d.d !== 'undefined'){
-											share_obj['text']=object_result.data.d.d;
 											share_obj['text']+="\n\n";
+											share_obj['text']+=object_result.data.d.d;
 										}
-										share_obj['text']+='@'+object_result.account+' on Readdle.Me';
 									}
 								}
+								share_obj['text']+="\n\n@"+object_result.account+' on Readdle.Me';
 								share_obj['text']+="\n\nURL: "+object_link;
+								console.log('share_obj:',share_obj);
 								navigator.share(share_obj)
 								.then(()=>{
 									$(target).addClass('success');
