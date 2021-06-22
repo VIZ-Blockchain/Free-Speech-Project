@@ -2,6 +2,10 @@ var app_version=1;
 var app_protocol='V';//V for Voice :)
 var storage_prefix='viz_voice_';
 var debug=false;
+var pwa=false;
+if(window.matchMedia('(display-mode: standalone)').matches){
+	pwa=true;
+}
 
 var whitelabel_account='';//main whitelabel account to redirect
 var whitelabel_accounts=[whitelabel_account];//always subscribed to whitelabels accounts
@@ -5144,18 +5148,77 @@ function app_mouse(e){
 				}
 			}
 			if($(target).hasClass('copy-link-action')){
-				let text=$(target).closest('.object').data('link');
+				let object_link=$(target).closest('.object').data('link');
 				if(false!==whitelabel_copy_link){
-					text=fast_str_replace('viz://',whitelabel_copy_link,text);
+					object_link=fast_str_replace('viz://',whitelabel_copy_link,object_link);
 				}
-				$('.text-copy').val(text);
-				$('.text-copy')[0].select();
-				$('.text-copy')[0].setSelectionRange(0,99999);
-				document.execCommand("copy");
-				$(target).addClass('success');
-				setTimeout(function(){
-					$(target).removeClass('success');
-				},3000);
+				if(pwa && navigator.share){
+					let pattern = /@[a-z0-9\-\.]*/g;
+					let share_account=object_link.match(pattern);
+					if(typeof share_account[0] != 'undefined'){
+						let pattern_block = /\/([0-9]*)\//g;
+						let share_block=object_link.match(pattern_block);
+						if(typeof share_block[1] != 'undefined'){
+							share_account=share_account[0].substr(1);
+							share_block=parseInt(fast_str_replace('/','',share_block[1]));
+							get_object(share_account,share_block,function(err,object_result){
+								let share_obj={
+									title:'@'+object_result.account+' on Readdle.Me',
+								};
+								let object_type='text';//by default
+								if(typeof object_result.data.t !== 'undefined'){
+									if(-1!=object_types_list.indexOf(object_result.data.t)){
+										if(typeof object_types_arr[object_result.data.t] !== 'undefined'){
+											object_type=object_types_arr[object_result.data.t];
+										}
+										else{
+											object_type=object_result.data.t;
+										}
+									}
+								}
+								if('text'==object_type){
+									if(typeof object_result.data.d.text !== 'undefined'){
+										share_obj['text']=object_result.data.d.text;
+									}
+								}
+								if('publication'==object_type){
+									if(typeof object_result.data.d.m !== 'undefined'){
+										share_obj['title']=object_result.data.d.t;
+										share_obj['text']='';
+										if(typeof object_result.data.d.d !== 'undefined'){
+											share_obj['text']=object_result.data.d.d;
+											share_obj['text']+="\n\n";
+										}
+										share_obj['text']+='@'+object_result.account+' on Readdle.Me';
+									}
+								}
+								share_obj['text']+="\n\nURL: "+object_link;
+								navigator.share(share_obj)
+								.then(()=>{
+									$(target).addClass('success');
+									setTimeout(function(){
+										$(target).removeClass('success');
+									},3000);
+								})
+								.catch((error)=>{
+									console.log('Error sharing',error,share_obj);
+								});
+							});
+						}
+					}
+				}
+				else{
+					$('.text-copy').css('top',$(target).offsetY+'px');
+					$('.text-copy').val(object_link);
+					$('.text-copy')[0].select();
+					$('.text-copy')[0].setSelectionRange(0,99999);
+					document.execCommand("copy");
+					$('.text-copy').css('top','-100px');
+					$(target).addClass('success');
+					setTimeout(function(){
+						$(target).removeClass('success');
+					},3000);
+				}
 			}
 			if($(target).hasClass('fast-publish-action')){
 				if(!$(target).hasClass('disabled')){
@@ -8814,13 +8877,6 @@ function view_app_settings(view,path_parts,query,title){
 
 		tab.find('input[name="energy"]').val(settings.energy/100);
 		$('input[name="silent_award"]').prop("checked",settings.silent_award);
-
-		if(typeof install_event !== 'undefined'){
-			tab.find('.install-action').css('display','block');
-		}
-		else{
-			tab.find('.install-action').css('display','none');
-		}
 	}
 	if('feed'==current_tab){
 		tab.find('.button').removeClass('disabled');

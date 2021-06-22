@@ -1765,6 +1765,9 @@ div.menu .secondary a{
 	display:block;
 	position:absolute;
 	top:-100px;
+	left:-1000px;
+	width:1px;
+	height:1px;
 	opacity:0;
 }
 
@@ -2523,6 +2526,12 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 	pointer-events:none;
 }
 
+@media (display-mode:standalone){
+	/* PWA only */
+	.install-action{
+		display:none;
+	}
+}
 @media only screen and (min-width:751px) and (max-width:1200px){
 	body{
 		font-size:16px;
