@@ -5208,7 +5208,8 @@ function app_mouse(e){
 					}
 				}
 				else{
-					$('.text-copy').css('top',$(target).offsetY+'px');
+					let target_offset=$(target)[0].getBoundingClientRect();
+					$('.text-copy').css('top',''+(window.scrollY+target_offset.top)+'px');
 					$('.text-copy').val(object_link);
 					$('.text-copy')[0].select();
 					$('.text-copy')[0].setSelectionRange(0,99999);
