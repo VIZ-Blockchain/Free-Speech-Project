@@ -1521,13 +1521,16 @@ body.dark .error{
 }
 .actions-view a{
 	flex-direction:column;
-	flex-basis:15%;
+	flex-basis:10%;
 	color:rgba(100,100,100,0.7);
 	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
 	-moz-transition:all 0.3s ease-out;  /* FF4+ */
 	-ms-transition:all 0.3s ease-out;  /* IE10 */
 	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
 	transition:all 0.3s ease-out;
+}
+.actions-view a:first-child{
+	flex-basis:25%;
 }
 .actions-view a:hover{
 	color:#1c98e5;
