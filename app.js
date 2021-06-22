@@ -5152,6 +5152,7 @@ function app_mouse(e){
 			}
 			if($(target).hasClass('copy-link-action')){
 				let original_object_link=$(target).closest('.object').data('link');
+				let object_link=original_object_link;
 				if(false!==whitelabel_copy_link){
 					object_link=fast_str_replace('viz://',whitelabel_copy_link,object_link);
 				}
