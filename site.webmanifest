@@ -4,6 +4,6 @@
 	"description": "The Free Speech Project is V (Voice) protocol runs on VIZ Blockchain.",
 	"start_url": "dapp.html",
 	"display": "standalone",
-	"theme_color": "#fff",
-	"background_color": "#fff"
+	"theme_color": "#efefef",
+	"background_color": "#ffffff"
 }

@@ -5151,21 +5151,20 @@ function app_mouse(e){
 				}
 			}
 			if($(target).hasClass('copy-link-action')){
-				let object_link=$(target).closest('.object').data('link');
+				let original_object_link=$(target).closest('.object').data('link');
 				if(false!==whitelabel_copy_link){
 					object_link=fast_str_replace('viz://',whitelabel_copy_link,object_link);
 				}
 				if(pwa && navigator.share){
 					let pattern = /@[a-z0-9\-\.]*/g;
-					let share_account=object_link.match(pattern);
+					let share_account=original_object_link.match(pattern);
 					if(typeof share_account[0] != 'undefined'){
 						let pattern_block = /\/([0-9]*)\//g;
-						let share_block=object_link.match(pattern_block);
+						let share_block=original_object_link.match(pattern_block);
 						if(typeof share_block[1] != 'undefined'){
 							share_account=share_account[0].substr(1);
 							share_block=parseInt(fast_str_replace('/','',share_block[1]));
 							get_object(share_account,share_block,function(err,object_result){
-								console.log(object_result.data.d);
 								let share_obj={
 									title:'@'+object_result.account+' on Readdle.Me',
 								};
@@ -9121,6 +9120,11 @@ function apply_theme_mode(){
 		$('body').addClass(settings.theme_night_mode);
 		$('.toggle-theme-icon').html(ltmp_arr.icon_theme_moon);
 	}
+	let theme_color=$('body').css('background-color');
+	if('light'==mode){
+		theme_color='#efefef';
+	}
+	document.querySelector('meta[name=theme-color]').setAttribute('content',theme_color);
 	clearTimeout(apply_theme_mode_timer);
 	apply_theme_mode_timer=setTimeout(function(){apply_theme_mode();},60000);
 }
