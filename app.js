@@ -43,10 +43,12 @@ window.addEventListener('beforeinstallprompt',(e)=>{
 		$('.install-notice').addClass('show');
 	}
 });
-if('serviceWorker' in navigator){
-	navigator.serviceWorker.register('/sw.js',{scope:'/',registrationStrategy:'registerImmediately'}).then(()=>{
-		console.log('Service Worker Registered');
-	});
+if('file://'!=document.location.origin){
+	if('serviceWorker' in navigator){
+		navigator.serviceWorker.register('/sw.js',{scope:'/',registrationStrategy:'registerImmediately'}).then(()=>{
+			console.log('Service Worker Registered');
+		});
+	}
 }
 
 function auth_signature_data(domain,action,account,authority,nonce){
@@ -1865,6 +1867,9 @@ function render_preview_data(account,block,obj){
 	if(typeof block == 'undefined'){
 		return;
 	}
+	if(typeof obj.meta == 'undefined'){
+		return;
+	}
 	let json=obj.meta;
 	if(false===json){
 		if(typeof obj.mime !== 'undefined'){
@@ -1948,12 +1953,17 @@ function render_preview_data(account,block,obj){
 	let image='';
 	let link='';
 	let image_part=false;
-	if(typeof json.image !== 'undefined'){
-		if(false!==json.image){
-			image_part=true;
+	let link_part=false;
+	if(typeof json !== 'undefined'){
+		if(typeof json.image !== 'undefined'){
+			if(false!==json.image){
+				image_part=true;
+			}
+		}
+		if(typeof json.title !== 'undefined'){
+			link_part=true;
 		}
 	}
-	let link_part=(typeof json.title !== 'undefined');
 	let link_image_addon=' style="flex-shrink:1;flex-direction:column;width:30%;"';
 	let link_addon=' style="flex-shrink:0;flex-grow:1;flex-direction:column;width:70%;"';
 	let wrapper_addon=' style="flex-direction:column;"';
@@ -4084,17 +4094,19 @@ function app_mouse(e){
 			if($(target).hasClass('install-action')){
 				e.preventDefault();
 				$('.install-notice').removeClass('show');
-				install_event.prompt();
-				install_event.userChoice.then((choice)=>{
-					if('accepted'===choice.outcome){
-						console.log('User accepted the A2HS prompt');
-						localStorage.setItem(storage_prefix+'install_close',1);
-					}else{
-						console.log('User dismissed the A2HS prompt');
-						localStorage.setItem(storage_prefix+'install_close',0);
-					}
-					install_event=null;
-				});
+				if(typeof install_event !== 'undefined'){
+					install_event.prompt();
+					install_event.userChoice.then((choice)=>{
+						if('accepted'===choice.outcome){
+							console.log('User accepted the A2HS prompt');
+							localStorage.setItem(storage_prefix+'install_close',1);
+						}else{
+							console.log('User dismissed the A2HS prompt');
+							localStorage.setItem(storage_prefix+'install_close',0);
+						}
+						install_event=null;
+					});
+				}
 				return;
 			}
 			if($(target).hasClass('scroll-top-action')){
@@ -8802,6 +8814,13 @@ function view_app_settings(view,path_parts,query,title){
 
 		tab.find('input[name="energy"]').val(settings.energy/100);
 		$('input[name="silent_award"]').prop("checked",settings.silent_award);
+
+		if(typeof install_event !== 'undefined'){
+			tab.find('.install-action').css('display','block');
+		}
+		else{
+			tab.find('.install-action').css('display','none');
+		}
 	}
 	if('feed'==current_tab){
 		tab.find('.button').removeClass('disabled');
@@ -10348,6 +10367,17 @@ function highlight_links(text,is_html){
 	if(null!=http_protocol_links){
 		for(let i in http_protocol_links){
 			summary_links[num]=http_protocol_links[i];
+			num++;
+		}
+	}
+
+	//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
+	//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
+	let magnet_protocol_pattern = /((magnet):[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;&]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
+	let magnet_protocol_links=text.match(magnet_protocol_pattern);
+	if(null!=magnet_protocol_links){
+		for(let i in magnet_protocol_links){
+			summary_links[num]=magnet_protocol_links[i];
 			num++;
 		}
 	}

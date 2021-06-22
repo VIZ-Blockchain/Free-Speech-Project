@@ -2487,7 +2487,7 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 .install-close-action i.icon:hover{
 	background:rgba(255,161,79,0.4);
 }
-.install-action{
+.install-notice .install-action{
 	border-bottom:1px dashed #e3792f;
 	padding:5px 10px;
 }
