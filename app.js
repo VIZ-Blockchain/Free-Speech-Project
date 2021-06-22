@@ -5166,9 +5166,7 @@ function app_mouse(e){
 							share_account=share_account[0].substr(1);
 							share_block=parseInt(fast_str_replace('/','',share_block[1]));
 							get_object(share_account,share_block,function(err,object_result){
-								let share_obj={
-									title:'@'+object_result.account+' on Readdle.Me',
-								};
+								let share_obj={};
 								let object_type='text';//by default
 								if(typeof object_result.data.t !== 'undefined'){
 									if(-1!=object_types_list.indexOf(object_result.data.t)){
@@ -5186,7 +5184,6 @@ function app_mouse(e){
 									}
 								}
 								if('publication'==object_type){
-									share_obj['title']=object_result.data.d.t;
 									share_obj['text']='';
 									share_obj['text']+=object_result.data.d.t;
 									if(typeof object_result.data.d.m !== 'undefined'){
@@ -5198,6 +5195,7 @@ function app_mouse(e){
 								}
 								share_obj['text']+="\n\n@"+object_result.account+' on Readdle.Me';
 								share_obj['text']+="\n\nURL: "+object_link;
+								share_obj['text']=share_obj['text'].trim();
 								console.log('share_obj:',share_obj);
 								navigator.share(share_obj)
 								.then(()=>{
