@@ -8168,6 +8168,7 @@ function view_publish(view,path_parts,query,title){
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.publish_caption});
 	header+=ltmp(ltmp_arr.header_icon_link,{action:'article-editor',caption:ltmp_arr.editor_caption,icon:ltmp_arr.icon_editor});
 	view.find('.header').html(header);
+	$('.footer').addClass('hidden');
 
 	view.find('.content-view[data-type="article"]').addClass('hidden');
 	view.find('.content-view[data-type="simple"]').css('display','block');
@@ -9420,7 +9421,7 @@ function view_path(location,state,save_state,update){
 	$('.footer').removeClass('hidden');
 	notes_save_draft_timer_stop=true;
 	if('dapp:publish/'==path){//exit from publish view
-		$('.footer').addClass('hidden');
+		$('.footer').removeClass('hidden');
 		if('article'==query){//exit from article mode
 			document.removeEventListener('selectionchange',editor_selection);
 		}
