@@ -1989,14 +1989,14 @@ function render_preview_data(account,block,obj){
 	if(link_part){
 		if(image_part){
 			if(!json.image.large){
-				link=ltmp(ltmp_arr.render_preview_link,{addon:link_addon,title:json.title,descr:json.description,source:ltmp_arr.icon_copy_link+json.source});
+				link=ltmp(ltmp_arr.render_preview_link,{addon:link_addon,title:json.title,descr:json.description,source:ltmp_arr.icon_link+json.source});
 			}
 			else{
-				link=ltmp(ltmp_arr.render_preview_link,{title:json.title,descr:json.description,source:ltmp_arr.icon_copy_link+json.source});
+				link=ltmp(ltmp_arr.render_preview_link,{title:json.title,descr:json.description,source:ltmp_arr.icon_link+json.source});
 			}
 		}
 		else{
-			link=ltmp(ltmp_arr.render_preview_link,{title:json.title,descr:json.description,source:ltmp_arr.icon_copy_link+json.source});
+			link=ltmp(ltmp_arr.render_preview_link,{title:json.title,descr:json.description,source:ltmp_arr.icon_link+json.source});
 		}
 	}
 	if(image_part){
@@ -5161,7 +5161,7 @@ function app_mouse(e){
 					}
 				}
 			}
-			if($(target).hasClass('copy-link-action')){
+			if($(target).hasClass('external-share-action')){
 				let original_object_link=$(target).closest('.object').data('link');
 				let object_link=original_object_link;
 				if(false!==whitelabel_copy_link){
@@ -10610,7 +10610,7 @@ function render_object(user,object,type,preset_level){
 					icon_reply:ltmp_arr.icon_reply,
 					icon_repost:ltmp_arr.icon_repost,
 					icon_award:ltmp_arr.icon_gem,
-					icon_copy_link:ltmp_arr.icon_copy_link,
+					icon_share:ltmp_arr.icon_share,
 				}),
 				timestamp:object.data.timestamp,
 				context:publication_html,
@@ -10698,7 +10698,7 @@ function render_object(user,object,type,preset_level){
 						icon_reply:ltmp_arr.icon_reply,
 						icon_repost:ltmp_arr.icon_repost,
 						icon_award:ltmp_arr.icon_gem,
-						icon_copy_link:ltmp_arr.icon_copy_link,
+						icon_share:ltmp_arr.icon_share,
 					}),
 					timestamp:object.data.timestamp,
 					context:image+link,
@@ -10755,7 +10755,7 @@ function render_object(user,object,type,preset_level){
 						icon_reply:ltmp_arr.icon_reply,
 						icon_repost:ltmp_arr.icon_repost,
 						icon_award:ltmp_arr.icon_gem,
-						icon_copy_link:ltmp_arr.icon_copy_link,
+						icon_share:ltmp_arr.icon_share,
 					}),
 					timestamp:object.data.timestamp,
 					class_addon:(1==object.nsfw?' nsfw-content':''),
@@ -10848,7 +10848,7 @@ function render_object(user,object,type,preset_level){
 						icon_reply:ltmp_arr.icon_reply,
 						icon_repost:ltmp_arr.icon_repost,
 						icon_award:ltmp_arr.icon_gem,
-						icon_copy_link:ltmp_arr.icon_copy_link,
+						icon_share:ltmp_arr.icon_share,
 					}),
 					timestamp:object.data.timestamp,
 					context:image+link,
@@ -10912,7 +10912,7 @@ function render_object(user,object,type,preset_level){
 						icon_reply:ltmp_arr.icon_reply,
 						icon_repost:ltmp_arr.icon_repost,
 						icon_award:ltmp_arr.icon_gem,
-						icon_copy_link:ltmp_arr.icon_copy_link,
+						icon_share:ltmp_arr.icon_share,
 					}),
 					timestamp:object.data.timestamp,
 					class_addon:(1==object.nsfw?' nsfw-content':''),
@@ -11041,7 +11041,7 @@ function render_object(user,object,type,preset_level){
 				icon_reply:ltmp_arr.icon_reply,
 				icon_repost:ltmp_arr.icon_repost,
 				icon_award:ltmp_arr.icon_gem,
-				icon_copy_link:ltmp_arr.icon_copy_link,
+				icon_share:ltmp_arr.icon_share,
 			}),
 			timestamp:object.data.timestamp,
 			class_addon:(1==object.nsfw?' nsfw-content':''),
@@ -11108,7 +11108,7 @@ function render_object(user,object,type,preset_level){
 					icon_reply:ltmp_arr.icon_reply,
 					icon_repost:ltmp_arr.icon_repost,
 					icon_award:ltmp_arr.icon_gem,
-					icon_copy_link:ltmp_arr.icon_copy_link,
+					icon_share:ltmp_arr.icon_share,
 				}),
 				timestamp:object.data.timestamp,
 				context:image+link,
@@ -11167,7 +11167,7 @@ function render_object(user,object,type,preset_level){
 					icon_reply:ltmp_arr.icon_reply,
 					icon_repost:ltmp_arr.icon_repost,
 					icon_award:ltmp_arr.icon_gem,
-					icon_copy_link:ltmp_arr.icon_copy_link,
+					icon_share:ltmp_arr.icon_share,
 				}),
 				timestamp:object.data.timestamp,
 				class_addon:(1==object.nsfw?' nsfw-content':''),
