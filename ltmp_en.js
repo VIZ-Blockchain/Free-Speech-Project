@@ -588,7 +588,7 @@ var ltmp_en_arr = {
 	toggle_menu_title: 'Toggle menu',
 	toggle_menu_icon: '<div><a tabindex="0" title="{title}" class="toggle-menu-icon">{icon}</a></div>',
 
-	toggle_theme_icon: '<div><a tabindex="0" data-href="dapp:app_settings/theme/" title="{title}" class="toggle-theme-icon">{icon}</a></div>',
+	toggle_theme_icon: '<div><a tabindex="0" title="{title}" class="toggle-theme-icon toggle-theme-action">{icon}</a></div>',
 	toggle_theme_title: 'Customize appearance',
 
 	icon_counter: `<div class="icon-counter counter-{name}">{count}</div>`,
@@ -612,7 +612,7 @@ var ltmp_en_arr = {
 	app_settings_reset: 'Settings reset',
 	app_settings_main_tab: 'General',
 	app_settings_feed_tab: 'News Feed',
-	app_settings_theme_tab: 'Decoration',
+	app_settings_theme_tab: 'Color Theme',
 	app_settings_sync_tab: 'Data Transfer',
 	app_settings_connection_tab: 'Connection',
 	app_settings_languages_tab: 'Languages',

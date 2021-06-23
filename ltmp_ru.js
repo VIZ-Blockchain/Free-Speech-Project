@@ -588,7 +588,7 @@ var ltmp_ru_arr = {
 	toggle_menu_title: 'Переключить меню',
 	toggle_menu_icon: '<div><a tabindex="0" title="{title}" class="toggle-menu-icon">{icon}</a></div>',
 
-	toggle_theme_icon: '<div><a tabindex="0" data-href="dapp:app_settings/theme/" title="{title}" class="toggle-theme-icon">{icon}</a></div>',
+	toggle_theme_icon: '<div><a tabindex="0" title="{title}" class="toggle-theme-icon toggle-theme-action">{icon}</a></div>',
 	toggle_theme_title: 'Настроить оформление',
 
 	icon_counter: `<div class="icon-counter counter-{name}">{count}</div>`,

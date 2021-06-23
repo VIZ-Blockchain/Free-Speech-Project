@@ -5040,6 +5040,29 @@ function app_mouse(e){
 					users_reset_settings(view);
 				}
 			}
+			if($(target).hasClass('toggle-theme-action')){
+				if('auto'==settings.theme_mode){
+					view_path('dapp:app_settings/theme/',{},true,false);
+				}
+				else
+				if('light'==settings.theme_mode){
+					settings.theme_mode='night';
+
+					let settings_json=JSON.stringify(settings);
+					localStorage.setItem(storage_prefix+'settings',settings_json);
+
+					apply_theme_mode();
+				}
+				else
+				if('night'==settings.theme_mode){
+					settings.theme_mode='light';
+
+					let settings_json=JSON.stringify(settings);
+					localStorage.setItem(storage_prefix+'settings',settings_json);
+					apply_theme_mode();
+				}
+
+			}
 			if($(target).hasClass('search-action')){
 				if(!$(target).hasClass('disabled')){
 					$(target).addClass('disabled');
