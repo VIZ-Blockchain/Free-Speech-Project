@@ -8164,7 +8164,7 @@ function view_publish(view,path_parts,query,title){
 	let header='';
 	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.publish_caption});
-	header+=ltmp(ltmp_arr.icon_link,{action:'article-editor',caption:ltmp_arr.editor_caption,icon:ltmp_arr.icon_editor});
+	header+=ltmp(ltmp_arr.header_icon_link,{action:'article-editor',caption:ltmp_arr.editor_caption,icon:ltmp_arr.icon_editor});
 	view.find('.header').html(header);
 
 	view.find('.content-view[data-type="article"]').addClass('hidden');
@@ -8204,8 +8204,8 @@ function view_publish(view,path_parts,query,title){
 			$('.article-settings input[name="thumbnail"]').val(article_obj.thumbnail);
 		}
 
-		header+=ltmp(ltmp_arr.icon_link,{action:'article-settings',caption:ltmp_arr.article_settings_caption,icon:ltmp_arr.icon_settings});
-		header+=ltmp(ltmp_arr.icon_link,{action:'article-publish',caption:ltmp_arr.article_publish_caption,icon:ltmp_arr.icon_check});
+		header+=ltmp(ltmp_arr.header_icon_link,{action:'article-settings',caption:ltmp_arr.article_settings_caption,icon:ltmp_arr.icon_settings});
+		header+=ltmp(ltmp_arr.header_icon_link,{action:'article-publish',caption:ltmp_arr.article_publish_caption,icon:ltmp_arr.icon_check});
 		view.find('.header').html(header);
 
 		view.find('.content-view[data-type="article"]').removeClass('hidden');
@@ -8334,8 +8334,8 @@ function view_notifications(view,path_parts,query,title){
 	view.find('.content-view[data-tab="'+current_tab+'"]').css('display','block');
 
 	let tab=view.find('.content-view[data-tab="'+current_tab+'"]');
-	header+=ltmp(ltmp_arr.icon_link,{action:'mark-readed-notifications',caption:ltmp_arr.mark_readed_notifications_caption,icon:ltmp_arr.icon_notify_clear});
-	header+=ltmp(ltmp_arr.icon_link,{action:'clear-readed-notifications',caption:ltmp_arr.clear_readed_notifications_caption,icon:ltmp_arr.icon_message_clear});
+	header+=ltmp(ltmp_arr.header_icon_link,{action:'mark-readed-notifications',caption:ltmp_arr.mark_readed_notifications_caption,icon:ltmp_arr.icon_notify_clear});
+	header+=ltmp(ltmp_arr.header_icon_link,{action:'clear-readed-notifications',caption:ltmp_arr.clear_readed_notifications_caption,icon:ltmp_arr.icon_message_clear});
 
 	view.find('.header').html(header);
 	tab.find('.objects').html(ltmp(ltmp_arr.notifications_loader_notice,{id:0}));
@@ -8675,9 +8675,9 @@ function view_hashtags(view,path_parts,query,title,back_to){
 			else{
 				document.title='#'+uppercase_first_symbol(hashtag)+' - '+document.title;
 				view.data('hashtag-id',hashtag_data.id);
-				header+=ltmp(ltmp_arr.icon_link,{action:'pin-hashtags',caption:ltmp_arr.pin_hashtags_caption,icon:ltmp_arr.icon_pin,addon:(1==hashtag_data.status?' positive':'')});
-				header+=ltmp(ltmp_arr.icon_link,{action:'ignore-hashtags',caption:ltmp_arr.ignore_hashtags_caption,icon:ltmp_arr.icon_eye_ignore,addon:(2==hashtag_data.status?' negative':'')});
-				header+=ltmp(ltmp_arr.icon_link,{action:'clear-hashtags',caption:ltmp_arr.clear_hashtags_caption,icon:ltmp_arr.icon_message_clear});
+				header+=ltmp(ltmp_arr.header_icon_link,{action:'pin-hashtags',caption:ltmp_arr.pin_hashtags_caption,icon:ltmp_arr.icon_pin,addon:(1==hashtag_data.status?' positive':'')});
+				header+=ltmp(ltmp_arr.header_icon_link,{action:'ignore-hashtags',caption:ltmp_arr.ignore_hashtags_caption,icon:ltmp_arr.icon_eye_ignore,addon:(2==hashtag_data.status?' negative':'')});
+				header+=ltmp(ltmp_arr.header_icon_link,{action:'clear-hashtags',caption:ltmp_arr.clear_hashtags_caption,icon:ltmp_arr.icon_message_clear});
 
 				view.find('.objects').html(ltmp(ltmp_arr.hashtags_loader_notice,{tag_id:hashtag_data.id,id:0}));
 			}
@@ -8833,7 +8833,7 @@ function view_awards(view,path_parts,query,title){
 	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:''});
 	header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.awards_caption});
 
-	header+=ltmp(ltmp_arr.icon_link,{action:'clear-awards',caption:ltmp_arr.clear_awards_caption,icon:ltmp_arr.icon_message_clear});
+	header+=ltmp(ltmp_arr.header_icon_link,{action:'clear-awards',caption:ltmp_arr.clear_awards_caption,icon:ltmp_arr.icon_message_clear});
 
 	view.find('.header').html(header);
 	view.find('.objects').html(ltmp(ltmp_arr.awards_loader_notice,{id:0}));
