@@ -1549,9 +1549,10 @@ function ltmp(ltmp_str,ltmp_args){
 }
 
 var langs_arr={
-	'en-US':'en',
+	'en-gb':'en',
+	'en-us':'en',
 	'en':'en',
-	'ru-RU':'ru',
+	'ru-ru':'ru',
 	'ru':'ru',
 };
 var available_langs={
@@ -1566,12 +1567,22 @@ if(null!=localStorage.getItem(storage_prefix+'lang')){
 	}
 }
 else{
+	let find_lang=false;
 	for(let i in window.navigator.languages){
-		if(typeof langs_arr[window.navigator.languages[i]] !== 'undefined'){
-			let try_lang=langs_arr[window.navigator.languages[i]];
+		if(typeof langs_arr[window.navigator.languages[i].toLowerCase()] !== 'undefined'){
+			let try_lang=langs_arr[window.navigator.languages[i].toLowerCase()];
 			if(typeof available_langs[try_lang] !== 'undefined'){
 				selected_lang=langs_arr[try_lang];
+				find_lang=true;
 				break;
+			}
+		}
+	}
+	if(!find_lang){
+		if(typeof langs_arr[window.navigator.language.toLowerCase()] !== 'undefined'){
+			let try_lang=langs_arr[window.navigator.language.toLowerCase()];
+			if(typeof available_langs[try_lang] !== 'undefined'){
+				selected_lang=langs_arr[try_lang];
 			}
 		}
 	}
