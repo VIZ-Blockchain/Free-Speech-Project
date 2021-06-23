@@ -2358,12 +2358,16 @@ function wait_publish(last_id,callback){
 }
 function fast_publish(publish_form){
 	let text_html=publish_form.find('.text').html();
-	let text=fast_str_replace('<br>',"\n",text_html);
+	let text=text_html;
+	text=text.replaceAll(/<([a-zA-Z^ >]*) (.[^>]*)>/gm,'<$1>');
+	text=fast_str_replace('<br/>',"\n",text_html);
+	text=fast_str_replace('<br>',"\n",text_html);
 	text=fast_str_replace('</div>',"\n",text);
 	text=text.replaceAll(/<(.[^>]*)>/gm,'');
 	text=fast_str_replace('&nbsp;',' ',text);
-	let action=false;
 	text=text.trim();
+
+	let action=false;
 	let ignore_text=false;
 	let reply=false;
 	let share=false;
