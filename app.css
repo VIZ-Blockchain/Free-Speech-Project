@@ -363,6 +363,10 @@ div.menu .primary a{
 div.menu .primary a.current{
 	color:#1c98e5;
 }
+div.menu .primary a.noauth{
+	width:235px;
+	min-width:245px;
+}
 body.dark div.menu .primary a.current{
 	color:#3daff5;
 }

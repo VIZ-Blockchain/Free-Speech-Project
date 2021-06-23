@@ -1493,8 +1493,8 @@ function save_account_settings(view,login,regular_key){
 						}
 						add_t.oncomplete=function(e){
 							update_user_profile(current_user,function(){
-								render_session();
 								render_menu();
+								render_session();
 								document.location.hash='dapp:account/profile';
 								//init sync cloud
 								clearTimeout(check_sync_cloud_activity_timer);
@@ -1506,8 +1506,8 @@ function save_account_settings(view,login,regular_key){
 					}
 					else{
 						update_user_profile(current_user,function(){
-							render_session();
 							render_menu();
+							render_session();
 							document.location.hash='dapp:account/profile';
 							//init sync cloud
 							clearTimeout(check_sync_cloud_activity_timer);
@@ -1613,8 +1613,10 @@ function render_menu(){
 	}
 	else{
 		primary_menu+=ltmp(ltmp_arr.left_addon_reg_button);
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:app_settings/languages',class:(path=='dapp:app_settings/languages'?'noauth current':'noauth'),icon:ltmp_arr.icon_translate,caption:ltmp_arr.menu_languages});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:app_settings/connection',class:(path=='dapp:app_settings/connection'?'noauth current':'noauth'),icon:ltmp_arr.icon_connection,caption:ltmp_arr.menu_connection});
+		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:manual',class:(path=='dapp:manual'?'noauth current':'noauth'),icon:ltmp_arr.icon_question,caption:ltmp_arr.menu_manual});
 		primary_menu+=ltmp(ltmp_arr.dapp_notice);
-		primary_menu+=ltmp(ltmp_arr.menu_primary,{link:'dapp:manual',class:(path=='dapp:manual'?'current':''),icon:ltmp_arr.icon_question,caption:ltmp_arr.menu_manual});
 	}
 	$('div.menu .primary').html(primary_menu);
 	let toggle_menu=ltmp(ltmp_arr.toggle_menu_icon,{title:ltmp_arr.toggle_menu_title,icon:('full'==menu_status?ltmp_arr.icon_menu_collapse:ltmp_arr.icon_menu_expand)});
@@ -4848,11 +4850,11 @@ function app_mouse(e){
 						localStorage.setItem(storage_prefix+'lang',selected_lang);
 						ltmp_arr=window['ltmp_'+selected_lang+'_arr'];
 					}
-					render_session();
 					render_menu();
+					render_session();
 					render_right_addon();
 					preset_view();
-					view_path('dapp:app_settings/languages/',{},true,false);
+					view_path('dapp:app_settings/languages',{},true,false);
 					$(target).removeClass('disabled');
 				}
 			}
@@ -4916,8 +4918,8 @@ function app_mouse(e){
 									tab.find('.submit-button-ring[rel="import-file"]').removeClass('show');
 									$(target).removeClass('disabled');
 
-									render_session();
 									render_menu();
+									render_session();
 									apply_theme_mode();
 
 									tab.find('.sync-import-success').html(tab.find('.sync-import-success').html()+'<br>'+ltmp_arr.settings_sync_import_finished);
@@ -5952,8 +5954,8 @@ function import_cloud(data){
 			}
 			else{
 				if(true===result){
-					render_session();
 					render_menu();
+					render_session();
 					apply_theme_mode();
 
 					add_notify(false,
@@ -8886,12 +8888,20 @@ function view_app_settings(view,path_parts,query,title){
 	}
 
 	let tabs='';
-	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/main',class:('main'==current_tab?'current':''),caption:ltmp_arr.app_settings_main_tab});
-	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
-	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/theme',class:('theme'==current_tab?'current':''),caption:ltmp_arr.app_settings_theme_tab});
-	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/connection',class:('connection'==current_tab?'current':''),caption:ltmp_arr.app_settings_connection_tab});
-	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/languages',class:('languages'==current_tab?'current':''),caption:ltmp_arr.app_settings_languages_tab});
-	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/sync',class:('sync'==current_tab?'current':''),caption:ltmp_arr.app_settings_sync_tab});
+	if(''!=current_user){
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/main',class:('main'==current_tab?'current':''),caption:ltmp_arr.app_settings_main_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/theme',class:('theme'==current_tab?'current':''),caption:ltmp_arr.app_settings_theme_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/connection',class:('connection'==current_tab?'current':''),caption:ltmp_arr.app_settings_connection_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/languages',class:('languages'==current_tab?'current':''),caption:ltmp_arr.app_settings_languages_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/sync',class:('sync'==current_tab?'current':''),caption:ltmp_arr.app_settings_sync_tab});
+	}
+	else{
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/languages',class:('languages'==current_tab?'current':''),caption:ltmp_arr.app_settings_languages_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/connection',class:('connection'==current_tab?'current':''),caption:ltmp_arr.app_settings_connection_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/theme',class:('theme'==current_tab?'current':''),caption:ltmp_arr.app_settings_theme_tab});
+
+	}
 	view.find('.tabs').html(tabs);
 
 	view.find('.content-view').css('display','none');
