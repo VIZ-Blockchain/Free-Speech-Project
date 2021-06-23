@@ -1082,7 +1082,7 @@ const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRa
 var db;
 var db_req;
 var db_version=1;
-var global_db_version=5;
+var global_db_version=6;
 var need_update_db_version=false;
 var local_global_db_version=localStorage.getItem(storage_prefix+'global_db_version');
 if((null===local_global_db_version)||(global_db_version>local_global_db_version)){
@@ -1231,6 +1231,8 @@ function load_db(callback){
 			items_table.createIndex('object',['account','block'],{unique:false});//account
 		}
 		else{
+			items_table=update_trx.objectStore('hashtags_feed');
+			items_table.createIndex('tag_block',['tag','block'],{unique:false});//order by block
 			//new index for hashtags_feed
 		}
 
@@ -11589,12 +11591,13 @@ function load_more_objects(indicator,check_level){
 		let update_t=db.transaction(['hashtags_feed'],'readonly');
 		let update_q=update_t.objectStore('hashtags_feed');
 		let hashtags_id=parseInt(indicator.data('hashtags-id'));
-		let hashtags_feed_id=parseInt(indicator.data('hashtags-feed-id'));
-		let last_id=0;
+		let hashtags_feed_id=parseInt(indicator.data('hashtags-feed-id'));//id change to block
+		hashtags_feed_id=(hashtags_feed_id==0?Number.MAX_SAFE_INTEGER:hashtags_feed_id);
+		let last_id=0;//id change to block
 		let objects=[];
 		let cursor_end=false;
 		let update_req;
-		update_req=update_q.index('tag').openCursor(IDBKeyRange.only(hashtags_id),'prev');
+		update_req=update_q.index('tag_block').openCursor(IDBKeyRange.upperBound([hashtags_id,hashtags_feed_id],true),'prev');
 		update_req.onsuccess=function(event){
 			let cur=event.target.result;
 			if(cursor_end){
@@ -11603,11 +11606,20 @@ function load_more_objects(indicator,check_level){
 			if(cur){
 				let item=cur.value;
 				if(item.tag==hashtags_id){
-					if((hashtags_feed_id>item.id)||(hashtags_feed_id==0)){
-						last_id=item.id;
-						objects.push(item);
-						cursor_end=true;
+					if(last_id!=0){
+						if(last_id!=item.block){
+							cursor_end=true;
+						}
 					}
+					else{
+						last_id=item.block;
+					}
+					if(!cursor_end){
+						objects.push(item);
+					}
+				}
+				else{
+					cursor_end=true;
 				}
 				cur.continue();
 			}
