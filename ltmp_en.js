@@ -115,7 +115,7 @@ var ltmp_en_arr = {
 				<p class="success save-settings-success"></p>
 				<p><a class="button save-settings-action">Save</a><span class="submit-button-ring"></span></p>
 				<hr>
-				<p><a class="button neutral-button install-action">Install as application</a></p>
+				<p><a class="button neutral-button install-action"></a></p>
 				<p><a class="button neutral-button reset-settings-action">Reset all settings</a></p>
 				<p><a class="button neutral-button reset-database-action">Reset database state</a></p>
 			</div>

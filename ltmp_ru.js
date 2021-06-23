@@ -115,7 +115,7 @@ var ltmp_ru_arr = {
 				<p class="success save-settings-success"></p>
 				<p><a class="button save-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
 				<hr>
-				<p><a class="button neutral-button install-action">Установить как приложение</a></p>
+				<p><a class="button neutral-button install-action"></a></p>
 				<p><a class="button neutral-button reset-settings-action">Сбросить все настройки</a></p>
 				<p><a class="button neutral-button reset-database-action">Сбросить состояние базы данных</a></p>
 			</div>
