@@ -10608,7 +10608,7 @@ function render_object(user,object,type,preset_level){
 				avatar:safe_avatar(profile.avatar),
 				actions:ltmp(ltmp_arr.object_type_text_actions,{
 					icon_reply:ltmp_arr.icon_reply,
-					icon_share:ltmp_arr.icon_share,
+					icon_repost:ltmp_arr.icon_repost,
 					icon_award:ltmp_arr.icon_gem,
 					icon_copy_link:ltmp_arr.icon_copy_link,
 				}),
@@ -10696,7 +10696,7 @@ function render_object(user,object,type,preset_level){
 					actions:ltmp(ltmp_arr.object_type_text_actions,{
 						//link:link,
 						icon_reply:ltmp_arr.icon_reply,
-						icon_share:ltmp_arr.icon_share,
+						icon_repost:ltmp_arr.icon_repost,
 						icon_award:ltmp_arr.icon_gem,
 						icon_copy_link:ltmp_arr.icon_copy_link,
 					}),
@@ -10753,7 +10753,7 @@ function render_object(user,object,type,preset_level){
 					actions:ltmp(ltmp_arr.object_type_text_actions,{
 						//link:link,
 						icon_reply:ltmp_arr.icon_reply,
-						icon_share:ltmp_arr.icon_share,
+						icon_repost:ltmp_arr.icon_repost,
 						icon_award:ltmp_arr.icon_gem,
 						icon_copy_link:ltmp_arr.icon_copy_link,
 					}),
@@ -10846,7 +10846,7 @@ function render_object(user,object,type,preset_level){
 					actions:ltmp(ltmp_arr.object_type_text_actions,{
 						//link:link,
 						icon_reply:ltmp_arr.icon_reply,
-						icon_share:ltmp_arr.icon_share,
+						icon_repost:ltmp_arr.icon_repost,
 						icon_award:ltmp_arr.icon_gem,
 						icon_copy_link:ltmp_arr.icon_copy_link,
 					}),
@@ -10910,7 +10910,7 @@ function render_object(user,object,type,preset_level){
 					actions:ltmp(ltmp_arr.object_type_text_actions,{
 						//link:link,
 						icon_reply:ltmp_arr.icon_reply,
-						icon_share:ltmp_arr.icon_share,
+						icon_repost:ltmp_arr.icon_repost,
 						icon_award:ltmp_arr.icon_gem,
 						icon_copy_link:ltmp_arr.icon_copy_link,
 					}),
@@ -11039,7 +11039,7 @@ function render_object(user,object,type,preset_level){
 			actions:ltmp(ltmp_arr.object_type_text_actions,{
 				//link:link,
 				icon_reply:ltmp_arr.icon_reply,
-				icon_share:ltmp_arr.icon_share,
+				icon_repost:ltmp_arr.icon_repost,
 				icon_award:ltmp_arr.icon_gem,
 				icon_copy_link:ltmp_arr.icon_copy_link,
 			}),
@@ -11106,7 +11106,7 @@ function render_object(user,object,type,preset_level){
 				actions:ltmp(ltmp_arr.object_type_text_actions,{
 					//link:link,
 					icon_reply:ltmp_arr.icon_reply,
-					icon_share:ltmp_arr.icon_share,
+					icon_repost:ltmp_arr.icon_repost,
 					icon_award:ltmp_arr.icon_gem,
 					icon_copy_link:ltmp_arr.icon_copy_link,
 				}),
@@ -11165,7 +11165,7 @@ function render_object(user,object,type,preset_level){
 				actions:ltmp(ltmp_arr.object_type_text_actions,{
 					//link:link,
 					icon_reply:ltmp_arr.icon_reply,
-					icon_share:ltmp_arr.icon_share,
+					icon_repost:ltmp_arr.icon_repost,
 					icon_award:ltmp_arr.icon_gem,
 					icon_copy_link:ltmp_arr.icon_copy_link,
 				}),
