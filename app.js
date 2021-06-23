@@ -2212,7 +2212,7 @@ function render_session(){
 		});
 	}
 	else{
-		$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_login,avatar:ltmp_arr.profile_default_avatar}));
+		$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_login,avatar:ltmp_arr.signin_image}));
 	}
 }
 
