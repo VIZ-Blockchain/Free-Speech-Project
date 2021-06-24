@@ -8586,7 +8586,7 @@ function view_users(view,path_parts,query,title,back_to){
 		header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.users_caption});
 		view.find('.header').html(header);
 
-		let current_tab='main';
+		let current_tab='subscribed';
 		if((typeof query != 'undefined')&&(''!=query)){
 			current_tab=query;
 		}
@@ -8595,9 +8595,9 @@ function view_users(view,path_parts,query,title,back_to){
 		}
 
 		let tabs='';
-		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.users_main_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?subscribed',class:('subscribed'==current_tab?'current':''),caption:ltmp_arr.users_subscribed_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?ignored',class:('ignored'==current_tab?'current':''),caption:ltmp_arr.users_ignored_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.users_main_tab});
 		view.find('.tabs').html(tabs);
 		view.find('.objects').html(ltmp_arr.empty_loader_notice);
 		if('main'==current_tab){
