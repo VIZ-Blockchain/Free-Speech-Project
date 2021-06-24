@@ -9649,6 +9649,12 @@ function view_path(location,state,save_state,update){
 	$('body').removeClass('publication-mode');
 	$('.footer').removeClass('hidden');
 	notes_save_draft_timer_stop=true;
+	if(typeof window.qr_scan_stream !== 'undefined'){//clear qr scan video stream
+		window.qr_scan_stream.getTracks().forEach((track)=>{
+			track.stop();
+		});
+		window.qr_scan_stream=undefined;
+	}
 	if('dapp:publish/'==path){//exit from publish view
 		$('.footer').removeClass('hidden');
 		if('article'==query){//exit from article mode
