@@ -510,9 +510,18 @@ var ltmp_en_arr = {
 	profile_shares_tab: 'Reposts',
 	profile_replies_tab: 'Replies',
 
+	users_qr_code_link: '<a tabindex="0" data-href="dapp:users/?{select_tab}" title="QR code" class="{addon}">%%icon_qr_code%%</a>',
 	users_main_tab: 'Everyone',
 	users_subscribed_tab: 'Subscriptions',
 	users_ignored_tab: 'Ignored',
+	users_qr_code_tab: 'Provide',
+	users_scan_qr_code_tab: 'Scan',
+	users_scan_unable: 'Unable to access video stream (please make sure you have a webcam enabled)',
+	users_scan_retrieving: 'Retrieving video...',
+	scan_qr_error_browser: '<div class="scan-qr-error-icon">{icon}</div><div class="scan-qr-error-text">Browser not support video capture</div>',
+	scan_qr_error_subscribe: '<div class="scan-qr-error-icon">{icon}</div><div class="scan-qr-error-text">Error to subscribe <a tabindex="0" data-href="viz://@{account}/">@{account}</a></div>',
+	scan_qr_successfull_subscribe: '<div class="scan-qr-successfull-icon">{icon}</div><div class="scan-qr-successfull-text">Successfully subscribed to <a tabindex="0" data-href="viz://@{account}/">@{account}</a></div>',
+
 	users_objects_box: `<div class="user-item-box">{context}</div>`,
 	users_objects_header: `
 	<div class="user-item-box"><input type="text" class="user-item-search" placeholder="Quick Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
@@ -715,6 +724,7 @@ var ltmp_en_arr = {
 	icon_question: `<i class="icon question"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm-1-5h2v2h-2v-2zm2-1.645V14h-2v-1.5a1 1 0 0 1 1-1 1.5 1.5 0 1 0-1.471-1.794l-1.962-.393A3.501 3.501 0 1 1 13 13.355z"/></svg></i>`,
 	icon_translate: `<i class="icon translate"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M18.5 10l4.4 11h-2.155l-1.201-3h-4.09l-1.199 3h-2.154L16.5 10h2zM10 2v2h6v2h-1.968a18.222 18.222 0 0 1-3.62 6.301 14.864 14.864 0 0 0 2.336 1.707l-.751 1.878A17.015 17.015 0 0 1 9 13.725a16.676 16.676 0 0 1-6.201 3.548l-.536-1.929a14.7 14.7 0 0 0 5.327-3.042A18.078 18.078 0 0 1 4.767 8h2.24A16.032 16.032 0 0 0 9 10.877a16.165 16.165 0 0 0 2.91-4.876L2 6V4h6V2h2zm7.5 10.885L16.253 16h2.492L17.5 12.885z"/></svg></i>`,
 	icon_connection: `<i class="icon connection"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M11 14v-3h2v3h5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h5zM2.51 8.837C3.835 4.864 7.584 2 12 2s8.166 2.864 9.49 6.837l-1.898.632a8.003 8.003 0 0 0-15.184 0l-1.897-.632zm3.796 1.265a6.003 6.003 0 0 1 11.388 0l-1.898.633a4.002 4.002 0 0 0-7.592 0l-1.898-.633zM7 16v4h10v-4H7z"/></svg></i>`,
+	icon_qr_code: `<i class="icon qr-code"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M16 17v-1h-3v-3h3v2h2v2h-1v2h-2v2h-2v-3h2v-1h1zm5 4h-4v-2h2v-2h2v4zM3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v2h-3v-2zM6 6h2v2H6V6zm0 10h2v2H6v-2zM16 6h2v2h-2V6z"/></svg></i>`,
 
 	icon_player_play: `<i class="icon player-play"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7 6L7 18 17 12z"></path></svg></i>`,
 	icon_player_pause: `<i class="icon player-pause"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 7H11V17H8zM13 7H16V17H13z"></path></svg></i>`,

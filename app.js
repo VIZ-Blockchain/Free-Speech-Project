@@ -2898,28 +2898,33 @@ function subscribe_update(account,callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
-	get_user(account,false,function(check_err,check_result){
-		if(!check_err){
-			let update_t=db.transaction(['users'],'readwrite');
-			let update_q=update_t.objectStore('users');
-			let update_req=update_q.index('account').openCursor(IDBKeyRange.only(account),'next');
-			update_req.onsuccess=function(event){
-				let cur=event.target.result;
-				if(cur){
-					let item=cur.value;
-					item.status=1;
-					cur.update(item);
-					cur.continue();
-				}
-				else{
-					callback(true);
-				}
-			};
-		}
-		else{
-			callback(false);
-		}
-	});
+	if(account==current_user){
+		callback(false);
+	}
+	else{
+		get_user(account,false,function(check_err,check_result){
+			if(!check_err){
+				let update_t=db.transaction(['users'],'readwrite');
+				let update_q=update_t.objectStore('users');
+				let update_req=update_q.index('account').openCursor(IDBKeyRange.only(account),'next');
+				update_req.onsuccess=function(event){
+					let cur=event.target.result;
+					if(cur){
+						let item=cur.value;
+						item.status=1;
+						cur.update(item);
+						cur.continue();
+					}
+					else{
+						callback(true);
+					}
+				};
+			}
+			else{
+				callback(false);
+			}
+		});
+	}
 }
 function reset_update(account,callback){
 	if(typeof callback==='undefined'){
@@ -8583,9 +8588,6 @@ function view_users(view,path_parts,query,title,back_to){
 		});
 	}
 	else{
-		header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.users_caption});
-		view.find('.header').html(header);
-
 		let current_tab='subscribed';
 		if((typeof query != 'undefined')&&(''!=query)){
 			current_tab=query;
@@ -8594,12 +8596,156 @@ function view_users(view,path_parts,query,title,back_to){
 			document.title=ltmp_arr['users_'+current_tab+'_tab']+' - '+document.title;
 		}
 
+		header+=ltmp(ltmp_arr.header_caption,{caption:ltmp_arr.users_caption});
+		header+=ltmp(ltmp_arr.users_qr_code_link,{select_tab:(('qr_code'==current_tab||'scan_qr_code'==current_tab)?'subscribed':'qr_code'),addon:(('qr_code'==current_tab||'scan_qr_code'==current_tab)?' positive':'')});
+		view.find('.header').html(header);
+
 		let tabs='';
-		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?subscribed',class:('subscribed'==current_tab?'current':''),caption:ltmp_arr.users_subscribed_tab});
-		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?ignored',class:('ignored'==current_tab?'current':''),caption:ltmp_arr.users_ignored_tab});
-		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.users_main_tab});
+		if(('qr_code'==current_tab||'scan_qr_code'==current_tab)){
+			tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?qr_code',class:('qr_code'==current_tab?'current':''),caption:ltmp_arr.users_qr_code_tab});
+			tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?scan_qr_code',class:('scan_qr_code'==current_tab?'current':''),caption:ltmp_arr.users_scan_qr_code_tab});
+		}
+		else{
+			tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?subscribed',class:('subscribed'==current_tab?'current':''),caption:ltmp_arr.users_subscribed_tab});
+			tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?ignored',class:('ignored'==current_tab?'current':''),caption:ltmp_arr.users_ignored_tab});
+			tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.users_main_tab});
+		}
 		view.find('.tabs').html(tabs);
 		view.find('.objects').html(ltmp_arr.empty_loader_notice);
+		if('qr_code'==current_tab){
+			let objects='<div class="view-qr-code"></div>';
+			view.find('.objects').html(objects);
+			let qrcode=new QRCode(view.find('.objects .view-qr-code')[0],{
+				text: 'viz://@'+current_user+'/',
+				width: 400,
+				height: 400,
+				colorDark: "#000000",
+				colorLight: "#ffffff",
+				correctLevel: QRCode.CorrectLevel.H
+			});
+			qrcode=null;
+			$('.loader').css('display','none');
+			view.css('display','block');
+		}
+		else
+		if('scan_qr_code'==current_tab){
+			let objects=`
+			<div class="scan-qr-code">
+				<div class="scan-qr-loading">${ltmp_arr.users_scan_unable}</div>
+				<canvas></canvas>
+				</div>
+			</div`
+			view.find('.objects').html(objects);
+
+			var scan_qr_result='';
+			var scan_qr_video=document.createElement('video');
+			var scan_qr_canvas_el=view.find('.objects canvas')[0];
+			var scan_qr_canvas=scan_qr_canvas_el.getContext('2d');
+			var scan_qr_loading=view.find('.objects .scan-qr-loading')[0];
+
+			let scan_qr_draw_line=function(begin,end,color) {
+				scan_qr_canvas.beginPath();
+				scan_qr_canvas.moveTo(begin.x,begin.y);
+				scan_qr_canvas.lineTo(end.x,end.y);
+				scan_qr_canvas.lineWidth=5;
+				scan_qr_canvas.strokeStyle=color;
+				scan_qr_canvas.stroke();
+			}
+
+			if(navigator.mediaDevices !== undefined){
+				// use facingMode: environment to attemt to get the back camera on phones
+				navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
+					window.qr_scan_stream=stream;
+					scan_qr_video.srcObject=window.qr_scan_stream;
+					// required to tell iOS safari we don't want fullscreen
+					scan_qr_video.setAttribute('playsinline', true);
+					scan_qr_video.play();
+					requestAnimationFrame(scan_qr_tick);
+				});
+
+				let scan_qr_tick=function(){
+
+					scan_qr_loading.innerText=ltmp_arr.users_scan_retrieving;
+					if(scan_qr_video.readyState === scan_qr_video.HAVE_ENOUGH_DATA){
+						scan_qr_loading.innerText='';
+
+						scan_qr_canvas_el.height=scan_qr_video.videoHeight;
+						scan_qr_canvas_el.width=scan_qr_video.videoWidth;
+						scan_qr_canvas.drawImage(scan_qr_video,0,0,scan_qr_canvas_el.width,scan_qr_canvas_el.height);
+						let scan_qr_image=scan_qr_canvas.getImageData(0,0,scan_qr_canvas_el.width,scan_qr_canvas_el.height);
+						let code=jsQR(scan_qr_image.data,scan_qr_image.width,scan_qr_image.height,{
+							inversionAttempts:'attemptBoth',
+						});
+						if(code){
+							if(0==code.data.indexOf('viz://')){
+								link=code.data.toLowerCase();
+								link=escape_html(link);
+								let pattern = /@([a-z0-9\-\.]*)\/$/g;
+								let link_account=link.match(pattern);
+								if(typeof link_account[0] != 'undefined'){
+									link_account=link_account[0];
+									link_account=link_account.substr(1);
+									link_account=link_account.substr(0,link_account.length-1);
+
+									scan_qr_draw_line(code.location.topLeftCorner, code.location.topRightCorner,'#26be0a');
+									scan_qr_draw_line(code.location.topRightCorner, code.location.bottomRightCorner,'#26be0a');
+									scan_qr_draw_line(code.location.bottomRightCorner, code.location.bottomLeftCorner,'#26be0a');
+									scan_qr_draw_line(code.location.bottomLeftCorner, code.location.topLeftCorner,'#26be0a');
+
+									scan_qr_result=link_account;
+								}
+							}
+							else{
+								scan_qr_draw_line(code.location.topLeftCorner, code.location.topRightCorner,'#ff1111');
+								scan_qr_draw_line(code.location.topRightCorner, code.location.bottomRightCorner,'#ff1111');
+								scan_qr_draw_line(code.location.bottomRightCorner, code.location.bottomLeftCorner,'#ff1111');
+								scan_qr_draw_line(code.location.bottomLeftCorner, code.location.topLeftCorner,'#ff1111');
+							}
+						}
+						else{
+						}
+					}
+					if(''!=scan_qr_result){
+						scan_qr_canvas=null;
+						scan_qr_canvas_el.hidden=true;
+						window.qr_scan_stream.getTracks().forEach((track)=>{
+							track.stop();
+						});
+
+						scan_qr_video=null;
+
+						let check_user=scan_qr_result;
+						scan_qr_result='';
+
+						subscribe_update(check_user,function(result){
+							if(result){
+								sync_cloud_put_update('subscribe',check_user);
+
+								feed_load(check_user,false,false,true,function(err,result){
+									console.log('feed load by subscribe',err,result);
+									if(!err){
+										update_feed_result(result);
+									}
+								});
+								scan_qr_loading.innerHTML=ltmp(ltmp_arr.scan_qr_successfull_subscribe,{account:check_user,icon:ltmp_arr.icon_check});
+							}
+							else{
+								scan_qr_loading.innerHTML=ltmp(ltmp_arr.scan_qr_error_subscribe,{account:check_user,icon:ltmp_arr.icon_close});
+							}
+						});
+					}
+					else{
+						requestAnimationFrame(scan_qr_tick);
+					}
+				}
+			}
+			else{
+				scan_qr_loading.innerHTML=ltmp(ltmp_arr.scan_qr_error_browser,{icon:ltmp_arr.icon_close});
+			}
+			$('.loader').css('display','none');
+			view.css('display','block');
+		}
+		else
 		if('main'==current_tab){
 			let read_t=db.transaction(['users'],'readonly');
 			let read_q=read_t.objectStore('users');
