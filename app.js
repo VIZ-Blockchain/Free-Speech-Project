@@ -1082,7 +1082,7 @@ const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRa
 var db;
 var db_req;
 var db_version=1;
-var global_db_version=6;
+var global_db_version=7;
 var need_update_db_version=false;
 var local_global_db_version=localStorage.getItem(storage_prefix+'global_db_version');
 if((null===local_global_db_version)||(global_db_version>local_global_db_version)){
@@ -1210,6 +1210,14 @@ function load_db(callback){
 			//new index for awards
 		}
 
+		if(!db.objectStoreNames.contains('reposts')){//store self reposts as fact only for other objects (not custom url)
+			items_table=db.createObjectStore('reposts',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('object',['account','block'],{unique:true});
+		}
+		else{
+			//new index for reposts
+		}
+
 		if(!db.objectStoreNames.contains('hashtags')){
 			items_table=db.createObjectStore('hashtags',{keyPath:'id',autoIncrement:true});
 			items_table.createIndex('tag','tag',{unique:true});//hash tag name
@@ -1232,7 +1240,9 @@ function load_db(callback){
 		}
 		else{
 			items_table=update_trx.objectStore('hashtags_feed');
-			items_table.createIndex('tag_block',['tag','block'],{unique:false});//order by block
+			if(!items_table.indexNames.contains('tag_block')){
+				items_table.createIndex('tag_block',['tag','block'],{unique:false});//order by block
+			}
 			//new index for hashtags_feed
 		}
 
@@ -2437,6 +2447,37 @@ function fast_publish(publish_form){
 
 									action.removeClass('success');
 									publish_form.remove();
+
+									if(typeof data.s !== 'undefined'){
+										//add entry to reposts object store
+										let share_link=data.s;
+										if(0==share_link.indexOf('viz://')){
+											share_link=share_link.toLowerCase();
+											share_link=escape_html(share_link);
+											let pattern = /@[a-z0-9\-\.]*/g;
+											let share_account=share_link.match(pattern);
+											if(typeof share_account[0] != 'undefined'){
+												let pattern_block = /\/([0-9]*)\//g;
+												let share_block=share_link.match(pattern_block);
+												if(typeof share_block[1] != 'undefined'){
+													parent_account=share_account[0].substr(1);
+													parent_block=parseInt(fast_str_replace('/','',share_block[1]));
+													idb_get_id('reposts','object',[parent_account,parent_block],function(repost_id){
+														if(false===repost_id){//create repost entry
+															let add_t=db.transaction(['reposts'],'readwrite');
+															let add_q=add_t.objectStore('reposts');
+															add_q.add({account:parent_account,block:parent_block});
+															if(!is_safari){
+																if(!is_firefox){
+																	add_t.commit();
+																}
+															}
+														}
+													});
+												}
+											}
+										}
+									}
 								}
 								else{
 									publish_form.find('.text').html('');
@@ -5185,7 +5226,9 @@ function app_mouse(e){
 							block=parseInt(fast_str_replace('/','',link_block[1]));
 							award(account,block,function(result){
 								if(result){
-									setTimeout(function(){check_object_award(account,block)},100);
+									setTimeout(function(){
+										check_object_award(account,block);
+									},100);
 								}
 							});
 						}
@@ -10566,6 +10609,27 @@ function highlight_links(text,is_html){
 	return text;
 }
 
+function check_object_repost(account,block){
+	if(typeof account == 'undefined'){
+		return;
+	}
+	if(typeof block == 'undefined'){
+		return;
+	}
+	idb_get_id('reposts','object',[account,block],function(repost_id){
+		if(false!==repost_id){//repost entry exist
+			let current_link='viz://@'+account+'/'+block+'/';
+			let view=$('.view[data-level="'+level+'"]');
+			if(-1==path.indexOf('viz://')){//look in services views
+				let path_parts=path.split('/');
+				view=$('.view[data-path="'+path_parts[0]+'"]');
+			}
+			let actions=view.find('.objects .object[data-link="'+current_link+'"] .actions-view');
+			$(actions).find('.share-action').addClass('success');
+		}
+	});
+}
+
 function check_object_award(account,block){
 	if(typeof account == 'undefined'){
 		return;
@@ -11215,6 +11279,7 @@ function render_object(user,object,type,preset_level){
 		}
 	}
 	setTimeout(function(){
+		check_object_repost(user.account,object.block);
 		check_object_award(user.account,object.block);
 		console.log('render_object timeout check first link',type,text_first_link);
 		if(1==object.nsfw){

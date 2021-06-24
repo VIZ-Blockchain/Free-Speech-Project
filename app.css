@@ -1534,9 +1534,6 @@ body.dark .error{
 	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
 	transition:all 0.3s ease-out;
 }
-.actions-view a:first-child{
-	flex-basis:25%;
-}
 .actions-view a:hover{
 	color:#1c98e5;
 }
@@ -2613,6 +2610,10 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 		position:sticky;
 		top:0;
 		z-index:5;
+	}
+	.actions-view a:first-child{
+		/* additional space for replies counter */
+		flex-basis:25%;
 	}
 	.gate-connection-error{
 		position:sticky;
