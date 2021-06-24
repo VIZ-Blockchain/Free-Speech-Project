@@ -8616,12 +8616,12 @@ function view_users(view,path_parts,query,title,back_to){
 			let objects='<div class="view-qr-code"></div>';
 			view.find('.objects').html(objects);
 			let qrcode=new QRCode(view.find('.objects .view-qr-code')[0],{
-				text: 'viz://@'+current_user+'/',
-				width: 400,
-				height: 400,
-				colorDark: ('light'==settings.theme_mode?'#000000':'#ffffff'),
-				colorLight: $('body').css('background-color'),
-				correctLevel: QRCode.CorrectLevel.H
+				text:'viz://@'+current_user+'/',
+				width:300,
+				height:300,
+				colorDark:('light'==settings.theme_mode?'#000000':'#ffffff'),
+				colorLight:$('body').css('background-color'),
+				correctLevel:QRCode.CorrectLevel.H
 			});
 			qrcode=null;
 			$('.loader').css('display','none');
