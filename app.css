@@ -2536,13 +2536,14 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 .view-qr-code img{
 	text-align:center;
 	max-height:calc(90vh - 100px);
+	max-width:100%;
 }
 .scan-qr-code{
 	margin:5vh;
 	text-align:center;
 }
 .scan-qr-code canvas{
-	max-width:calc(600px - 10vh);
+	max-width:100%;
 }
 .scan-qr-error-text{
 	font-size:20px;
