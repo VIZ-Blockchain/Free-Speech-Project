@@ -8619,8 +8619,8 @@ function view_users(view,path_parts,query,title,back_to){
 				text: 'viz://@'+current_user+'/',
 				width: 400,
 				height: 400,
-				colorDark: "#000000",
-				colorLight: "#ffffff",
+				colorDark: ('light'==settings.theme_mode?'#000000':'#ffffff'),
+				colorLight: $('body').css('background-color'),
 				correctLevel: QRCode.CorrectLevel.H
 			});
 			qrcode=null;
@@ -9366,6 +9366,9 @@ function apply_theme_mode(){
 	document.querySelector('meta[name=theme-color]').setAttribute('content',theme_color);
 	clearTimeout(apply_theme_mode_timer);
 	apply_theme_mode_timer=setTimeout(function(){apply_theme_mode();},60000);
+	if('dapp:users/'==path && 'qr_code'==query){
+		view_path(path+(''==query?'':'?'+query),{},false,false);
+	}
 }
 
 function view_account(view,path_parts,query,title){
