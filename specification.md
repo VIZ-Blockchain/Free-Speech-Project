@@ -22,7 +22,7 @@ Provide simple access to specific data from account in block number. Protocol sh
 
 ## Object structure
 
-Custom protocol  have been allowing to operate with any JSON data. Weakly typed structure mean version dependece for new features implementation. If new feature broke back compatibility it is needed to increase version. If attribute is default it is not needed to exist in object. Short name of attributes required for minimize operation size.
+Custom protocol have been allowing to operate with any JSON data. Weakly typed structure mean version dependece for new features implementation. If new feature broke back compatibility it is needed to increase version. If attribute is default it is not needed to exist in object. Short name of attributes required for minimize operation size.
 
 > Example: Default version is 1. It is optional if marked by `*`.
 
