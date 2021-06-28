@@ -2422,7 +2422,7 @@ function fast_publish(publish_form){
 				//new_object.u=new Date().getTime() /1000 | 0;//for delayed publication
 
 				let data={};
-				data.text=text;
+				data.t=text;
 
 				if(false!=reply){
 					data.r=reply;
@@ -2576,7 +2576,7 @@ function publish(view){
 
 			let error=false;
 			let data={};
-			data.text=text;
+			data.t=text;
 			if(false!=reply){
 				data.r=reply;
 			}
@@ -5278,8 +5278,14 @@ function app_mouse(e){
 									}
 								}
 								if('text'==object_type){
+									share_obj['text']='';
 									if(typeof object_result.data.d.text !== 'undefined'){
 										share_obj['text']=object_result.data.d.text;
+									}
+									else{
+										if(typeof object_result.data.d.t !== 'undefined'){
+											share_obj['text']=object_result.data.d.t;
+										}
 									}
 								}
 								if('publication'==object_type){
@@ -6293,9 +6299,15 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 							if(object_result.parent_account==current_user){
 								let link='viz://@'+object_result.account+'/'+object_result.block+'/';
 								let share_text='';
-								if(typeof object_result.data.d.text !== 'udnefined'){
+								if(typeof object_result.data.d.text !== 'undefined'){
 									share_text=object_result.data.d.text;
 								}
+								else{
+									if(typeof object_result.data.d.t !== 'undefined'){
+										share_text=object_result.data.d.t;
+									}
+								}
+
 								add_notify(true,ltmp(ltmp_arr.notify_arr.new_share,{account:object_result.account}),share_text,link);
 							}
 							else{
@@ -6314,7 +6326,15 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 							feed=false;
 							if(object_result.parent_account==current_user){
 								let link='viz://@'+object_result.account+'/'+object_result.block+'/';
-								let reply_text=object_result.data.d.text;
+								let reply_text='';
+								if(typeof object_result.data.d.text !== 'undefined'){
+									reply_text=object_result.data.d.text;
+								}
+								else{
+									if(typeof object_result.data.d.t !== 'undefined'){
+										reply_text=object_result.data.d.t;
+									}
+								}
 								add_notify(true,ltmp(ltmp_arr.notify_arr.new_reply,{account:object_result.account}),reply_text,link);
 								feed=true;
 							}
@@ -6339,6 +6359,16 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 									let reply_text=object_result.data.d.text;
 									add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
 									feed=true;
+								}
+							}
+							else{
+								if(typeof object_result.data.d.t !== 'undefined'){
+									if(-1!=object_result.data.d.t.indexOf('@'+current_user)){//mention
+										let link='viz://@'+object_result.account+'/'+object_result.block+'/';
+										let reply_text=object_result.data.d.t;
+										add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
+										feed=true;
+									}
 								}
 							}
 						}
@@ -6603,6 +6633,14 @@ function parse_object(account,block,callback){
 								let hashtags_text='';
 								if('text'==type){
 									hashtags_text=obj.data.d.text;
+									if(typeof obj.data.d.text !== 'undefined'){
+										hashtags_text=obj.data.d.text;
+									}
+									else{
+										if(typeof obj.data.d.t !== 'undefined'){
+											hashtags_text=obj.data.d.t;
+										}
+									}
 								}
 								if('publication'==type){
 									hashtags_text=markdown_clear_code(obj.data.d.m);//markdown
@@ -6705,7 +6743,14 @@ function parse_object(account,block,callback){
 							/* check nsfw hashtags in object texts */
 							let nsfw_text='';
 							if('text'==type){
-								nsfw_text=obj.data.d.text;
+								if(typeof obj.data.d.text !== 'undefined'){
+									nsfw_text=obj.data.d.text;
+								}
+								else{
+									if(typeof obj.data.d.t !== 'undefined'){
+										nsfw_text=obj.data.d.t;
+									}
+								}
 							}
 							if('publication'==type){
 								nsfw_text=markdown_clear_code(obj.data.d.m);//markdown
@@ -11032,8 +11077,13 @@ function render_object(user,object,type,preset_level){
 			let text='';
 			if(typeof object.data.d.text !== 'undefined'){
 				text=object.data.d.text;
-				text=escape_html(text);
 			}
+			else{
+				if(typeof object.data.d.t !== 'undefined'){
+					text=object.data.d.t;
+				}
+			}
+			text=escape_html(text);
 			let current_link='viz://@'+user.account+'/'+object.block+'/';
 			render=ltmp(ltmp_arr.object_type_text_loading,{
 				account:user.account,
@@ -11116,7 +11166,15 @@ function render_object(user,object,type,preset_level){
 				});
 			}
 			if('text'==object_type){
-				let text=object.data.d.text;
+				let text='';
+				if(typeof object.data.d.text !== 'undefined'){
+					text=object.data.d.text;
+				}
+				else{
+					if(typeof object.data.d.t !== 'undefined'){
+						text=object.data.d.t;
+					}
+				}
 				text_first_link=first_link(text);
 
 				text=escape_html(text);
@@ -11177,8 +11235,13 @@ function render_object(user,object,type,preset_level){
 			let text='';
 			if(typeof object.data.d.text !== 'undefined'){
 				text=object.data.d.text;
-				text=escape_html(text);
 			}
+			else{
+				if(typeof object.data.d.t !== 'undefined'){
+					text=object.data.d.t;
+				}
+			}
+			text=escape_html(text);
 
 			let current_link='viz://@'+user.account+'/'+object.block+'/';
 			render=ltmp(ltmp_arr.object_type_text_loading,{
@@ -11266,7 +11329,15 @@ function render_object(user,object,type,preset_level){
 				});
 			}
 			if('text'==object_type){
-				let text=object.data.d.text;
+				let text='';
+				if(typeof object.data.d.text !== 'undefined'){
+					text=object.data.d.text;
+				}
+				else{
+					if(typeof object.data.d.t !== 'undefined'){
+						text=object.data.d.t;
+					}
+				}
 				text_first_link=first_link(text);
 
 				text=escape_html(text);
@@ -11333,8 +11404,13 @@ function render_object(user,object,type,preset_level){
 		let text='';
 		if(typeof object.data.d.text !== 'undefined'){
 			text=object.data.d.text;
-			text=escape_html(text);
 		}
+		else{
+			if(typeof object.data.d.t !== 'undefined'){
+				text=object.data.d.t;
+			}
+		}
+		text=escape_html(text);
 
 		let current_link='viz://@'+user.account+'/'+object.block+'/';
 		render=ltmp(ltmp_arr.object_type_text_pinned,{
@@ -11430,7 +11506,15 @@ function render_object(user,object,type,preset_level){
 	if('reply-view'==type){
 		let current_link='viz://@'+user.account+'/'+object.block+'/';
 
-		let text=object.data.d.text;
+		let text='';
+		if(typeof object.data.d.text !== 'undefined'){
+			text=object.data.d.text;
+		}
+		else{
+			if(typeof object.data.d.t !== 'undefined'){
+				text=object.data.d.t;
+			}
+		}
 		text_first_link=first_link(text);
 
 		text=escape_html(text);
@@ -11526,7 +11610,15 @@ function render_object(user,object,type,preset_level){
 			});
 		}
 		if('text'==object_type){
-			let text=object.data.d.text;
+			let text='';
+			if(typeof object.data.d.text !== 'undefined'){
+				text=object.data.d.text;
+			}
+			else{
+				if(typeof object.data.d.t !== 'undefined'){
+					text=object.data.d.t;
+				}
+			}
 			text_first_link=first_link(text);
 
 			text=escape_html(text);
