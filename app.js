@@ -6530,6 +6530,7 @@ function parse_object(account,block,callback){
 				for(let parse_callback in parsing_objects[current_parse][2]){
 					parsing_objects[current_parse][2][parse_callback](true,1);
 				}
+				delete parsing_objects[current_parse];
 			}
 			else{
 				let item=false;
@@ -6550,6 +6551,7 @@ function parse_object(account,block,callback){
 					for(let parse_callback in parsing_objects[current_parse][2]){
 						parsing_objects[current_parse][2][parse_callback](true,2);
 					}
+					delete parsing_objects[current_parse];
 				}
 				else{
 					let reply=false;
@@ -6657,6 +6659,7 @@ function parse_object(account,block,callback){
 								for(let parse_callback in parsing_objects[current_parse][2]){
 									parsing_objects[current_parse][2][parse_callback](false,result);
 								}
+								delete parsing_objects[current_parse];
 							});
 							cur.continue();
 						}
@@ -6844,6 +6847,7 @@ function parse_object(account,block,callback){
 													for(let parse_callback in parsing_objects[current_parse][2]){
 														parsing_objects[current_parse][2][parse_callback](false,obj);
 													}
+													delete parsing_objects[current_parse];
 												};
 											}
 											else{//already exist
@@ -6851,6 +6855,7 @@ function parse_object(account,block,callback){
 												for(let parse_callback in parsing_objects[current_parse][2]){
 													parsing_objects[current_parse][2][parse_callback](false,obj);
 												}
+												delete parsing_objects[current_parse];
 											}
 										});
 									}
@@ -6859,6 +6864,7 @@ function parse_object(account,block,callback){
 										for(let parse_callback in parsing_objects[current_parse][2]){
 											parsing_objects[current_parse][2][parse_callback](false,obj);
 										}
+										delete parsing_objects[current_parse];
 									}
 								};
 							}
