@@ -3037,7 +3037,7 @@ function unsubscribe(el){
 	});
 }
 
-function ignore(el){
+function ignore_target(el){
 	let actions=$(el).closest('.user-actions');
 	let check_user=actions.data('user');
 	let render='';
@@ -4836,7 +4836,7 @@ function app_mouse(e){
 			if($(target).hasClass('ignore-action')){
 				if(!$(target).hasClass('disabled')){
 					$(target).addClass('disabled');
-					ignore(target);
+					ignore_target(target);
 				}
 			}
 			if($(target).hasClass('unignore-action')){
@@ -6459,7 +6459,7 @@ function feed_load(account,limit,upper_bound,continued,callback){
 				console.log('feed_load check offset>end_offset',offset>end_offset,offset,end_offset);
 				if(offset>end_offset){
 					console.log('feed_load going to feed_load_more in range',offset,end_offset,account);
-					//console.log('start feed_load_more from feed_load, offset, end offset, limit:',account,offset,end_offset,limit);
+					console.log('start feed_load_more from feed_load, offset, end offset, limit:',account,offset,end_offset,limit);
 					feed_load_more(result,account,offset,end_offset,limit,callback);
 				}
 				else{
@@ -6501,333 +6501,373 @@ function feed_add(account,block,time,callback){
 
 var object_types_list=['t','text','p','publication'];
 var object_types_arr={'t':'text','p':'publication'};
+
+//need to make queue for callbacks in similar parse object executions
+var parsing_objects=[];
+var parsing_object_num=0;
 function parse_object(account,block,callback){
-	let result={};
-	viz.api.getOpsInBlock(block,false,function(err,response){
-		if(err){
-			callback(true,1);//api error or block not found
-		}
-		else{
-			let item=false;
-			for(let i in response){
-				let item_i=i;
-				if('custom'==response[item_i].op[0]){
-					if(app_protocol==response[item_i].op[1].id){
-						let op=response[item_i].op[1];
-						if(op.required_regular_auths.includes(account)){
-							item=JSON.parse(response[item_i].op[1].json);
-							item.timestamp=parse_date(response[item_i].timestamp) / 1000 | 0;
-						}
-					}
-				}
+	let current_parse=false;
+	for(let o in parsing_objects){
+		if(parsing_objects[o][0]==account){
+			if(parsing_objects[o][1]==block){
+				current_parse=o;
 			}
-			if(false==item){
-				callback(true,2);//item not found
+		}
+	}
+	if(false!==current_parse){
+		//console.log('find existed parsing_objects with i:',current_parse,parsing_objects[current_parse]);
+		parsing_objects[current_parse][2].push(callback);
+	}
+	else{
+		current_parse=parsing_object_num;
+		parsing_objects[current_parse]=[account,block,[]];
+		//console.log('create new parsing_objects with i:',current_parse,parsing_objects[current_parse]);
+		parsing_object_num++;
+		let result={};
+		viz.api.getOpsInBlock(block,false,function(err,response){
+			if(err){
+				callback(true,1);//api error or block not found
+				for(let parse_callback in parsing_objects[current_parse][2]){
+					parsing_objects[current_parse][2][parse_callback](true,1);
+				}
 			}
 			else{
-				let reply=false;
-				let share=false;
+				let item=false;
+				for(let i in response){
+					let item_i=i;
+					if('custom'==response[item_i].op[0]){
+						if(app_protocol==response[item_i].op[1].id){
+							let op=response[item_i].op[1];
+							if(op.required_regular_auths.includes(account)){
+								item=JSON.parse(response[item_i].op[1].json);
+								item.timestamp=parse_date(response[item_i].timestamp) / 1000 | 0;
+							}
+						}
+					}
+				}
+				if(false==item){
+					callback(true,2);//item not found
+					for(let parse_callback in parsing_objects[current_parse][2]){
+						parsing_objects[current_parse][2][parse_callback](true,2);
+					}
+				}
+				else{
+					let reply=false;
+					let share=false;
 
-				let parent_account=false;
-				let parent_block=false;
+					let parent_account=false;
+					let parent_block=false;
 
-				let type='text';//by default
-				if(typeof item.t !== 'undefined'){
-					if(-1!=object_types_list.indexOf(item.t)){
-						if(typeof object_types_arr[item.t] !== 'undefined'){
-							type=object_types_arr[item.t];
+					let type='text';//by default
+					if(typeof item.t !== 'undefined'){
+						if(-1!=object_types_list.indexOf(item.t)){
+							if(typeof object_types_arr[item.t] !== 'undefined'){
+								type=object_types_arr[item.t];
+							}
+							else{
+								type=item.t;
+							}
+						}
+					}
+					if('text'==type){
+						if(typeof item.d.r !== 'undefined'){
+							let reply_link=item.d.r;
+							//internal
+							if(0==reply_link.indexOf('viz://')){
+								reply_link=reply_link.toLowerCase();
+								reply_link=escape_html(reply_link);
+								let pattern = /@[a-z0-9\-\.]*/g;
+								let reply_account=reply_link.match(pattern);
+								if(typeof reply_account[0] != 'undefined'){
+									let pattern_block = /\/([0-9]*)\//g;
+									let reply_block=reply_link.match(pattern_block);
+									if(typeof reply_block[1] != 'undefined'){
+										reply=true;
+										parent_account=reply_account[0].substr(1);
+										parent_block=parseInt(fast_str_replace('/','',reply_block[1]));
+									}
+								}
+							}
+						}
+						else
+						if(typeof item.d.s != 'undefined'){
+							let share_link=item.d.s;
+							//internal
+							if(0==share_link.indexOf('viz://')){
+								share_link=share_link.toLowerCase();
+								share_link=escape_html(share_link);
+								let pattern = /@[a-z0-9\-\.]*/g;
+								let share_account=share_link.match(pattern);
+								if(typeof share_account[0] != 'undefined'){
+									let pattern_block = /\/([0-9]*)\//g;
+									let share_block=share_link.match(pattern_block);
+									if(typeof share_block[1] != 'undefined'){
+										share=true;
+										parent_account=share_account[0].substr(1);
+										parent_block=parseInt(fast_str_replace('/','',share_block[1]));
+									}
+								}
+							}
+						}
+					}
+					let nsfw=0;
+					let obj={
+						account:account,
+						block:block,
+						data:item,
+						is_reply:0,
+						is_share:0,
+						nsfw:nsfw,
+					};
+					if('text'==type){
+						if(reply){
+							obj.is_reply=1;
+							obj.parent_account=parent_account;
+							obj.parent_block=parent_block;
+						}
+						if(share){
+							obj.is_share=1;
+							obj.parent_account=parent_account;
+							obj.parent_block=parent_block;
+						}
+					}
+					obj.time=new Date().getTime() / 1000 | 0;//unixtime
+					console.log(obj);
+
+					let t,q,req;
+					t=db.transaction(['objects'],'readwrite');
+					q=t.objectStore('objects');
+					req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
+
+					let result;
+					let find=false;
+					req.onsuccess=function(event){
+						let cur=event.target.result;
+						if(cur){
+							result=cur.value;
+							result.time=obj.time;
+							result.processed=false;
+							find=true;
+							idb_get_id('feed','object',[account,block],function(feed_id){
+								if(false!==feed_id){
+									result.processed=true;//already in feed
+								}
+								console.log('parse_object: find in objects cache: '+account+' '+block+(result.processed?' (processed in feed)':' (not processed in feed)'));
+								callback(false,result);
+								for(let parse_callback in parsing_objects[current_parse][2]){
+									parsing_objects[current_parse][2][parse_callback](false,result);
+								}
+							});
+							cur.continue();
 						}
 						else{
-							type=item.t;
-						}
-					}
-				}
-				if('text'==type){
-					if(typeof item.d.r !== 'undefined'){
-						let reply_link=item.d.r;
-						//internal
-						if(0==reply_link.indexOf('viz://')){
-							reply_link=reply_link.toLowerCase();
-							reply_link=escape_html(reply_link);
-							let pattern = /@[a-z0-9\-\.]*/g;
-							let reply_account=reply_link.match(pattern);
-							if(typeof reply_account[0] != 'undefined'){
-								let pattern_block = /\/([0-9]*)\//g;
-								let reply_block=reply_link.match(pattern_block);
-								if(typeof reply_block[1] != 'undefined'){
-									reply=true;
-									parent_account=reply_account[0].substr(1);
-									parent_block=parseInt(fast_str_replace('/','',reply_block[1]));
-								}
-							}
-						}
-					}
-					else
-					if(typeof item.d.s != 'undefined'){
-						let share_link=item.d.s;
-						//internal
-						if(0==share_link.indexOf('viz://')){
-							share_link=share_link.toLowerCase();
-							share_link=escape_html(share_link);
-							let pattern = /@[a-z0-9\-\.]*/g;
-							let share_account=share_link.match(pattern);
-							if(typeof share_account[0] != 'undefined'){
-								let pattern_block = /\/([0-9]*)\//g;
-								let share_block=share_link.match(pattern_block);
-								if(typeof share_block[1] != 'undefined'){
-									share=true;
-									parent_account=share_account[0].substr(1);
-									parent_block=parseInt(fast_str_replace('/','',share_block[1]));
-								}
-							}
-						}
-					}
-				}
-				let nsfw=0;
-				let obj={
-					account:account,
-					block:block,
-					data:item,
-					is_reply:0,
-					is_share:0,
-					nsfw:nsfw,
-				};
-				if('text'==type){
-					if(reply){
-						obj.is_reply=1;
-						obj.parent_account=parent_account;
-						obj.parent_block=parent_block;
-					}
-					if(share){
-						obj.is_share=1;
-						obj.parent_account=parent_account;
-						obj.parent_block=parent_block;
-					}
-				}
-				obj.time=new Date().getTime() / 1000 | 0;//unixtime
-				console.log(obj);
-
-				let t,q,req;
-				t=db.transaction(['objects'],'readwrite');
-				q=t.objectStore('objects');
-				req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
-
-				let result;
-				let find=false;
-				req.onsuccess=function(event){
-					let cur=event.target.result;
-					if(cur){
-						result=cur.value;
-						result.time=obj.time;
-						result.processed=false;
-						find=true;
-						idb_get_id('feed','object',[account,block],function(feed_id){
-							if(false!==feed_id){
-								result.processed=true;//already in feed
-							}
-							console.log('parse_object: find in objects cache: '+account+' '+block+(result.processed?' (processed in feed)':' (not processed in feed)'));
-							callback(false,result);
-						});
-						cur.continue();
-					}
-					else{
-						if(!find){//object not found in base
-							if(global_db_version>=2){//hashtags support
-								//need replace url with hash to avoid conflict
-								let hashtags_text='';
-								if('text'==type){
-									hashtags_text=obj.data.d.text;
-									if(typeof obj.data.d.text !== 'undefined'){
+							if(!find){//object not found in base
+								if(global_db_version>=2){//hashtags support
+									//need replace url with hash to avoid conflict
+									let hashtags_text='';
+									if('text'==type){
 										hashtags_text=obj.data.d.text;
+										if(typeof obj.data.d.text !== 'undefined'){
+											hashtags_text=obj.data.d.text;
+										}
+										else{
+											if(typeof obj.data.d.t !== 'undefined'){
+												hashtags_text=obj.data.d.t;
+											}
+										}
+									}
+									if('publication'==type){
+										hashtags_text=markdown_clear_code(obj.data.d.m);//markdown
+										hashtags_text=markdown_decode_text(hashtags_text);
+										let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+										hashtags_text=hashtags_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
+									}
+									let summary_links=[];
+									//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
+									//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
+									let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
+									let http_protocol_links=hashtags_text.match(http_protocol_pattern);
+									if(null!=http_protocol_links){
+										summary_links=summary_links.concat(http_protocol_links);
+									}
+
+									summary_links=array_unique(summary_links);
+									summary_links.sort(sort_by_length_desc);
+
+									for(let i in summary_links){
+										hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
+									}
+
+									let hashtags_pattern = /(|\b)#([^:;@#!.,?\r\n\t <>()\[\]]+)(|\b)/g;;
+									let hashtags_links=hashtags_text.match(hashtags_pattern);
+									if(null!=hashtags_links){
+										hashtags_links=hashtags_links.map(function(value){
+											return value.toLowerCase();
+										});
+										hashtags_links=array_unique(hashtags_links);
+
+										let add_hashtag_object=function(hashtag_id,account,block){
+											idb_get_id_filter('hashtags_feed','object',[account,block],{tag:hashtag_id},function(feed_id){
+												if(false===feed_id){//add object to hashtag feed
+													let add_t,add_q,add_req;
+													add_t=db.transaction(['hashtags_feed'],'readwrite');
+													add_q=add_t.objectStore('hashtags_feed');
+													add_req=add_q.add({tag:hashtag_id,account:account,block:block});
+													if(!is_safari){
+														if(!is_firefox){
+															add_t.commit();
+														}
+													}
+													add_req.onsuccess=function(e){
+														//update hashtag counter
+														let upd_t,upd_q,upd_req;
+														upd_t=db.transaction(['hashtags'],'readwrite');
+														upd_q=upd_t.objectStore('hashtags');
+														upd_req=upd_q.openCursor(IDBKeyRange.only(hashtag_id),'next');
+														upd_req.onsuccess=function(event){
+															let cur=event.target.result;
+															if(cur){
+																let result=cur.value;
+																result.count++;
+																cur.update(result);
+																cur.continue();
+															}
+															else{
+																setTimeout(function(){render_right_addon();},10);
+															}
+														};
+													};
+												}
+											});
+										};
+
+										for(let i in hashtags_links){
+											let hashtag=hashtags_links[i].substr(1);
+											hashtag=hashtag.trim();
+											if(''!=hashtag){
+												idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+													if(false===hashtag_id){
+														let hashtag_info,hashtag_add_t,hashtag_add_q,hashtag_add_req;
+														hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
+														hashtag_add_t=db.transaction(['hashtags'],'readwrite');
+														hashtag_add_q=hashtag_add_t.objectStore('hashtags');
+														hashtag_add_req=hashtag_add_q.add(hashtag_info);
+														if(!is_safari){
+															if(!is_firefox){
+																hashtag_add_t.commit();
+															}
+														}
+														hashtag_add_req.onsuccess=function(e){
+															idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+																if(false!==hashtag_id){
+																	add_hashtag_object(hashtag_id,obj.account,obj.block);
+																}
+															});
+														}
+													}
+													else{
+														add_hashtag_object(hashtag_id,obj.account,obj.block);
+													}
+												});
+											}
+										}
+									}
+								}
+
+								/* check nsfw hashtags in object texts */
+								let nsfw_text='';
+								if('text'==type){
+									if(typeof obj.data.d.text !== 'undefined'){
+										nsfw_text=obj.data.d.text;
 									}
 									else{
 										if(typeof obj.data.d.t !== 'undefined'){
-											hashtags_text=obj.data.d.t;
+											nsfw_text=obj.data.d.t;
 										}
 									}
 								}
 								if('publication'==type){
-									hashtags_text=markdown_clear_code(obj.data.d.m);//markdown
-									hashtags_text=markdown_decode_text(hashtags_text);
+									nsfw_text=markdown_clear_code(obj.data.d.m);//markdown
+									nsfw_text=markdown_decode_text(nsfw_text);
 									let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
-									hashtags_text=hashtags_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
+									nsfw_text=nsfw_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
 								}
-								let summary_links=[];
-								//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
-								//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
-								let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
-								let http_protocol_links=hashtags_text.match(http_protocol_pattern);
-								if(null!=http_protocol_links){
-									summary_links=summary_links.concat(http_protocol_links);
+								for(let i in settings.nsfw_hashtags){
+									let search_hashtag='#'+settings.nsfw_hashtags[i];
+									if(-1!=nsfw_text.indexOf(search_hashtag)){
+										nsfw=1;
+									}
 								}
+								obj.nsfw=nsfw;
 
-								summary_links=array_unique(summary_links);
-								summary_links.sort(sort_by_length_desc);
-
-								for(let i in summary_links){
-									hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
+								let add_t,add_q;
+								add_t=db.transaction(['objects'],'readwrite');
+								add_q=add_t.objectStore('objects');
+								add_q.add(obj);
+								if(!is_safari){
+									if(!is_firefox){
+										add_t.commit();
+									}
 								}
-
-								let hashtags_pattern = /(|\b)#([^:;@#!.,?\r\n\t <>()\[\]]+)(|\b)/g;;
-								let hashtags_links=hashtags_text.match(hashtags_pattern);
-								if(null!=hashtags_links){
-									hashtags_links=hashtags_links.map(function(value){
-										return value.toLowerCase();
-									});
-									hashtags_links=array_unique(hashtags_links);
-
-									let add_hashtag_object=function(hashtag_id,account,block){
-										idb_get_id_filter('hashtags_feed','object',[account,block],{tag:hashtag_id},function(feed_id){
-											if(false===feed_id){//add object to hashtag feed
-												let add_t,add_q,add_req;
-												add_t=db.transaction(['hashtags_feed'],'readwrite');
-												add_q=add_t.objectStore('hashtags_feed');
-												add_req=add_q.add({tag:hashtag_id,account:account,block:block});
-												if(!is_safari){
-													if(!is_firefox){
-														add_t.commit();
-													}
-												}
-												add_req.onsuccess=function(e){
-													//update hashtag counter
-													let upd_t,upd_q,upd_req;
-													upd_t=db.transaction(['hashtags'],'readwrite');
-													upd_q=upd_t.objectStore('hashtags');
-													upd_req=upd_q.openCursor(IDBKeyRange.only(hashtag_id),'next');
-													upd_req.onsuccess=function(event){
-														let cur=event.target.result;
-														if(cur){
-															let result=cur.value;
-															result.count++;
-															cur.update(result);
-															cur.continue();
-														}
-														else{
-															setTimeout(function(){render_right_addon();},10);
-														}
-													};
-												};
-											}
-										});
-									};
-
-									for(let i in hashtags_links){
-										let hashtag=hashtags_links[i].substr(1);
-										hashtag=hashtag.trim();
-										if(''!=hashtag){
-											idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
-												if(false===hashtag_id){
-													let hashtag_info,hashtag_add_t,hashtag_add_q,hashtag_add_req;
-													hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
-													hashtag_add_t=db.transaction(['hashtags'],'readwrite');
-													hashtag_add_q=hashtag_add_t.objectStore('hashtags');
-													hashtag_add_req=hashtag_add_q.add(hashtag_info);
-													if(!is_safari){
-														if(!is_firefox){
-															hashtag_add_t.commit();
-														}
-													}
-													hashtag_add_req.onsuccess=function(e){
-														idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
-															if(false!==hashtag_id){
-																add_hashtag_object(hashtag_id,obj.account,obj.block);
-															}
-														});
-													}
-												}
-												else{
-													add_hashtag_object(hashtag_id,obj.account,obj.block);
+								add_t.oncomplete=function(e){
+									idb_get_by_id('users','account',account,function(user_data){
+										if(1==user_data.status){//subscribed to account
+											//check feed load for parsed object and previous unseen range
+											feed_load(account,false,block,false,function(err,result){
+												console.log('parse_object: feed load (not founded)',err,result);
+												if(!err){
+													update_feed_result(result);
 												}
 											});
 										}
-									}
-								}
-							}
-
-							/* check nsfw hashtags in object texts */
-							let nsfw_text='';
-							if('text'==type){
-								if(typeof obj.data.d.text !== 'undefined'){
-									nsfw_text=obj.data.d.text;
-								}
-								else{
-									if(typeof obj.data.d.t !== 'undefined'){
-										nsfw_text=obj.data.d.t;
-									}
-								}
-							}
-							if('publication'==type){
-								nsfw_text=markdown_clear_code(obj.data.d.m);//markdown
-								nsfw_text=markdown_decode_text(nsfw_text);
-								let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
-								nsfw_text=nsfw_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
-							}
-							for(let i in settings.nsfw_hashtags){
-								let search_hashtag='#'+settings.nsfw_hashtags[i];
-								if(-1!=nsfw_text.indexOf(search_hashtag)){
-									nsfw=1;
-								}
-							}
-							obj.nsfw=nsfw;
-
-							let add_t,add_q;
-							add_t=db.transaction(['objects'],'readwrite');
-							add_q=add_t.objectStore('objects');
-							add_q.add(obj);
-							if(!is_safari){
-								if(!is_firefox){
-									add_t.commit();
-								}
-							}
-							add_t.oncomplete=function(e){
-								idb_get_by_id('users','account',account,function(user_data){
-									if(1==user_data.status){//subscribed to account
-										//check feed load for parsed object and previous unseen range
-										feed_load(account,false,block,false,function(err,result){
-											console.log('parse_object: feed load (not founded)',err,result);
-											if(!err){
-												update_feed_result(result);
+									});
+									if(reply){//add to replies
+										idb_get_id('replies','object',[account,block],function(reply_id){
+											if(false===reply_id){//create reply
+												let reply_add_t=db.transaction(['replies'],'readwrite');
+												let reply_add_q=reply_add_t.objectStore('replies');
+												let reply_obj={
+													account:account,
+													block:block,
+													parent_account:parent_account,
+													parent_block:parent_block,
+													time:new Date().getTime() / 1000 | 0
+												};
+												reply_add_q.add(reply_obj);
+												if(!is_safari){
+													if(!is_firefox){
+														reply_add_t.commit();
+													}
+												}
+												reply_add_t.oncomplete=function(e){
+													callback(false,obj);
+													for(let parse_callback in parsing_objects[current_parse][2]){
+														parsing_objects[current_parse][2][parse_callback](false,obj);
+													}
+												};
+											}
+											else{//already exist
+												callback(false,obj);
+												for(let parse_callback in parsing_objects[current_parse][2]){
+													parsing_objects[current_parse][2][parse_callback](false,obj);
+												}
 											}
 										});
 									}
-								});
-								if(reply){//add to replies
-									idb_get_id('replies','object',[account,block],function(reply_id){
-										if(false===reply_id){//create reply
-											let reply_add_t=db.transaction(['replies'],'readwrite');
-											let reply_add_q=reply_add_t.objectStore('replies');
-											let reply_obj={
-												account:account,
-												block:block,
-												parent_account:parent_account,
-												parent_block:parent_block,
-												time:new Date().getTime() / 1000 | 0
-											};
-											reply_add_q.add(reply_obj);
-											if(!is_safari){
-												if(!is_firefox){
-													reply_add_t.commit();
-												}
-											}
-											reply_add_t.oncomplete=function(e){
-												callback(false,obj);
-											};
+									else{
+										callback(false,obj);
+										for(let parse_callback in parsing_objects[current_parse][2]){
+											parsing_objects[current_parse][2][parse_callback](false,obj);
 										}
-										else{//already exist
-											callback(false,obj);
-										}
-									});
-								}
-								else{
-									callback(false,obj);
-								}
-							};
+									}
+								};
+							}
 						}
-					}
-				};
+					};
+				}
 			}
-		}
-	});
+		});
+	}
 }
 
 function load_nested_replies(el){
@@ -11821,7 +11861,7 @@ function profile_filter_by_type(){
 				clearTimeout(check_load_more_timer);
 				check_load_more_timer=setTimeout(function(){
 					check_load_more();
-				},50);
+				},150);
 			}
 			else{//filter by selected interests
 				console.log(hashtags_filter.length,hashtags_unique_filter)
@@ -11958,7 +11998,7 @@ function profile_filter_by_type(){
 									clearTimeout(check_load_more_timer);
 									check_load_more_timer=setTimeout(function(){
 										check_load_more();
-									},50);
+									},150);
 								}
 							});
 						}
@@ -11966,7 +12006,7 @@ function profile_filter_by_type(){
 							clearTimeout(check_load_more_timer);
 							check_load_more_timer=setTimeout(function(){
 								check_load_more();
-							},50);
+							},150);
 						}
 					}
 				};
@@ -12221,12 +12261,12 @@ function load_more_objects(indicator,check_level){
 			let start_offset=user_result.start;
 			let offset=start_offset;
 			let find_objects=false;
-			let objects_count=indicator.parent().find('.object').length;
+			let objects_count=indicator.parent().find('.objects>.object').length;
 			objects_count-=indicator.parent().find('.pinned-object').length;
 			if(0<objects_count){
 				find_objects=true;
 			}
-			indicator.parent().find('.object').each(function(){
+			indicator.parent().find('.objects>.object').each(function(){
 				if(typeof $(this).data('previous') !== 'undefined'){
 					let previous=parseInt($(this).data('previous'));
 					if(isNaN(previous)){
@@ -12239,6 +12279,7 @@ function load_more_objects(indicator,check_level){
 					}
 				}
 			});
+			//if some objects - need to check impossible?
 			if(find_objects){
 				//need to stop load more if no previous
 				if((offset==start_offset)||(offset==0)){
@@ -12252,10 +12293,18 @@ function load_more_objects(indicator,check_level){
 					console.log('get_object error',check_account,offset,err,object_result);
 					if(1==object_result){
 						indicator.before(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
+						//try again after 1s
+						indicator.data('busy','0');
+						clearTimeout(check_load_more_timer);
+						check_load_more_timer=setTimeout(function(){
+							check_load_more();
+						},1000);
 					}
 					if(2==object_result){
+						console.log('get_object error:',check_account,offset,'result:',object_result);
 						indicator.before(ltmp_arr.load_more_end_notice);
 						indicator.remove();
+						return;
 					}
 				}
 				else{
@@ -12264,8 +12313,8 @@ function load_more_objects(indicator,check_level){
 					let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
 					new_object.css('display','none');
 					update_short_date(new_object.find('.short-date-view'));
-					indicator.data('busy','0');
 					profile_filter_by_type();
+					indicator.data('busy','0');
 					clearTimeout(check_load_more_timer);
 					check_load_more_timer=setTimeout(function(){
 						check_load_more();
