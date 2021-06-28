@@ -58,6 +58,14 @@ var ltmp_en_arr = {
 				<p><a class="button save-profile-action">Save</a><span class="submit-button-ring"></span></p>
 				<p><em>Attention! All information will be recorded in the blockchain, it can be replaced, but it will not be possible to «delete» or «erase» from history.</em></p>
 			</div>
+			<div class="content-view" data-tab="qr">
+				<p>You can import account by scan this QR-code from another device.</p>
+				<div class="objects"></div>
+			</div>
+			<div class="content-view" data-tab="scan_qr">
+				<p>Open “Account”&rarr;“Export via QR” on device with signed account and scan QR-code from it.</p>
+				<div class="objects"></div>
+			</div>
 		</div>
 	</div>
 	`,
@@ -516,11 +524,13 @@ var ltmp_en_arr = {
 	users_ignored_tab: 'Ignored',
 	users_qr_code_tab: 'Provide',
 	users_scan_qr_code_tab: 'Scan',
-	users_scan_unable: 'Unable to access video stream (please make sure you have a webcam enabled)',
 	users_scan_retrieving: 'Retrieving video...',
-	scan_qr_error_browser: '<div class="scan-qr-error-icon">{icon}</div><div class="scan-qr-error-text">Browser not support video capture</div>',
-	scan_qr_error_subscribe: '<div class="scan-qr-error-icon">{icon}</div><div class="scan-qr-error-text">Error to subscribe <a tabindex="0" data-href="viz://@{account}/">@{account}</a></div>',
-	scan_qr_successfull_subscribe: '<div class="scan-qr-successfull-icon">{icon}</div><div class="scan-qr-successfull-text">Successfully subscribed to <a tabindex="0" data-href="viz://@{account}/">@{account}</a></div>',
+	scan_qr_unable: 'Unable to access video stream (please make sure you have a webcam enabled)',
+	scan_qr_error: '<div class="scan-qr-error-icon">{icon}</div><div class="scan-qr-error-text">{text}</div>',
+	scan_qr_error_browser: 'Browser not support video capture',
+	scan_qr_error_subscribe: 'Error to subscribe <a tabindex="0" data-href="viz://@{account}/">@{account}</a>',
+	scan_qr_successfull: '<div class="scan-qr-successfull-icon">{icon}</div><div class="scan-qr-successfull-text">{text}</div>',
+	scan_qr_successfull_subscribe: 'Successfully subscribed to <a tabindex="0" data-href="viz://@{account}/">@{account}</a>',
 
 	users_objects_box: `<div class="user-item-box">{context}</div>`,
 	users_objects_header: `
@@ -554,7 +564,7 @@ var ltmp_en_arr = {
 		attention: 'Attention!',
 		upload: 'Upload',
 		sync: 'Sync',
-		sync_import: 'Synchronizing with the cloud &hellip;',
+		sync_import: 'Synchronizing with the cloud&hellip;',
 		sync_import_error: 'Invalid data format ',
 		sync_import_success: 'Data transfer completed successfully ',
 		award_success: 'You awarded @{account}',
@@ -611,6 +621,8 @@ var ltmp_en_arr = {
 	account_settings_reset: 'Account data has been deleted',
 	account_credentials_tab: 'Account',
 	account_profile_tab: 'Profile',
+	account_qr_tab: 'Export via QR',
+	account_scan_qr_tab: 'Import via QR',
 
 	notifications_caption: 'Notifications',
 	awards_caption: 'Awards',

@@ -58,6 +58,14 @@ var ltmp_ru_arr = {
 				<p><a class="button save-profile-action">Сохранить</a><span class="submit-button-ring"></span></p>
 				<p><em>Внимание! Вся информация будет записана в блокчейн, её можно заменить, но невозможно будет «удалить» или «стереть» из истории.</em></p>
 			</div>
+			<div class="content-view" data-tab="qr">
+				<p>Вы можете быстро импортировать аккаунт просканировав данный QR-код с другого устройства.</p>
+				<div class="objects"></div>
+			</div>
+			<div class="content-view" data-tab="scan_qr">
+				<p>Откройте «Аккаунт»&rarr;«Экспорт через QR» на устройстве с выполненным входом и отсканируйте QR-код с него.</p>
+				<div class="objects"></div>
+			</div>
 		</div>
 	</div>
 	`,
@@ -516,11 +524,13 @@ var ltmp_ru_arr = {
 	users_ignored_tab: 'Игнорируемые',
 	users_qr_code_tab: 'Предоставить',
 	users_scan_qr_code_tab: 'Сканировать',
-	users_scan_unable: 'Не получается получить доступ к видео потоку (убедитесь, что у вас включена камера)',
 	users_scan_retrieving: 'Получаем видео...',
-	scan_qr_error_browser: '<div class="scan-qr-error-icon">{icon}</div><div class="scan-qr-error-text">Браузер не поддерживает захват видео</div>',
-	scan_qr_error_subscribe: '<div class="scan-qr-error-icon">{icon}</div><div class="scan-qr-error-text">Ошибка при подписке на <a tabindex="0" data-href="viz://@{account}/">@{account}</a></div>',
-	scan_qr_successfull_subscribe: '<div class="scan-qr-successfull-icon">{icon}</div><div class="scan-qr-successfull-text">Успешная подписка на <a tabindex="0" data-href="viz://@{account}/">@{account}</a></div>',
+	scan_qr_unable: 'Не получается получить доступ к видео потоку (убедитесь, что у вас включена камера)',
+	scan_qr_error: '<div class="scan-qr-error-icon">{icon}</div><div class="scan-qr-error-text">{text}</div>',
+	scan_qr_error_browser: 'Браузер не поддерживает захват видео',
+	scan_qr_error_subscribe: 'Ошибка при подписке на <a tabindex="0" data-href="viz://@{account}/">@{account}</a>',
+	scan_qr_successfull: '<div class="scan-qr-successfull-icon">{icon}</div><div class="scan-qr-successfull-text">{text}</div>',
+	scan_qr_successfull_subscribe: 'Успешная подписка на <a tabindex="0" data-href="viz://@{account}/">@{account}</a>',
 
 	users_objects_box: `<div class="user-item-box">{context}</div>`,
 	users_objects_header: `
@@ -611,6 +621,8 @@ var ltmp_ru_arr = {
 	account_settings_reset: 'Данные аккаунта удалены',
 	account_credentials_tab: 'Учетная запись',
 	account_profile_tab: 'Профиль',
+	account_qr_tab: 'Экспорт через QR',
+	account_scan_qr_tab: 'Импорт через QR',
 
 	notifications_caption: 'Уведомления',
 	awards_caption: 'Награждения',

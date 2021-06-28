@@ -9,6 +9,7 @@ if(window.matchMedia('(display-mode: standalone)').matches){
 if(window.matchMedia('(display-mode: fullscreen)').matches){
 	pwa=true;
 }
+var current_theme='';
 
 var whitelabel_account='';//main whitelabel account to redirect
 var whitelabel_accounts=[whitelabel_account];//always subscribed to whitelabels accounts
@@ -1036,7 +1037,7 @@ function remove_session(view){
 	view.find('.error').html('');
 	view.find('.success').html(ltmp_arr.account_settings_reset);
 
-	view.find('input').val('');
+	view.find('input').attr('disabled','disabled');
 
 	if(''!=current_user){
 		let update_t=db.transaction(['users'],'readwrite');
@@ -1057,8 +1058,16 @@ function remove_session(view){
 				localStorage.removeItem(storage_prefix+'current_user');
 				render_menu();
 				render_session();
+				setTimeout(function(){
+					view_path('dapp:account/credentials/',{},true,false);
+				},1000);
 			}
 		};
+	}
+	else{
+		setTimeout(function(){
+			view_path('dapp:account/credentials/',{},true,false);
+		},1000);
 	}
 }
 
@@ -5842,6 +5851,11 @@ function import_backup(data,callback){
 	}
 	if(typeof backup.settings !== 'undefined'){
 		settings=backup.settings;
+		for(let i in default_settings){
+			if(typeof settings[i]==='undefined'){
+				settings[i]=default_settings[i];
+			}
+		}
 		let settings_json=JSON.stringify(settings);
 		localStorage.setItem(storage_prefix+'settings',settings_json);
 		callback(ltmp_arr.settings_sync_import_settings_success);
@@ -8619,9 +8633,10 @@ function view_users(view,path_parts,query,title,back_to){
 				text:'viz://@'+current_user+'/',
 				width:300,
 				height:300,
-				colorDark:('light'==settings.theme_mode?'#000000':'#ffffff'),
+				colorDark:('light'==current_theme?'#000000':'#ffffff'),
 				colorLight:$('body').css('background-color'),
-				correctLevel:QRCode.CorrectLevel.H
+				correctLevel:QRCode.CorrectLevel.H,
+				title:''
 			});
 			qrcode=null;
 			$('.loader').css('display','none');
@@ -8631,7 +8646,7 @@ function view_users(view,path_parts,query,title,back_to){
 		if('scan_qr_code'==current_tab){
 			let objects=`
 			<div class="scan-qr-code">
-				<div class="scan-qr-loading">${ltmp_arr.users_scan_unable}</div>
+				<div class="scan-qr-loading">${ltmp_arr.scan_qr_unable}</div>
 				<canvas></canvas>
 				</div>
 			</div`
@@ -8727,10 +8742,10 @@ function view_users(view,path_parts,query,title,back_to){
 										update_feed_result(result);
 									}
 								});
-								scan_qr_loading.innerHTML=ltmp(ltmp_arr.scan_qr_successfull_subscribe,{account:check_user,icon:ltmp_arr.icon_check});
+								scan_qr_loading.innerHTML=ltmp(ltmp_arr.scan_qr_successfull,{icon:ltmp_arr.icon_check,text:ltmp(ltmp_arr.scan_qr_successfull_subscribe,{account:check_user})});
 							}
 							else{
-								scan_qr_loading.innerHTML=ltmp(ltmp_arr.scan_qr_error_subscribe,{account:check_user,icon:ltmp_arr.icon_close});
+								scan_qr_loading.innerHTML=ltmp(ltmp_arr.scan_qr_error,{icon:ltmp_arr.icon_close,text:ltmp_arr(ltmp_arr.scan_qr_error_subscribe,{account:check_user})});
 							}
 						});
 					}
@@ -8740,7 +8755,7 @@ function view_users(view,path_parts,query,title,back_to){
 				}
 			}
 			else{
-				scan_qr_loading.innerHTML=ltmp(ltmp_arr.scan_qr_error_browser,{icon:ltmp_arr.icon_close});
+				scan_qr_loading.innerHTML=ltmp(ltmp_arr.scan_qr_error,{icon:ltmp_arr.icon_close,text:ltmp_arr.scan_qr_error_subscribe});
 			}
 			$('.loader').css('display','none');
 			view.css('display','block');
@@ -9363,6 +9378,7 @@ function apply_theme_mode(){
 	if('light'==mode){
 		theme_color='#efefef';
 	}
+	current_theme=mode;
 	document.querySelector('meta[name=theme-color]').setAttribute('content',theme_color);
 	clearTimeout(apply_theme_mode_timer);
 	apply_theme_mode_timer=setTimeout(function(){apply_theme_mode();},60000);
@@ -9389,11 +9405,16 @@ function view_account(view,path_parts,query,title){
 	tabs+=ltmp(ltmp_arr.tab,{link:'dapp:account/credentials',class:('credentials'==current_tab?'current':''),caption:ltmp_arr.account_credentials_tab});
 	if(''!=current_user){
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:account/profile',class:('profile'==current_tab?'current':''),caption:ltmp_arr.account_profile_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:account/qr',class:('qr'==current_tab?'current':''),caption:ltmp_arr.account_qr_tab});
+	}
+	else{
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:account/scan_qr',class:('scan_qr'==current_tab?'current':''),caption:ltmp_arr.account_scan_qr_tab});
 	}
 	view.find('.tabs').html(tabs);
 
 	console.log(current_tab);
 	view.find('.content-view').css('display','none');
+	view.find('input').removeAttr('disabled');
 	view.find('.content-view[data-tab="'+current_tab+'"]').css('display','block');
 
 	let tab=view.find('.content-view[data-tab="'+current_tab+'"]');
@@ -9465,6 +9486,135 @@ function view_account(view,path_parts,query,title){
 			}
 			$('.loader').css('display','none');
 		});
+	}
+	if('qr'==current_tab){
+		let objects='<div class="view-qr-code"></div>';
+		tab.find('.objects').html(objects);
+		let qrcode=new QRCode(tab.find('.view-qr-code')[0],{
+			text:''+current_user+':'+users[current_user].regular_key,
+			width:300,
+			height:300,
+			colorDark:('light'==current_theme?'#000000':'#ffffff'),
+			colorLight:$('body').css('background-color'),
+			correctLevel:QRCode.CorrectLevel.H,
+			title:''
+		});
+		qrcode=null;
+	}
+	if('scan_qr'==current_tab){
+		let objects=`
+		<div class="scan-qr-code">
+			<div class="scan-qr-loading">${ltmp_arr.scan_qr_unable}</div>
+			<canvas></canvas>
+			</div>
+		</div`
+		tab.find('.objects').html(objects);
+		var scan_qr_result='';
+		var scan_qr_video=document.createElement('video');
+		var scan_qr_canvas_el=tab.find('.objects canvas')[0];
+		var scan_qr_canvas=scan_qr_canvas_el.getContext('2d');
+		var scan_qr_loading=tab.find('.objects .scan-qr-loading')[0];
+
+		let scan_qr_draw_line=function(begin,end,color) {
+			scan_qr_canvas.beginPath();
+			scan_qr_canvas.moveTo(begin.x,begin.y);
+			scan_qr_canvas.lineTo(end.x,end.y);
+			scan_qr_canvas.lineWidth=5;
+			scan_qr_canvas.strokeStyle=color;
+			scan_qr_canvas.stroke();
+		}
+
+		if(navigator.mediaDevices !== undefined){
+			// use facingMode: environment to attemt to get the back camera on phones
+			navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
+				window.qr_scan_stream=stream;
+				scan_qr_video.srcObject=window.qr_scan_stream;
+				// required to tell iOS safari we don't want fullscreen
+				scan_qr_video.setAttribute('playsinline', true);
+				scan_qr_video.play();
+				requestAnimationFrame(scan_qr_tick);
+			});
+
+			let scan_qr_tick=function(){
+
+				scan_qr_loading.innerText=ltmp_arr.users_scan_retrieving;
+				if(scan_qr_video.readyState === scan_qr_video.HAVE_ENOUGH_DATA){
+					scan_qr_loading.innerText='';
+
+					scan_qr_canvas_el.height=scan_qr_video.videoHeight;
+					scan_qr_canvas_el.width=scan_qr_video.videoWidth;
+					scan_qr_canvas.drawImage(scan_qr_video,0,0,scan_qr_canvas_el.width,scan_qr_canvas_el.height);
+					let scan_qr_image=scan_qr_canvas.getImageData(0,0,scan_qr_canvas_el.width,scan_qr_canvas_el.height);
+					let code=jsQR(scan_qr_image.data,scan_qr_image.width,scan_qr_image.height,{
+						inversionAttempts:'attemptBoth',
+					});
+					if(code){
+						if(0!=code.data.indexOf(':')){
+							let code_data=code.data.split(':');
+							if(typeof code_data[0] !== 'undefined'){
+								if(typeof code_data[1] !== 'undefined'){
+									if(viz.auth.isWif(code_data[1])){
+										scan_qr_result=code_data;
+									}
+								}
+							}
+						}
+						if(''==scan_qr_result){
+							scan_qr_draw_line(code.location.topLeftCorner, code.location.topRightCorner,'#ff1111');
+							scan_qr_draw_line(code.location.topRightCorner, code.location.bottomRightCorner,'#ff1111');
+							scan_qr_draw_line(code.location.bottomRightCorner, code.location.bottomLeftCorner,'#ff1111');
+							scan_qr_draw_line(code.location.bottomLeftCorner, code.location.topLeftCorner,'#ff1111');
+						}
+					}
+					else{
+					}
+				}
+				if(''!=scan_qr_result){
+					scan_qr_canvas=null;
+					scan_qr_canvas_el.hidden=true;
+					window.qr_scan_stream.getTracks().forEach((track)=>{
+						track.stop();
+					});
+
+					scan_qr_video=null;
+
+					view.find('.tabs a[data-href="dapp:account/'+current_tab+'"]').removeClass('current');
+					current_tab='credentials';
+					view.find('.tabs a[data-href="dapp:account/'+current_tab+'"]').addClass('current');
+
+					view.find('.content-view').css('display','none');
+					view.find('.content-view[data-tab="'+current_tab+'"]').css('display','block');
+
+					let tab=view.find('.content-view[data-tab="'+current_tab+'"]');
+
+					tab.find('.button').removeClass('disabled');
+					tab.find('.submit-button-ring').removeClass('show');
+					tab.find('.error').html('');
+					tab.find('.success').html('');
+
+					tab.find('input').val('');
+
+					tab.find('input[name=viz_account]').val(scan_qr_result[0]);
+					tab.find('input[name=viz_regular_key]').val(scan_qr_result[1]);
+
+					//clear sync cloud vars
+					sync_cloud_activity=0;
+					sync_cloud_update=0;
+					localStorage.removeItem(storage_prefix+'sync_cloud_activity');
+					localStorage.removeItem(storage_prefix+'sync_cloud_update');
+
+					var event=document.createEvent('MouseEvents');
+					event.initEvent('click',true,true);
+					tab.find('.save-account-action')[0].dispatchEvent(event);
+				}
+				else{
+					requestAnimationFrame(scan_qr_tick);
+				}
+			}
+		}
+		else{
+			scan_qr_loading.innerHTML=ltmp(ltmp_arr.scan_qr_error,{icon:ltmp_arr.icon_close,text:ltmp_arr.scan_qr_error_subscribe});
+		}
 	}
 	$('.loader').css('display','none');
 	view.css('display','block');
