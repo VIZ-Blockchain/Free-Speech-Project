@@ -1056,6 +1056,9 @@ function remove_session(view){
 				current_user='';
 				localStorage.removeItem(storage_prefix+'users');
 				localStorage.removeItem(storage_prefix+'current_user');
+				localStorage.removeItem(storage_prefix+'install_close');
+				localStorage.removeItem(storage_prefix+'sync_cloud_activity');
+				localStorage.removeItem(storage_prefix+'sync_cloud_update');
 				render_menu();
 				render_session();
 				setTimeout(function(){
@@ -4181,7 +4184,8 @@ function app_mouse(e){
 						if('accepted'===choice.outcome){
 							console.log('User accepted the A2HS prompt');
 							localStorage.setItem(storage_prefix+'install_close',1);
-						}else{
+						}
+						else{
 							console.log('User dismissed the A2HS prompt');
 							localStorage.setItem(storage_prefix+'install_close',0);
 						}
