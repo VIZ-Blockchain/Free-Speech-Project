@@ -31,4 +31,4 @@ You can read about the concept in 4 publications:
 
 ## Community
 
-Telegram groups: [TFSP Development](https://t.me/free_speech_project_dev) [Readdle.me](https://t.me/readdle_me)
+Telegram groups: [TFSP Development](https://t.me/free_speech_project_dev), [Readdle.me](https://t.me/readdle_me)

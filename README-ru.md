@@ -32,4 +32,4 @@
 
 ## Сообщество
 
-Группы в телеграме: [TFSP Development](https://t.me/free_speech_project_dev) [Readdle.me](https://t.me/readdle_me)
+Группы в телеграме: [TFSP Development](https://t.me/free_speech_project_dev), [Readdle.me](https://t.me/readdle_me)
