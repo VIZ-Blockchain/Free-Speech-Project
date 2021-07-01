@@ -1,11 +1,9 @@
 # The Free Speech Project
 
 <p align="center">
-![](https://i.imgur.com/iCQ4aeL.png)
-</p>
-
-<p align="center">
-[Русская версия](README-ru.md) - **English version**
+<img src="https://i.imgur.com/iCQ4aeL.png">
+<br>
+<a href="README-ru.md">Русская версия</a> - <b>English version</b>
 </p>
 
 This is a decentralized application (dApp) “The Free Speech Project”. It is based on [the open protocol “Voice”].(specification.md), launched on the social [blockchain platform VIZ](https://github.com/VIZ-Blockchain/viz-cpp-node/). Together with microservices responsible for searching, filtering data, storing data and routing messages, the concept of a decentralized social network of backward linking is progressively implemented.

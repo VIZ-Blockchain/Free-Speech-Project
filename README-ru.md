@@ -1,11 +1,9 @@
 # The Free Speech Project
 
 <p align="center">
-![](https://i.imgur.com/iCQ4aeL.png)
-</p>
-
-<p align="center">
-**Русская версия** - [English version](README.md)
+<img src="https://i.imgur.com/iCQ4aeL.png">
+<br>
+<b>Русская версия</b> - <a href="README.md">English version</a>
 </p>
 
 Перед вами децентрализованное приложение (dApp) «Проект Свобода Слова». Он основан на [открытом протоколе «Голос»](specification-ru.md), запущенном на социальной [блокчейн платформе VIZ](https://github.com/VIZ-Blockchain/viz-cpp-node/). Вместе с микро-сервисами отвечающими за поиск, фильтрацию данных, хранения данных и роутинга сообщений постепенно реализуется концепт децентрализованной социальной сети обратной связанности.
