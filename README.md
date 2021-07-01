@@ -1,44 +1,36 @@
+# The Free Speech Project
+
+<p align="center">
 ![](https://i.imgur.com/iCQ4aeL.png)
+</p>
 
-# Free Speech Project
+<p align="center">
+[Русская версия](README-ru.md) - **English version**
+</p>
 
-## Описание проекта
-Децентрализованная социальная сеть обратной связанности на социальной блокчейн платформе VIZ.
+This is a decentralized application (dApp) “The Free Speech Project”. It is based on [the open protocol “Voice”].(specification.md), launched on the social [blockchain platform VIZ](https://github.com/VIZ-Blockchain/viz-cpp-node/). Together with microservices responsible for searching, filtering data, storing data and routing messages, the concept of a decentralized social network of backward linking is progressively implemented.
 
-Концепт в 4 публикациях:
-- [Протокол децентрализованной социальной сети на распределенном реестре](https://control.viz.world/media/@on1x/ru-decentralized-social-network-protocol-on-blockchain/)
-- [Построение нового протокола на блокчейне VIZ](https://control.viz.world/media/@on1x/ru-custom-protocol-on-viz-blockchain/)
-- [Протокол Голос на блокчейне VIZ](https://control.viz.world/media/@on1x/ru-protocol-golos-blockchain-viz/)
-- [Использование промежуточного хаба в протоколе Голос](https://control.viz.world/media/@on1x/ru-using-proxy-hub-protocol-voice/)
+The problems of modern social networks: censorship and filtering of information, the imposition of a social agenda. The formation of news feeds by closed algorithms. We believe that all these problems can be solved and we are moving step by step towards the realization of a free social network protocol.
 
-Создается минималистичный концепт автономного html файла, который будет обращаться к публичным нодам для взаимодействия.
+Using the unique features of VIZ - namely the use of the model of digital social capital through awards - it is possible to digitize not only the context of self-expression, but also to tokenize the relationship between personalities and brands.  VIZ is a turquoise DAO, where each participant can influence the distribution of social capital within the network by rewarding interesting and useful initiatives, seeding a new model of behavior.
 
-## Какую проблему решает проект
-Цензура, свободный доступ к информации в распределенном реестре.
+## MVP
 
-## Контакты:
-Чат проекта в телеграме: @ozi_free_speech_project
+In the project settings there are parameters responsible for whitelabel, which allows you to run an application instance under a specific brand. For example, a public service is launched under the brand [Readdle.me](https://readdle.me/). Already now it can be used, it is enough to register in the VIZ network and sign in using the usual (regular) private key.
 
-## Подзадачи для энтузиастов
+## Concept description
 
-### 1
-Создать микро сервис с открытыми CORS политиками, который сформирует и отдаст json, содержащий:
-- sitename (если нет, то host)
-- title страницы (смотрим мета данные)
-- description страницы (смотрим мета данные)
-- image в сжатом виде и пропущенную через base64 (meta image)
-Входящие данные в виде стандартного url.
+You can read about the concept in 4 publications:
+- [The protocol of a decentralized social network on the distributed ledger](https://control.viz.world/media/@on1x/en-decentralized-social-network-protocol-on-blockchain/)
+- [Building a new protocol on the VIZ blockchain](https://control.viz.world/media/@on1x/en-custom-protocol-on-viz-blockchain/)
+- [The Voice protocol on the VIZ blockchain](https://control.viz.world/media/@on1x/en-protocol-voice-on-viz-blockchain/)
+- [Use of an intermediate hub in the Voice protocol](https://control.viz.world/media/@on1x/en-using-proxy-hub-protocol-voice/)
 
-### 2
-Так как протоколов в блокчейне может быть много, пользоваться единым custom счетчиком внутри аккаунта было бы не логичным.
-Нужно разработать плагин на C++ для ноды https://github.com/VIZ-Blockchain/viz-cpp-node/tree/master/plugins
-который будет следить за custom операциями и формировать индекс для api запросов вида:
-get_user_custom_list (input: account login) — возвращает список уникальных custom протоколов, которые использовал user
-get_user_custom_sequence (input: account login, custom name) — возвращает custom_sequence как счетчик операций заданного custom протокола и custom_sequence_block_num как номер последнего блока, где была custom операция
+## Historical publications
 
-### 3
+- [Public beta of Readdle.me](https://control.viz.world/media/@on1x/en-readdle-me-beta/)
+- [The Free Speech Project: Progress in the first half of 2021](https://control.viz.world/media/@on1x/en-the-free-speech-project-progress-in-the-first-half-of-2021/)
 
-Кэш сервис для API запросов к публичным нодам, по совместительству load balancer. Нужно, чтобы сервис держал список публичных нод и периодически проверял их доступность и актуальность последнего блока. И распределял между ними нагрузку на входящие запросы.
-Ответ кэшировал до следующего блока (было бы здорово вычислять это автоматически ИЛИ задавать длительность кэша в конфиге (например: 1 или 3 секунды было бы достаточно для динамических данных, а для таких как операции в блоке — можно и на минуту кэшировать)).
-Делать это на нативных структурах самого языка, чтобы не подключать дополнительную прослойку в виде того же memcached или redis.
-Например, для PHP подошел бы https://www.php.net/manual/ru/function.apc-store.php
+## Community
+
+Telegram groups: [TFSP Development](https://t.me/free_speech_project_dev) [Readdle.me](https://t.me/readdle_me)
