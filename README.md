@@ -6,7 +6,7 @@
 <a href="README-ru.md">Русская версия</a> - <b>English version</b>
 </p>
 
-This is a decentralized application (dApp) “The Free Speech Project”. It is based on [the open protocol “Voice”].(specification.md), launched on the social [blockchain platform VIZ](https://github.com/VIZ-Blockchain/viz-cpp-node/). Together with microservices responsible for searching, filtering data, storing data and routing messages, the concept of a decentralized social network of backward linking is progressively implemented.
+This is a decentralized application (dApp) “The Free Speech Project”. It is based on [the open protocol “Voice”](specification.md), launched on the social [blockchain platform VIZ](https://github.com/VIZ-Blockchain/viz-cpp-node/). Together with microservices responsible for searching, filtering data, storing data and routing messages, the concept of a decentralized social network of backward linking is progressively implemented.
 
 The problems of modern social networks: censorship and filtering of information, the imposition of a social agenda. The formation of news feeds by closed algorithms. We believe that all these problems can be solved and we are moving step by step towards the realization of a free social network protocol.
 
