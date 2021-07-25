@@ -1094,7 +1094,7 @@ const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRa
 var db;
 var db_req;
 var db_version=1;
-var global_db_version=7;
+var global_db_version=8;
 var need_update_db_version=false;
 var local_global_db_version=localStorage.getItem(storage_prefix+'global_db_version');
 if((null===local_global_db_version)||(global_db_version>local_global_db_version)){
@@ -1249,6 +1249,7 @@ function load_db(callback){
 			items_table=db.createObjectStore('hashtags_feed',{keyPath:'id',autoIncrement:true});
 			items_table.createIndex('tag','tag',{unique:false});//hash tag id
 			items_table.createIndex('object',['account','block'],{unique:false});//account
+			items_table.createIndex('tag_block',['tag','block'],{unique:false});//order by block
 		}
 		else{
 			items_table=update_trx.objectStore('hashtags_feed');
