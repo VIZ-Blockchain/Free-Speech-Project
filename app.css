@@ -2817,6 +2817,14 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 
 }
 @media only screen and (min-width:0) and (max-width:600px){
+	.notifications .notify-wrapper .notify{
+		margin:15px;
+		margin-top:0;
+		font-size:16px;
+	}
+	.notifications .notify-wrapper .notify .text{
+		max-width:100%;
+	}
 	.view{
 		border:0;
 	}
