@@ -6557,6 +6557,7 @@ function parse_object(account,block,callback){
 				else{
 					let reply=false;
 					let share=false;
+					let share_link=false;
 
 					let parent_account=false;
 					let parent_block=false;
@@ -6594,7 +6595,7 @@ function parse_object(account,block,callback){
 						}
 						else
 						if(typeof item.d.s != 'undefined'){
-							let share_link=item.d.s;
+							share_link=item.d.s;
 							//internal
 							if(0==share_link.indexOf('viz://')){
 								share_link=share_link.toLowerCase();
@@ -6610,6 +6611,10 @@ function parse_object(account,block,callback){
 										parent_block=parseInt(fast_str_replace('/','',share_block[1]));
 									}
 								}
+							}
+							//external
+							if((0==share_link.indexOf('http://'))||(0==share_link.indexOf('https://'))){
+								share=true;
 							}
 						}
 					}
@@ -6630,8 +6635,13 @@ function parse_object(account,block,callback){
 						}
 						if(share){
 							obj.is_share=1;
-							obj.parent_account=parent_account;
-							obj.parent_block=parent_block;
+							if(false!==parent_account){
+								obj.parent_account=parent_account;
+								obj.parent_block=parent_block;
+							}
+							else{
+								obj.link=share_link;
+							}
 						}
 					}
 					obj.time=new Date().getTime() / 1000 | 0;//unixtime
@@ -11124,7 +11134,7 @@ function render_object(user,object,type,preset_level){
 	}
 	else
 	if('default'==type){
-		if(object.is_share){
+		if(object.is_share && (typeof object.parent_account !== 'undefined')){
 			let text='';
 			if(typeof object.data.d.text !== 'undefined'){
 				text=object.data.d.text;
@@ -11228,6 +11238,10 @@ function render_object(user,object,type,preset_level){
 				}
 				text_first_link=first_link(text);
 
+				if(object.is_share && (typeof object.link !== 'undefined')){
+					text_first_link=object.link;
+				}
+
 				text=escape_html(text);
 				text=fast_str_replace("\n",'<br>',text);
 
@@ -11282,7 +11296,7 @@ function render_object(user,object,type,preset_level){
 		}
 	}
 	if('preview'==type){
-		if(object.is_share){
+		if(object.is_share && (typeof object.parent_account !== 'undefined')){
 			let text='';
 			if(typeof object.data.d.text !== 'undefined'){
 				text=object.data.d.text;
@@ -11390,6 +11404,10 @@ function render_object(user,object,type,preset_level){
 					}
 				}
 				text_first_link=first_link(text);
+
+				if(object.is_share && (typeof object.link !== 'undefined')){
+					text_first_link=object.link;
+				}
 
 				text=escape_html(text);
 				text=fast_str_replace("\n",'<br>',text);
