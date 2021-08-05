@@ -2385,7 +2385,7 @@ function wait_publish(last_id,callback){
 	get_user(current_user,true,function(err,result){
 		if(!err){
 			if(result.start!=last_id){
-				get_object(current_user,result.start,function(err,object_result){
+				get_object(current_user,result.start,false,function(err,object_result){
 					if(!err){
 						callback(result.start);
 					}
@@ -2661,7 +2661,7 @@ function publish(view){
 							get_user(current_user,true,function(err,result){
 								if(!err){
 									if(result.start!=previous){
-										get_object(current_user,result.start,function(err,object_result){
+										get_object(current_user,result.start,false,function(err,object_result){
 											if(!err){
 												view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:result.start}));
 											}
@@ -5299,7 +5299,7 @@ function app_mouse(e){
 						if(typeof share_block[1] != 'undefined'){
 							share_account=share_account[0].substr(1);
 							share_block=parseInt(fast_str_replace('/','',share_block[1]));
-							get_object(share_account,share_block,function(err,object_result){
+							get_object(share_account,share_block,false,function(err,object_result){
 								let share_obj={};
 								let object_type='text';//by default
 								if(typeof object_result.data.t !== 'undefined'){
@@ -6298,7 +6298,7 @@ function feed_load_result(result,account,block,next_offset,end_offset,limit,call
 }
 
 function feed_load_more(result,account,next_offset,end_offset,limit,callback){
-	get_object(account,next_offset,function(err,object_result){
+	get_object(account,next_offset,true,function(err,object_result){
 		if(err){
 			feed_load_final(result,account,callback);
 		}
@@ -6443,6 +6443,8 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 	});
 }
 
+//info: on update users feed by activity by update_feed_subscribes limit=false, upper_bound=false, continued=true
+//info: on parse object if its new, check author status, if user subscribed, then limit=false, upper_bound=block, continued=false (onlt from block to upper in object store)
 function feed_load(account,limit,upper_bound,continued,callback){
 	console.log('feed_load',account,'limit:',limit,'upper_bound:',upper_bound,'continued:',continued);
 	limit=((false===limit)?settings.activity_deep:limit);
@@ -6536,7 +6538,9 @@ var object_types_arr={'t':'text','p':'publication'};
 //need to make queue for callbacks in similar parse object executions
 var parsing_objects=[];
 var parsing_object_num=0;
-function parse_object(account,block,callback){
+function parse_object(account,block,feed_load_flag,callback){
+	//feed_load_flag needed to solve recursive problem with event new feed_load
+	feed_load_flag=typeof feed_load_flag==='undefined'?false:feed_load_flag;
 	let current_parse=false;
 	for(let o in parsing_objects){
 		if(parsing_objects[o][0]==account){
@@ -6854,17 +6858,22 @@ function parse_object(account,block,callback){
 									}
 								}
 								add_t.oncomplete=function(e){
-									idb_get_by_id('users','account',account,function(user_data){
-										if(1==user_data.status){//subscribed to account
-											//check feed load for parsed object and previous unseen range
-											feed_load(account,false,block,false,function(err,result){
-												console.log('parse_object: feed load (not founded)',err,result);
-												if(!err){
-													update_feed_result(result);
-												}
-											});
-										}
-									});
+									if(!feed_load_flag){
+										//solved by feed_load_flag (true when come from feed_load)
+										//problem code, it's trigger automatically for user, if you open object by link in new page, feed not loaded for him, but it's limited now with current object height
+										//but if it stepped by feed load events - create recurse for lover objects
+										idb_get_by_id('users','account',account,function(user_data){
+											if(1==user_data.status){//subscribed to account
+												//check feed load for parsed object and previous unseen range
+												feed_load(account,false,block,false,function(err,result){
+													console.log('parse_object: feed load (not founded)',err,result);
+													if(!err){
+														update_feed_result(result);
+													}
+												});
+											}
+										});
+									}
 									if(reply){//add to replies
 										idb_get_id('replies','object',[account,block],function(reply_id){
 											if(false===reply_id){//create reply
@@ -6976,7 +6985,9 @@ function get_replies(object_account,object_block,callback){
 	};
 }
 
-function get_object(account,block,callback){
+function get_object(account,block,feed_load_flag,callback){
+	//feed_load_flag needed to solve recursive problem with event new feed_load from parse_object
+	feed_load_flag=typeof feed_load_flag==='undefined'?false:feed_load_flag;
 	let result={};
 	let find=false;
 
@@ -7004,7 +7015,7 @@ function get_object(account,block,callback){
 			}
 			else{
 				console.log('need parse object: '+account+' '+block);
-				parse_object(account,block,callback);
+				parse_object(account,block,feed_load_flag,callback);
 			}
 		}
 	};
@@ -10305,7 +10316,7 @@ function view_path(location,state,save_state,update){
 											setTimeout(function(){
 												get_user(pinned_object_account,false,function(err,pinned_user_result){
 													if(!err)
-													get_object(pinned_object_account,pinned_object_block,function(err,pinned_object_result){
+													get_object(pinned_object_account,pinned_object_block,false,function(err,pinned_object_result){
 														if(!err){
 															pinned_render=render_object(pinned_user_result,pinned_object_result,'pinned');
 															view.find('.objects').prepend(pinned_render);
@@ -10413,7 +10424,7 @@ function view_path(location,state,save_state,update){
 									//view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
 									view.find('.objects').html(ltmp_arr.empty_loader_notice);
 
-									get_object(check_account,check_block,function(err,object_result){
+									get_object(check_account,check_block,false,function(err,object_result){
 										if(err){
 											console.log('get_object error',check_account,offset,err,object_result);
 											document.title=ltmp_arr.error_title+' - '+document.title;
@@ -10547,7 +10558,7 @@ function view_path(location,state,save_state,update){
 									//view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
 									view.find('.objects').html(ltmp_arr.empty_loader_notice);
 
-									get_object(check_account,check_block,function(err,object_result){
+									get_object(check_account,check_block,false,function(err,object_result){
 										if(err){
 											console.log('get_object error',check_account,offset,err,object_result);
 											document.title=ltmp_arr.error_title+' - '+document.title;
@@ -11203,7 +11214,7 @@ function render_object(user,object,type,preset_level){
 						load_content.html(sub_render);
 					}
 					else{
-						get_object(object.parent_account,object.parent_block,function(err,sub_object){
+						get_object(object.parent_account,object.parent_block,false,function(err,sub_object){
 							let sub_render='';
 							if(err){
 								sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_not_found});
@@ -11365,7 +11376,7 @@ function render_object(user,object,type,preset_level){
 						load_content.html(sub_render);
 					}
 					else{
-						get_object(object.parent_account,object.parent_block,function(err,sub_object){
+						get_object(object.parent_account,object.parent_block,false,function(err,sub_object){
 							let sub_render='';
 							if(err){
 								sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_not_found});
@@ -11552,7 +11563,7 @@ function render_object(user,object,type,preset_level){
 					load_content.html(sub_render);
 				}
 				else{
-					get_object(user,object,function(err,sub_object){
+					get_object(user,object,false,function(err,sub_object){
 						let sub_render='';
 						if(err){
 							sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_not_found});
@@ -11586,7 +11597,7 @@ function render_object(user,object,type,preset_level){
 					load_content.html(sub_render);
 				}
 				else{
-					get_object(user,object,function(err,sub_object){
+					get_object(user,object,false,function(err,sub_object){
 						let sub_render='';
 						if(err){
 							sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_not_found});
@@ -12343,7 +12354,7 @@ function load_more_objects(indicator,check_level){
 					return;
 				}
 			}
-			get_object(check_account,offset,function(err,object_result){
+			get_object(check_account,offset,false,function(err,object_result){
 				if(err){
 					console.log('get_object error',check_account,offset,err,object_result);
 					if(1==object_result){
