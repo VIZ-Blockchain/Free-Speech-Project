@@ -1992,6 +1992,21 @@ function render_preview_data(account,block,obj){
 				});
 			}
 		}
+		else{//no meta, no mime - timeout preview
+			let current_link='viz://@'+account+'/'+block+'/';
+			let view=$('.view[data-level="'+level+'"]');
+			if(-1==path.indexOf('viz://')){//look in services views
+				let path_parts=path.split('/');
+				view=$('.view[data-path="'+path_parts[0]+'"]');
+			}
+			let actions=view.find('.objects .object[data-link="'+current_link+'"] .preview-container');
+			let result='';
+
+			let wrapper_addon=' style="flex-direction:column;"';
+			let link=ltmp(ltmp_arr.render_preview_link,{title:'',descr:'',source:ltmp_arr.icon_link+obj.domain});
+			result=ltmp(ltmp_arr.render_preview_wrapper,{link:obj.link,context:link,addon:wrapper_addon});
+			$(actions).html(result);
+		}
 		return;
 	}
 	let result='';
@@ -2016,14 +2031,14 @@ function render_preview_data(account,block,obj){
 	if(link_part){
 		if(image_part){
 			if(!json.image.large){
-				link=ltmp(ltmp_arr.render_preview_link,{addon:link_addon,title:json.title,descr:json.description,source:ltmp_arr.icon_link+json.source});
+				link=ltmp(ltmp_arr.render_preview_link,{addon:link_addon,title:json.title,descr:(typeof json.description !== 'undefined'?json.description:''),source:ltmp_arr.icon_link+json.source});
 			}
 			else{
-				link=ltmp(ltmp_arr.render_preview_link,{title:json.title,descr:json.description,source:ltmp_arr.icon_link+json.source});
+				link=ltmp(ltmp_arr.render_preview_link,{title:json.title,descr:(typeof json.description !== 'undefined'?json.description:''),source:ltmp_arr.icon_link+json.source});
 			}
 		}
 		else{
-			link=ltmp(ltmp_arr.render_preview_link,{title:json.title,descr:json.description,source:ltmp_arr.icon_link+json.source});
+			link=ltmp(ltmp_arr.render_preview_link,{title:json.title,descr:(typeof json.description !== 'undefined'?json.description:''),source:ltmp_arr.icon_link+json.source});
 		}
 	}
 	if(image_part){
@@ -2057,7 +2072,7 @@ function load_preview_data(link,callback){
 		callback=function(){};
 	}
 
-	link_domain=link.split('://')[1].split('/')[0];
+	let link_domain=link.split('://')[1].split('/')[0];
 
 	//look on cache
 	let t=db.transaction(['preview'],'readonly');
@@ -2092,6 +2107,21 @@ function load_preview_data(link,callback){
 				xhr.setRequestHeader('content-type','application/json');
 				xhr.ontimeout = function() {
 					console.log('load_preview_data timeout',link);
+					let add_t=db.transaction(['preview'],'readwrite');
+					let add_q=add_t.objectStore('preview');
+					let obj={
+						domain:link_domain,
+						link:link,
+						meta:false,
+						time:parseInt(new Date().getTime()/1000),
+					};
+					add_q.add(obj);
+					if(!is_safari){
+						if(!is_firefox){
+							add_t.commit();
+						}
+					}
+					callback(obj);
 				};
 				xhr.onreadystatechange = function() {
 					if(4==xhr.readyState && 200==xhr.status){

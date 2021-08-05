@@ -2044,6 +2044,9 @@ body.midnight .preview-link div{
 	max-height:16px;
 	line-height:16px;
 	background:none;
+
+	margin-right:5px;
+	vertical-align:text-bottom;
 }
 .preview-link .icon svg{
 	max-width:16px;
