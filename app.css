@@ -2106,6 +2106,11 @@ body.dark .menu-notice, body.midnight .menu-notice{
 	color:#0952ab;
 }
 
+.content-view ol{
+	line-height:26px;
+	margin-bottom:20px;
+	margin-left:1.5em;
+}
 .content-view ul{
 	line-height:26px;
 	margin-bottom:20px;

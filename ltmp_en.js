@@ -763,6 +763,8 @@ var ltmp_en_arr = {
 	editor_code_caption: `Code`,
 	editor_quote_caption: `Quote`,
 	editor_separator_caption: `Separator`,
+	editor_ul_caption: `Unordered list`,
+	editor_ol_caption: `Ordered list`,
 
 	editor_text_preset: `<h1><br></h1><p><br></p>`,
 	editor_formatter_separator: `<span class="separator"></span>`,
@@ -781,6 +783,9 @@ var ltmp_en_arr = {
 	<a class="editor-header3-action" tabindex="0" title="%%editor_header3_caption%%">%%icon_editor_header3%%</a>
 	<a class="editor-quote-action" tabindex="0" title="%%editor_quote_caption%%">%%icon_editor_quote%%</a>
 	%%editor_formatter_separator%%
+	<a class="editor-ul-action" tabindex="0" title="%%editor_ul_caption%%">%%icon_editor_ul%%</a>
+	<a class="editor-ol-action" tabindex="0" title="%%editor_ol_caption%%">%%icon_editor_ol%%</a>
+	%%editor_formatter_separator%%
 	<a class="editor-separator-action" tabindex="0" title="%%editor_separator_caption%%">%%icon_editor_separator%%</a>
 
 	`,
@@ -798,6 +803,9 @@ var ltmp_en_arr = {
 	icon_editor_attach_image: `<i class="icon editor-image"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M4,5h13v7h2V5c0-1.103-0.897-2-2-2H4C2.897,3,2,3.897,2,5v12c0,1.103,0.897,2,2,2h8v-2H4V5z"></path><path d="M8 11L5 15 16 15 12 9 9 13z"></path><path d="M19 14L17 14 17 17 14 17 14 19 17 19 17 22 19 22 19 19 22 19 22 17 19 17z"></path></svg></i>`,
 	icon_editor_plus: `<i class="icon editor-plus"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M19 11L13 11 13 5 11 5 11 11 5 11 5 13 11 13 11 19 13 19 13 13 19 13z"></path></svg></i>`,
 	icon_editor_separator: `<i class="icon editor-separator"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M2 11h2v2H2v-2zm4 0h12v2H6v-2zm14 0h2v2h-2v-2z"/></svg></i>`,
+	icon_editor_ul: `<i class="icon editor-ul"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M8 4h13v2H8V4zM4.5 6.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0 6.9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM8 11h13v2H8v-2zm0 7h13v2H8v-2z"/></svg></i>`,
+	icon_editor_ol: `<i class="icon editor-ol"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="none"><path d="M8 4h13v2H8V4zM5 3v3h1v1H3V6h1V4H3V3h2zM3 14v-2.5h2V11H3v-1h3v2.5H4v.5h2v1H3zm2 5.5H3v-1h2V18H3v-1h3v4H3v-1h2v-.5zM8 11h13v2H8v-2zm0 7h13v2H8v-2z"/></svg></i>`,
+
 	header_back_action: `<a tabindex="0" class="back-action" title="Back" data-force="{force}">{icon}</a>`,
 	header_link: '<div class="link grow"><div class="header-link-wrapper"><input type="text" class="header-link" value="{link}"><div class="header-link-icons">{icons}</div></div></div>',
 	header_link_icons: `
