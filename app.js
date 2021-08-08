@@ -6837,6 +6837,9 @@ function parse_object(account,block,feed_load_flag,callback){
 					if('text'==type){
 						if(typeof item.d.r !== 'undefined'){
 							let reply_link=item.d.r;
+							if(typeof reply_link !== 'string'){
+								reply_link='';
+							}
 							//internal
 							if(0==reply_link.indexOf('viz://')){
 								reply_link=reply_link.toLowerCase();
@@ -6857,6 +6860,9 @@ function parse_object(account,block,feed_load_flag,callback){
 						else
 						if(typeof item.d.s != 'undefined'){
 							share_link=item.d.s;
+							if(typeof share_link !== 'string'){
+								share_link='';
+							}
 							//internal
 							if(0==share_link.indexOf('viz://')){
 								share_link=share_link.toLowerCase();
