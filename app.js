@@ -3368,6 +3368,7 @@ function markdown_decode(text,rewrite_block){
 	while(-1!=text.indexOf("\n\n\n")){
 		text=fast_str_replace("\n\n\n","\n\n",text);
 	}
+	text=fast_str_replace("\r",'',text);
 	//let images_pattern=/\!\[(.*?)\]\((.*?)\)/gm;
 	let text_arr=text.split("\n\n");
 	let html='';
