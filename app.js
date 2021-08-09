@@ -11575,7 +11575,7 @@ function render_object(user,object,type,preset_level){
 				let wrapper_addon=' style="flex-direction:column;"';
 				let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
 				let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
-				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d,link:'viz://@'+user.account+'/'+object.block+'/'});
+				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:(typeof object.data.d.d !== 'undefined'?object.data.d.d:''),link:'viz://@'+user.account+'/'+object.block+'/'});
 				if(typeof object.data.d.i !== 'undefined'){
 					if(false===safe_image(object.data.d.i)){
 						image_part=false;
@@ -11737,7 +11737,7 @@ function render_object(user,object,type,preset_level){
 				let wrapper_addon=' style="flex-direction:column;"';
 				let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
 				let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
-				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d,link:'viz://@'+user.account+'/'+object.block+'/'});
+				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:(typeof object.data.d.d !== 'undefined'?object.data.d.d:''),link:'viz://@'+user.account+'/'+object.block+'/'});
 				if(typeof object.data.d.i !== 'undefined'){
 					if(false===safe_image(object.data.d.i)){
 						image_part=false;
@@ -12022,7 +12022,7 @@ function render_object(user,object,type,preset_level){
 			let wrapper_addon=' style="flex-direction:column;"';
 			let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
 			let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
-			link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:object.data.d.d,link:'viz://@'+user.account+'/'+object.block+'/'});
+			link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:(typeof object.data.d.d !== 'undefined'?object.data.d.d:''),link:'viz://@'+user.account+'/'+object.block+'/'});
 			if(typeof object.data.d.i !== 'undefined'){
 				if(false===safe_image(object.data.d.i)){
 					image_part=false;
