@@ -3368,6 +3368,7 @@ function markdown_decode(text,rewrite_block){
 	while(-1!=text.indexOf("\n\n\n")){
 		text=fast_str_replace("\n\n\n","\n\n",text);
 	}
+	text=fast_str_replace("\r",'',text);
 	//let images_pattern=/\!\[(.*?)\]\((.*?)\)/gm;
 	let text_arr=text.split("\n\n");
 	let html='';
@@ -6837,6 +6838,9 @@ function parse_object(account,block,feed_load_flag,callback){
 					if('text'==type){
 						if(typeof item.d.r !== 'undefined'){
 							let reply_link=item.d.r;
+							if(typeof reply_link !== 'string'){
+								reply_link='';
+							}
 							//internal
 							if(0==reply_link.indexOf('viz://')){
 								reply_link=reply_link.toLowerCase();
@@ -6857,6 +6861,9 @@ function parse_object(account,block,feed_load_flag,callback){
 						else
 						if(typeof item.d.s != 'undefined'){
 							share_link=item.d.s;
+							if(typeof share_link !== 'string'){
+								share_link='';
+							}
 							//internal
 							if(0==share_link.indexOf('viz://')){
 								share_link=share_link.toLowerCase();
