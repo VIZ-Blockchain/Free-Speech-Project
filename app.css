@@ -1791,8 +1791,8 @@ div.menu .secondary a{
 }
 
 .terms-of-use-wrapper{
-	background:#11486b;
-	color:#fff;
+	background:#fff;
+	color:#000;
 	width:100vw;
 	font-size:1.2em;
 	line-height:1.6em;
@@ -1802,13 +1802,12 @@ div.menu .secondary a{
 }
 .terms-of-use-wrapper .view{
 	display:block;
-	border:none;
-	padding:2vw;
-	padding-top:5vh;
-	padding-bottom:10vh;
+	padding:1.2vw;
+	padding-top:2.5vh;
+	padding-bottom:100px;
 }
 .terms-of-use-wrapper .view a{
-	color:#fff;
+	color:#0b86d2;
 }
 .terms-of-use-wrapper .view p{
 	margin-bottom:4vh;
@@ -1828,8 +1827,6 @@ div.menu .secondary a{
 .terms-of-use-wrapper .view p.boldest{
 	font-size:1.1em;
 	font-weight:bold;
-	margin-top:5vh;
-	margin-bottom:5vh;
 }
 .terms-of-use-wrapper ul{
 	list-style-type:disc;
@@ -1839,11 +1836,21 @@ div.menu .secondary a{
 	margin-bottom:1.4em;
 }
 .terms-of-use-wrapper .bad-face svg{
+	color:#0b86d2;
 	float:right;
 	width:135px;
 	height:135px;
 	margin:10px;
-}.terms-of-use-wrapper .hand-like svg{
+}
+.terms-of-use-wrapper .hand-like svg{
+	color:#0b86d2;
+	float:right;
+	width:135px;
+	height:135px;
+	margin:10px;
+}
+.terms-of-use-wrapper .incognito svg{
+	color:#0b86d2;
 	float:right;
 	width:135px;
 	height:135px;
@@ -1855,18 +1862,19 @@ div.menu .secondary a{
 	margin:0;
 	padding:0;
 	top:0;
-	z-index:1;
+	z-index:5;
 	overflow:hidden;
 	width:100%;
-	background:#1a83c4;
+	background:rgba(255, 255, 255, 0.692);
+	border-bottom:1px solid #0b86d294;
 }
 .terms-of-use-readline .fill-level{
 	display:block;
 	position:relative;
 	width:0%;
 	height:6px;
-	background:#fff;
-	border-bottom:1px solid #1a83c4;
+	background:#0e8fdf;
+	border-bottom:1px solid #0b86d2;
 
 	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
 	-moz-transition:all 0.3s ease-out;  /* FF4+ */
