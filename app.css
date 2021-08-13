@@ -2311,7 +2311,7 @@ body.midnight .editor-formatter{
 	margin:0;
 	padding:0;
 	top:0;
-	z-index:1;
+	z-index:10;
 	overflow:hidden;
 }
 .publication-readline .fill-level{
