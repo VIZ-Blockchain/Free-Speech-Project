@@ -2210,12 +2210,12 @@ body.dark .menu-notice, body.midnight .menu-notice{
 
 .content-view ol,.article ol{
 	line-height:26px;
-	margin-bottom:20px;
+	margin-bottom:26px;
 	margin-left:1.5em;
 }
 .content-view ul,.article ul{
 	line-height:26px;
-	margin-bottom:20px;
+	margin-bottom:26px;
 	list-style-type:disc;
 	margin-left:1.5em;
 }
@@ -2520,6 +2520,14 @@ body.dark .article blockquote,body.midnight .article blockquote{
 	margin-bottom:15px;
 	letter-spacing:0.005em;
 	line-height:1.5em;
+}
+.article ul li,.article ol li{
+	font-family:"PT Serif",serif;
+	font-weight:400;
+	margin-bottom:20px;
+	letter-spacing:0.005em;
+	line-height:1.5em;
+	padding-left:0.25em;
 }
 .article p:after{
 	clear:both;
