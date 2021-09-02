@@ -11496,7 +11496,7 @@ function render_object(user,object,type,preset_level){
 			//text=markdown_clear_code(object.data.d.m);//markdown
 			let image_part=(typeof object.data.d.i !== 'undefined');
 			let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
-			let title='<h1>'+object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>')+'</h1>';
+			let title='<h1>'+markdown_decode_text(object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>'))+'</h1>';
 			let publication_html=title+html_safe_images(markdown_decode(object.data.d.m));
 			publication_html=highlight_links(publication_html,true);//ignore html tags (images and links)
 			render=ltmp(ltmp_arr.object_type_publication_full,{
@@ -11581,7 +11581,7 @@ function render_object(user,object,type,preset_level){
 				let image_part=(typeof object.data.d.i !== 'undefined');
 				let wrapper_addon=' style="flex-direction:column;"';
 				let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
-				let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
+				let title=markdown_decode_text(object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>'));
 				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:(typeof object.data.d.d !== 'undefined'?object.data.d.d:''),link:'viz://@'+user.account+'/'+object.block+'/'});
 				if(typeof object.data.d.i !== 'undefined'){
 					if(false===safe_image(object.data.d.i)){
@@ -11743,7 +11743,7 @@ function render_object(user,object,type,preset_level){
 				let image_part=(typeof object.data.d.i !== 'undefined');
 				let wrapper_addon=' style="flex-direction:column;"';
 				let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
-				let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
+				let title=markdown_decode_text(object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>'));
 				link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:(typeof object.data.d.d !== 'undefined'?object.data.d.d:''),link:'viz://@'+user.account+'/'+object.block+'/'});
 				if(typeof object.data.d.i !== 'undefined'){
 					if(false===safe_image(object.data.d.i)){
@@ -12028,7 +12028,7 @@ function render_object(user,object,type,preset_level){
 			let image_part=(typeof object.data.d.i !== 'undefined');
 			let wrapper_addon=' style="flex-direction:column;"';
 			let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
-			let title=object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>');
+			let title=markdown_decode_text(object.data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>'));
 			link=ltmp(ltmp_arr.render_article_preview,{title:title,descr:(typeof object.data.d.d !== 'undefined'?object.data.d.d:''),link:'viz://@'+user.account+'/'+object.block+'/'});
 			if(typeof object.data.d.i !== 'undefined'){
 				if(false===safe_image(object.data.d.i)){
