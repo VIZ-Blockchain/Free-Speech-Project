@@ -1573,18 +1573,24 @@ function ltmp(ltmp_str,ltmp_args){
 	return ltmp_str;
 }
 
+//https://www.localeplanet.com/icu/
+//need localization to uk/be for local usage
 var langs_arr={
 	'en-gb':'en',
 	'en-us':'en',
 	'en':'en',
 	'ru-ru':'ru',
 	'ru':'ru',
+	'uk-ua':'ru',
+	'uk':'ru',
+	'be_by':'ru',
+	'be':'ru',
 };
 var available_langs={
 	'en':'English',
 	'ru':'Русский',
 };
-var default_lang='ru';
+var default_lang='en';
 var selected_lang=default_lang;
 if(null!=localStorage.getItem(storage_prefix+'lang')){
 	if(typeof available_langs[localStorage.getItem(storage_prefix+'lang')] !== 'undefined'){
