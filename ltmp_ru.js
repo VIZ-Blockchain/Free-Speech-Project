@@ -422,6 +422,7 @@ var ltmp_ru_arr = {
 			<p>Отдельный микросервис создает предпросмотр для ссылок, сообщая браузеру мета-информацию о запрашиваемом url. Например, на основе этого формируется проигрыватель для аудио файлов.</p>
 			<p>В будущем возможно будет вынести провайдера микросервисов в отдельное приложение, добавив к этому хранение файлов и записей с возможностью их удаления в соответствии с GDRP.</p>
 		`},
+		terms_of_use: {title: '%%terms_of_use_caption%%', html: `<div class="terms-of-use-inherit">%%terms_of_use_html%%</div>`},
 	},
 	manual_next_link: `<br><p><a tabIndex="0" data-href="dapp:manual/{item}/">Продолжить &rarr;</a></p>`,
 	manual_contents_link: `<hr><p><a tabIndex="0" data-href="dapp:manual">&larr; Вернуться к содержанию</a></p>`,

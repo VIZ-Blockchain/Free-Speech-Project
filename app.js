@@ -7903,7 +7903,7 @@ function view_manual(view,path_parts,query,title){
 	let current_item='contents';
 	if((typeof path_parts[1] != 'undefined')&&(''!=path_parts[1])){
 		current_item=path_parts[1];
-		document.title=ltmp_arr.manual_arr[current_item]['title']+' - '+document.title;
+		document.title=ltmp(ltmp_arr.manual_arr[current_item]['title'])+' - '+document.title;
 	}
 	let next_item=false;
 	for(let i in ltmp_arr.manual_arr){
@@ -7921,7 +7921,7 @@ function view_manual(view,path_parts,query,title){
 	let header='';
 	let header_caption=ltmp_arr.manual_caption;
 	if('contents'!=current_item){
-		header_caption=ltmp_arr.manual_arr[current_item]['title']+' - '+header_caption;
+		header_caption=ltmp(ltmp_arr.manual_arr[current_item]['title'])+' - '+header_caption;
 		header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_arr.icon_back,force:'dapp:manual'});
 	}
 	else{
@@ -7933,7 +7933,7 @@ function view_manual(view,path_parts,query,title){
 	if('contents'==current_item){
 		let contents='<ul>';
 		for(let i in ltmp_arr.manual_arr){
-			contents+='<li><a tabIndex="0" data-href="dapp:manual/'+i+'/">'+ltmp_arr.manual_arr[i]['title']+'</a></li>';
+			contents+='<li><a tabIndex="0" data-href="dapp:manual/'+i+'/">'+ltmp(ltmp_arr.manual_arr[i]['title'])+'</a></li>';
 		}
 		contents+='</ul>';
 		view.find('.objects').html(ltmp(ltmp_arr.manual_item,{'name':current_item,'context':contents}));
@@ -12905,20 +12905,24 @@ var terms_of_user_scroll=function(){
 		}
 	}
 }
+function show_terms_of_use(){
+	$('body').addClass('scrollable');
+	$('body').append(ltmp(ltmp_arr.terms_of_use_wrapper));
+	document.addEventListener('scroll',terms_of_user_scroll);
+	$('.terms-of-use-accept-action').on('click',function(){
+		document.removeEventListener('scroll',terms_of_user_scroll);
+		$('.terms-of-use-wrapper').remove();
+		$('body').removeClass('scrollable');
+		terms_of_use_accept=new Date().getTime() / 1000 | 0;
+		localStorage.terms_of_use_accept=terms_of_use_accept;
+		main_app();
+	});
+	return;
+}
 var ignore_resize=false;
 function main_app(){
 	if(false===terms_of_use_accept){
-		$('body').addClass('scrollable');
-		$('body').append(ltmp(ltmp_arr.terms_of_use_wrapper));
-		document.addEventListener('scroll',terms_of_user_scroll);
-		$('.terms-of-use-accept-action').on('click',function(){
-			terms_of_use_accept=new Date().getTime() / 1000 | 0;
-			localStorage.terms_of_use_accept=terms_of_use_accept;
-			document.removeEventListener('scroll',terms_of_user_scroll);
-			$('.terms-of-use-wrapper').remove();
-			$('body').removeClass('scrollable');
-			main_app();
-		});
+		show_terms_of_use();
 		return;
 	}
 	if(false!==whitelabel_logo){

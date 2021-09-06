@@ -422,6 +422,7 @@ var ltmp_en_arr = {
 			<p>A separate microservice creates a preview for links, telling the browser the meta-information about the requested url. For example, this provides a player for audio files.</p>
 			<p>In the future, it may be possible to bring the microservices provider into a separate application, adding to this the storage of files and records with the ability to delete them according to GDRP.</p>
 		`},
+		terms_of_use: {title: '%%terms_of_use_caption%%', html: `<div class="terms-of-use-inherit">%%terms_of_use_html%%</div>`},
 	},
 	manual_next_link: `<br><p><a tabIndex="0" data-href="dapp:manual/{item}/">Continue &rarr;</a></p>`,
 	manual_contents_link: `<hr><p><a tabIndex="0" data-href="dapp:manual">&larr; Back to content</a></p>`,

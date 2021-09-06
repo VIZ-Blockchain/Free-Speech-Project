@@ -1812,19 +1812,19 @@ div.menu .secondary a{
 .terms-of-use-wrapper .view p{
 	margin-bottom:4vh;
 }
-.terms-of-use-wrapper .view .smaller{
+.terms-of-use-wrapper .view .smaller, .terms-of-use-inherit .smaller{
 	font-size:0.9em;
 }
-.terms-of-use-wrapper .view .bigger{
+.terms-of-use-wrapper .view .bigger, .terms-of-use-inherit .bigger{
 	font-size:1.4em !important;
 }
-.terms-of-use-wrapper .view .big{
+.terms-of-use-wrapper .view .big, .terms-of-use-inherit .big{
 	font-size:1.1em !important;
 }
-.terms-of-use-wrapper .view .big2{
+.terms-of-use-wrapper .view .big2, .terms-of-use-inherit .big2{
 	font-size:1.2em !important;
 }
-.terms-of-use-wrapper .view p.boldest{
+.terms-of-use-wrapper .view p.boldest, .terms-of-use-inherit p.boldest{
 	font-size:1.1em;
 	font-weight:bold;
 }
@@ -1835,21 +1835,21 @@ div.menu .secondary a{
 .terms-of-use-wrapper ul li{
 	margin-bottom:1.4em;
 }
-.terms-of-use-wrapper .bad-face svg{
+.terms-of-use-wrapper .bad-face svg, .terms-of-use-inherit .bad-face svg{
 	color:#0b86d2;
 	float:right;
 	width:135px;
 	height:135px;
 	margin:10px;
 }
-.terms-of-use-wrapper .hand-like svg{
+.terms-of-use-wrapper .hand-like svg, .terms-of-use-inherit .hand-like svg{
 	color:#0b86d2;
 	float:right;
 	width:135px;
 	height:135px;
 	margin:10px;
 }
-.terms-of-use-wrapper .incognito svg{
+.terms-of-use-wrapper .incognito svg, .terms-of-use-inherit .incognito svg{
 	color:#0b86d2;
 	float:right;
 	width:135px;
@@ -1894,6 +1894,9 @@ div.menu .secondary a{
 	bottom:1vh;
 	margin-right:4vw;
 	max-width:600px;
+}
+.terms-of-use-inherit .terms-of-use-accept-action{
+	display:none;
 }
 .startup-screen{
 	z-index:100;
