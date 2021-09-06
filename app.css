@@ -2096,6 +2096,8 @@ body.midnight .preview-article-link a{
 	position:relative;
 	display:flex;
 	cursor:pointer;
+	max-height:50vh;
+	overflow:hidden;
 }
 .preview-article-image img{
 	width:100%;
