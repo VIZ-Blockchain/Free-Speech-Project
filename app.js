@@ -3702,6 +3702,33 @@ function app_mouse(e){
 		if($(target).hasClass('icon')){
 			target=$(target).parent();
 		}
+		if($(target).hasClass('editor-reset-action')){
+			e.preventDefault();
+			let confirm_reset=confirm(ltmp_arr.editor_reset_caption+'?');
+			if(confirm_reset){
+				$('.article-editor .editor-text').html('<h1><br></h1><p><br></p>');
+				$('.article-settings input[name="description"]').val('');
+				$('.article-settings input[name="thumbnail"]').val('');
+				$('.article-settings .beneficiaries-list .beneficiaries-item').each(function(i,el){
+					$(el).find('input[name="account"]').val('');
+					$(el).find('input[name="weight"]').val('');
+					if(i>0){
+						el.remove();
+					}
+				});
+				$('.editor-placeholders').find('h1').removeClass('hidden');
+				$('.editor-placeholders').find('p').removeClass('hidden');
+				editor_change();
+				setTimeout(function(){
+					editor_clear_elements(editor,0);
+				},10);
+				clearTimeout(editor_save_draft_timer);
+				editor_save_draft_timer=setTimeout(function(){
+					editor_save_draft();
+				},20);
+
+			}
+		}
 		if($(target).hasClass('editor-separator-action')){
 			if(!$(target).hasClass('disabled')){
 				e.preventDefault();
@@ -8376,6 +8403,9 @@ function editor_selection(e){
 			$('.editor-formatter > a').addClass('disabled');
 			$('.editor-formatter > a').removeClass('positive');
 			$('.editor-formatter > a').removeClass('positive-alt');
+
+			$('.editor-formatter > a.editor-reset-action').removeClass('disabled');
+
 			let element_type=$(selection.focusNode)[0].nodeName;
 			let parent_element_html=$(selection.focusNode.parentNode)[0].innerHTML;
 			let parent_element_type=$(selection.focusNode.parentNode)[0].nodeName;
