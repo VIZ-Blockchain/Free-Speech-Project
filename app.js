@@ -12795,16 +12795,28 @@ function check_load_more(){
 	}
 }
 
+function is_retina(){
+	return ((window.matchMedia && (window.matchMedia('only screen and (min-resolution: 192dpi), only screen and (min-resolution: 2dppx), only screen and (min-resolution: 75.6dpcm)').matches || window.matchMedia('only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 2/1), only screen and (min--moz-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2)').matches)) || (window.devicePixelRatio && window.devicePixelRatio >= 2)) && /(Mac OS|iPad|iPhone|iPod)/g.test(navigator.userAgent);
+}
+
 function is_full(){
-	let calc_width=window.outerWidth;
+	let fix=1;
+	if(is_retina()){
+		fix=0.5;
+	}
+	let calc_width=parseInt(fix*window.outerWidth);
 	//console.log(calc_width);
 	return (calc_width>1120);
 }
 
 function is_mobile(){
-	let calc_width=window.outerWidth;
+	let fix=1;
+	if(is_retina()){
+		fix=0.5;
+	}
+	let calc_width=parseInt(fix*window.outerWidth);
 	//console.log(calc_width);
-	return (calc_width<=750);
+	return (calc_width<=800);
 }
 
 function check_current_user(callback){
