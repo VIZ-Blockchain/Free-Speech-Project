@@ -521,11 +521,20 @@ var is_safari=navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
 			navigator.userAgent.indexOf('FxiOS') == -1;
 var is_firefox=navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 var is_chrome_ios=navigator.userAgent.indexOf('CriOS') > -1;
+var is_ucbrowser=navigator.userAgent.indexOf('UCBrowser') > -1;
+var is_samsungbrowser=navigator.userAgent.indexOf('SamsungBrowser') > -1;
+var is_macintosh=navigator.userAgent.indexOf('Macintosh') > -1;
 var trx_need_commit=false;
 if(!is_safari){
 	if(!is_firefox){
 		if(!is_chrome_ios){
-			trx_need_commit=true;
+			if(!is_ucbrowser){
+				if(!is_samsungbrowser){
+					if(!is_macintosh){
+						trx_need_commit=true;
+					}
+				}
+			}
 		}
 	}
 }
