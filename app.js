@@ -47,9 +47,6 @@ var install_event;
 window.addEventListener('beforeinstallprompt',(e)=>{
 	e.preventDefault();
 	install_event=e;
-	if(1!=localStorage.getItem(storage_prefix+'install_close')){
-		$('.install-notice').addClass('show');
-	}
 });
 if('file://'!=document.location.origin){
 	if('serviceWorker' in navigator){
@@ -12868,6 +12865,9 @@ function dapp_loaded(){
 	clearTimeout(dapp_loaded_timer);
 	dapp_loaded_timer=setTimeout(function(){
 		$('body').addClass('loaded');
+		if(1!=localStorage.getItem(storage_prefix+'install_close')){
+			$('.install-notice').addClass('show');
+		}
 	},2200);
 }
 var terms_of_use_accept=false;
