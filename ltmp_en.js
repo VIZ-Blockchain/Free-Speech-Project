@@ -18,7 +18,7 @@ var ltmp_en_arr = {
 				<p class="success save-account-success"></p>
 				<p><a class="button save-account-action">Save</a><span class="submit-button-ring"></span></p>
 				<hr>
-				<p><a class="button neutral-button remove-account-action">Remove</a></p>
+				<p><a class="button neutral-button remove-account-action">Sign out of VIZ Account</a></p>
 			</div>
 			<div class="content-view" data-tab="profile">
 				<p>Name:</p>

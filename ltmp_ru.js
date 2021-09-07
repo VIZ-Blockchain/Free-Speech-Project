@@ -18,7 +18,7 @@ var ltmp_ru_arr = {
 				<p class="success save-account-success"></p>
 				<p><a class="button save-account-action">Сохранить</a><span class="submit-button-ring"></span></p>
 				<hr>
-				<p><a class="button neutral-button remove-account-action">Удалить</a></p>
+				<p><a class="button neutral-button remove-account-action">Выйти из аккаунта ВИЗ</a></p>
 			</div>
 			<div class="content-view" data-tab="profile">
 				<p>Имя:</p>
