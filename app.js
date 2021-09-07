@@ -520,6 +520,15 @@ var is_safari=navigator.vendor && navigator.vendor.indexOf('Apple') > -1 &&
 			navigator.userAgent.indexOf('CriOS') == -1 &&
 			navigator.userAgent.indexOf('FxiOS') == -1;
 var is_firefox=navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+var is_chrome_ios=navigator.userAgent.indexOf('CriOS') > -1;
+var trx_need_commit=false;
+if(!is_safari){
+	if(!is_firefox){
+		if(!is_chrome_ios){
+			trx_need_commit=true;
+		}
+	}
+}
 
 var api_gates=[
 	'https://node.viz.plus/',
@@ -1283,10 +1292,8 @@ function load_db(callback){
 			//items_table=update_trx.objectStore('objects');
 			//new index for objects cache
 		}
-		if(!is_safari){
-			if(!is_firefox){
-				update_trx.commit();
-			}
+		if(trx_need_commit){
+			update_trx.commit();
 		}
 	};
 	console.log('- load_db');
@@ -1509,10 +1516,8 @@ function save_account_settings(view,login,regular_key){
 						let add_t=db.transaction(['users'],'readwrite');
 						let add_q=add_t.objectStore('users');
 						add_q.add(obj);
-						if(!is_safari){
-							if(!is_firefox){
-								add_t.commit();
-							}
+						if(trx_need_commit){
+							add_t.commit();
 						}
 						add_t.oncomplete=function(e){
 							update_user_profile(current_user,function(){
@@ -2125,10 +2130,8 @@ function load_preview_data(link,callback){
 						time:parseInt(new Date().getTime()/1000),
 					};
 					add_q.add(obj);
-					if(!is_safari){
-						if(!is_firefox){
-							add_t.commit();
-						}
+					if(trx_need_commit){
+						add_t.commit();
 					}
 					callback(obj);
 				};
@@ -2149,10 +2152,8 @@ function load_preview_data(link,callback){
 								obj['mime']=json.mime;
 							}
 							add_q.add(obj);
-							if(!is_safari){
-								if(!is_firefox){
-									add_t.commit();
-								}
+							if(trx_need_commit){
+								add_t.commit();
 							}
 							callback(obj);
 						}
@@ -2363,10 +2364,8 @@ function award(account,block,callback){
 									let add_q=add_t.objectStore('awards');
 									obj.amount+=predicted_reward;
 									add_q.add(obj);
-									if(!is_safari){
-										if(!is_firefox){
-											add_t.commit();
-										}
+									if(trx_need_commit){
+										add_t.commit();
 									}
 								}
 							}
@@ -2519,10 +2518,8 @@ function fast_publish(publish_form){
 															let add_t=db.transaction(['reposts'],'readwrite');
 															let add_q=add_t.objectStore('reposts');
 															add_q.add({account:parent_account,block:parent_block});
-															if(!is_safari){
-																if(!is_firefox){
-																	add_t.commit();
-																}
+															if(trx_need_commit){
+																add_t.commit();
 															}
 														}
 													});
@@ -2770,10 +2767,8 @@ function hashtag_update(hashtag,status,callback){
 			hashtag_add_t=db.transaction(['hashtags'],'readwrite');
 			hashtag_add_q=hashtag_add_t.objectStore('hashtags');
 			hashtag_add_req=hashtag_add_q.add(hashtag_info);
-			if(!is_safari){
-				if(!is_firefox){
-					hashtag_add_t.commit();
-				}
+			if(trx_need_commit){
+				hashtag_add_t.commit();
 			}
 			hashtag_add_req.oncomplete=function(e){
 				idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
@@ -3626,10 +3621,8 @@ function add_notify(store,title,text,link,service){
 					let add_t=db.transaction(['notifications'],'readwrite');
 					let add_q=add_t.objectStore('notifications');
 					add_q.add(obj);
-					if(!is_safari){
-						if(!is_firefox){
-							add_t.commit();
-						}
+					if(trx_need_commit){
+						add_t.commit();
 					}
 					add_t.oncomplete=function(e){
 						clearTimeout(load_notifications_count_timer);
@@ -6111,10 +6104,8 @@ function import_backup_final_step(backup,callback){
 					let item=backup.users[i];
 					q_add.add(item);
 				}
-				if(!is_safari){
-					if(!is_firefox){
-						t_add.commit();
-					}
+				if(trx_need_commit){
+					t_add.commit();
 				}
 				t_add.oncomplete=function(e){
 					callback(ltmp_arr.settings_sync_import_users_success);
@@ -6181,10 +6172,8 @@ function import_backup(data,callback){
 				let item=backup.feed[i];
 				q_add.add(item);
 			}
-			if(!is_safari){
-				if(!is_firefox){
-					t_add.commit();
-				}
+			if(trx_need_commit){
+				t_add.commit();
 			}
 			t_add.oncomplete=function(e){
 				setTimeout(function(){
@@ -6209,10 +6198,8 @@ function import_backup(data,callback){
 				let item=backup.replies[i];
 				q_add.add(item);
 			}
-			if(!is_safari){
-				if(!is_firefox){
-					t_add.commit();
-				}
+			if(trx_need_commit){
+				t_add.commit();
 			}
 			t_add.oncomplete=function(e){
 				setTimeout(function(){
@@ -6237,10 +6224,8 @@ function import_backup(data,callback){
 				let item=backup.hashtags[i];
 				q_add.add(item);
 			}
-			if(!is_safari){
-				if(!is_firefox){
-					t_add.commit();
-				}
+			if(trx_need_commit){
+				t_add.commit();
 			}
 			t_add.oncomplete=function(e){
 				import_steps--;
@@ -6258,10 +6243,8 @@ function import_backup(data,callback){
 							let item=backup.hashtags_feed[i];
 							q_add.add(item);
 						}
-						if(!is_safari){
-							if(!is_firefox){
-								t_add.commit();
-							}
+						if(trx_need_commit){
+							t_add.commit();
 						}
 						t_add.oncomplete=function(e){
 							setTimeout(function(){
@@ -6293,10 +6276,8 @@ function import_backup(data,callback){
 				let item=backup.awards[i];
 				q_add.add(item);
 			}
-			if(!is_safari){
-				if(!is_firefox){
-					t_add.commit();
-				}
+			if(trx_need_commit){
+				t_add.commit();
 			}
 			t_add.oncomplete=function(e){
 				setTimeout(function(){
@@ -6503,10 +6484,8 @@ function update_user_profile(account,callback){
 						let add_t=db.transaction(['users'],'readwrite');
 						let add_q=add_t.objectStore('users');
 						add_q.add(obj);
-						if(!is_safari){
-							if(!is_firefox){
-								add_t.commit();
-							}
+						if(trx_need_commit){
+							add_t.commit();
 						}
 						add_t.oncomplete=function(e){
 							callback(false,obj);
@@ -6781,10 +6760,8 @@ function feed_add(account,block,time,callback){
 				time:(time?time:(new Date().getTime() / 1000 | 0)),
 			};
 			add_q.add(obj);
-			if(!is_safari){
-				if(!is_firefox){
-					add_t.commit();
-				}
+			if(trx_need_commit){
+				add_t.commit();
 			}
 			add_t.oncomplete=function(e){
 				callback(false,obj);
@@ -7031,10 +7008,8 @@ function parse_object(account,block,feed_load_flag,callback){
 													add_t=db.transaction(['hashtags_feed'],'readwrite');
 													add_q=add_t.objectStore('hashtags_feed');
 													add_req=add_q.add({tag:hashtag_id,account:account,block:block});
-													if(!is_safari){
-														if(!is_firefox){
-															add_t.commit();
-														}
+													if(trx_need_commit){
+														add_t.commit();
 													}
 													add_req.onsuccess=function(e){
 														//update hashtag counter
@@ -7070,10 +7045,8 @@ function parse_object(account,block,feed_load_flag,callback){
 														hashtag_add_t=db.transaction(['hashtags'],'readwrite');
 														hashtag_add_q=hashtag_add_t.objectStore('hashtags');
 														hashtag_add_req=hashtag_add_q.add(hashtag_info);
-														if(!is_safari){
-															if(!is_firefox){
-																hashtag_add_t.commit();
-															}
+														if(trx_need_commit){
+															hashtag_add_t.commit();
 														}
 														hashtag_add_req.onsuccess=function(e){
 															idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
@@ -7122,10 +7095,8 @@ function parse_object(account,block,feed_load_flag,callback){
 								add_t=db.transaction(['objects'],'readwrite');
 								add_q=add_t.objectStore('objects');
 								add_q.add(obj);
-								if(!is_safari){
-									if(!is_firefox){
-										add_t.commit();
-									}
+								if(trx_need_commit){
+									add_t.commit();
 								}
 								add_t.oncomplete=function(e){
 									if(!feed_load_flag){
@@ -7157,10 +7128,8 @@ function parse_object(account,block,feed_load_flag,callback){
 													time:new Date().getTime() / 1000 | 0
 												};
 												reply_add_q.add(reply_obj);
-												if(!is_safari){
-													if(!is_firefox){
-														reply_add_t.commit();
-													}
+												if(trx_need_commit){
+													reply_add_t.commit();
 												}
 												reply_add_t.oncomplete=function(e){
 													callback(false,obj);
