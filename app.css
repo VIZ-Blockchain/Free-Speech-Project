@@ -2801,6 +2801,10 @@ all and (orientation:portrait),
 		max-width:600px;
 		margin:0;
 	}
+	body.publication-mode .content{
+		width:100vw;
+		max-width:800px;
+	}
 	.view{
 		width:100vw;
 	}
