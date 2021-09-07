@@ -56,6 +56,12 @@ if('file://'!=document.location.origin){
 	}
 }
 
+if(typeof String.prototype.replaceAll == "undefined") {
+	String.prototype.replaceAll = function(match, replace){
+		return this.replace(new RegExp(match, 'g'), () => replace);
+	}
+}
+
 function auth_signature_data(domain,action,account,authority,nonce){
 	return domain+':'+action+':'+account+':'+authority+':'+(new Date().getTime() / 1000 | 0)+':'+nonce;
 }
