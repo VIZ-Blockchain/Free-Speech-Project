@@ -13070,4 +13070,8 @@ function main_app(){
 		view_path(path+(''==query?'':'?'+query),{},true,false);
 	};
 	window.onresize(true);
+	window.addEventListener('orientationchange', function() {
+		setTimeout(function(){window.onresize(true)},20);
+		console.log('The orientation of the device is now '+screen.orientation.angle,screen.orientation);
+	});
 }
