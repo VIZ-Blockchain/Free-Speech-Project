@@ -528,6 +528,9 @@ var is_ucbrowser=navigator.userAgent.indexOf('UCBrowser') > -1;
 var is_samsungbrowser=navigator.userAgent.indexOf('SamsungBrowser') > -1;
 var is_macintosh=navigator.userAgent.indexOf('Macintosh') > -1;
 var trx_need_commit=false;
+if(null!=localStorage.getItem(storage_prefix+'trx_need_commit')){
+	trx_need_commit=('true'==localStorage.getItem(storage_prefix+'trx_need_commit'));
+}
 if(!is_safari){
 	if(!is_firefox){
 		if(!is_chrome_ios){
@@ -1103,15 +1106,34 @@ function idb_error(e){
 		ltmp_arr.notify_arr.idb_error
 	);
 	stop_timers();
-	setTimeout(function(){
-		document.location.reload(true);
-	},10000);
+	if(idb_init){
+		setTimeout(function(){
+			document.location.reload(true);
+		},10000);
+	}
+	else{//init error
+		if(null==localStorage.getItem(storage_prefix+'trx_need_commit')){
+			document.write('IndexedDB error! Trying to change commit rules. Please wait for page reload in 2 sec.<br>Browser: '+navigator.userAgent);
+			setTimeout(function(){
+				document.location.reload(true);
+			},2000);
+		}
+		else{
+			document.write('IndexedDB error! Trying to change commit rules. Please wait for page reload in 5 sec.<br>Browser: '+navigator.userAgent);
+			setTimeout(function(){
+				document.location.reload(true);
+			},5000);
+		}
+		trx_need_commit=!trx_need_commit;
+		localStorage.setItem(storage_prefix+'trx_need_commit',trx_need_commit);
+	}
 }
 
 const idb=window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
 const idbt=window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
 const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
 
+var idb_init=false;
 var db;
 var db_req;
 var db_version=1;
@@ -1128,17 +1150,22 @@ if(null!=localStorage.getItem(storage_prefix+'db_version')){
 }
 //need_update_db_version=true;
 console.log('db_version',db_version,'local_global_db_version',global_db_version,need_update_db_version);
-if(need_update_db_version){
-	increase_db_version(function(){
+if ('object' !== typeof idb){
+	document.write('IndexedDB not found! Try another modern browser.');
+}
+else{
+	if(need_update_db_version){
+		increase_db_version(function(){
+			load_db(function(){
+				main_app();
+			});
+		});
+	}
+	else{
 		load_db(function(){
 			main_app();
 		});
-	});
-}
-else{
-	load_db(function(){
-		main_app();
-	});
+	}
 }
 
 function increase_db_version(callback){
@@ -1187,6 +1214,7 @@ function load_db(callback){
 		db.addEventListener('versionchange',event=>{
 			console.log('The version of this database has changed');
 		});
+		idb_init=true;
 		callback();
 	};
 	db_req.onupgradeneeded=function(event){
