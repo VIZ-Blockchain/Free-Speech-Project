@@ -528,22 +528,6 @@ var is_ucbrowser=navigator.userAgent.indexOf('UCBrowser') > -1;
 var is_samsungbrowser=navigator.userAgent.indexOf('SamsungBrowser') > -1;
 var is_macintosh=navigator.userAgent.indexOf('Macintosh') > -1;
 var trx_need_commit=false;
-if(null!=localStorage.getItem(storage_prefix+'trx_need_commit')){
-	trx_need_commit=('true'==localStorage.getItem(storage_prefix+'trx_need_commit'));
-}
-if(!is_safari){
-	if(!is_firefox){
-		if(!is_chrome_ios){
-			if(!is_ucbrowser){
-				if(!is_samsungbrowser){
-					if(!is_macintosh){
-						trx_need_commit=true;
-					}
-				}
-			}
-		}
-	}
-}
 
 var api_gates=[
 	'https://node.viz.plus/',
@@ -566,13 +550,17 @@ var api_gate=default_api_gate;
 console.log('using default node',default_api_gate);
 viz.config.set('websocket',default_api_gate);
 
+var dgp={};
+
 if(select_best_api_gate){
 	select_best_gate();
 }
-
-var dgp={};
+else{
+	update_dgp(true);
+}
 
 function update_api_gate(value=false,latency){
+	console.log('new dgp:',dgp);
 	if(false==value){
 		api_gate=api_gates[best_gate];
 	}
@@ -778,6 +766,7 @@ function update_dgp(auto=false){
 		if(response){
 			dgp_error=false;
 			dgp=response;
+			console.log('new dgp:',dgp);
 		}
 		gate_connection_status();
 	});
@@ -1100,11 +1089,13 @@ function remove_session(view){
 
 function idb_error(e){
 	console.log('IDB error',e);
+	/*
 	add_notify(
 		false,
 		ltmp_arr.notify_arr.error,
 		ltmp_arr.notify_arr.idb_error
 	);
+	*/
 	stop_timers();
 	if(idb_init){
 		setTimeout(function(){
@@ -1112,20 +1103,10 @@ function idb_error(e){
 		},10000);
 	}
 	else{//init error
-		if(null==localStorage.getItem(storage_prefix+'trx_need_commit')){
-			document.write('IndexedDB error! Trying to change commit rules. Please wait for page reload in 2 sec.<br>Browser: '+navigator.userAgent);
-			setTimeout(function(){
-				document.location.reload(true);
-			},2000);
-		}
-		else{
-			document.write('IndexedDB error! Trying to change commit rules. Please wait for page reload in 5 sec.<br>Browser: '+navigator.userAgent);
-			setTimeout(function(){
-				document.location.reload(true);
-			},5000);
-		}
-		trx_need_commit=!trx_need_commit;
-		localStorage.setItem(storage_prefix+'trx_need_commit',trx_need_commit);
+		document.write('IndexedDB error! Trying to change commit rules. Please wait for page reload in 10 sec.<br>Browser: '+navigator.userAgent);
+		setTimeout(function(){
+			document.location.reload(true);
+		},10000);
 	}
 }
 
@@ -1136,12 +1117,12 @@ const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRa
 var idb_init=false;
 var db;
 var db_req;
-var db_version=1;
+var db_version=0;
 var global_db_version=8;
 var need_update_db_version=false;
 var local_global_db_version=localStorage.getItem(storage_prefix+'global_db_version');
 if((null===local_global_db_version)||(global_db_version>local_global_db_version)){
-	console.log('need update global db version',global_db_version);
+	console.log('need update, global_db_version:',global_db_version,', db_version: ',db_version);
 	need_update_db_version=true;
 	localStorage.setItem(storage_prefix+'global_db_version',global_db_version);
 }
@@ -1149,7 +1130,7 @@ if(null!=localStorage.getItem(storage_prefix+'db_version')){
 	db_version=parseInt(localStorage.getItem(storage_prefix+'db_version'));
 }
 //need_update_db_version=true;
-console.log('db_version',db_version,'local_global_db_version',global_db_version,need_update_db_version);
+console.log('db_version:',db_version,', local_global_db_version:',global_db_version,', need_update_db_version:',need_update_db_version);
 if ('object' !== typeof idb){
 	document.write('IndexedDB not found! Try another modern browser.');
 }
@@ -1211,6 +1192,11 @@ function load_db(callback){
 	db_req.onsuccess=function(event){
 		console.log('onsuccess!');
 		db=event.target.result;
+		let check_trx_commit=db.transaction(['users'],'readwrite');
+		console.log('check check_trx_commit.commit:',typeof check_trx_commit.commit);
+		if('function'==typeof check_trx_commit){
+			trx_need_commit=true;
+		}
 		db.addEventListener('versionchange',event=>{
 			console.log('The version of this database has changed');
 		});
@@ -1221,6 +1207,10 @@ function load_db(callback){
 		console.log('onupgradeneeded!');
 		db=event.target.result;
 		let update_trx = event.target.transaction;
+		console.log('check update_trx.commit:',typeof update_trx.commit);
+		if('function'==typeof update_trx){
+			trx_need_commit=true;
+		}
 
 		if(!db.objectStoreNames.contains('users')){
 			items_table=db.createObjectStore('users',{keyPath:'id',autoIncrement:true});
@@ -1234,6 +1224,7 @@ function load_db(callback){
 		else{
 			//new index for users
 		}
+		console.log('users storage upgraded');
 
 		if(!db.objectStoreNames.contains('replies')){
 			items_table=db.createObjectStore('replies',{keyPath:'id',autoIncrement:true});
@@ -1245,6 +1236,7 @@ function load_db(callback){
 			//items_table=update_trx.objectStore('replies');
 			//new index for replies
 		}
+		console.log('replies storage upgraded');
 
 		if(!db.objectStoreNames.contains('feed')){
 			items_table=db.createObjectStore('feed',{keyPath:'id',autoIncrement:true});
@@ -1254,6 +1246,7 @@ function load_db(callback){
 		else{
 			//new index for feed
 		}
+		console.log('feed storage upgraded');
 
 		if(!db.objectStoreNames.contains('notifications')){
 			items_table=db.createObjectStore('notifications',{keyPath:'id',autoIncrement:true});
@@ -1262,6 +1255,7 @@ function load_db(callback){
 		else{
 			//new index for notifications
 		}
+		console.log('notifications storage upgraded');
 
 		if(!db.objectStoreNames.contains('awards')){
 			items_table=db.createObjectStore('awards',{keyPath:'id',autoIncrement:true});
@@ -1270,6 +1264,7 @@ function load_db(callback){
 		else{
 			//new index for awards
 		}
+		console.log('awards storage upgraded');
 
 		if(!db.objectStoreNames.contains('reposts')){//store self reposts as fact only for other objects (not custom url)
 			items_table=db.createObjectStore('reposts',{keyPath:'id',autoIncrement:true});
@@ -1278,6 +1273,7 @@ function load_db(callback){
 		else{
 			//new index for reposts
 		}
+		console.log('reposts storage upgraded');
 
 		if(!db.objectStoreNames.contains('hashtags')){
 			items_table=db.createObjectStore('hashtags',{keyPath:'id',autoIncrement:true});
@@ -1293,6 +1289,7 @@ function load_db(callback){
 			}
 			//new index for hashtags
 		}
+		console.log('hashtags storage upgraded');
 
 		if(!db.objectStoreNames.contains('hashtags_feed')){
 			items_table=db.createObjectStore('hashtags_feed',{keyPath:'id',autoIncrement:true});
@@ -1307,6 +1304,7 @@ function load_db(callback){
 			}
 			//new index for hashtags_feed
 		}
+		console.log('hashtags_feed storage upgraded');
 
 		if(!db.objectStoreNames.contains('preview')){//store previews data
 			items_table=db.createObjectStore('preview',{keyPath:'id',autoIncrement:true});
@@ -1316,8 +1314,8 @@ function load_db(callback){
 		else{
 			//new index for preview
 		}
+		console.log('preview storage upgraded');
 
-		users_table=update_trx.objectStore('users');
 		if(!db.objectStoreNames.contains('objects')){
 			items_table=db.createObjectStore('objects',{keyPath:'id',autoIncrement:true});
 			items_table.createIndex('object',['account','block'],{unique:true});//account
@@ -1332,9 +1330,12 @@ function load_db(callback){
 			//items_table=update_trx.objectStore('objects');
 			//new index for objects cache
 		}
+		console.log('objects storage upgraded');
+
 		if(trx_need_commit){
 			update_trx.commit();
 		}
+		callback();
 	};
 	console.log('- load_db');
 }
@@ -12989,9 +12990,6 @@ function main_app(){
 			});
 		});
 	});
-	dgp_timer=setTimeout(function(){
-		update_dgp(true);
-	},10000);//10sec for re-check selected api gate
 
 	document.addEventListener('mousedown',app_mouse,false);
 	document.addEventListener('touchstart',app_mouse,false);
