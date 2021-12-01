@@ -1103,10 +1103,10 @@ function idb_error(e){
 		},10000);
 	}
 	else{//init error
-		document.write('IndexedDB error! Trying to change commit rules. Please wait for page reload in 10 sec.<br>Browser: '+navigator.userAgent);
+		document.write('IndexedDB error! Please wait for page reload in 15 sec.<br>Browser: '+navigator.userAgent);
 		setTimeout(function(){
 			document.location.reload(true);
-		},10000);
+		},15000);
 	}
 }
 
@@ -1117,10 +1117,10 @@ const idbrkr=window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRa
 var idb_init=false;
 var db;
 var db_req;
-var db_version=0;
+var db_version=1;
 var global_db_version=8;
 var need_update_db_version=false;
-var local_global_db_version=localStorage.getItem(storage_prefix+'global_db_version');
+var local_global_db_version=parseInt(localStorage.getItem(storage_prefix+'global_db_version'));
 if((null===local_global_db_version)||(global_db_version>local_global_db_version)){
 	console.log('need update, global_db_version:',global_db_version,', db_version: ',db_version);
 	need_update_db_version=true;
@@ -1191,7 +1191,7 @@ function load_db(callback){
 	db_req.onblocked=idb_error;
 	db_req.onsuccess=function(event){
 		console.log('onsuccess!');
-		db=event.target.result;
+		db=db_req.result;
 		let check_trx_commit=db.transaction(['users'],'readwrite');
 		console.log('check check_trx_commit.commit:',typeof check_trx_commit.commit);
 		if('function'==typeof check_trx_commit){
@@ -1330,12 +1330,11 @@ function load_db(callback){
 			//items_table=update_trx.objectStore('objects');
 			//new index for objects cache
 		}
-		console.log('objects storage upgraded');
+		console.log('Objects storage upgraded!');
 
 		if(trx_need_commit){
 			update_trx.commit();
 		}
-		callback();
 	};
 	console.log('- load_db');
 }
