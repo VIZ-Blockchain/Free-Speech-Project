@@ -241,8 +241,16 @@ var ltmp_ru_arr = {
 	<p>Миниатюра изображения:</p>
 	<p><input type="text" name="thumbnail" value=""></p>
 	<div class="input-addon">(загрузить изображение через: <a class="ipfs-upload-article-thumbnail-action">IPFS</a>, <a class="sia-upload-article-thumbnail-action">Sia</a>, допустимы ссылки https://, ipfs://, sia://)</div>
-	<div class="add-categories"></div>
 	<div class="add-interests"></div>
+	<div class="add-categories"></div>
+
+	<div class="edit-event-addon">
+		<hr>
+		<p>Редактируемый объект:</p>
+		<p><input type="text" name="edit-event-object" value=""></p>
+		<div class="input-addon">(опциональное поле, содержит адрес на объект)</div>
+	</div>
+
 	<div class="toggle-publish-addons"><a tabindex="0" class="toggle-publish-addons-action">%%open_publish_addons%%</a></div>
 	<div class="publish-addons">%%publish_addons%%</div>
 	`,
@@ -298,7 +306,7 @@ var ltmp_ru_arr = {
 						<div class="input-addon">(опциональное поле, содержит адрес на объект)</div>
 					</div>
 					<div class="share-addon">
-						<p>Распространяемый объект:</p>
+						<p>Делимся контентом:</p>
 						<p><input type="text" name="share" value=""></p>
 						<div class="input-addon">(опциональное поле, содержит адрес на объект)</div>
 					</div>
@@ -306,6 +314,12 @@ var ltmp_ru_arr = {
 						<p>Номер блока для создания петли:</p>
 						<p><input type="text" name="loop" value=""></p>
 						<div class="input-addon">(можно скрыть последние записи или наоборот: восстановить связь)</div>
+					</div>
+					<div class="edit-event-addon">
+						<hr>
+						<p>Редактируемый объект:</p>
+						<p><input type="text" name="edit-event-object" value="" disabled></p>
+						<div class="input-addon">(опциональное поле, содержит адрес на объект)</div>
 					</div>
 				</div>
 				<p class="error publish-error"></p>
@@ -654,9 +668,11 @@ var ltmp_ru_arr = {
 	account_not_found: 'Пользователь не найден',
 	object_not_found: 'Объект не найден',
 	block_not_found: 'Блок не найден, попробуйте позже',
+	object_is_hidden: 'Автор решил скрыть контент',
 	data_not_found: 'Данные не найдены',
 	hashtags_not_found: 'Тэг не найден',
 	users_not_found: 'Пользователи не найдены',
+	event_not_found: 'Запрашиваемое событие не найдено',
 
 	view: `
 		<div class="view" data-level="{level}" data-path="{path}" data-query="{query}">
@@ -779,14 +795,15 @@ var ltmp_ru_arr = {
 	publish_caption: 'Публикация',
 	publish_empty_text: 'Введите текст публикации',
 	publish_success: 'Запись успешно опубликована&hellip;',
-	publish_success_link: 'Запись успешно опубликована: <a tabindex="0" data-href="viz://@{account}/{block}/">ссылка</a>',
+	publish_success_link: 'Запись успешно опубликована: <a tabindex="0" data-href="viz://@{account}/{block}/{addon}">ссылка</a>',
 
 	object_type_publication_full: `
 		<div class="publication-readline" data-object="{link}"><div class="fill-level"></div></div>
-		<div class="object type-text" data-link="{link}" data-publication="true">
+		<div class="object type-text" data-link="{link}" data-events="{events}" data-publication="true">
 			<div class="author-view">
 				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+				{more}
 			</div>
 			<div class="object-column">
 				<div class="article">{context}</div>
@@ -795,10 +812,11 @@ var ltmp_ru_arr = {
 			</div>
 		</div>`,
 	object_type_publication: `
-		<div class="object type-text" data-link="{link}">
+		<div class="object type-text" data-link="{link}" data-events="{events}">
 			<div class="author-view">
 				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+				{more}
 			</div>
 			<div class="object-column">
 				<div class="preview-wrapper{class_addon}"{addon}>{context}</div>
@@ -807,7 +825,7 @@ var ltmp_ru_arr = {
 			</div>
 		</div>`,
 	object_type_publication_preview: `
-		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
+		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">
@@ -817,11 +835,17 @@ var ltmp_ru_arr = {
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
+	object_hidden: `
+		<div class="object object-hidden" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}"></div>`,
+	more_column: `<div class="more-column"><a tabindex="0" class="more-action" title="Доступные действия" data-account="{account}" data-block="{block}">%%icon_more%%</a></div>`,
+	more_actions: `<a class="edit-more-action">Редактировать</a><a class="hide-more-action">Скрыть</a><a class="cancel-more-action">Отмена</a>`,
+	confirm_hide_event: `Вы уверены, что хотите скрыть данную запись?`,
 	object_type_text: `
-		<div class="object type-text" data-link="{link}">
+		<div class="object type-text" data-link="{link}" data-events="{events}">
 			<div class="author-view">
 				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+				{more}
 			</div>
 			<div class="object-column">
 				{reply}
@@ -836,18 +860,18 @@ var ltmp_ru_arr = {
 	<a tabindex="0" class="share-action" title="Репост">{icon_repost}</a>
 	<a tabindex="0" class="award-action" title="Наградить">{icon_award}</a>
 	<a tabindex="0" class="external-share-action" title="Поделиться">{icon_share}</a>`,
-	object_type_text_pinned: `<div class="object type-text-loading pinned-object" data-link="{link}">{context}</div>`,
+	object_type_text_pinned: `<div class="object type-text-loading pinned-object" data-link="{link}" data-events="{events}">{context}</div>`,
 	object_type_text_pinned_caption: `
 	<div class="share-view">{icon} Закрепленная запись</div>
 	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
-	object_type_text_loading: `<div class="object type-text-loading" data-account="{account}" data-block="{block}" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">{context}</div>`,
-	object_type_text_wait_loading: `<div class="object type-text-wait-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
+	object_type_text_loading: `<div class="object type-text-loading" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">{context}</div>`,
+	object_type_text_wait_loading: `<div class="object type-text-wait-loading" data-link="{link}" data-events="{events}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
 	object_type_text_share: `
 	<div class="share-view"><a tabindex="0" data-href="{link}">{caption}</a> поделился:{comment}</div>
 	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
 	object_type_text_share_comment: ` <div class="comment-view">{comment}</div>`,
 	object_type_text_preview: `
-		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
+		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">
@@ -860,7 +884,7 @@ var ltmp_ru_arr = {
 			</div>
 		</div>`,
 	object_type_text_share_preview: `
-		<div class="object type-text-preview" data-link="{link}">
+		<div class="object type-text-preview" data-link="{link}" data-events="{events}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">
@@ -873,7 +897,7 @@ var ltmp_ru_arr = {
 		</div>`,
 	object_type_text_reply: `
 		<div class="branch">
-		<div class="object type-text-preview" data-link="{link}">
+		<div class="object type-text-preview" data-link="{link}" data-events="{events}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">

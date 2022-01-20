@@ -241,8 +241,16 @@ var ltmp_en_arr = {
 	<p>Thumbnail:</p>
 	<p><input type="text" name="thumbnail" value=""></p>
 	<div class="input-addon">(Upload image via: <a class="ipfs-upload-article-thumbnail-action">IPFS</a>, <a class="sia-upload-article-thumbnail-action">Sia</a>, allowed links https://, ipfs://, sia://)</div>
-	<div class="add-categories"></div>
 	<div class="add-interests"></div>
+	<div class="add-categories"></div>
+
+	<div class="edit-event-addon">
+		<hr>
+		<p>Editable object:</p>
+		<p><input type="text" name="edit-event-object" value=""></p>
+		<div class="input-addon">(optional field, contains the address to the object)</div>
+	</div>
+
 	<div class="toggle-publish-addons"><a tabindex="0" class="toggle-publish-addons-action">%%open_publish_addons%%</a></div>
 	<div class="publish-addons">%%publish_addons%%</div>
 	`,
@@ -259,7 +267,7 @@ var ltmp_en_arr = {
 	beneficiaries_list_caption: `Beneficiaries`,
 	beneficiaries_list_description: `Specify the users who will receive some of the rewards.`,
 	beneficiaries_list_add: `%%beneficiaries_item%% %%beneficiaries_add_item%%`,
-	beneficiaries_item: `<div class="beneficiaries-item"><input type="text" name="account" class="round" placeholder="Login"><input type="text" name="weight" class="round" placeholder="Percent of reward"></div>`,
+	beneficiaries_item: `<div class="beneficiaries-item"><input type="text" name="account" class="round" placeholder="Login" value="{account}"><input type="text" name="weight" class="round" placeholder="Percent of reward" value="{weight}"></div>`,
 	beneficiaries_add_item: `<a tabindex="0" class="beneficiaries-add-item-action" title="Add benificary">%%icon_editor_plus%%</a>`,
 
 	preset_view_publish: `
@@ -298,7 +306,7 @@ var ltmp_en_arr = {
 						<div class="input-addon">(optional field, contains the address to the object)</div>
 					</div>
 					<div class="share-addon">
-						<p>Redistributable object:</p>
+						<p>Sharing the content:</p>
 						<p><input type="text" name="share" value=""></p>
 						<div class="input-addon">(optional field, contains the address to the object)</div>
 					</div>
@@ -306,6 +314,12 @@ var ltmp_en_arr = {
 						<p>Block number to create a loop:</p>
 						<p><input type="text" name="loop" value=""></p>
 						<div class="input-addon">(you can hide recent entries or vice versa: re-establish link)</div>
+					</div>
+					<div class="edit-event-addon">
+						<hr>
+						<p>Editable object:</p>
+						<p><input type="text" name="edit-event-object" value="" disabled></p>
+						<div class="input-addon">(optional field, contains the address to the object)</div>
 					</div>
 				</div>
 				<p class="error publish-error"></p>
@@ -654,9 +668,11 @@ var ltmp_en_arr = {
 	account_not_found: 'User not found',
 	object_not_found: 'Object not found',
 	block_not_found: 'Block not found, please try later',
+	object_is_hidden: 'Author decided to hide content',
 	data_not_found: 'No data found',
 	hashtags_not_found: 'Tag not found',
 	users_not_found: 'No users found',
+	event_not_found: 'Requested event not found',
 
 	view: `
 		<div class="view" data-level="{level}" data-path="{path}" data-query="{query}">
@@ -778,14 +794,15 @@ var ltmp_en_arr = {
 	publish_caption: 'Publish',
 	publish_empty_text: 'Enter publish text',
 	publish_success: 'Post published successfully &hellip;',
-	publish_success_link: 'Post has been published successfully: <a tabindex="0" data-href="viz://@{account}/{block}/">link</a>',
+	publish_success_link: 'Post has been published successfully: <a tabindex="0" data-href="viz://@{account}/{block}/{addon}">link</a>',
 
 	object_type_publication_full: `
 		<div class="publication-readline" data-object="{link}"><div class="fill-level"></div></div>
-		<div class="object type-text" data-link="{link}" data-publication="true">
+		<div class="object type-text" data-link="{link}" data-events="{events}" data-publication="true">
 			<div class="author-view">
 				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+				{more}
 			</div>
 			<div class="object-column">
 				<div class="article">{context}</div>
@@ -794,10 +811,11 @@ var ltmp_en_arr = {
 			</div>
 		</div>`,
 	object_type_publication: `
-		<div class="object type-text" data-link="{link}">
+		<div class="object type-text" data-link="{link}" data-events="{events}">
 			<div class="author-view">
 				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+				{more}
 			</div>
 			<div class="object-column">
 				<div class="preview-wrapper{class_addon}"{addon}>{context}</div>
@@ -806,7 +824,7 @@ var ltmp_en_arr = {
 			</div>
 		</div>`,
 	object_type_publication_preview: `
-		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
+		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">
@@ -816,11 +834,17 @@ var ltmp_en_arr = {
 				<div class="actions-view">{actions}</div>
 			</div>
 		</div>`,
+	object_hidden: `
+		<div class="object object-hidden" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}"></div>`,
+	more_column: `<div class="more-column"><a tabindex="0" class="more-action" title="Available actions" data-account="{account}" data-block="{block}">%%icon_more%%</a></div>`,
+	more_actions: `<a class="edit-more-action">Edit</a><a class="hide-more-action">Hide</a><a class="cancel-more-action">Cancel</a>`,
+	confirm_hide_event: `Are you sure that you want to hide this entry?`,
 	object_type_text: `
-		<div class="object type-text" data-link="{link}">
+		<div class="object type-text" data-link="{link}" data-events="{events}">
 			<div class="author-view">
 				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+				{more}
 			</div>
 			<div class="object-column">
 				{reply}
@@ -835,18 +859,18 @@ var ltmp_en_arr = {
 	<a tabindex="0" class="share-action" title="Repost">{icon_repost}</a>
 	<a tabindex="0" class="award-action" title="Award">{icon_award}</a>
 	<a tabindex="0" class="external-share-action" title="Share">{icon_share}</a>`,
-	object_type_text_pinned: `<div class="object type-text-loading pinned-object" data-link="{link}">{context}</div>`,
+	object_type_text_pinned: `<div class="object type-text-loading pinned-object" data-link="{link}" data-events="{events}">{context}</div>`,
 	object_type_text_pinned_caption: `
 	<div class="share-view">{icon} Pinned post</div>
 	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
-	object_type_text_loading: `<div class="object type-text-loading" data-account="{account}" data-block="{block}" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">{context}</div>`,
-	object_type_text_wait_loading: `<div class="object type-text-wait-loading" data-link="{link}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
+	object_type_text_loading: `<div class="object type-text-loading" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">{context}</div>`,
+	object_type_text_wait_loading: `<div class="object type-text-wait-loading" data-link="{link}" data-events="{events}"><div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div></div>`,
 	object_type_text_share: `
 	<div class="share-view"><a tabindex="0" data-href="{link}">{caption}</a> shared:{comment}</div>
 	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
 	object_type_text_share_comment: ` <div class="comment-view">{comment}</div>`,
 	object_type_text_preview: `
-		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
+		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">
@@ -859,7 +883,7 @@ var ltmp_en_arr = {
 			</div>
 		</div>`,
 	object_type_text_share_preview: `
-		<div class="object type-text-preview" data-link="{link}">
+		<div class="object type-text-preview" data-link="{link}" data-events="{events}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">
@@ -872,7 +896,7 @@ var ltmp_en_arr = {
 		</div>`,
 	object_type_text_reply: `
 		<div class="branch">
-		<div class="object type-text-preview" data-link="{link}">
+		<div class="object type-text-preview" data-link="{link}" data-events="{events}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 			<div class="object-column">
 				<div class="author-view">

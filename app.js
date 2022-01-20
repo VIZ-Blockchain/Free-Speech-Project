@@ -1,5 +1,6 @@
 var app_version=1;
 var app_protocol='V';//V for Voice :)
+var events_protocol='VE';//Voice Events
 var storage_prefix='viz_voice_';
 var debug=false;
 var pwa=false;
@@ -271,7 +272,19 @@ function sync_cloud_update_worker(){
 		if(typeof update !== 'undefined'){
 			let type=types_id[update.type];
 			if('backup'==type){
-				import_cloud(update.value);
+				import_cloud(update.value,function(result){
+					if(false===result){
+						console.log('sync_cloud_update_worker error with update',update);
+					}
+					else{
+						console.log('sync_cloud_update_worker OK with update',update);
+					}
+					sync_cloud_update_worker_busy=false;
+					clearTimeout(sync_cloud_update_worker_timer);
+					sync_cloud_update_worker_timer=setTimeout(function(){
+						sync_cloud_update_worker();
+					},sync_cloud_update_worker_interval);
+				});
 			}
 			else
 			if('subscribe'==type){
@@ -1118,11 +1131,14 @@ var idb_init=false;
 var db;
 var db_req;
 var db_version=1;
-var global_db_version=8;
+var global_db_version=9;
 var need_update_db_version=false;
 var local_global_db_version=parseInt(localStorage.getItem(storage_prefix+'global_db_version'));
+if(isNaN(local_global_db_version)){
+	local_global_db_version=0;
+}
 if((null===local_global_db_version)||(global_db_version>local_global_db_version)){
-	console.log('need update, global_db_version:',global_db_version,', db_version: ',db_version);
+	console.log('Need update global_db_version:',global_db_version,', db_version: ',db_version);
 	need_update_db_version=true;
 	localStorage.setItem(storage_prefix+'global_db_version',global_db_version);
 }
@@ -1332,6 +1348,19 @@ function load_db(callback){
 		}
 		console.log('Objects storage upgraded!');
 
+		if(!db.objectStoreNames.contains('events')){
+			items_table=db.createObjectStore('events',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('event',['account','block'],{unique:true});//event
+			items_table.createIndex('account','account',{unique:false});
+			items_table.createIndex('time','time',{unique:false});//unixtime for stored events
+			items_table.createIndex('executed',['account','executed'],{unique:false});
+		}
+		else{
+			//items_table=update_trx.objectStore('events');
+			//new index for events cache
+		}
+		console.log('Events storage upgraded!');
+
 		if(trx_need_commit){
 			update_trx.commit();
 		}
@@ -1449,6 +1478,7 @@ function idb_get_by_id(container,index,search,callback){
 	if(db.objectStoreNames.contains(container)){
 		t=db.transaction([container],'readonly');
 		q=t.objectStore(container);
+		//console.log('idb_get_by_id',container,index,search);
 		req=q.index(index).openCursor(IDBKeyRange.only(search),'next');
 		req.onsuccess=function(event){
 			let cur=event.target.result;
@@ -1593,6 +1623,7 @@ function save_account_settings(view,login,regular_key){
 var level=0;
 var path='viz://';
 var query='';
+var query_obj={};
 
 function ltmp(ltmp_str,ltmp_args){
 	let ltmp_includes_pattern = /%%([a-zA-Z_0-9]*)%%/gi;
@@ -2457,6 +2488,777 @@ function wait_publish(last_id,callback){
 		}
 	});
 }
+
+//load exact event, increase counter for event queue num, set to execute it
+function load_event(queue_num,account,event_block){
+	console.log('load_event queue_num',queue_num,account,event_block);
+	let t,q,req;
+	t=db.transaction(['events'],'readonly');
+	q=t.objectStore('events');
+	req=q.index('event').openCursor(IDBKeyRange.only([account,event_block]),'next');
+
+	let find=false;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			find=true;
+			let result=cur.value;
+			if(0==result.executed){
+				execute_events_queue[queue_num][0]++;//increase counter
+				setTimeout(function(){
+					execute_event(result,queue_num);
+				},execute_events_queue[queue_num][0]*execute_events_queue_time_offset);
+			}
+			else{
+				//ignore, already executed
+			}
+			cur.continue();
+		}
+		else{
+			if(!find){
+				execute_events_queue[queue_num][0]++;//increase counter for all queue wait parsing callback
+				//need to parse event from custom account and block num and try again with load_event
+				parse_event(account,event_block,function(err,result){
+					execute_events_queue[queue_num][0]--;//decrease counter for all queue
+					if(err){
+						//no event found, no matter for reason
+						if(1==result){//node error
+							add_notify(false,'',ltmp_arr.gateway_error);
+						}
+						if(2==result){//event not found, show notice
+							add_notify(false,'',ltmp_arr.event_not_found+' ['+event_block+']');
+						}
+						//if event not exist, not found and there is no more other events need to callback
+						if(execute_events_queue[queue_num][0]==0){
+							//return to queue callback
+							execute_events_queue[queue_num][1]();
+							execute_events_queue[queue_num]=false;//remove callback after initiate
+						}
+					}
+					else{
+						//try execute again already parsed event
+						load_event(queue_num,account,event_block);
+					}
+				});
+			}
+			else{
+				//if searched event exists and already executed, they dont trigger events_queue_finish, but needed
+				if(execute_events_queue[queue_num][0]==0){
+					//return to queue callback
+					execute_events_queue[queue_num][1]();
+					execute_events_queue[queue_num]=false;//remove callback after initiate
+				}
+			}
+			//New: wait events_queue_finish() with event update and trigger callback if counter changed to zero
+		}
+	};
+}
+
+var load_events_timer=0;
+//events must be in sorted array
+function load_events(account,events,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	console.log('load_events tick with account',account,events);
+	idb_get_by_id('users','account',account,function(user_data){//check user exist
+		//console.log('check user exist',user_data);
+		if(false!==user_data){//if user was found
+			//need to create queue for events from array with callback
+			let queue_num=execute_events_queue_num;
+			execute_events_queue[queue_num]=[0,callback];//init zero counter
+			execute_events_queue_num++;
+			console.log('load_events create execute_events_queue',queue_num);
+			for(let i in events){
+				let event_block=parseInt(events[i]);
+				load_event(queue_num,account,event_block);
+			}
+			//then go to events_queue_finish which trigger callback
+		}
+		else{
+			get_user(account,false,function(check_err,check_result){
+				if(!check_err){//user parsed? try again
+					load_events_timer=setTimeout(function(){
+						load_events(account,events,callback);
+					},100);
+				}
+				else{//account was not found? impossible but trackable
+					callback(false);
+				}
+			});
+		}
+	});
+}
+
+var wait_new_event_timer=0;
+function wait_new_event(account,last_id,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	console.log('wait_new_event tick with last_id',last_id);
+	clearTimeout(wait_new_event_timer);
+	idb_get_by_id('users','account',account,function(user_data){//check user exist
+		//console.log('check user exist',user_data);
+		if(false!==user_data){//if user was found
+			update_user_last_event(account,function(last_event){//update events_protocol block num
+				console.log('update_user_last_event in wait_new_event return',last_event);
+				let need_wait=true;
+				if(false!==last_event){//not error
+					if(last_event>0){//not empty
+						if(last_event>last_id){//more than last known event
+							need_wait=false;
+						}
+					}
+				}
+				if(need_wait){
+					console.log('wait_new_event need_wait with last_event',last_event,'last_id',last_id);
+					wait_new_event_timer=setTimeout(function(){
+						wait_new_event(last_id,callback);
+					},1000);
+				}
+				else{
+					console.log('wait_new_event finish with',last_event);
+					callback(last_event);
+				}
+			});
+		}
+		else{
+			get_user(account,false,function(check_err,check_result){
+				if(!check_err){
+					wait_new_event_timer=setTimeout(function(){
+						wait_new_event(last_id,callback);
+					},1000);
+				}
+				else{//current user not found? impossible but trackable
+					callback(false);
+				}
+			});
+		}
+	});
+}
+
+let events_affected_objects={};//a:[b,b,b],c:[b,b],clear after callback
+//mark executed/errors events, trigger callback if all events was executed
+//affected_object=[a,b], need to put it in events_affected_objects and to callback it (for auto refresh objects view)
+function events_queue_finish(event_object_id,execution,queue_num,affected_object,error_reason){
+	error_reason=typeof error_reason === 'undefined'?'error':error_reason;
+	console.log('events_queue_finish queue_num',queue_num,'counter was',execute_events_queue[queue_num][0],'event_object_id',event_object_id,execution)
+	execute_events_queue[queue_num][0]--;//decrease queue counter
+
+	let t,q,req;
+	t=db.transaction(['events'],'readwrite');
+	q=t.objectStore('events');
+	req=q.openCursor(IDBKeyRange.only(event_object_id),'next');
+
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let result=cur.value;
+			if(execution){//true means not errors at all
+				result.executed=1;
+				if(typeof affected_object !== 'undefined'){
+					if(typeof events_affected_objects[affected_object[0]] === 'undefined'){
+						events_affected_objects[affected_object[0]]=[];
+					}
+					events_affected_objects[affected_object[0]].push(affected_object[1]);
+				}
+			}
+			else{//any error on execution?
+				result.executed=1;
+				result[error_reason]=1;
+			}
+			cur.update(result);
+			cur.continue();
+		}
+		else{
+			//New: wait events_queue_finish() with event update and trigger callback if counter changed to zero
+			if(execute_events_queue[queue_num][0]==0){
+				if(typeof affected_object !== 'undefined'){
+					//return to load_events
+					execute_events_queue[queue_num][1](events_affected_objects[affected_object[0]]);
+					delete events_affected_objects[affected_object[0]];//clear affected objects for specific account
+				}
+				else{
+					execute_events_queue[queue_num][1]();
+				}
+				execute_events_queue[queue_num]=false;//remove callback after initiate
+			}
+		}
+	};
+}
+
+function clear_hashtag_object(account,block,callback){
+	//delete object from hashtags_feed and update decrease hashtag counter
+	let hashtags_arr=[];
+	let upd_t,upd_q,upd_req;
+	upd_t=db.transaction(['hashtags_feed'],'readwrite');
+	upd_q=upd_t.objectStore('hashtags_feed');
+	upd_req=upd_q.index('object').openCursor(IDBKeyRange.only([account,parseInt(block)]),'next');
+	upd_req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let result=cur.value;
+			console.log('clear_hashtag_object find and delete',result);
+			hashtags_arr.push(result.tag);
+			cur.delete();
+			cur.continue();
+		}
+		else{
+			console.log('clear_hashtag_object decrease counter',hashtags_arr);
+
+			for(let i in hashtags_arr){
+				let hashtag_id=hashtags_arr[i];
+				let upd_t,upd_q,upd_req;
+				upd_t=db.transaction(['hashtags'],'readwrite');
+				upd_q=upd_t.objectStore('hashtags');
+				upd_req=upd_q.openCursor(IDBKeyRange.only(hashtag_id),'next');
+				upd_req.onsuccess=function(event){
+					let cur=event.target.result;
+					if(cur){
+						let result=cur.value;
+						result.count--;
+						cur.update(result);
+						cur.continue();
+					}
+					else{
+						setTimeout(function(){render_right_addon();},10);
+					}
+				};
+			}
+
+			callback();
+		}
+	};
+}
+
+function check_event_is_newest(event_object,callback){
+	let check_account=event_object.account;
+	if(typeof event_object.data.a !== 'undefined'){
+		check_account=event_object.data.a;//check affected object account
+	}
+	let check_event_block=event_object.block;//check only newest events with higher block num
+	let check_block_num=event_object.data.b;//check affected object block
+	let check_event_type=event_object.data.e;//check same event type
+
+	let is_newest=true;
+	let cursor_end=false;
+
+	let t,q,req;
+	t=db.transaction(['events'],'readonly');
+	q=t.objectStore('events');
+	req=q.index('event').openCursor(IDBKeyRange.upperBound([check_account,Number.MAX_SAFE_INTEGER]),'prev');
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cursor_end){
+			cur=false;
+			console.log('check_event_is_newest search end');
+		}
+		if(cur){
+			console.log('check_event_is_newest search',cur.value);
+			/*
+			if(check_account==cur.value.data.a){
+				if(check_block_num==cur.value.data.b){
+					if(check_event_type==cur.value.data.e){
+						if(check_event_block<cur.value.block){
+							is_newest=false;
+							cursor_end=true;
+						}
+					}
+				}
+			}
+			else{
+				cursor_end=true;
+			}
+			*/
+			let cur_account=cur.value.account;
+			if(typeof cur.value.data.a !== 'undefined'){
+				cur_account=cur.value.data.a;//it can be cropped, if initiator the same
+			}
+			if(check_event_block>=cur.value.block){//same block num or greater? not check at all, just end
+				cursor_end=true;
+			}
+			else{
+				if(check_account==cur_account){//same affected object account?
+					if(check_block_num==cur.value.data.b){//same affected object block?
+						if(check_event_type==cur.value.data.e){//same event type?
+							if(check_event_block<cur.value.block){
+								//if current event check_event_block is lower than cursor event
+								is_newest=false;
+								cursor_end=true;
+							}
+						}
+					}
+				}
+				else{//other account? end
+					cursor_end=true;
+				}
+			}
+			cur.continue();
+		}
+		else{
+			console.log('check_event_is_newest ended is_newest?',event_object,is_newest);
+			callback(is_newest);
+		}
+	};
+}
+
+function execute_event(event_object,queue_num){
+	//need to check current event - it is the last with same event-type?
+	//if found known and most fresh event, then ignore current event and mark it as executed and "late", not as error
+	if(0==event_object.executed){
+		check_event_is_newest(event_object,function(is_newest){
+			if(is_newest){
+				if('h'==event_object.data.e){//hide
+					if(typeof event_object.data.a === 'undefined'){//if not account specified in data:a, means initiator
+						event_object.data.a=event_object.account;
+					}
+					if(typeof event_object.data.b === 'undefined'){
+						events_queue_finish(event_object.id,false,queue_num);//error result, block not specified
+					}
+					if(event_object.account!=event_object.data.a){
+						events_queue_finish(event_object.id,false,queue_num);//error result, initiator try hide other account object
+					}
+
+					get_object(event_object.data.a,event_object.data.b,false,function(err,object_result){//parse object if new
+						if(!err){
+							let t,q,req;
+							t=db.transaction(['objects'],'readwrite');
+							q=t.objectStore('objects');
+							req=q.index('object').openCursor(IDBKeyRange.only([event_object.data.a,event_object.data.b]),'next');
+
+							let find=false;
+							req.onsuccess=function(event){
+								let cur=event.target.result;
+								if(cur){
+									let result=cur.value;
+									if(typeof result.events === 'undefined'){
+										result.events=[];
+									}
+									result.events.push(event_object.block);
+									result.hidden=1;
+									cur.update(result);
+									find=true;
+								}
+								if(find){
+									events_queue_finish(event_object.id,true,queue_num,[event_object.data.a,event_object.data.b]);//object was found
+								}
+								else{
+									events_queue_finish(event_object.id,false,queue_num);//not found object
+								}
+							};
+						}
+						else{
+							events_queue_finish(event_object.id,false,queue_num);//not found object
+						}
+					});
+				}
+				if('e'==event_object.data.e){//edit
+					if(typeof event_object.data.a === 'undefined'){//if not account specified in data:a, means initiator
+						event_object.data.a=event_object.account;
+					}
+					if(typeof event_object.data.b === 'undefined'){
+						events_queue_finish(event_object.id,false,queue_num);//error result, block not specified
+					}
+					if(event_object.account!=event_object.data.a){
+						events_queue_finish(event_object.id,false,queue_num);//error result, initiator try hide other account object
+					}
+
+					get_object(event_object.data.a,event_object.data.b,false,function(err,object_result){//parse object if new
+						if(!err){
+							let t,q,req;
+							t=db.transaction(['objects'],'readwrite');
+							q=t.objectStore('objects');
+							req=q.index('object').openCursor(IDBKeyRange.only([event_object.data.a,event_object.data.b]),'next');
+
+							let find=false;
+							let need_update=false;//if object was already updated newest event, then ignore
+							req.onsuccess=function(event){
+								let cur=event.target.result;
+								if(cur){
+									let result=cur.value;
+									result.data.d=event_object.data.d;//update new data
+									//object update time
+									if(typeof result.update_time !== 'undefined'){
+										if(parseInt(result.update_time)<parseInt(event_object.time)){
+											result.update_time=event_object.time;
+											need_update=true;
+										}
+									}
+									else{
+										result.update_time=event_object.time;
+										need_update=true;
+									}
+									if(need_update){
+										//need to update share/reply statuses, hashtags, nsfw
+										let reply=false;
+										let share=false;
+										let share_link=false;
+										let nsfw=result.nsfw;
+
+										let parent_account=false;
+										let parent_block=false;
+
+										let type='text';//check type
+										if(typeof event_object.data.t !== 'undefined'){
+											if(-1!=object_types_list.indexOf(event_object.data.t)){
+												if(typeof object_types_arr[event_object.data.t] !== 'undefined'){
+													type=object_types_arr[event_object.data.t];
+												}
+												else{
+													type=event_object.data.t;
+												}
+											}
+										}
+										if('text'==type){
+											if(typeof event_object.data.d.r !== 'undefined'){
+												let reply_link=event_object.data.d.r;
+												if(typeof reply_link !== 'string'){
+													reply_link='';
+												}
+												//internal
+												if(0==reply_link.indexOf('viz://')){
+													reply_link=reply_link.toLowerCase();
+													reply_link=escape_html(reply_link);
+													let pattern = /@[a-z0-9\-\.]*/g;
+													let reply_account=reply_link.match(pattern);
+													if(typeof reply_account[0] != 'undefined'){
+														let pattern_block = /\/([0-9]*)\//g;
+														let reply_block=reply_link.match(pattern_block);
+														if(typeof reply_block[1] != 'undefined'){
+															reply=true;
+															parent_account=reply_account[0].substr(1);
+															parent_block=parseInt(fast_str_replace('/','',reply_block[1]));
+														}
+													}
+												}
+											}
+											else
+											if(typeof event_object.data.d.s != 'undefined'){
+												share_link=event_object.data.d.s;
+												if(typeof share_link !== 'string'){
+													share_link='';
+												}
+												//internal
+												if(0==share_link.indexOf('viz://')){
+													share_link=share_link.toLowerCase();
+													share_link=escape_html(share_link);
+													let pattern = /@[a-z0-9\-\.]*/g;
+													let share_account=share_link.match(pattern);
+													if(typeof share_account[0] != 'undefined'){
+														let pattern_block = /\/([0-9]*)\//g;
+														let share_block=share_link.match(pattern_block);
+														if(typeof share_block[1] != 'undefined'){
+															share=true;
+															parent_account=share_account[0].substr(1);
+															parent_block=parseInt(fast_str_replace('/','',share_block[1]));
+														}
+													}
+												}
+												//external
+												if((0==share_link.indexOf('http://'))||(0==share_link.indexOf('https://'))){
+													share=true;
+												}
+											}
+										}
+										if('text'==type){
+											if(reply){
+												result.is_reply=1;
+												result.parent_account=parent_account;
+												result.parent_block=parent_block;
+											}
+											if(share){
+												result.is_share=1;
+												if(false!==parent_account){
+													result.parent_account=parent_account;
+													result.parent_block=parent_block;
+												}
+												else{
+													result.link=share_link;
+												}
+											}
+										}
+
+										/* hashtags support */
+										//need replace url with hash to avoid conflict
+										let hashtags_text='';
+										if('text'==type){
+											hashtags_text=event_object.data.d.text;
+											if(typeof event_object.data.d.text !== 'undefined'){
+												hashtags_text=event_object.data.d.text;
+											}
+											else{
+												if(typeof event_object.data.d.t !== 'undefined'){
+													hashtags_text=event_object.data.d.t;
+												}
+											}
+										}
+										if('publication'==type){
+											hashtags_text=markdown_clear_code(event_object.data.d.m);//markdown
+											hashtags_text=markdown_decode_text(hashtags_text);
+											let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+											hashtags_text=hashtags_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
+										}
+										let summary_links=[];
+										//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
+										//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
+										let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
+										let http_protocol_links=hashtags_text.match(http_protocol_pattern);
+										if(null!=http_protocol_links){
+											summary_links=summary_links.concat(http_protocol_links);
+										}
+
+										summary_links=array_unique(summary_links);
+										summary_links.sort(sort_by_length_desc);
+
+										for(let i in summary_links){
+											hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
+										}
+
+										let hashtags_pattern = /(|\b)#([^:;@#!.,?\r\n\t <>()\[\]]+)(|\b)/g;;
+										let hashtags_links=hashtags_text.match(hashtags_pattern);
+										if(null!=hashtags_links){
+											hashtags_links=hashtags_links.map(function(value){
+												return value.toLowerCase();
+											});
+											hashtags_links=array_unique(hashtags_links);
+
+											console.log('execute event object hashtags',hashtags_links,result.account,result.block);
+											clear_hashtag_object(result.account,result.block,function(){
+												console.log('execute event after clear_hashtag_object object hashtags',hashtags_links);
+												for(let i in hashtags_links){
+													let hashtag=hashtags_links[i].substr(1);
+													hashtag=hashtag.trim();
+													if(''!=hashtag){
+														idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+															if(false===hashtag_id){
+																let hashtag_info,hashtag_add_t,hashtag_add_q,hashtag_add_req;
+																hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
+																hashtag_add_t=db.transaction(['hashtags'],'readwrite');
+																hashtag_add_q=hashtag_add_t.objectStore('hashtags');
+																hashtag_add_req=hashtag_add_q.add(hashtag_info);
+																if(trx_need_commit){
+																	hashtag_add_t.commit();
+																}
+																hashtag_add_req.onsuccess=function(e){
+																	idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+																		if(false!==hashtag_id){
+																			add_hashtag_object(hashtag_id,result.account,result.block);
+																		}
+																	});
+																}
+															}
+															else{
+																add_hashtag_object(hashtag_id,result.account,result.block);
+															}
+														});
+													}
+												}
+											});
+										}
+
+										/* check nsfw hashtags in object texts */
+										let nsfw_text='';
+										if('text'==type){
+											if(typeof event_object.data.d.text !== 'undefined'){
+												nsfw_text=event_object.data.d.text;
+											}
+											else{
+												if(typeof event_object.data.d.t !== 'undefined'){
+													nsfw_text=event_object.data.d.t;
+												}
+											}
+										}
+										if('publication'==type){
+											nsfw_text=markdown_clear_code(event_object.data.d.m);//markdown
+											nsfw_text=markdown_decode_text(nsfw_text);
+											let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+											nsfw_text=nsfw_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
+										}
+										for(let i in settings.nsfw_hashtags){
+											let search_hashtag='#'+settings.nsfw_hashtags[i];
+											if(-1!=nsfw_text.indexOf(search_hashtag)){
+												nsfw=1;
+											}
+										}
+										if(nsfw!=result.nsfw){
+											result.nsfw=nsfw;
+										}
+										if(typeof result.events === 'undefined'){
+											result.events=[];
+										}
+										result.events.push(event_object.block);
+										cur.update(result);
+									}
+									find=true;
+								}
+								if(find){
+									events_queue_finish(event_object.id,true,queue_num,[event_object.data.a,event_object.data.b]);//object was found
+								}
+								else{
+									events_queue_finish(event_object.id,false,queue_num);//not found object
+								}
+							};
+						}
+						else{
+							events_queue_finish(event_object.id,false,queue_num);//not found object
+						}
+					});
+				}
+			}
+			else{
+				events_queue_finish(event_object.id,false,queue_num,[],'late');//event is late (found newest with same event type)
+			}
+		});
+	}
+}
+var execute_events_queue=[];
+var execute_events_queue_num=0;
+var execute_events_queue_time_offset=100;
+function execute_events(account,callback){
+	let t,q,req;
+	t=db.transaction(['events'],'readonly');
+	q=t.objectStore('events');
+	req=q.index('account').openCursor(IDBKeyRange.only(account),'next');
+
+	let queue_num=execute_events_queue_num;
+	execute_events_queue[queue_num]=[0,callback];//init zero counter
+	execute_events_queue_num++;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let result=cur.value;
+			if(0==result.executed){
+				execute_events_queue[queue_num][0]++;//increase counter
+				setTimeout(function(){
+					execute_event(result,queue_num);
+				},execute_events_queue[queue_num][0]*execute_events_queue_time_offset);
+			}
+			else{
+				//ignore
+			}
+			cur.continue();
+		}
+		else{
+			//New: wait events_queue_finish() with event update and trigger callback if counter changed to zero
+		}
+	};
+}
+function finish_parse_events(account,object_block,event,events_count){
+	if(0==events_count){//error?
+		add_notify(false,'',ltmp_arr.gateway_error);
+	}
+	else{
+		execute_events(account,function(){
+			if('h'==event){
+				view_path('viz://@'+account+'/',{},true,false);
+			}
+			else{
+				view_path('viz://@'+account+'/'+object_block+'/',{},true,false);
+			}
+		});
+	}
+}
+function continuous_parse_event(account,object_block,block,event,last_block,count,callback){
+	count=typeof count!=='undefined'?count:0;
+	parse_event(account,block,function(err,result_event){
+		if(!err){
+			count++;
+			if(result_event.data.p>last_block){
+				continuous_parse_event(account,object_block,result_event.data.p,event,last_block,count,callback);
+			}
+			else{
+				callback(account,object_block,event,count);
+			}
+		}
+		else{
+			callback(account,object_block,event,count);
+		}
+	});
+}
+function voice_event(el,object_account,object_block,event,data){
+	el=typeof el==='undefined'?'.not-exist':el;
+	object_account=typeof object_account==='undefined'?false:current_user;
+	object_block=typeof object_block==='undefined'?0:object_block;
+	event=typeof event==='undefined'?'':event;
+	data=typeof data==='undefined'?false:data;
+
+	if(''==event){
+		add_notify(false,'',ltmp_arr.gateway_error);
+		$(el).removeClass('disabled');
+		return;
+	}
+
+	viz.api.getAccount(current_user,events_protocol,function(err,response){
+		if(err){
+			console.log(err);
+			add_notify(false,'',ltmp_arr.gateway_error);
+			$(el).removeClass('disabled');
+		}
+		else{
+			if(object_account!=response.name){
+				add_notify(false,'',account_not_found);
+				$(el).removeClass('disabled');
+			}
+			else{
+				let previous=response.custom_sequence_block_num;
+				let new_object={};
+				if(previous>0){
+					new_object.p=previous;
+				}
+				new_object.e=event;
+				if(object_account!=current_user){
+					new_object.a=object_account;
+				}
+				if(object_block>0){
+					new_object.b=object_block;
+				}
+				if(false!==data){
+					new_object.d=data;
+				}
+				console.log(new_object);
+				let object_json=JSON.stringify(new_object);
+
+				viz.broadcast.custom(users[current_user].regular_key,[],[current_user],events_protocol,object_json,function(err,result){
+					if(result){
+						console.log(result);
+						setTimeout(function(){
+							wait_new_event(current_user,previous,function(last_event){//wait till account custom sequencer will updated
+								console.log('wait_new_event result',last_event);
+								//result_event
+								/*
+								account
+								block
+								executed:0
+								time
+								data:{
+									p/previous
+									e/event
+									a/account
+									b/block
+									d/data
+									timestamp
+								}
+								*/
+								if(false!==last_event){
+									continuous_parse_event(current_user,object_block,last_event,event,previous,0,finish_parse_events);
+								}
+								else{
+									add_notify(false,'',ltmp_arr.gateway_error);
+									$(el).removeClass('disabled');
+								}
+							});
+						},2000);//no reason to wait 3 sec, it can be handle faster by witnesses
+					}
+					else{
+						console.log(err);
+						add_notify(false,'',ltmp_arr.gateway_error);
+						$(el).removeClass('disabled');
+					}
+				});
+			}
+		}
+	});
+}
 function fast_publish(publish_form){
 	let text_html=publish_form.find('.text').html();
 	let text=text_html;
@@ -2594,6 +3396,7 @@ function fast_publish(publish_form){
 }
 
 function publish(view){
+	let publish_protocol=app_protocol;
 	let text=view.find('textarea[name="text"]').val();
 	text=text.trim();
 
@@ -2629,7 +3432,15 @@ function publish(view){
 		}
 	}
 
-	viz.api.getAccount(current_user,app_protocol,function(err,response){
+	let edit=false;
+	if(editable_object[2]){//edit mode, need to change custom protocol
+		edit=view.find('input[name="edit-event-object"]').val();
+		publish_protocol=events_protocol;
+		console.log('publish with edit:',edit);
+	}
+
+
+	viz.api.getAccount(current_user,publish_protocol,function(err,response){
 		if(err){
 			console.log(err);
 			view.find('.submit-button-ring').removeClass('show');
@@ -2690,10 +3501,34 @@ function publish(view){
 			}
 
 			new_object.d=data;
+			if(false!==edit){
+				let edit_account='';
+				let edit_block=0;
+				let pattern = /@[a-z0-9\-\.]*/g;
+				let link_account=edit.match(pattern);
+				if(typeof link_account[0] != 'undefined'){
+					edit_account=link_account[0].substr(1);
+					let pattern_block = /\/([0-9]*)\//g;
+					let link_block=edit.match(pattern_block);
+					if(typeof link_block[1] != 'undefined'){
+						edit_block=parseInt(fast_str_replace('/','',link_block[1]));
+					}
+				}
+				new_object.e='e';//edit
+				if(current_user!=edit_account){
+					new_object.a=edit_account;//account
+				}
+				if(edit_block>0){
+					new_object.b=edit_block;//block
+				}
+				else{
+					return;
+				}
+			}
 			let object_json=JSON.stringify(new_object);
 
 			if(false===error){
-				viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
+				viz.broadcast.custom(users[current_user].regular_key,[],[current_user],publish_protocol,object_json,function(err,result){
 					if(result){
 						console.log(result);
 						view.find('.success').html(ltmp_arr.publish_success);
@@ -2703,19 +3538,34 @@ function publish(view){
 
 						view.find('.submit-button-ring').removeClass('show');
 						view.find('.button').removeClass('disabled');
-						setTimeout(function(){
-							get_user(current_user,true,function(err,result){
-								if(!err){
-									if(result.start!=previous){
-										get_object(current_user,result.start,false,function(err,object_result){
+						if(false!==edit){
+							setTimeout(function(){
+								update_user_last_event(current_user,function(result){
+									if(false!==result){
+										get_object(current_user,new_object.b,false,function(err,object_result){
 											if(!err){
-												view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:result.start}));
+												view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:new_object.b,addon:'?event='+result}));
 											}
 										});
 									}
-								}
-							});
-						},3000);
+								});
+							},3000);
+						}
+						else{//get new object and add link to it
+							setTimeout(function(){
+								get_user(current_user,true,function(err,result){
+									if(!err){
+										if(result.start!=previous){
+											get_object(current_user,result.start,false,function(err,object_result){
+												if(!err){
+													view.find('.success').html(ltmp(ltmp_arr.publish_success_link,{account:current_user,block:result.start}));
+												}
+											});
+										}
+									}
+								});
+							},3000);
+						}
 					}
 					else{
 						console.log(err);
@@ -3752,6 +4602,8 @@ function app_mouse(e){
 						el.remove();
 					}
 				});
+				$('.article-settings input[name="edit-event-object"]').val('');
+
 				$('.editor-placeholders').find('h1').removeClass('hidden');
 				$('.editor-placeholders').find('p').removeClass('hidden');
 				editor_change();
@@ -4698,6 +5550,63 @@ function app_mouse(e){
 				$('body').addClass(theme);
 				localStorage.setItem(storage_prefix+'theme',theme)
 			}
+			if($(target).hasClass('screen-click')||$(target).hasClass('cancel-more-action')){
+				more_list_close();
+			}
+			if($(target).hasClass('more-action')){
+				$('.screen-click').addClass('show')
+				let more_account=$(target).data('account');
+				let more_block=$(target).data('block');
+				$('div.more-list').data('account',more_account);
+				$('div.more-list').data('block',more_block);
+				$('div.more-list').html(ltmp_arr.more_actions);
+				if(!$('div.more-list').hasClass('show')){
+					let target_offset=$('.view[data-level="'+level+'"] .more-action[data-account="'+$('div.more-list').data('account')+'"][data-block="'+$('div.more-list').data('block')+'"]')[0].getBoundingClientRect();
+					$('div.more-list').css('display','block');
+					let more_offset=$('div.more-list')[0].getBoundingClientRect();
+					$('div.more-list').css('left',(target_offset.left+target_offset.width-more_offset.width)+'px');
+					$('div.more-list').css('top',(window.scrollY+target_offset.top-5)+'px');
+					$('div.more-list').addClass('show');
+					ignore_resize=true;
+				}
+			}
+			if($(target).hasClass('hide-more-action')){
+				let confirm_hide=confirm(ltmp_arr.confirm_hide_event);
+				if(confirm_hide){
+					let object_account=$('div.more-list').data('account');
+					let object_block=$('div.more-list').data('block');
+					$(target).addClass('disabled');
+					voice_event(target,object_account,object_block,'h');//hide
+				}
+			}
+			if($(target).hasClass('edit-more-action')){
+				let object_account=$('div.more-list').data('account');
+				let object_block=$('div.more-list').data('block');
+				$(target).addClass('disabled');
+				get_object(object_account,object_block,false,function(err,object_result){
+					if(err){
+						$(target).removeClass('disabled');
+						console.log(err);
+						add_notify(false,'',ltmp_arr.object_not_found);
+					}
+					else{
+						set_editable_object('viz://@'+object_account+'/'+object_block+'/',object_result);
+
+						if(typeof object_result.data.t !== 'undefined'){
+							if('p'==object_result.data.t){
+								document.location.hash='dapp:publish/?publication';
+							}
+							else{
+								view_path('dapp:publish/',{},true,false);
+							}
+						}
+						else{
+							view_path('dapp:publish/',{},true,false);
+						}
+					}
+				});
+			}
+
 			if($(target).hasClass('toggle-menu') || $(target).hasClass('toggle-menu-icon')){
 				if(is_mobile()){
 					clearTimeout(mobile_hide_menu_timer);
@@ -5583,7 +6492,13 @@ function app_mouse(e){
 			}
 			if($(target).hasClass('external-share-action')){
 				let original_object_link=$(target).closest('.object').data('link');
-				let object_link=original_object_link;
+				let original_object_events='';
+				if(typeof $(target).closest('.object').data('events') !== 'undefined'){
+					if(''!=$(target).closest('.object').data('events')){
+						original_object_events='?event='+$(target).closest('.object').data('events');
+					}
+				}
+				let object_link=original_object_link+original_object_events;
 				if(false!==whitelabel_copy_link){
 					object_link=fast_str_replace('viz://',whitelabel_copy_link,object_link);
 				}
@@ -5846,11 +6761,14 @@ function app_mouse(e){
 					if(view.find('.article-editor-action').hasClass('positive')){
 						if(view.find('.article-settings-action').hasClass('positive')){
 							view.find('.article-settings-action')[0].click();
+							return;
 						}
 						else{
-							view.find('.article-editor-action')[0].click();
+							if(!editable_object[2]){//if not edit object just back action
+								view.find('.article-editor-action')[0].click();
+								return;
+							}
 						}
-						return;
 					}
 				}
 				if(''!=$(target).data('force')){
@@ -5873,6 +6791,7 @@ function app_mouse(e){
 				level--;
 				path='viz://';
 				query='';
+				query_obj={};
 
 				if(false!==force_path){
 					path=force_path;
@@ -6181,8 +7100,10 @@ function import_backup(data,callback){
 		current_user=backup.user;
 		localStorage.setItem(storage_prefix+'current_user',current_user);
 		if(typeof backup.time !== 'undefined'){
-			sync_cloud_activity=backup.time;
-			localStorage.setItem(storage_prefix+'sync_cloud_activity',sync_cloud_activity);
+			if(backup.time>sync_cloud_activity){
+				sync_cloud_activity=backup.time;
+				localStorage.setItem(storage_prefix+'sync_cloud_activity',sync_cloud_activity);
+			}
 		}
 	}
 	if(typeof backup.settings !== 'undefined'){
@@ -6330,7 +7251,10 @@ function import_backup(data,callback){
 		}
 	}
 }
-function import_cloud(data){
+function import_cloud(data,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
 	stop_timers();
 	add_notify(false,
 		ltmp_arr.notify_arr.attention,
@@ -6343,6 +7267,7 @@ function import_cloud(data){
 					ltmp_arr.notify_arr.error,
 					ltmp_arr.notify_arr.sync_import_error
 				);
+				callback(false);
 			}
 			else{
 				if(true===result){
@@ -6382,12 +7307,14 @@ function import_cloud(data){
 					},mute_notifications*1000);
 
 					start_timers();
+					callback(true);
 				}
 				else{
 					add_notify(false,
 						ltmp_arr.notify_arr.sync,
 						result
 					);
+					callback(false);
 				}
 			}
 		});
@@ -6427,6 +7354,215 @@ function select_file(callback){
 		input.click();
 	}
 	//setTimeout(function(){input.remove();},1000);
+}
+
+let set_no_gaps_events_train_num=0;
+let set_no_gaps_events_train_counters=[];
+function finish_set_no_gaps(counter,callback){
+	//console.log('finish_set_no_gaps',counter,set_no_gaps_events_train_counters[counter]);
+	set_no_gaps_events_train_counters[counter]--;
+	if(0==set_no_gaps_events_train_counters[counter]){
+		delete set_no_gaps_events_train_counters[counter];
+		callback();
+	}
+}
+function set_no_gaps_events_train(account,events,callback){
+	let counter=set_no_gaps_events_train_num;
+	set_no_gaps_events_train_num++;
+	set_no_gaps_events_train_counters[counter]=0;
+	for(let i in events){
+		set_no_gaps_events_train_counters[counter]++;
+		let event_block=events[i];
+		//console.log('set_no_gaps_events_train',account,event_block,counter,set_no_gaps_events_train_counters[counter]);
+		let t,q,req;
+		t=db.transaction(['events'],'readwrite');
+		q=t.objectStore('events');
+		req=q.index('event').openCursor(IDBKeyRange.only([account,event_block]),'next');
+		let find=false;
+		req.onsuccess=function(event){
+			let cur=event.target.result;
+			if(cur){
+				find=true;
+				let result=cur.value;
+				result.no_gaps=1;
+				update_req=cur.update(result);
+				update_req.onsuccess=function(e){
+					finish_set_no_gaps(counter,callback);
+				}
+				cur.continue();
+			}
+			else{
+				if(!find){
+					finish_set_no_gaps(counter,callback);//impossible, parsed, updated, but no reason to panic, just callback
+				}
+			}
+		};
+	}
+}
+//need to update events from train, set no_gaps=1 for fast events train in future loadings
+function finish_events_train(events_train,account,callback){
+	let no_gaps=0;
+	if(typeof events_train['no_gaps'] !== 'undefined'){
+		no_gaps=events_train['no_gaps'];
+	}
+	//if any event error, false no_gaps
+	if(typeof events_train['error'] !== 'undefined'){
+		if(0<events_train['error'].length){
+			no_gaps=0;
+		}
+	}
+	events_train['loaded'].sort();
+	if(1==no_gaps){
+		set_no_gaps_events_train(account,events_train['loaded'],function(){
+			load_events(account,events_train['loaded'],function(affected_objects){
+				console.log('finish load_events from finish_events_train',check_account);
+				callback(affected_objects);
+			});
+		});
+	}
+	else{
+		load_events(account,events_train['loaded'],function(affected_objects){
+			console.log('finish load_events from finish_events_train',check_account);
+			callback(affected_objects);
+		});
+	}
+}
+//top/recursive deep loader from known event block to previous while not found gap/no_gaps/end/stop block num
+//need_new is condition to look deeper that already know
+function load_events_train(events_train,account,event_block,stop_block,need_new,deep,callback){
+	if(typeof events_train['loaded'] === 'undefined'){
+		events_train['loaded']=[];
+	}
+	if(typeof events_train['error'] === 'undefined'){
+		events_train['error']=[];
+	}
+	if(typeof events_train['no_gaps'] === 'undefined'){
+		events_train['no_gaps']=0;
+	}
+	//console.log('load_events_train',account,event_block);
+	parse_event(account,event_block,function(err,result,is_new){
+		//console.log('load_events_train parse_event',err,result);
+		if(err){
+			//no event found, no matter for reason
+			if(1==result){//node error
+				add_notify(false,'',ltmp_arr.gateway_error);
+			}
+			if(2==result){//event not found, show notice
+				add_notify(false,'',ltmp_arr.event_not_found+' ['+event_block+']');
+			}
+			events_train['error'].push(event_block);
+			callback(events_train);
+		}
+		else{
+			events_train['loaded'].push(event_block);
+			let is_end=false;
+			let previous=0;
+			if(typeof result.data.p !== 'undefined'){
+				previous=parseInt(result.data.p);
+			}
+			if(previous<=stop_block){
+				is_end=true;
+			}
+			if(0==previous){
+				events_train['no_gaps']=1;
+			}
+			if(need_new){
+				if(is_new){
+					deep--;
+				}
+			}
+			else{
+				deep--;
+			}
+			if(deep<=0){
+				is_end=true;
+			}
+			if(typeof result.no_gaps !== 'undefined'){
+				if(1==result.no_gaps){
+					is_end=true;
+					events_train['no_gaps']=1;
+				}
+			}
+			if(!is_end){
+				load_events_train(events_train,account,previous,stop_block,need_new,deep,callback);
+			}
+			else{
+				callback(events_train);
+			}
+		}
+	});
+}
+
+//check user last event update time and update it, if needed by settings/personal activity period
+function check_user_last_event(account,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	let check_activity=(new Date().getTime() /1000 | 0) - settings.activity_period*60;
+	idb_get_by_id('users','account',account,function(user_data){
+		if(false===user_data){
+			callback(false);
+		}
+		else{
+			if(typeof user_data.last_event_update !== 'undefined'){
+				let item_check_activity=check_activity;
+				if(typeof user_data.settings !== 'undefined'){
+					if(typeof user_data.settings.activity_period !== 'undefined'){
+						item_check_activity=(new Date().getTime() /1000 | 0) - user_data.settings.activity_period*60;
+					}
+				}
+				if(user_data.last_event_update<item_check_activity){
+					update_user_last_event(account,callback);
+				}
+				else{
+					callback(user_data.last_event);
+				}
+			}
+			else{
+				update_user_last_event(account,callback);
+			}
+		}
+	});
+}
+
+//get account events_protocol block num, store as users.last_event, callback number or false
+function update_user_last_event(account,callback){
+	console.log('update_user_last_event',account);
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	viz.api.getAccount(account,events_protocol,function(err,response){
+		if(err){
+			console.log('viz api error:',err);
+			callback(false);
+		}
+		else{
+			let t=db.transaction(['users'],'readwrite');
+			let q=t.objectStore('users');
+			let req=q.index('account').openCursor(IDBKeyRange.only(account),'next');
+
+			let find=false;
+			req.onsuccess=function(event){
+				let cur=event.target.result;
+				if(cur){
+					let result=cur.value;
+					result.last_event=response.custom_sequence_block_num;
+					result.last_event_update=new Date().getTime() / 1000 | 0;
+					find=true;
+					update_req=cur.update(result);
+					update_req.onsuccess=function(e){
+						callback(response.custom_sequence_block_num);
+					}
+					cur.continue();
+				}
+				else{
+					if(!find){
+						callback(false);
+					}
+				}
+			};
+		}
+	});
 }
 
 function update_user_profile(account,callback){
@@ -6816,6 +7952,170 @@ function feed_add(account,block,time,callback){
 var object_types_list=['t','text','p','publication'];
 var object_types_arr={'t':'text','p':'publication'};
 
+//need to make queue for additional callbacks in similar parse events (if created)
+var parsing_events=[];
+var parsing_events_num=0;
+//return [err,result], result is event object in database
+function parse_event(account,block,callback){
+	if(0==block){
+		return;
+	}
+	console.log('parse_event',account,block);
+	let current_parse=false;
+	for(let o in parsing_events){
+		if(parsing_events[o][0]==account){
+			if(parsing_events[o][1]==block){
+				current_parse=o;
+			}
+		}
+	}
+	if(false!==current_parse){
+		//add callback if parsing waiting response from node
+		parsing_events[current_parse][2].push(callback);
+	}
+	else{
+		current_parse=parsing_events_num;
+		parsing_events[current_parse]=[account,block,[]];
+		parsing_events_num++;
+		//check event in store, if not founded, then search ops in block and add it
+		idb_get_by_id('events','event',[account,block],function(event_obj){
+			if(false!==event_obj){
+				callback(false,event_obj,false);//return no error with obj data, not new
+				for(let parse_callback in parsing_events[current_parse][2]){
+					parsing_events[current_parse][2][parse_callback](false,obj,false);
+				}
+				delete parsing_events[current_parse];
+			}
+			else{
+				viz.api.getOpsInBlock(block,false,function(err,response){
+					console.log('parse_event get_ops_in_block',block,err,response);
+					if(err){
+						callback(true,1);//api error or block not found
+						for(let parse_callback in parsing_events[current_parse][2]){
+							parsing_events[current_parse][2][parse_callback](true,1);//node error
+						}
+						delete parsing_events[current_parse];
+					}
+					else{
+						let item=false;
+						for(let i in response){
+							let item_i=i;
+							if('custom'==response[item_i].op[0]){
+								if(events_protocol==response[item_i].op[1].id){
+									let op=response[item_i].op[1];
+									if(op.required_regular_auths.includes(account)){
+										item=JSON.parse(response[item_i].op[1].json);
+										item.timestamp=parse_date(response[item_i].timestamp) / 1000 | 0;
+									}
+								}
+							}
+						}
+						console.log('parse_event get_ops_in_block item',item);
+						if(false===item){
+							callback(true,2);//item not found
+							for(let parse_callback in parsing_events[current_parse][2]){
+								parsing_events[current_parse][2][parse_callback](true,2);
+							}
+							delete parsing_events[current_parse];
+						}
+						else{
+							/*
+							item:
+								p/previous
+								e/event
+								a/account
+								b/block
+								d/data
+							*/
+							let obj={
+								account:account,
+								block:block,
+								data:item,
+								executed:0,
+							};
+							obj.time=new Date().getTime() / 1000 | 0;//unixtime
+							console.log(obj);
+
+							let t,q,req;
+							t=db.transaction(['events'],'readwrite');
+							q=t.objectStore('events');
+							req=q.index('event').openCursor(IDBKeyRange.only([account,block]),'next');
+
+							let find=false;
+							req.onsuccess=function(event){
+								let cur=event.target.result;
+								if(cur){
+									find=true;
+									obj=cur.value;
+									cur.continue();
+								}
+								else{
+									if(!find){//object not found in base
+										let add_t,add_q;
+										add_t=db.transaction(['events'],'readwrite');
+										add_q=add_t.objectStore('events');
+										add_q.add(obj);
+										if(trx_need_commit){
+											add_t.commit();
+										}
+										add_t.oncomplete=function(e){
+											callback(false,obj,true);//return no error with obj data, is new
+											for(let parse_callback in parsing_events[current_parse][2]){
+												parsing_events[current_parse][2][parse_callback](false,obj,true);
+											}
+											delete parsing_events[current_parse];
+										};
+									}
+									else{
+										callback(false,obj,false);//return no error with obj data, not new (? seems added from other proccess)
+										for(let parse_callback in parsing_events[current_parse][2]){
+											parsing_events[current_parse][2][parse_callback](false,obj,false);
+										}
+										delete parsing_events[current_parse];
+									}
+								}
+							};
+						}
+					}
+				});
+			}
+		});
+	}
+}
+
+function add_hashtag_object(hashtag_id,account,block){
+	idb_get_id_filter('hashtags_feed','object',[account,block],{tag:hashtag_id},function(feed_id){
+		if(false===feed_id){//add object to hashtag feed
+			let add_t,add_q,add_req;
+			add_t=db.transaction(['hashtags_feed'],'readwrite');
+			add_q=add_t.objectStore('hashtags_feed');
+			add_req=add_q.add({tag:hashtag_id,account:account,block:block});
+			if(trx_need_commit){
+				add_t.commit();
+			}
+			add_req.onsuccess=function(e){
+				//update hashtag counter
+				let upd_t,upd_q,upd_req;
+				upd_t=db.transaction(['hashtags'],'readwrite');
+				upd_q=upd_t.objectStore('hashtags');
+				upd_req=upd_q.openCursor(IDBKeyRange.only(hashtag_id),'next');
+				upd_req.onsuccess=function(event){
+					let cur=event.target.result;
+					if(cur){
+						let result=cur.value;
+						result.count++;
+						cur.update(result);
+						cur.continue();
+					}
+					else{
+						setTimeout(function(){render_right_addon();},10);
+					}
+				};
+			};
+		}
+	});
+}
+
 //need to make queue for callbacks in similar parse object executions
 var parsing_objects=[];
 var parsing_object_num=0;
@@ -6997,110 +8297,76 @@ function parse_object(account,block,feed_load_flag,callback){
 						}
 						else{
 							if(!find){//object not found in base
-								if(global_db_version>=2){//hashtags support
-									//need replace url with hash to avoid conflict
-									let hashtags_text='';
-									if('text'==type){
+								/* hashtags support */
+								//need replace url with hash to avoid conflict
+								let hashtags_text='';
+								if('text'==type){
+									hashtags_text=obj.data.d.text;
+									if(typeof obj.data.d.text !== 'undefined'){
 										hashtags_text=obj.data.d.text;
-										if(typeof obj.data.d.text !== 'undefined'){
-											hashtags_text=obj.data.d.text;
-										}
-										else{
-											if(typeof obj.data.d.t !== 'undefined'){
-												hashtags_text=obj.data.d.t;
-											}
+									}
+									else{
+										if(typeof obj.data.d.t !== 'undefined'){
+											hashtags_text=obj.data.d.t;
 										}
 									}
-									if('publication'==type){
-										hashtags_text=markdown_clear_code(obj.data.d.m);//markdown
-										hashtags_text=markdown_decode_text(hashtags_text);
-										let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
-										hashtags_text=hashtags_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
-									}
-									let summary_links=[];
-									//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
-									//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
-									let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
-									let http_protocol_links=hashtags_text.match(http_protocol_pattern);
-									if(null!=http_protocol_links){
-										summary_links=summary_links.concat(http_protocol_links);
-									}
+								}
+								if('publication'==type){
+									hashtags_text=markdown_clear_code(obj.data.d.m);//markdown
+									hashtags_text=markdown_decode_text(hashtags_text);
+									let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+									hashtags_text=hashtags_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
+								}
+								let summary_links=[];
+								//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
+								//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
+								let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
+								let http_protocol_links=hashtags_text.match(http_protocol_pattern);
+								if(null!=http_protocol_links){
+									summary_links=summary_links.concat(http_protocol_links);
+								}
 
-									summary_links=array_unique(summary_links);
-									summary_links.sort(sort_by_length_desc);
+								summary_links=array_unique(summary_links);
+								summary_links.sort(sort_by_length_desc);
 
-									for(let i in summary_links){
-										hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
-									}
+								for(let i in summary_links){
+									hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
+								}
 
-									let hashtags_pattern = /(|\b)#([^:;@#!.,?\r\n\t <>()\[\]]+)(|\b)/g;;
-									let hashtags_links=hashtags_text.match(hashtags_pattern);
-									if(null!=hashtags_links){
-										hashtags_links=hashtags_links.map(function(value){
-											return value.toLowerCase();
-										});
-										hashtags_links=array_unique(hashtags_links);
+								let hashtags_pattern = /(|\b)#([^:;@#!.,?\r\n\t <>()\[\]]+)(|\b)/g;;
+								let hashtags_links=hashtags_text.match(hashtags_pattern);
+								if(null!=hashtags_links){
+									hashtags_links=hashtags_links.map(function(value){
+										return value.toLowerCase();
+									});
+									hashtags_links=array_unique(hashtags_links);
 
-										let add_hashtag_object=function(hashtag_id,account,block){
-											idb_get_id_filter('hashtags_feed','object',[account,block],{tag:hashtag_id},function(feed_id){
-												if(false===feed_id){//add object to hashtag feed
-													let add_t,add_q,add_req;
-													add_t=db.transaction(['hashtags_feed'],'readwrite');
-													add_q=add_t.objectStore('hashtags_feed');
-													add_req=add_q.add({tag:hashtag_id,account:account,block:block});
+									for(let i in hashtags_links){
+										let hashtag=hashtags_links[i].substr(1);
+										hashtag=hashtag.trim();
+										if(''!=hashtag){
+											idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+												if(false===hashtag_id){
+													let hashtag_info,hashtag_add_t,hashtag_add_q,hashtag_add_req;
+													hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
+													hashtag_add_t=db.transaction(['hashtags'],'readwrite');
+													hashtag_add_q=hashtag_add_t.objectStore('hashtags');
+													hashtag_add_req=hashtag_add_q.add(hashtag_info);
 													if(trx_need_commit){
-														add_t.commit();
+														hashtag_add_t.commit();
 													}
-													add_req.onsuccess=function(e){
-														//update hashtag counter
-														let upd_t,upd_q,upd_req;
-														upd_t=db.transaction(['hashtags'],'readwrite');
-														upd_q=upd_t.objectStore('hashtags');
-														upd_req=upd_q.openCursor(IDBKeyRange.only(hashtag_id),'next');
-														upd_req.onsuccess=function(event){
-															let cur=event.target.result;
-															if(cur){
-																let result=cur.value;
-																result.count++;
-																cur.update(result);
-																cur.continue();
+													hashtag_add_req.onsuccess=function(e){
+														idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+															if(false!==hashtag_id){
+																add_hashtag_object(hashtag_id,obj.account,obj.block);
 															}
-															else{
-																setTimeout(function(){render_right_addon();},10);
-															}
-														};
-													};
+														});
+													}
+												}
+												else{
+													add_hashtag_object(hashtag_id,obj.account,obj.block);
 												}
 											});
-										};
-
-										for(let i in hashtags_links){
-											let hashtag=hashtags_links[i].substr(1);
-											hashtag=hashtag.trim();
-											if(''!=hashtag){
-												idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
-													if(false===hashtag_id){
-														let hashtag_info,hashtag_add_t,hashtag_add_q,hashtag_add_req;
-														hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
-														hashtag_add_t=db.transaction(['hashtags'],'readwrite');
-														hashtag_add_q=hashtag_add_t.objectStore('hashtags');
-														hashtag_add_req=hashtag_add_q.add(hashtag_info);
-														if(trx_need_commit){
-															hashtag_add_t.commit();
-														}
-														hashtag_add_req.onsuccess=function(e){
-															idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
-																if(false!==hashtag_id){
-																	add_hashtag_object(hashtag_id,obj.account,obj.block);
-																}
-															});
-														}
-													}
-													else{
-														add_hashtag_object(hashtag_id,obj.account,obj.block);
-													}
-												});
-											}
 										}
 									}
 								}
@@ -7362,11 +8628,24 @@ function clear_objects_cache(callback){
 				else{
 					for(let i in result){
 						let item_i=result[i];
-						let remove_t,remove_q;
+						//remove replies linked with object
+						let remove_t,remove_q,remove_req;
 						remove_t=db.transaction(['replies'],'readwrite');
 						remove_q=remove_t.objectStore('replies');
 						remove_req=remove_q.index('object').openCursor(IDBKeyRange.only([item_i[0],item_i[1]]),'next');
 						remove_req.onsuccess=function(event){
+							let cur=event.target.result;
+							if(cur){
+								cur.delete();
+								cur.continue();
+							}
+						}
+						//remove hashtags feed linked with object
+						let remove_t2,remove_q2,remove_req2;
+						remove_t2=db.transaction(['hashtags_feed'],'readwrite');
+						remove_q2=remove_t2.objectStore('hashtags_feed');
+						remove_req2=remove_q2.index('object').openCursor(IDBKeyRange.only([item_i[0],item_i[1]]),'next');
+						remove_req2.onsuccess=function(event){
 							let cur=event.target.result;
 							if(cur){
 								cur.delete();
@@ -7390,17 +8669,32 @@ function clear_users_cache(callback){
 	let time_bound=new Date().getTime() / 1000 | 0;
 	time_bound-=settings.user_cache_ttl*60;
 	req=q.index('update').openCursor(IDBKeyRange.upperBound(time_bound),'next');
-
+	let cleared_accounts=[];
 	req.onsuccess=function(event){
 		let cur=event.target.result;
 		if(cur){
 			if(0==cur.value.status){//deleting only temporary users
+				cleared_accounts.push(cur.value.account);
 				cur.delete();
 			}
 			cur.continue();
 		}
 		else{
-			//nothing
+			console.log('clear_users_cache',cleared_accounts);
+			for(let i in cleared_accounts){
+				let clear_account=cleared_accounts[i];
+				let remove_t,remove_q,remove_req;
+				remove_t=db.transaction(['events'],'readwrite');
+				remove_q=remove_t.objectStore('events');
+				remove_req=remove_q.index('account').openCursor(IDBKeyRange.only(clear_account),'next');
+				remove_req.onsuccess=function(event){
+					let cur=event.target.result;
+					if(cur){
+						cur.delete();
+						cur.continue();
+					}
+				}
+			}
 			callback();
 		}
 	};
@@ -7525,6 +8819,44 @@ function update_feed_result(result){
 	}
 }
 
+function update_feed_events_subscribes(check_account){
+	let check_level=0;//load new objects only in feed (0 level)
+	let view=$('.view[data-level="0"]');
+	//load more object in profile trigger load new event (1), for unknown accounts too
+	let events_deep=settings.activity_deep;
+	check_user_last_event(check_account,function(last_event){
+		if(false!==last_event){//no user events at all
+			console.log('update_feed_events_subscribes check_user_last_event block num',check_account,last_event);
+			let need_new=false;
+			load_events_train({},check_account,last_event,0,need_new,events_deep,function(train){
+				console.log('update_feed_events_subscribes load_events_train',train);
+				finish_events_train(train,check_account,function(affected_objects){
+					console.log('update_feed_events_subscribes finish_events_train affected_objects',check_account,affected_objects);
+					for(let i in affected_objects){
+						let affected_object_block=affected_objects[i];
+						//need to update render view for all affected objects (preview/pinned in profile feed)
+						setTimeout(function(){
+							get_user(check_account,false,function(err,affected_user){
+								if(!err)
+								get_object(check_account,affected_object_block,false,function(err,affected_object_result){
+									if(!err){
+										console.log(affected_object_result);
+										let find_object=view.find('.objects>.object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]');
+										if(find_object.length>0){
+											let affected_render=render_object(affected_user,affected_object_result,'feed',check_level);
+											find_object.before(affected_render);
+											find_object.remove();//remove old view
+										}
+									}
+								});
+							});
+						},10);
+					}
+				});
+			});
+		}
+	});
+}
 let feed_load_timers={};
 function update_feed_subscribes(callback){
 	if(typeof callback==='undefined'){
@@ -7573,6 +8905,7 @@ function update_feed_subscribes(callback){
 						feed_load(account,false,false,false,function(err,result){
 							if(!err){
 								update_feed_result(result);
+								update_feed_events_subscribes(account);
 							}
 						});
 					},delay);
@@ -8075,6 +9408,7 @@ if(null!=localStorage.getItem(storage_prefix+'notes_draft')){
 	}
 }
 function note_load(el_path,textarea){
+	if(editable_object[2]){return};
 	console.log('try note_load',el_path,textarea);
 	for(let i in notes_obj){
 		if(notes_obj[i].path==el_path){
@@ -8111,6 +9445,7 @@ function note_clear_draft(el_path){
 }
 function note_save_draft(el_path,textarea,auto){
 	//console.log('! note_save_draft',el_path,textarea,auto);
+	if(editable_object[2]){return};
 	let note_text='';
 	let note_clear=false;
 	if($(el_path).length>0){
@@ -8182,6 +9517,7 @@ function note_save_draft(el_path,textarea,auto){
 }
 var editor_save_draft_timer=0;
 function editor_save_draft(){
+	if(editable_object[2]){return};
 	let article_obj={
 		html:$('.article-editor .editor-text').html(),
 		description:$('.article-settings input[name="description"]').val(),
@@ -8190,8 +9526,126 @@ function editor_save_draft(){
 	let article_json=JSON.stringify(article_obj);
 	localStorage.setItem(storage_prefix+'article_draft',article_json);
 }
+function check_editor_placeholders(editor){
+	let placeholders=$('.editor-placeholders');
+	if(0!=editor.find('ul').length){//remove empty ul
+		editor.find('ul').each(function(i,el){
+			if(''==el.innerHTML){
+				el.remove();
+			}
+		});
+	}
+	if(0!=editor.find('ol').length){//remove empty ol
+		editor.find('ol').each(function(i,el){
+			if(''==el.innerHTML){
+				el.remove();
+			}
+		});
+	}
+	if(0!=editor.find('p').length){//remove empty ol
+		editor.find('p').each(function(i,el){
+			if(('* '==el.innerHTML)||('*&nbsp;'==el.innerHTML)){//auto create ul
+				el.outerHTML='<ul><li id="new_selection_temp"></li></ul>';
+				let selection=document.getSelection();
+				let new_selection_temp=document.getElementById('new_selection_temp');
+				let range=document.createRange();
+				range.selectNodeContents(new_selection_temp);
+				selection.removeAllRanges();
+				selection.addRange(range);
+				new_selection_temp.removeAttribute('id');
+			}
+			if(('1. '==el.innerHTML)||('1.&nbsp;'==el.innerHTML)){//auto create ol
+				el.outerHTML='<ol><li id="new_selection_temp"></li></ol>';
+				let selection=document.getSelection();
+				let new_selection_temp=document.getElementById('new_selection_temp');
+				let range=document.createRange();
+				range.selectNodeContents(new_selection_temp);
+				selection.removeAllRanges();
+				selection.addRange(range);
+				new_selection_temp.removeAttribute('id');
+			}
+		});
+	}
+
+	if(0==editor.find('h1').length){
+		//console.log("editor.find('h1').length",editor.find('h1').length);
+		editor.prepend('<h1><br></h1>');
+		placeholders.find('h1').removeClass('hidden');
+	}
+	else{
+		if(1!=editor.find('h1').length){
+			editor.find('h1').each(function(i,el){
+				if(0==i){
+					el.innerHTML=el.textContent;
+				}
+				else{
+					el.remove();
+				}
+			});
+		}
+		if(''!=editor.find('h1')[0].textContent){
+			placeholders.find('h1').addClass('hidden');
+		}
+		else{
+			editor.find('h1').html('<br>');
+			placeholders.find('h1').removeClass('hidden');
+		}
+	}
+	placeholders.find('p').removeClass('hidden');
+
+	let find_content=false;
+	if(0!=editor.find('p').length){
+		if(1==editor.find('p').length){
+			if(''==editor.find('p')[0].textContent){
+				find_content=false;
+			}
+			else{
+				find_content=true;
+			}
+		}
+		else{
+			find_content=true;
+		}
+	}
+	if(0!=editor.find('blockquote').length){
+		find_content=true;
+	}
+	if(0!=editor.find('cite').length){
+		find_content=true;
+	}
+	if(0!=editor.find('img').length){
+		find_content=true;
+	}
+	if(0!=editor.find('h2').length){
+		find_content=true;
+	}
+	if(0!=editor.find('h3').length){
+		find_content=true;
+	}
+	if(0!=editor.find('li').length){
+		find_content=true;
+	}
+	if(find_content){
+		placeholders.find('p').addClass('hidden');
+	}
+	else{
+		if(0==editor.find('p').length){
+			editor.append('<p><br></p>');
+		}
+		if(0!=editor.find('hr').length){
+			placeholders.find('p').addClass('hidden');
+		}
+		else{
+			placeholders.find('p').removeClass('hidden');
+		}
+	}
+}
 function editor_change(e){
 	e=typeof e !== 'undefined'?e:false;
+	let editor=false;
+	if(false===e){
+		editor=$('.editor-text');
+	}
 	//console.log('editor_change',typeof e,e);
 	if('input'==e.type){
 		if('deleteContentBackward'==e.inputType){
@@ -8209,134 +9663,24 @@ function editor_change(e){
 			}
 		}
 	}
+	else
 	if('keyup'==e.type){
-		let editor=false;
-		if(false===e){
-			editor=$('.editor-text');
-		}
-		else{
+		if(false!==e){
 			editor=$(e.target);
 		}
-		let placeholders=$('.editor-placeholders');
+		check_editor_placeholders(editor);
 
-		if(0!=editor.find('ul').length){//remove empty ul
-			editor.find('ul').each(function(i,el){
-				if(''==el.innerHTML){
-					el.remove();
-				}
-			});
-		}
-		if(0!=editor.find('ol').length){//remove empty ol
-			editor.find('ol').each(function(i,el){
-				if(''==el.innerHTML){
-					el.remove();
-				}
-			});
-		}
-		if(0!=editor.find('p').length){//remove empty ol
-			editor.find('p').each(function(i,el){
-				if(('* '==el.innerHTML)||('*&nbsp;'==el.innerHTML)){//auto create ul
-					el.outerHTML='<ul><li id="new_selection_temp"></li></ul>';
-					let selection=document.getSelection();
-					let new_selection_temp=document.getElementById('new_selection_temp');
-					let range=document.createRange();
-					range.selectNodeContents(new_selection_temp);
-					selection.removeAllRanges();
-					selection.addRange(range);
-					new_selection_temp.removeAttribute('id');
-				}
-				if(('1. '==el.innerHTML)||('1.&nbsp;'==el.innerHTML)){//auto create ol
-					el.outerHTML='<ol><li id="new_selection_temp"></li></ol>';
-					let selection=document.getSelection();
-					let new_selection_temp=document.getElementById('new_selection_temp');
-					let range=document.createRange();
-					range.selectNodeContents(new_selection_temp);
-					selection.removeAllRanges();
-					selection.addRange(range);
-					new_selection_temp.removeAttribute('id');
-				}
-			});
-		}
-
-		if(0==editor.find('h1').length){
-			//console.log("editor.find('h1').length",editor.find('h1').length);
-			editor.prepend('<h1><br></h1>');
-			placeholders.find('h1').removeClass('hidden');
-		}
-		else{
-			if(1!=editor.find('h1').length){
-				editor.find('h1').each(function(i,el){
-					if(0==i){
-						el.innerHTML=el.textContent;
-					}
-					else{
-						el.remove();
-					}
-				});
-			}
-			if(''!=editor.find('h1')[0].textContent){
-				placeholders.find('h1').addClass('hidden');
-			}
-			else{
-				editor.find('h1').html('<br>');
-				placeholders.find('h1').removeClass('hidden');
-			}
-		}
-		placeholders.find('p').removeClass('hidden');
-
-		let find_content=false;
-		if(0!=editor.find('p').length){
-			if(1==editor.find('p').length){
-				if(''==editor.find('p')[0].textContent){
-					find_content=false;
-				}
-				else{
-					find_content=true;
-				}
-			}
-			else{
-				find_content=true;
-			}
-		}
-		if(0!=editor.find('blockquote').length){
-			find_content=true;
-		}
-		if(0!=editor.find('cite').length){
-			find_content=true;
-		}
-		if(0!=editor.find('img').length){
-			find_content=true;
-		}
-		if(0!=editor.find('h2').length){
-			find_content=true;
-		}
-		if(0!=editor.find('h3').length){
-			find_content=true;
-		}
-		if(0!=editor.find('li').length){
-			find_content=true;
-		}
-		if(find_content){
-			placeholders.find('p').addClass('hidden');
-		}
-		else{
-			if(0==editor.find('p').length){
-				editor.append('<p><br></p>');
-			}
-			if(0!=editor.find('hr').length){
-				placeholders.find('p').addClass('hidden');
-			}
-			else{
-				placeholders.find('p').removeClass('hidden');
-			}
-		}
 		setTimeout(function(){
 			editor_clear_elements(editor,0);
 		},10);
+
 		clearTimeout(editor_save_draft_timer);
 		editor_save_draft_timer=setTimeout(function(){
 			editor_save_draft();
 		},1000);
+	}
+	else{
+		check_editor_placeholders(editor);
 	}
 }
 function selection_insert_tag(tag,text){
@@ -8788,6 +10132,15 @@ function editor_selection(e){
 		}
 	}
 }
+
+let editable_object=[false,{},false];//object link, object result, edit state
+function clear_editable_object(){
+	editable_object=[false,{},false];
+}
+function set_editable_object(link,data){
+	editable_object=[link,data,false];
+}
+
 function view_publish(view,path_parts,query,title){
 	console.log('view_publish',path_parts,query);
 	document.title=ltmp_arr.publish_caption+' - '+title;
@@ -8880,6 +10233,76 @@ function view_publish(view,path_parts,query,title){
 	view.find('.share-addon').css('display','none');
 	view.find('.share-addon input[name="share"]').removeAttr('disabled');
 	view.find('.loop-addon').css('display','none');
+
+	view.find('.edit-event-addon').css('display','none');
+	view.find('input[name="edit-event-object"]').val('');
+
+	if(false!=editable_object[0]){
+		console.log(editable_object);
+		let editable_object_publication=false;
+		if(typeof editable_object[1].data.t !== 'undefined'){
+			if('p'==editable_object[1].data.t){
+				editable_object_publication=true;
+			}
+		}
+		if(editable_object_publication){
+			let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
+			let publication_title='<h1>'+markdown_decode_text(editable_object[1].data.d.t.replace(strikethrough_pattern,'<strike>$1</strike>'))+'</h1>';
+			let publication_html=publication_title+html_safe_images(markdown_decode(editable_object[1].data.d.m));
+			view.find('.article-editor .editor-text').html(publication_html);
+			if(typeof editable_object[1].data.d.d !== 'undefined'){
+				view.find('.article-settings input[name="description"]').val(editable_object[1].data.d.d);
+			}
+			if(typeof editable_object[1].data.d.i !== 'undefined'){
+				view.find('.article-settings input[name="thumbnail"]').val(editable_object[1].data.d.i);
+			}
+
+			//check and hide placeholders if needed
+			editor_change();
+		}
+		else{
+			view.find('textarea[name="text"]').val(editable_object[1].data.d.t);
+
+			if(1==editable_object[1].is_reply){
+				view.find('.reply-addon').css('display','block');
+				view.find('.reply-addon input[name="reply"]').val('viz://@'+editable_object[1].parent_account+'/'+editable_object[1].parent_block+'/');
+			}
+			if(1==editable_object[1].is_share){
+				view.find('.share-addon').css('display','block');
+				if(typeof editable_object[1].link !== 'undefined'){
+					view.find('.share-addon input[name="share"]').val(editable_object[1].link);
+					view.find('.share-addon input[name="share"]').attr('disabled','disabled');
+				}
+			}
+		}
+
+		view.find('.edit-event-addon').css('display','block');
+		view.find('input[name="edit-event-object"]').val(editable_object[0]);
+
+		//clear beneficiaries list and push new from editable object
+		view.find('.beneficiaries-list .beneficiaries-item').each(function(i,el){
+			if(i>0){
+				if(''==$(el).find('input[name="account"]').val()){
+					if(''==$(el).find('input[name="weight"]').val()){
+						el.remove();
+					}
+				}
+			}
+			else{
+				$(el).find('input[name="account"]').val('');
+				$(el).find('input[name="weight"]').val('');
+			}
+		});
+		if(typeof editable_object[1].data.d.b !== 'undefined'){
+			for(let i in editable_object[1].data.d.b){
+				let beneficiary_obj=editable_object[1].data.d.b[i];
+				view.find('.beneficiaries-list .beneficiaries-add-item-action').before(ltmp(ltmp_arr.beneficiaries_item,beneficiary_obj));
+			}
+		}
+		editable_object[2]=true;
+		//clear_editable_object();
+	}
+
 	if('loop'==query){
 		view.find('.loop-addon').css('display','block');
 	}
@@ -10316,12 +11739,28 @@ function parse_fullpath(){
 	let fullpath=window.location.hash.substr(1);
 	path='';
 	query='';
+	query_obj={};
 	if(-1==fullpath.indexOf('?')){
 		path=fullpath;
 	}
 	else{
 		path=fullpath.substring(0,fullpath.indexOf('?'));
 		query=fullpath.substring(fullpath.indexOf('?')+1);
+		let params_arr=query.split('&');
+		for(let i in params_arr){
+			let param_str=params_arr[i];
+			if(-1==param_str.indexOf('=')){
+				query_obj[param_str]=true;
+			}
+			else{
+				let param_name=param_str.substring(0,param_str.indexOf('='));
+				let param_value=param_str.substring(param_str.indexOf('=')+1);
+				if(-1!=param_value.indexOf(',')){
+					param_value=param_value.split(',');
+				}
+				query_obj[param_name]=param_value;
+			}
+		}
 	}
 	if(''==path){
 		path='viz://';
@@ -10333,8 +11772,12 @@ var check_account='';
 
 var mobile_hide_menu_timer=0;
 function view_path(location,state,save_state,update){
+	more_list_close();
 	$('body').removeClass('publication-mode');
 	$('.footer').removeClass('hidden');
+	if(editable_object[2]){
+		clear_editable_object();
+	}
 	notes_save_draft_timer_stop=true;
 	if(typeof window.qr_scan_stream !== 'undefined'){//clear qr scan video stream
 		window.qr_scan_stream.getTracks().forEach((track)=>{
@@ -10372,10 +11815,27 @@ function view_path(location,state,save_state,update){
 		//check query state
 		if(-1!=location.indexOf('?')){
 			query=location.substring(location.indexOf('?')+1);
+			query_obj={};
 			location=location.substring(0,location.indexOf('?'));
+			let params_arr=query.split('&');
+			for(let i in params_arr){
+				let param_str=params_arr[i];
+				if(-1==param_str.indexOf('=')){
+					query_obj[param_str]=true;
+				}
+				else{
+					let param_name=param_str.substring(0,param_str.indexOf('='));
+					let param_value=param_str.substring(param_str.indexOf('=')+1);
+					if(-1!=param_value.indexOf(',')){
+						param_value=param_value.split(',');
+					}
+					query_obj[param_name]=param_value;
+				}
+			}
 		}
 		else{
 			query='';
+			query_obj={};
 			if(typeof state.query !== 'undefined'){
 				if(''!=state.query){
 					query=state.query;
@@ -10494,7 +11954,7 @@ function view_path(location,state,save_state,update){
 			//execute view_ function if exist to prepare page (load vars to input)
 			let current_view=path_parts[0].substring(('dapp:').length);
 			if(typeof window['view_'+current_view] === 'function'){
-				setTimeout(window['view_'+current_view],1,view,path_parts,query,title,back_to);
+				setTimeout(window['view_'+current_view],5,view,path_parts,query,title,back_to);
 			}
 			else{
 				$('.loader').css('display','none');
@@ -10683,6 +12143,49 @@ function view_path(location,state,save_state,update){
 								view.find('.header').html(header);
 							}
 							if(update){
+								//if profile view path is new update, then need load events
+								let events_deep=1;//dont need more for unknown account
+								if(1==result.status){//subscribed
+									events_deep=settings.activity_deep;
+								}
+								if(2!=result.status){//if not ignored
+									check_user_last_event(check_account,function(last_event){
+										if(false!==last_event){//no user events at all
+											//console.log('view_path check_user_last_event block num',check_account,last_event);
+											let need_new=false;
+											load_events_train({},check_account,last_event,0,need_new,events_deep,function(train){
+												finish_events_train(train,check_account,function(affected_objects){
+													console.log('view_path finish_events_train affected_objects',check_account,affected_objects);
+													for(let i in affected_objects){
+														let affected_object_block=affected_objects[i];
+														//need to update render view for all affected objects (preview/pinned in profile feed)
+														setTimeout(function(){
+															get_user(check_account,false,function(err,affected_user){
+																if(!err)
+																get_object(check_account,affected_object_block,false,function(err,affected_object_result){
+																	if(!err){
+																		let find_object=view.find('.objects>.object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]');
+																		if(find_object.length>0){
+																			let found_object_type='preview';
+																			if(find_object.hasClass('pinned-object')){
+																				found_object_type='pinned';
+																			}
+																			let affected_render=render_object(affected_user,affected_object_result,found_object_type);
+																			find_object.before(affected_render);
+																			find_object.remove();//remove old view
+																			update_short_date(view.find('.objects .object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]').find('.short-date-view'));
+																			profile_filter_by_type();
+																		}
+																	}
+																});
+															});
+														},10);
+													}
+												});
+											});
+										}
+									});
+								}
 								view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:result.account,block:0}));
 							}
 							if('main'==current_tab){
@@ -10813,45 +12316,123 @@ function view_path(location,state,save_state,update){
 								if(update){
 									//view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
 									view.find('.objects').html(ltmp_arr.empty_loader_notice);
-
-									get_object(check_account,check_block,false,function(err,object_result){
-										if(err){
-											console.log('get_object error',check_account,offset,err,object_result);
-											document.title=ltmp_arr.error_title+' - '+document.title;
-											if(1==object_result){//block not found
-												view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
-											}
-											if(2==object_result){//item not found
-												view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
-											}
-											$('.loader').css('display','none');
-											view.css('display','block');
-											after_view_render();
+									if(typeof query_obj.event !== 'undefined'){
+										let events_arr=query_obj.event;
+										if(typeof query_obj.event === 'string'){
+											events_arr=[query_obj.event];
 										}
-										else{
-											document.title=check_block+' - '+document.title;
-											let object_view=render_object(user_result,object_result);
-											let link='viz://@'+user_result.account+'/'+object_result.block+'/';
+										events_arr=array_unique(events_arr);
+										events_arr.sort();
+										//try load and execute events from array
+										load_events(check_account,events_arr,function(){
+											console.log('finish load_events from view_path',check_account);
+											get_object(check_account,check_block,false,function(err,object_result){
+												if(err){
+													console.log('get_object error',check_account,offset,err,object_result);
+													document.title=ltmp_arr.error_title+' - '+document.title;
+													if(1==object_result){//block not found
+														view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
+													}
+													if(2==object_result){//item not found
+														view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
+													}
+													$('.loader').css('display','none');
+													view.css('display','block');
+													after_view_render();
+												}
+												else{
+													document.title=check_block+' - '+document.title;
+													let object_view=render_object(user_result,object_result);
+													let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 
-											view.find('.objects').html(object_view);
-											let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
-											set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
+													view.find('.objects').html(object_view);
 
-											get_replies(user_result.account,object_result.block,function(err,replies_result){
-												for(let i in replies_result){
-													let reply_object=replies_result[i];
-													let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
-													reply_render=render_object(reply_object.account,reply_object.block,'reply');
-													view.find('.objects').append(reply_render);
+													let hidden=false;
+													if(typeof object_result.hidden !== 'undefined'){
+														if(1==object_result.hidden){
+															hidden=true;
+														}
+													}
+
+													if(hidden){
+														view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_is_hidden}));
+													}
+													else{
+														let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+														set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
+
+														get_replies(user_result.account,object_result.block,function(err,replies_result){
+															for(let i in replies_result){
+																let reply_object=replies_result[i];
+																let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+																reply_render=render_object(reply_object.account,reply_object.block,'reply');
+																view.find('.objects').append(reply_render);
+															}
+														});
+													}
+
+													$('.loader').css('display','none');
+													view.css('display','block');
+													check_load_more();
+													after_view_render();
 												}
 											});
+										});
+									}
+									else{
+										//just get object without checking events
+										get_object(check_account,check_block,false,function(err,object_result){
+											if(err){
+												console.log('get_object error',check_account,offset,err,object_result);
+												document.title=ltmp_arr.error_title+' - '+document.title;
+												if(1==object_result){//block not found
+													view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
+												}
+												if(2==object_result){//item not found
+													view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
+												}
+												$('.loader').css('display','none');
+												view.css('display','block');
+												after_view_render();
+											}
+											else{
+												document.title=check_block+' - '+document.title;
+												let object_view=render_object(user_result,object_result);
+												let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 
-											$('.loader').css('display','none');
-											view.css('display','block');
-											check_load_more();
-											after_view_render();
-										}
-									});
+												view.find('.objects').html(object_view);
+
+												let hidden=false;
+												if(typeof object_result.hidden !== 'undefined'){
+													if(1==object_result.hidden){
+														hidden=true;
+													}
+												}
+
+												if(hidden){
+													view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_is_hidden}));
+												}
+												else{
+													let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+													set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
+
+													get_replies(user_result.account,object_result.block,function(err,replies_result){
+														for(let i in replies_result){
+															let reply_object=replies_result[i];
+															let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+															reply_render=render_object(reply_object.account,reply_object.block,'reply');
+															view.find('.objects').append(reply_render);
+														}
+													});
+												}
+
+												$('.loader').css('display','none');
+												view.css('display','block');
+												check_load_more();
+												after_view_render();
+											}
+										});
+									}
 								}
 								else{
 									$('.loader').css('display','none');
@@ -10948,49 +12529,107 @@ function view_path(location,state,save_state,update){
 									//view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:check_account,block:check_block}));
 									view.find('.objects').html(ltmp_arr.empty_loader_notice);
 
-									get_object(check_account,check_block,false,function(err,object_result){
-										if(err){
-											console.log('get_object error',check_account,offset,err,object_result);
-											document.title=ltmp_arr.error_title+' - '+document.title;
-											if(1==object_result){//block not found
-												view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
-											}
-											if(2==object_result){//item not found
-												view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
-											}
-											$('.loader').css('display','none');
-											view.css('display','block');
-											after_view_render();
+									if(typeof query_obj.event !== 'undefined'){
+										let events_arr=query_obj.event;
+										if(typeof query_obj.event === 'string'){
+											events_arr=[query_obj.event];
 										}
-										else{
-											document.title=check_block+' - '+document.title;
-											let object_view=render_object(user_result,object_result,'publication');
-											let link='viz://@'+user_result.account+'/'+object_result.block+'/';
+										events_arr=array_unique(events_arr);
+										events_arr.sort();
+										//try load and execute events from array
+										load_events(check_account,events_arr,function(){
+											console.log('finish load_events from view_path publication',check_account);
+											get_object(check_account,check_block,false,function(err,object_result){
+												if(err){
+													console.log('get_object error',check_account,offset,err,object_result);
+													document.title=ltmp_arr.error_title+' - '+document.title;
+													if(1==object_result){//block not found
+														view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
+													}
+													if(2==object_result){//item not found
+														view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
+													}
+													$('.loader').css('display','none');
+													view.css('display','block');
+													after_view_render();
+												}
+												else{
+													document.title=check_block+' - '+document.title;
+													let object_view=render_object(user_result,object_result,'publication');
+													let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 
-											view.find('.objects').html(object_view);
-											let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
-											set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
+													view.find('.objects').html(object_view);
+													let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+													set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
 
-											get_replies(user_result.account,object_result.block,function(err,replies_result){
-												for(let i in replies_result){
-													let reply_object=replies_result[i];
-													let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
-													reply_render=render_object(reply_object.account,reply_object.block,'reply');
-													view.find('.objects').append(reply_render);
+													get_replies(user_result.account,object_result.block,function(err,replies_result){
+														for(let i in replies_result){
+															let reply_object=replies_result[i];
+															let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+															reply_render=render_object(reply_object.account,reply_object.block,'reply');
+															view.find('.objects').append(reply_render);
+														}
+													});
+
+													//publication content view mode
+													$('body').addClass('publication-mode');
+
+													$('.loader').css('display','none');
+													view.css('display','block');
+													check_load_more();
+													after_view_render();
 												}
 											});
+										});
+									}
+									else{
+										get_object(check_account,check_block,false,function(err,object_result){
+											if(err){
+												console.log('get_object error',check_account,offset,err,object_result);
+												document.title=ltmp_arr.error_title+' - '+document.title;
+												if(1==object_result){//block not found
+													view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.block_not_found}));
+												}
+												if(2==object_result){//item not found
+													view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
+												}
+												$('.loader').css('display','none');
+												view.css('display','block');
+												after_view_render();
+											}
+											else{
+												document.title=check_block+' - '+document.title;
+												let object_view=render_object(user_result,object_result,'publication');
+												let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 
-											//publication content view mode
-											$('body').addClass('publication-mode');
+												view.find('.objects').html(object_view);
+												let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+												set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
 
-											$('.loader').css('display','none');
-											view.css('display','block');
-											check_load_more();
-											after_view_render();
-										}
-									});
+												get_replies(user_result.account,object_result.block,function(err,replies_result){
+													for(let i in replies_result){
+														let reply_object=replies_result[i];
+														let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+														reply_render=render_object(reply_object.account,reply_object.block,'reply');
+														view.find('.objects').append(reply_render);
+													}
+												});
+
+												//publication content view mode
+												$('body').addClass('publication-mode');
+
+												$('.loader').css('display','none');
+												view.css('display','block');
+												check_load_more();
+												after_view_render();
+											}
+										});
+									}
 								}
 								else{
+									//publication content view mode
+									$('body').addClass('publication-mode');
+
 									$('.loader').css('display','none');
 									view.css('display','block');
 									$(window)[0].scrollTo({top:(typeof view.data('scroll')!=='undefined'?view.data('scroll'):0)});
@@ -11537,10 +13176,30 @@ function render_object(user,object,type,preset_level){
 			}
 		}
 	}
+	if(typeof object.hidden !== 'undefined'){
+		if(1==object.hidden){
+			object_type='hidden';
+		}
+	}
 	console.log('render_object=',object_type,object);
 
+	if('hidden'==object_type){
+		render=ltmp(ltmp_arr.object_hidden,{
+			account:user.account,
+			block:object.block,
+			link:'viz://@'+user.account+'/'+object.block+'/',
+			events:(typeof object.events !== 'undefined')?object.events.join(','):'',
+			previous:object.data.p,
+		});
+		return render;
+	}
 	if('publication'==type){
 		if('publication'==object_type){
+			let more_view='';
+			if(user.account==current_user){
+				more_view=ltmp(ltmp_arr.more_column,{account:user.account,block:object.block});
+			}
+
 			//text=markdown_clear_code(object.data.d.m);//markdown
 			let image_part=(typeof object.data.d.i !== 'undefined');
 			let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
@@ -11550,6 +13209,7 @@ function render_object(user,object,type,preset_level){
 			render=ltmp(ltmp_arr.object_type_publication_full,{
 				author:'@'+user.account,
 				link:'viz://@'+user.account+'/'+object.block+'/',
+				events:(typeof object.events !== 'undefined')?object.events.join(','):'',
 				nickname:profile.nickname,
 				avatar:safe_avatar(profile.avatar),
 				actions:ltmp(ltmp_arr.object_type_text_actions,{
@@ -11560,6 +13220,7 @@ function render_object(user,object,type,preset_level){
 				}),
 				timestamp:object.data.timestamp,
 				context:publication_html,
+				more:more_view,
 			});
 		}
 	}
@@ -11639,9 +13300,16 @@ function render_object(user,object,type,preset_level){
 				if(image_part){
 					image=ltmp(ltmp_arr.render_preview_article_image,{image:safe_image(object.data.d.i),link:'viz://@'+user.account+'/'+object.block+'/'});
 				}
+
+				let more_view='';
+				if(user.account==current_user){
+					more_view=ltmp(ltmp_arr.more_column,{account:user.account,block:object.block});
+				}
+
 				render=ltmp(ltmp_arr.object_type_publication,{
 					author:'@'+user.account,
 					link:'viz://@'+user.account+'/'+object.block+'/',
+					events:(typeof object.events !== 'undefined')?object.events.join(','):'',
 					nickname:profile.nickname,
 					avatar:safe_avatar(profile.avatar),
 					actions:ltmp(ltmp_arr.object_type_text_actions,{
@@ -11655,6 +13323,7 @@ function render_object(user,object,type,preset_level){
 					context:image+link,
 					addon:wrapper_addon,
 					class_addon:(1==object.nsfw?' nsfw-content':''),
+					more:more_view,
 				});
 			}
 			if('text'==object_type){
@@ -11706,10 +13375,16 @@ function render_object(user,object,type,preset_level){
 
 				text=highlight_links(text);
 
+				let more_view='';
+				if(user.account==current_user){
+					more_view=ltmp(ltmp_arr.more_column,{account:user.account,block:object.block});
+				}
+
 				render=ltmp(ltmp_arr.object_type_text,{
 					reply:reply,
 					author:'@'+user.account,
 					link:'viz://@'+user.account+'/'+object.block+'/',
+					events:(typeof object.events !== 'undefined')?object.events.join(','):'',
 					nickname:profile.nickname,
 					avatar:safe_avatar(profile.avatar),
 					text:text,
@@ -11722,6 +13397,7 @@ function render_object(user,object,type,preset_level){
 					}),
 					timestamp:object.data.timestamp,
 					class_addon:(1==object.nsfw?' nsfw-content':''),
+					more:more_view,
 				});
 			}
 		}
@@ -11747,6 +13423,7 @@ function render_object(user,object,type,preset_level){
 				is_reply:object.is_reply,
 				is_share:object.is_share,
 				link:current_link,
+				events:(typeof object.events !== 'undefined')?object.events.join(','):'',
 				context:ltmp(ltmp_arr.object_type_text_share,{
 					link:'viz://@'+user.account+'/',
 					caption:'@'+user.account,
@@ -11811,6 +13488,7 @@ function render_object(user,object,type,preset_level){
 					is_reply:object.is_reply,
 					is_share:object.is_share,
 					link:'viz://@'+user.account+'/'+object.block+'/',
+					events:(typeof object.events !== 'undefined')?object.events.join(','):'',
 					actions:ltmp(ltmp_arr.object_type_text_actions,{
 						//link:link,
 						icon_reply:ltmp_global.icon_reply,
@@ -11887,6 +13565,7 @@ function render_object(user,object,type,preset_level){
 					is_reply:object.is_reply,
 					is_share:object.is_share,
 					link:'viz://@'+user.account+'/'+object.block+'/',
+					events:(typeof object.events !== 'undefined')?object.events.join(','):'',
 					actions:ltmp(ltmp_arr.object_type_text_actions,{
 						//link:link,
 						icon_reply:ltmp_global.icon_reply,
@@ -12096,6 +13775,7 @@ function render_object(user,object,type,preset_level){
 				is_reply:object.is_reply,
 				is_share:object.is_share,
 				link:'viz://@'+user.account+'/'+object.block+'/',
+				events:(typeof object.events !== 'undefined')?object.events.join(','):'',
 				actions:ltmp(ltmp_arr.object_type_text_actions,{
 					//link:link,
 					icon_reply:ltmp_global.icon_reply,
@@ -12163,6 +13843,7 @@ function render_object(user,object,type,preset_level){
 				avatar:safe_avatar(profile.avatar),
 				text:text,
 				link:'viz://@'+user.account+'/'+object.block+'/',
+				events:(typeof object.events !== 'undefined')?object.events.join(','):'',
 				actions:ltmp(ltmp_arr.object_type_text_actions,{
 					//link:link,
 					icon_reply:ltmp_global.icon_reply,
@@ -12775,6 +14456,48 @@ function load_more_objects(indicator,check_level){
 					check_load_more_timer=setTimeout(function(){
 						check_load_more();
 					},100);
+
+					//load more object in profile trigger load new event (1), for unknown accounts too
+					let events_deep=1;//dont need deeper, but need dig new event, subscribed accounts already go deeper while loading profile feed
+					check_user_last_event(check_account,function(last_event){
+						if(false!==last_event){//no user events at all
+							console.log('load_more_objects check_user_last_event block num',check_account,last_event);
+							let need_new=true;
+							load_events_train({},check_account,last_event,object_result.block,need_new,events_deep,function(train){
+								console.log('load_more_objects load_events_train',train);
+								finish_events_train(train,check_account,function(affected_objects){
+									console.log('load_more_objects finish_events_train affected_objects',check_account,affected_objects);
+									for(let i in affected_objects){
+										let affected_object_block=affected_objects[i];
+										//need to update render view for all affected objects (preview/pinned in profile feed)
+										setTimeout(function(){
+											get_user(check_account,false,function(err,affected_user){
+												if(!err)
+												get_object(check_account,affected_object_block,false,function(err,affected_object_result){
+													if(!err){
+														console.log(affected_object_result);
+														let view=indicator.closest('.view');
+														let find_object=view.find('.objects>.object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]');
+														if(find_object.length>0){
+															let found_object_type='preview';
+															if(find_object.hasClass('pinned-object')){
+																found_object_type='pinned';
+															}
+															let affected_render=render_object(affected_user,affected_object_result,found_object_type);
+															find_object.before(affected_render);
+															find_object.remove();//remove old view
+															update_short_date(view.find('.objects .object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]').find('.short-date-view'));
+															profile_filter_by_type();
+														}
+													}
+												});
+											});
+										},10);
+									}
+								});
+							});
+						}
+					});
 				}
 			});
 		});
@@ -12946,6 +14669,33 @@ function show_terms_of_use(){
 	});
 	return;
 }
+
+function more_list_close(){
+	if($('div.more-list').hasClass('show')){
+		$('div.more-list').data('account','');
+		$('div.more-list').data('block','');
+		$('div.more-list').css('display','none');
+		$('div.more-list').removeClass('show');
+
+		$('.screen-click').removeClass('show');
+	}
+}
+function more_list_position(){
+	if($('div.more-list').hasClass('show')){
+		if($('.view[data-level="'+level+'"] .more-action[data-account="'+$('div.more-list').data('account')+'"][data-block="'+$('div.more-list').data('block')+'"]').length>0){
+			let target_offset=$('.view[data-level="'+level+'"] .more-action[data-account="'+$('div.more-list').data('account')+'"][data-block="'+$('div.more-list').data('block')+'"]')[0].getBoundingClientRect();
+			$('div.more-list').css('display','block');
+			let more_offset=$('div.more-list')[0].getBoundingClientRect();
+			$('div.more-list').css('left',(target_offset.left+target_offset.width-more_offset.width)+'px');
+			$('div.more-list').css('top',(window.scrollY+target_offset.top-5)+'px');
+		}
+		else{
+			$('div.more-list').removeClass('show');
+			$('div.more-list').css('display','none');
+		}
+	}
+}
+
 var ignore_resize=false;
 function main_app(){
 	if(false===terms_of_use_accept){
@@ -13026,7 +14776,9 @@ function main_app(){
 		});
 		check_load_more();
 	});
+
 	window.onresize=function(init){
+		more_list_position();
 		if(ignore_resize){
 			return;
 		}
