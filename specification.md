@@ -6,6 +6,7 @@
 * Protocol name: **Voice**
 * Protocol shortname: **V**
 * Authority type: Regular
+* Extensions: [Voice Events](events-specification.md)
 * Protocol description: Open protocol for back-linked JSON objects in VIZ blockchain, created for account activity with customazable types.
 
 Account create custom protocol operation and wrote JSON object with back-link to previous object in history. If blockchain is going forward, Voice protocol can be readed backward. It can be done if blockchain node store block number of contains last custom protocol operation (available by `custom_protocol_api` plugin).
