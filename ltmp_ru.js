@@ -267,7 +267,7 @@ var ltmp_ru_arr = {
 	beneficiaries_list_caption: `Бенефициары`,
 	beneficiaries_list_description: `Укажите пользователей, которые будут получать часть награждений.`,
 	beneficiaries_list_add: `%%beneficiaries_item%% %%beneficiaries_add_item%%`,
-	beneficiaries_item: `<div class="beneficiaries-item"><input type="text" name="account" class="round" placeholder="Логин"><input type="text" name="weight" class="round" placeholder="Процент от награды"></div>`,
+	beneficiaries_item: `<div class="beneficiaries-item"><input type="text" name="account" class="round" placeholder="Логин" value="{account}"><input type="text" name="weight" class="round" placeholder="Процент от награды" value="{weight}"></div>`,
 	beneficiaries_add_item: `<a tabindex="0" class="beneficiaries-add-item-action" title="Добавить бенефициара">%%icon_editor_plus%%</a>`,
 
 	preset_view_publish: `
