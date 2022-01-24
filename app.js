@@ -10351,6 +10351,7 @@ function view_publish(view,path_parts,query,title){
 		if(typeof editable_object[1].data.d.b !== 'undefined'){
 			for(let i in editable_object[1].data.d.b){
 				let beneficiary_obj=editable_object[1].data.d.b[i];
+				beneficiary_obj.weight=parseInt(beneficiary_obj.weight)/100;
 				view.find('.beneficiaries-list .beneficiaries-add-item-action').before(ltmp(ltmp_arr.beneficiaries_item,beneficiary_obj));
 			}
 		}
