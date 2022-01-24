@@ -6491,11 +6491,15 @@ function app_mouse(e){
 				}
 			}
 			if($(target).hasClass('external-share-action')){
-				let original_object_link=$(target).closest('.object').data('link');
+				let original_object_el=$(target).closest('.object');
+				let original_object_link=original_object_el.data('link');
+				if(original_object_el.data('publication')){
+					original_object_link+='publication/';
+				}
 				let original_object_events='';
-				if(typeof $(target).closest('.object').data('events') !== 'undefined'){
-					if(''!=$(target).closest('.object').data('events')){
-						original_object_events='?event='+$(target).closest('.object').data('events');
+				if(typeof original_object_el.data('events') !== 'undefined'){
+					if(''!=original_object_el.data('events')){
+						original_object_events='?event='+original_object_el.data('events');
 					}
 				}
 				let object_link=original_object_link+original_object_events;
