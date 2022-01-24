@@ -3439,7 +3439,6 @@ function publish(view){
 		console.log('publish with edit:',edit);
 	}
 
-
 	viz.api.getAccount(current_user,publish_protocol,function(err,response){
 		if(err){
 			console.log(err);
@@ -6591,6 +6590,15 @@ function app_mouse(e){
 			if($(target).hasClass('article-publish-action')){
 				if(!$(target).hasClass('disabled')){
 					$(target).addClass('disabled');
+
+					let publish_protocol=app_protocol;
+					let edit=false;
+					if(editable_object[2]){//edit mode, need to change custom protocol
+						edit=$('.article-settings input[name="edit-event-object"]').val();
+						publish_protocol=events_protocol;
+						console.log('publish with edit:',edit);
+					}
+
 					let editor=$('.article-editor .editor-text')[0];
 					let title=markdown_encode($('.article-editor .editor-text h1')[0],0);
 					let markdown=markdown_encode(editor,0);
@@ -6659,7 +6667,7 @@ function app_mouse(e){
 						error=ltmp_arr.editor_error_empty_title;
 					}
 					if(false===error){
-						viz.api.getAccount(current_user,app_protocol,function(err,response){
+						viz.api.getAccount(current_user,publish_protocol,function(err,response){
 							if(err){
 								console.log(err);
 								add_notify(false,'',ltmp_arr.gateway_error);
@@ -6679,21 +6687,64 @@ function app_mouse(e){
 								//new_object.u=new Date().getTime() /1000 | 0;//for delayed publication
 
 								new_object.d=article_obj;
+								if(false!==edit){
+									let edit_account='';
+									let edit_block=0;
+									let pattern = /@[a-z0-9\-\.]*/g;
+									let link_account=edit.match(pattern);
+									if(typeof link_account[0] != 'undefined'){
+										edit_account=link_account[0].substr(1);
+										let pattern_block = /\/([0-9]*)\//g;
+										let link_block=edit.match(pattern_block);
+										if(typeof link_block[1] != 'undefined'){
+											edit_block=parseInt(fast_str_replace('/','',link_block[1]));
+										}
+									}
+									new_object.e='e';//edit
+									if(current_user!=edit_account){
+										new_object.a=edit_account;//account
+									}
+									if(edit_block>0){
+										new_object.b=edit_block;//block
+									}
+									else{
+										return;
+									}
+								}
 								let object_json=JSON.stringify(new_object);
 
-								viz.broadcast.custom(users[current_user].regular_key,[],[current_user],app_protocol,object_json,function(err,result){
+								viz.broadcast.custom(users[current_user].regular_key,[],[current_user],publish_protocol,object_json,function(err,result){
 									if(result){
 										console.log(result);
-										setTimeout(function(){
-											wait_publish(previous,function(object_block){
-												view_path('viz://@'+current_user+'/'+object_block+'/',{},true,false);
-												$(target).removeClass('disabled');
-												$('.article-editor .editor-text').html('');
-												$('.article-settings input[name="description"]').val('');
-												$('.article-settings input[name="thumbnail"]').val('');
-												editor_save_draft();
-											});
-										},3000);
+										if(false!==edit){
+											setTimeout(function(){
+												update_user_last_event(current_user,function(result){
+													if(false!==result){
+														get_object(current_user,new_object.b,false,function(err,object_result){
+															if(!err){
+																view_path('viz://@'+current_user+'/'+new_object.b+'/publication/?event='+result,{},true,false);
+																$(target).removeClass('disabled');
+																$('.article-editor .editor-text').html('');
+																$('.article-settings input[name="description"]').val('');
+																$('.article-settings input[name="thumbnail"]').val('');
+															}
+														});
+													}
+												});
+											},3000);
+										}
+										else{//get new object and add link to it
+											setTimeout(function(){
+												wait_publish(previous,function(object_block){
+													view_path('viz://@'+current_user+'/'+object_block+'/',{},true,false);
+													$(target).removeClass('disabled');
+													$('.article-editor .editor-text').html('');
+													$('.article-settings input[name="description"]').val('');
+													$('.article-settings input[name="thumbnail"]').val('');
+													editor_save_draft();
+												});
+											},3000);
+										}
 									}
 									else{
 										console.log(err);
