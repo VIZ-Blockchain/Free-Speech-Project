@@ -6149,10 +6149,10 @@ function app_mouse(e){
 						localStorage.setItem(storage_prefix+'lang',selected_lang);
 						ltmp_arr=window['ltmp_'+selected_lang+'_arr'];
 					}
+					preset_view();
 					render_menu();
 					render_session();
 					render_right_addon();
-					preset_view();
 					view_path('dapp:app_settings/languages',{},true,false);
 					$(target).removeClass('disabled');
 				}
@@ -14712,9 +14712,54 @@ var terms_of_user_scroll=function(){
 	}
 }
 function show_terms_of_use(){
+	localStorage.removeItem('terms_of_use_accept');
+	terms_of_use_accept=false;
+	$('body').removeClass('loaded');
 	$('body').addClass('scrollable');
+	$('.terms-of-use-wrapper').remove();
 	$('body').append(ltmp(ltmp_arr.terms_of_use_wrapper));
+	$('.terms-of-use-wrapper .view').css('display','block');
+
+	$('.languages-short-list').html('');
+	let languages_list='';
+	for(let i in available_langs){
+		let value=i;
+		let language=available_langs[i];
+		let language_selected=false;
+		if(selected_lang==value){
+			language_selected=true;
+		}
+		languages_list+=ltmp(ltmp_arr.languages_short_list_item,{value:value,caption:language,selected:language_selected?' selected':''});
+	}
+	$('.languages-short-list').html(languages_list);
+
+	$('.languages-short-list .select-language').on('click',function(){
+		console.log('select language',$(this).data('value'));
+		$('.languages-short-list .select-language').removeClass('selected');
+		$(this).addClass('selected');
+		let language_str=$(this).data('value');
+		if(typeof available_langs[language_str] !== 'undefined'){
+			selected_lang=language_str;
+			localStorage.setItem(storage_prefix+'lang',selected_lang);
+			ltmp_arr=window['ltmp_'+selected_lang+'_arr'];
+		}
+		if(false===terms_of_use_accept){
+			show_terms_of_use();
+		}
+		else{
+			preset_view();
+			render_menu();
+			render_session();
+			render_right_addon();
+			parse_fullpath();
+			view_path(path,{},true,false);
+		}
+		return;
+	});
+
+	document.removeEventListener('scroll',terms_of_user_scroll);
 	document.addEventListener('scroll',terms_of_user_scroll);
+
 	$('.terms-of-use-accept-action').on('click',function(){
 		document.removeEventListener('scroll',terms_of_user_scroll);
 		$('.terms-of-use-wrapper').remove();

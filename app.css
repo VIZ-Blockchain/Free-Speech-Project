@@ -1861,6 +1861,30 @@ div.menu .secondary a{
 	display:flex !important;
 }
 
+.languages-short-list{
+	margin-bottom:2.5vh;
+	text-align: center;
+}
+.languages-short-list .select-language.selected{
+	color:#000;
+	font-weight:bold;
+}
+.languages-short-list .select-language-wrapper{
+	display:inline-block;
+}
+.languages-short-list .select-language-wrapper::before{
+	content:'•';
+	margin-right:5px;
+	margin-left:5px;
+	position:relative;
+	top:1px;
+	color:#000;
+}
+.languages-short-list .select-language-wrapper:first-child::before{
+	content:'';
+	margin-right:0;
+	margin-left:0;
+}
 .terms-of-use-wrapper{
 	background:#fff;
 	color:#000;

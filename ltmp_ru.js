@@ -219,6 +219,7 @@ var ltmp_ru_arr = {
 	</div>`,
 	api_list_item:`<p><label><input type="radio" name="api_gate" value="{value}"{selected}> &mdash; {domain}</label></p>`,
 	languages_list_item:`<p><label><input type="radio" name="language" value="{value}"{selected}> &mdash; {caption}</label></p>`,
+	languages_short_list_item:`<div class="select-language-wrapper"><a class="select-language{selected}" data-value="{value}">{caption}</a></div>`,
 
 	node_request:'Отправляем запрос ноде&hellip;',
 	node_not_respond:'Нода не отвечает',
@@ -981,8 +982,11 @@ var ltmp_ru_arr = {
 	<div class="terms-of-use-wrapper">
 	<div class="terms-of-use-readline"><div class="fill-level"></div></div>
 		<div class="content">
-		<div class="header space-between"><div class="caption grow">%%terms_of_use_caption%%</div></div>
-			<div class="view">%%terms_of_use_html%%</div>
+			<div class="header space-between"><div class="caption grow">%%terms_of_use_caption%%</div></div>
+			<div class="view">
+				<div class="languages-short-list"></div>
+				%%terms_of_use_html%%
+			</div>
 		</div>
 	</div>`,
 	terms_of_use_caption: `Условия использования`,
