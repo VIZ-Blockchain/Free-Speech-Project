@@ -6600,6 +6600,12 @@ function app_mouse(e){
 					}
 
 					let editor=$('.article-editor .editor-text')[0];
+
+					//fix <br> repeats in lists which can break markdown logic with \n\n
+					$('.article-editor .editor-text').find('li').each(function(i,el){
+						$(el)[0].innerHTML=fast_str_replace('<br><br>','<br>',$(el)[0].innerHTML);
+					});
+
 					let title=markdown_encode($('.article-editor .editor-text h1')[0],0);
 					let markdown=markdown_encode(editor,0);
 					let first_image='';
@@ -9424,6 +9430,37 @@ function editor_clear_elements(parent,level){
 						if('P'==element.nodeName){
 							if('P'==parent_element){
 								$(element)[0].outerHTML=$(element)[0].innerHTML;
+							}
+						}
+					}
+					if('LI'==element.nodeName){
+						//need to test <br> tag for repeats (more than 1 is break \n\n markdown in lists)
+						let check_br_breakup=$(element)[0].innerHTML;
+						check_br_breakup=fast_str_replace('<br />','<br>',check_br_breakup);
+						check_br_breakup=fast_str_replace('<br/>','<br>',check_br_breakup);
+						//browser add <br> to the end in empty line
+						//thats why need to calc one from end (simple remove 4 from length)
+						if(-1!==check_br_breakup.indexOf('<br><br>')){
+							if(check_br_breakup.indexOf('<br><br>')<check_br_breakup.length-8){//ignore end
+								let find_repeat_position=check_br_breakup.indexOf('<br><br>');
+								if(-1!==find_repeat_position){
+									let first_part=check_br_breakup.substring(0,find_repeat_position);
+									let second_part=check_br_breakup.substring(find_repeat_position+8);
+									$(element)[0].innerHTML=first_part;
+									$(element).after('<li>'+second_part+'</li>');
+								}
+								else{
+									check_br_breakup=fast_str_replace('<br><br>','<br>',check_br_breakup);
+									$(element)[0].innerHTML=check_br_breakup;
+									$(element).after('<li></li>');
+								}
+								let new_li=$(element).next()[0];
+								let selection=document.getSelection();
+								let range=document.createRange();
+								range.selectNodeContents(new_li);
+								range.collapse(true);//caret to start of range
+								selection.removeAllRanges();
+								selection.addRange(range);
 							}
 						}
 					}
