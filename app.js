@@ -2613,7 +2613,7 @@ function wait_new_event(account,last_id,callback){
 				if(need_wait){
 					console.log('wait_new_event need_wait with last_event',last_event,'last_id',last_id);
 					wait_new_event_timer=setTimeout(function(){
-						wait_new_event(last_id,callback);
+						wait_new_event(account,last_id,callback);
 					},1000);
 				}
 				else{
@@ -2626,7 +2626,7 @@ function wait_new_event(account,last_id,callback){
 			get_user(account,false,function(check_err,check_result){
 				if(!check_err){
 					wait_new_event_timer=setTimeout(function(){
-						wait_new_event(last_id,callback);
+						wait_new_event(account,last_id,callback);
 					},1000);
 				}
 				else{//current user not found? impossible but trackable
