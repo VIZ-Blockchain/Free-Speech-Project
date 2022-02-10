@@ -2733,11 +2733,15 @@ function clear_hashtag_object(account,block,callback){
 
 function check_event_is_newest(event_object,callback){
 	let check_account=event_object.account;
+	/*
+	//Old bad code? Don't need to check and get data.a, it's not checking target account newest event, only initiator
+	//May be the cause of a bug in the future when event type will target to not initiator account
 	if(typeof event_object.data.a !== 'undefined'){
 		if(typeof event_object.data.a === 'string'){
 			check_account=event_object.data.a;//check affected object account
 		}
 	}
+	*/
 	let check_event_block=event_object.block;//check only newest events with higher block num
 	let check_block_num=event_object.data.b;//check affected object block
 	let check_event_type=event_object.data.e;//check same event type
