@@ -2734,7 +2734,9 @@ function clear_hashtag_object(account,block,callback){
 function check_event_is_newest(event_object,callback){
 	let check_account=event_object.account;
 	if(typeof event_object.data.a !== 'undefined'){
-		check_account=event_object.data.a;//check affected object account
+		if(typeof event_object.data.a === 'string'){
+			check_account=event_object.data.a;//check affected object account
+		}
 	}
 	let check_event_block=event_object.block;//check only newest events with higher block num
 	let check_block_num=event_object.data.b;//check affected object block
