@@ -917,8 +917,8 @@ var ltmp_en_arr = {
 	object_type_text_reply_external: '<div class="reply-view">Reply to <a tabindex="0" href="{link}" target="_blank">{caption}</a></div>',
 
 	new_objects: '<a class="new-objects load-new-objects-action" data-items="0">&hellip;</a>',
-	feed_new_objects: 'Show new updates: {items}',
-	feed_no_new_objects: 'There are no new updates',
+	feed_new_objects: 'Show latest updates: {items}',
+	feed_no_new_objects: 'Nothing new',
 
 	nsfw_warning: '<div tabindex="0" class="nsfw-warning nsfw-reveal-action">This content may contain adult information.<br>Click to show.</div>',
 
