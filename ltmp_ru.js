@@ -918,8 +918,8 @@ var ltmp_ru_arr = {
 	object_type_text_reply_external: '<div class="reply-view">Ответ на <a tabindex="0" href="{link}" target="_blank">{caption}</a></div>',
 
 	new_objects: '<a class="new-objects load-new-objects-action" data-items="0">&hellip;</a>',
-	feed_new_objects: 'Показать новые обновления: {items}',
-	feed_no_new_objects: 'Новых обновлений нет',
+	feed_new_objects: 'Показать последние обновления: {items}',
+	feed_no_new_objects: 'Ничего нового нет',
 
 	nsfw_warning: '<div tabindex="0" class="nsfw-warning nsfw-reveal-action">Данный контент может содержать информацию для взрослых.<br>Нажмите, чтобы показать.</div>',
 
