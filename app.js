@@ -2640,7 +2640,7 @@ function wait_new_event(account,last_id,callback){
 let events_affected_objects={};//a:[b,b,b],c:[b,b],clear after callback
 //mark executed/errors events, trigger callback if all events was executed
 //affected_object=[a,b], need to put it in events_affected_objects and to callback it (for auto refresh objects view)
-function events_queue_finish(event_object_id,execution,queue_num,affected_object,error_reason){
+function events_queue_finish(event_account_locker,event_object_id,execution,queue_num,affected_object,error_reason){
 	error_reason=typeof error_reason === 'undefined'?'error':error_reason;
 	console.log('events_queue_finish queue_num',queue_num,'counter was',execute_events_queue[queue_num][0],'event_object_id',event_object_id,execution)
 	execute_events_queue[queue_num][0]--;//decrease queue counter
@@ -2665,12 +2665,16 @@ function events_queue_finish(event_object_id,execution,queue_num,affected_object
 			}
 			else{//any error on execution?
 				result.executed=1;
-				result[error_reason]=1;
+				if(typeof result.errors === 'undefined'){
+					result.errors=[];
+				}
+				result.errors.push(error_reason);
 			}
 			cur.update(result);
 			cur.continue();
 		}
 		else{
+			execute_event_locker[event_account_locker]=false;//release the event queue execution
 			//New: wait events_queue_finish() with event update and trigger callback if counter changed to zero
 			if(execute_events_queue[queue_num][0]==0){
 				if(typeof affected_object !== 'undefined'){
@@ -2743,8 +2747,12 @@ function check_event_is_newest(event_object,callback){
 	}
 	*/
 	let check_event_block=event_object.block;//check only newest events with higher block num
-	let check_block_num=event_object.data.b;//check affected object block
+	let check_block_num=parseInt(event_object.data.b);//check affected object block
 	let check_event_type=event_object.data.e;//check same event type
+	if('a'==check_event_type){//add event don't need to be checked, because it has increment execution
+		console.log('check_event_is_newest ignored because event type',event_object);
+		callback(true);
+	}
 
 	let is_newest=true;
 	let cursor_end=false;
@@ -2808,7 +2816,20 @@ function check_event_is_newest(event_object,callback){
 	};
 }
 
+let execute_event_locker={};
+let execute_event_locker_time_offset=100;//ms for each execute retry
 function execute_event(event_object,queue_num){
+	//loop locker for accounts
+	if(typeof execute_event_locker[event_object.account] !== 'undefined'){
+		if(true===execute_event_locker[event_object.account]){
+			setTimeout(function(){
+				execute_event(event_object,queue_num);
+			},execute_event_locker_time_offset);
+		}
+		else{
+			execute_event_locker[event_object.account]=true;
+		}
+	}
 	//need to check current event - it is the last with same event-type?
 	//if found known and most fresh event, then ignore current event and mark it as executed and "late", not as error
 	if(0==event_object.executed){
@@ -2819,10 +2840,10 @@ function execute_event(event_object,queue_num){
 						event_object.data.a=event_object.account;
 					}
 					if(typeof event_object.data.b === 'undefined'){
-						events_queue_finish(event_object.id,false,queue_num);//error result, block not specified
+						events_queue_finish(event_object.account,event_object.id,false,queue_num);//error result, block not specified
 					}
 					if(event_object.account!=event_object.data.a){
-						events_queue_finish(event_object.id,false,queue_num);//error result, initiator try hide other account object
+						events_queue_finish(event_object.account,event_object.id,false,queue_num);//error result, initiator try hide other account object
 					}
 
 					get_object(event_object.data.a,event_object.data.b,false,function(err,object_result){//parse object if new
@@ -2837,24 +2858,246 @@ function execute_event(event_object,queue_num){
 								let cur=event.target.result;
 								if(cur){
 									let result=cur.value;
+
+									//check events array, return if already executed for object (prevent event actions)
 									if(typeof result.events === 'undefined'){
 										result.events=[];
 									}
+									else{
+										if(-1!=result.events.indexOf(event_object.block)){
+											//events_queue_finish(event_object.account,event_object.id,false,queue_num,[],'already in events array');//rewrite positive result if executed in second queue
+											events_queue_finish(event_object.account,event_object.id,true,queue_num,[event_object.data.a,event_object.data.b]);//can be triggered again
+											return;
+										}
+									}
 									result.events.push(event_object.block);
+
 									result.hidden=1;
 									cur.update(result);
 									find=true;
 								}
 								if(find){
-									events_queue_finish(event_object.id,true,queue_num,[event_object.data.a,event_object.data.b]);//object was found
+									events_queue_finish(event_object.account,event_object.id,true,queue_num,[event_object.data.a,event_object.data.b]);//object was found
 								}
 								else{
-									events_queue_finish(event_object.id,false,queue_num);//not found object
+									events_queue_finish(event_object.account,event_object.id,false,queue_num);//not found object
 								}
 							};
 						}
 						else{
-							events_queue_finish(event_object.id,false,queue_num);//not found object
+							events_queue_finish(event_object.account,event_object.id,false,queue_num);//not found object
+						}
+					});
+				}
+				if('a'==event_object.data.e){//add
+					if(typeof event_object.data.a === 'undefined'){//if not account specified in data:a, means initiator
+						event_object.data.a=event_object.account;
+					}
+					if(typeof event_object.data.b === 'undefined'){
+						events_queue_finish(event_object.account,event_object.id,false,queue_num);//error result, block not specified
+					}
+					if(event_object.account!=event_object.data.a){
+						events_queue_finish(event_object.account,event_object.id,false,queue_num);//error result, initiator try hide other account object
+					}
+
+					get_object(event_object.data.a,event_object.data.b,false,function(err,object_result){//parse object if new
+						if(!err){
+							let t,q,req;
+							t=db.transaction(['objects'],'readwrite');
+							q=t.objectStore('objects');
+							req=q.index('object').openCursor(IDBKeyRange.only([event_object.data.a,event_object.data.b]),'next');
+
+							let find=false;
+							let need_update_context=true;//rebuild hashtags and nsfw params
+							req.onsuccess=function(event){
+								let cur=event.target.result;
+								if(cur){
+									let result=cur.value;
+
+									//check events array, return if already executed for object (prevent event actions)
+									if(typeof result.events === 'undefined'){
+										result.events=[];
+									}
+									else{
+										if(-1!=result.events.indexOf(event_object.block)){
+											//events_queue_finish(event_object.account,event_object.id,false,queue_num,[],'already in events array');//rewrite positive result if executed in second queue
+											events_queue_finish(event_object.account,event_object.id,true,queue_num,[event_object.data.a,event_object.data.b]);//can be triggered again
+											return;
+										}
+									}
+									result.events.push(event_object.block);
+
+									/* add history for object d/data */
+									if(typeof result.history === 'undefined'){
+										result.history={};
+										result.history[event_object.data.b]={t:'o',d:Object.assign({},result.data.d)};//origin
+									}
+									result.history[event_object.block]={t:'a',d:Object.assign({},event_object.data.d)};//add
+
+									/* restore the integrity of the object from history */
+									result.data.d={};
+									for(let i in result.history){
+										let history_el=Object.assign({},result.history[i]);
+										if('o'==history_el['t']){
+											result.data.d=Object.assign({},history_el['d']);
+										}
+										if('e'==history_el['t']){
+											result.data.d=Object.assign({},history_el['d']);
+										}
+										if('a'==history_el['t']){
+											for(let j in history_el['d']){
+												if(typeof result.data.d[j] === 'undefined'){
+													result.data.d[j]='';
+												}
+												result.data.d[j]+=history_el['d'][j];
+											}
+										}
+									}
+
+									//object update time
+									if(typeof result.update_time !== 'undefined'){
+										if(parseInt(result.update_time)<parseInt(event_object.time)){
+											result.update_time=event_object.time;
+										}
+									}
+									else{
+										result.update_time=event_object.time;
+									}
+
+									if(need_update_context){
+										let nsfw=result.nsfw;
+
+										let type='text';//check type
+										if(typeof result.data.t !== 'undefined'){
+											if(-1!=object_types_list.indexOf(result.data.t)){
+												if(typeof object_types_arr[result.data.t] !== 'undefined'){
+													type=object_types_arr[result.data.t];
+												}
+												else{
+													type=result.data.t;
+												}
+											}
+										}
+										/* hashtags support */
+										//need replace url with hash to avoid conflict
+										let hashtags_text='';
+										if('text'==type){
+											hashtags_text=result.data.d.text;
+											if(typeof result.data.d.text !== 'undefined'){
+												hashtags_text=result.data.d.text;
+											}
+											else{
+												if(typeof result.data.d.t !== 'undefined'){
+													hashtags_text=result.data.d.t;
+												}
+											}
+										}
+										if('publication'==type){
+											hashtags_text=markdown_clear_code(result.data.d.m);//markdown
+											hashtags_text=markdown_decode_text(hashtags_text);
+											let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+											hashtags_text=hashtags_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
+										}
+										let summary_links=[];
+										//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
+										//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
+										let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
+										let http_protocol_links=hashtags_text.match(http_protocol_pattern);
+										if(null!=http_protocol_links){
+											summary_links=summary_links.concat(http_protocol_links);
+										}
+
+										summary_links=array_unique(summary_links);
+										summary_links.sort(sort_by_length_desc);
+
+										for(let i in summary_links){
+											hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
+										}
+
+										let hashtags_pattern = /(|\b)#([^:;@#!.,?\r\n\t <>()\[\]]+)(|\b)/g;;
+										let hashtags_links=hashtags_text.match(hashtags_pattern);
+										if(null!=hashtags_links){
+											hashtags_links=hashtags_links.map(function(value){
+												return value.toLowerCase();
+											});
+											hashtags_links=array_unique(hashtags_links);
+
+											console.log('execute event object hashtags',hashtags_links,result.account,result.block);
+											clear_hashtag_object(result.account,result.block,function(){
+												console.log('execute event after clear_hashtag_object object hashtags',hashtags_links);
+												for(let i in hashtags_links){
+													let hashtag=hashtags_links[i].substr(1);
+													hashtag=hashtag.trim();
+													if(''!=hashtag){
+														idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+															if(false===hashtag_id){
+																let hashtag_info,hashtag_add_t,hashtag_add_q,hashtag_add_req;
+																hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
+																hashtag_add_t=db.transaction(['hashtags'],'readwrite');
+																hashtag_add_q=hashtag_add_t.objectStore('hashtags');
+																hashtag_add_req=hashtag_add_q.add(hashtag_info);
+																if(trx_need_commit){
+																	hashtag_add_t.commit();
+																}
+																hashtag_add_req.onsuccess=function(e){
+																	idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+																		if(false!==hashtag_id){
+																			add_hashtag_object(hashtag_id,result.account,result.block);
+																		}
+																	});
+																}
+															}
+															else{
+																add_hashtag_object(hashtag_id,result.account,result.block);
+															}
+														});
+													}
+												}
+											});
+										}
+
+										/* check nsfw hashtags in object texts */
+										let nsfw_text='';
+										if('text'==type){
+											if(typeof result.data.d.text !== 'undefined'){
+												nsfw_text=result.data.d.text;
+											}
+											else{
+												if(typeof result.data.d.t !== 'undefined'){
+													nsfw_text=result.data.d.t;
+												}
+											}
+										}
+										if('publication'==type){
+											nsfw_text=markdown_clear_code(result.data.d.m);//markdown
+											nsfw_text=markdown_decode_text(nsfw_text);
+											let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+											nsfw_text=nsfw_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
+										}
+										for(let i in settings.nsfw_hashtags){
+											let search_hashtag='#'+settings.nsfw_hashtags[i];
+											if(-1!=nsfw_text.indexOf(search_hashtag)){
+												nsfw=1;
+											}
+										}
+										if(nsfw!=result.nsfw){
+											result.nsfw=nsfw;
+										}
+									}
+
+									cur.update(result);
+									find=true;
+								}
+								if(find){
+									events_queue_finish(event_object.account,event_object.id,true,queue_num,[event_object.data.a,event_object.data.b]);//object was found
+								}
+								else{
+									events_queue_finish(event_object.account,event_object.id,false,queue_num);//not found object
+								}
+							};
+						}
+						else{
+							events_queue_finish(event_object.account,event_object.id,false,queue_num);//not found object
 						}
 					});
 				}
@@ -2863,10 +3106,10 @@ function execute_event(event_object,queue_num){
 						event_object.data.a=event_object.account;
 					}
 					if(typeof event_object.data.b === 'undefined'){
-						events_queue_finish(event_object.id,false,queue_num);//error result, block not specified
+						events_queue_finish(event_object.account,event_object.id,false,queue_num);//error result, block not specified
 					}
 					if(event_object.account!=event_object.data.a){
-						events_queue_finish(event_object.id,false,queue_num);//error result, initiator try hide other account object
+						events_queue_finish(event_object.account,event_object.id,false,queue_num);//error result, initiator try hide other account object
 					}
 
 					get_object(event_object.data.a,event_object.data.b,false,function(err,object_result){//parse object if new
@@ -2877,24 +3120,64 @@ function execute_event(event_object,queue_num){
 							req=q.index('object').openCursor(IDBKeyRange.only([event_object.data.a,event_object.data.b]),'next');
 
 							let find=false;
-							let need_update=false;//if object was already updated newest event, then ignore
+							let need_update_context=false;//if object was already updated newest event, then ignore
 							req.onsuccess=function(event){
 								let cur=event.target.result;
 								if(cur){
 									let result=cur.value;
-									result.data.d=event_object.data.d;//update new data
+
+									//check events array, return if already executed for object (prevent event actions)
+									if(typeof result.events === 'undefined'){
+										result.events=[];
+									}
+									else{
+										if(-1!=result.events.indexOf(event_object.block)){
+											//events_queue_finish(event_object.account,event_object.id,false,queue_num,[],'already in events array');//rewrite positive result if executed in second queue
+											events_queue_finish(event_object.account,event_object.id,true,queue_num,[event_object.data.a,event_object.data.b]);//can be triggered again
+											return;
+										}
+									}
+									result.events.push(event_object.block);
+
+									/* add history for object d/data */
+									if(typeof result.history === 'undefined'){
+										result.history={};
+										result.history[event_object.data.b]={t:'o',d:Object.assign({},result.data.d)};//origin
+									}
+									result.history[event_object.block]={t:'e',d:Object.assign({},event_object.data.d)};//edit
+
+									/* restore the integrity of the object from history */
+									result.data.d={};
+									for(let i in result.history){
+										let history_el=Object.assign({},result.history[i]);
+										if('o'==history_el['t']){
+											result.data.d=Object.assign({},history_el['d']);
+										}
+										if('e'==history_el['t']){
+											result.data.d=Object.assign({},history_el['d']);
+										}
+										if('a'==history_el['t']){
+											for(let j in history_el['d']){
+												if(typeof result.data.d[j] === 'undefined'){
+													result.data.d[j]='';
+												}
+												result.data.d[j]+=history_el['d'][j];
+											}
+										}
+									}
+
 									//object update time
 									if(typeof result.update_time !== 'undefined'){
 										if(parseInt(result.update_time)<parseInt(event_object.time)){
 											result.update_time=event_object.time;
-											need_update=true;
+											need_update_context=true;
 										}
 									}
 									else{
 										result.update_time=event_object.time;
-										need_update=true;
+										need_update_context=true;
 									}
-									if(need_update){
+									if(need_update_context){
 										//need to update share/reply statuses, hashtags, nsfw
 										let reply=false;
 										let share=false;
@@ -3089,32 +3372,31 @@ function execute_event(event_object,queue_num){
 										if(nsfw!=result.nsfw){
 											result.nsfw=nsfw;
 										}
-										if(typeof result.events === 'undefined'){
-											result.events=[];
-										}
-										result.events.push(event_object.block);
-										cur.update(result);
 									}
+									cur.update(result);
 									find=true;
 								}
 								if(find){
-									events_queue_finish(event_object.id,true,queue_num,[event_object.data.a,event_object.data.b]);//object was found
+									events_queue_finish(event_object.account,event_object.id,true,queue_num,[event_object.data.a,event_object.data.b]);//object was found
 								}
 								else{
-									events_queue_finish(event_object.id,false,queue_num);//not found object
+									events_queue_finish(event_object.account,event_object.id,false,queue_num);//not found object
 								}
 							};
 						}
 						else{
-							events_queue_finish(event_object.id,false,queue_num);//not found object
+							events_queue_finish(event_object.account,event_object.id,false,queue_num);//not found object
 						}
 					});
 				}
 			}
 			else{
-				events_queue_finish(event_object.id,false,queue_num,[],'late');//event is late (found newest with same event type)
+				events_queue_finish(event_object.account,event_object.id,false,queue_num,[],'late');//event is late (found newest with same event type)
 			}
 		});
+	}
+	else{
+		events_queue_finish(event_object.account,event_object.id,false,queue_num,[],'executed');//event is late (found newest with same event type)
 	}
 }
 var execute_events_queue=[];
@@ -3185,6 +3467,7 @@ function voice_event(el,object_account,object_block,event,data){
 	el=typeof el==='undefined'?'.not-exist':el;
 	object_account=typeof object_account==='undefined'?false:current_user;
 	object_block=typeof object_block==='undefined'?0:object_block;
+	object_block=parseInt(object_block);
 	event=typeof event==='undefined'?'':event;
 	data=typeof data==='undefined'?false:data;
 
@@ -4208,7 +4491,7 @@ function markdown_encode(element,level){
 			src=markdown_encode_text(element.getAttribute('src'));
 		}
 		if(''!=src){
-			result='!['+alt+']('+markdown_encode_text(element.getAttribute('src'))+')';
+			result='!['+alt+']('+src+')';
 		}
 		else{
 			result='';
@@ -8096,7 +8379,7 @@ function parse_event(account,block,callback){
 							*/
 							let obj={
 								account:account,
-								block:block,
+								block:parseInt(block),
 								data:item,
 								executed:0,
 							};
@@ -8189,6 +8472,7 @@ var parsing_object_num=0;
 function parse_object(account,block,feed_load_flag,callback){
 	//feed_load_flag needed to solve recursive problem with event new feed_load
 	feed_load_flag=typeof feed_load_flag==='undefined'?false:feed_load_flag;
+	block=parseInt(block);
 	let current_parse=false;
 	for(let o in parsing_objects){
 		if(parsing_objects[o][0]==account){
@@ -8600,6 +8884,7 @@ function get_replies(object_account,object_block,callback){
 function get_object(account,block,feed_load_flag,callback){
 	//feed_load_flag needed to solve recursive problem with event new feed_load from parse_object
 	feed_load_flag=typeof feed_load_flag==='undefined'?false:feed_load_flag;
+	block=parseInt(block);
 	let result={};
 	let find=false;
 
@@ -13196,6 +13481,7 @@ function check_object_repost(account,block){
 	if(typeof block == 'undefined'){
 		return;
 	}
+	block=parseInt(block);
 	idb_get_id('reposts','object',[account,block],function(repost_id){
 		if(false!==repost_id){//repost entry exist
 			let current_link='viz://@'+account+'/'+block+'/';
@@ -13217,6 +13503,7 @@ function check_object_award(account,block){
 	if(typeof block == 'undefined'){
 		return;
 	}
+	block=parseInt(block);
 	let t=db.transaction(['awards'],'readonly');
 	let q=t.objectStore('awards');
 	let req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
@@ -13246,6 +13533,9 @@ function check_object_award(account,block){
 function render_object(user,object,type,preset_level){
 	type=typeof type==='undefined'?'default':type;
 	preset_level=typeof preset_level==='undefined'?level:preset_level;
+	if(typeof object.block !== 'undefined'){
+		object.block=parseInt(object.block);
+	}
 	let render='';
 	let text_first_link=false;
 	let profile={};
