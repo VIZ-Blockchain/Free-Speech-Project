@@ -38,3 +38,7 @@ Event for hiding an object from the activity feed. It does not require any addit
 ### Event type e (edit)
 
 Event to change object data. The attribute d (data) must be a Voice protocol-compatible object.
+
+### Event type a (add)
+
+Event to add data to the end of the specified object parameters. Example for `d` (data) attribute structure: `{t:" Extended object."}`. For the text type object it will be add string to the end of text context. For the publication type object it will be add string to the end of title context.
