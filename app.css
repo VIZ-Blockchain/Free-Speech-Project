@@ -1201,6 +1201,9 @@ body.dark .share-view a{
 	font-size:20px;
 	word-break:break-word;
 }
+.avatar img{
+	image-rendering:-webkit-optimize-contrast;
+}
 .fast-publish-wrapper{
 	position:relative;
 	border-bottom:1px solid rgba(204, 204, 221, 0.6);
