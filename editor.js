@@ -11,7 +11,7 @@ function editor_formatter_actions(e,target){
 	}
 	if($(target).hasClass('editor-reset-action')){
 		e.preventDefault();
-		let confirm_reset=confirm(ltmp_arr.editor_reset_caption+'?');
+		let confirm_reset=confirm(ltmp_editor.editor_reset_caption+'?');
 		if(confirm_reset){
 			$('.article-editor .editor-text').html('<h1><br></h1><p><br></p>');
 			$('.article-settings input[name="description"]').val('');
@@ -464,8 +464,8 @@ function editor_formatter_actions(e,target){
 				}
 			}
 			else{
-				let url=prompt(ltmp_arr.editor_link_prompt,ltmp_arr.editor_link_placeholder_prompt);
-				if(url && url!='' && url!=ltmp_arr.editor_link_placeholder_prompt){
+				let url=prompt(ltmp_editor.editor_link_prompt,ltmp_editor.editor_link_placeholder_prompt);
+				if(url && url!='' && url!=ltmp_editor.editor_link_placeholder_prompt){
 					$(target).addClass('positive');
 					document.execCommand('createlink',false,url);
 				}
@@ -480,8 +480,8 @@ function editor_formatter_actions(e,target){
 				if(typeof selection !== "undefined"){
 					if(typeof $(selection.focusNode).closest('.editor-text')[0] !== 'undefined'){
 						let selection_text=selection.toString();
-						let url=prompt(ltmp_arr.editor_image_prompt,ltmp_arr.editor_link_placeholder_prompt);
-						if(url && url!='' && url!=ltmp_arr.editor_link_placeholder_prompt){
+						let url=prompt(ltmp_editor.editor_image_prompt,ltmp_editor.editor_link_placeholder_prompt);
+						if(url && url!='' && url!=ltmp_editor.editor_link_placeholder_prompt){
 							let img_el=selection_insert_tag('img');
 							img_el.setAttribute('src',url);
 							img_el.setAttribute('alt',selection_text);
