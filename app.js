@@ -11947,7 +11947,7 @@ function highlight_links(text,is_html){
 
 	if(is_html){
 		let html_img_pattern = /<img(.[^>]*)>/gim;
-		let html_href_pattern = /<a (.[^>]*)>/gim;
+		let html_href_pattern = /<a (.[^>]*)>(.*)<\/a>/gim;
 		let html_arr=text.match(html_img_pattern);
 		if(null!=html_arr){
 			for(let i in html_arr){
