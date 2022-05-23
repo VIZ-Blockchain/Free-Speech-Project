@@ -702,6 +702,16 @@ body.dark .footer a{
 	top:-2px;
 	z-index:4;
 	color:rgba(180,180,180,1.0);
+	background:#fff;
+	box-shadow:0 0 10px 10px #fff;
+}
+body.midnight .header-link-icons{
+	background:#14202c;
+	box-shadow:0 0 10px 10px #14202c;
+}
+body.dark .header-link-icons{
+	background:#18191c;
+	box-shadow:0 0 10px 10px #18191c;
 }
 .header-link-icons i.icon{
 	cursor:pointer;
