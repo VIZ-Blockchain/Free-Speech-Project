@@ -12324,6 +12324,54 @@ function render_object(user,object,type,preset_level){
 				});
 			},500);
 		}
+		else
+		if(object.is_share && (typeof object.link !== 'undefined')){
+			let text='';
+			if(typeof object.data.d.text !== 'undefined'){
+				text=object.data.d.text;
+			}
+			else{
+				if(typeof object.data.d.t !== 'undefined'){
+					text=object.data.d.t;
+				}
+			}
+			text=escape_html(text);
+			let current_link='viz://@'+user.account+'/'+object.block+'/';
+			render=ltmp(ltmp_arr.object_type_text_share_link,{
+				author:'@'+user.account,
+				link:current_link,
+				account:user.account,
+				block:object.block,
+				previous:object.data.p,
+				is_reply:object.is_reply,
+				is_share:object.is_share,
+
+				events:(typeof object.events !== 'undefined')?object.events.join(','):'',
+
+				caption:'@'+user.account,
+				comment:ltmp(ltmp_arr.object_type_text_share_comment,{comment:text}),
+
+				class_addon:(1==object.nsfw?' nsfw-content':''),
+				actions:ltmp(ltmp_arr.object_type_text_actions,{
+					//link:link,
+					icon_reply:ltmp_global.icon_reply,
+					icon_repost:ltmp_global.icon_repost,
+					icon_award:ltmp_global.icon_gem,
+					icon_share:ltmp_global.icon_share,
+				}),
+			});
+			setTimeout(function(){
+				let text_share_link=link_to_http_gate(object.link);
+				if(false!==text_share_link){
+					load_preview_data(text_share_link,function(preview_data){
+						if(undefined===preview_data.meta){//show link preview anyway
+							preview_data.meta=false;
+						}
+						render_preview_data(user.account,object.block,preview_data);
+					});
+				}
+			},100);
+		}
 		else{
 			if('publication'==object_type){
 				//text=markdown_clear_code(object.data.d.m);//markdown
@@ -12501,6 +12549,60 @@ function render_object(user,object,type,preset_level){
 					}
 				});
 			},500);
+		}
+		else
+		if(object.is_share && (typeof object.link !== 'undefined')){
+			let text='';
+			if(typeof object.data.d.text !== 'undefined'){
+				text=object.data.d.text;
+			}
+			else{
+				if(typeof object.data.d.t !== 'undefined'){
+					text=object.data.d.t;
+				}
+			}
+			text=escape_html(text);
+			let current_link='viz://@'+user.account+'/'+object.block+'/';
+			render=ltmp(ltmp_arr.object_type_text_share_link_preview,{
+				author:'@'+user.account,
+				account:user.account,
+				block:object.block,
+
+				nickname:profile.nickname,
+				avatar:safe_avatar(profile.avatar),
+
+				previous:object.data.p,
+				is_reply:object.is_reply,
+				is_share:object.is_share,
+
+				text:text,
+
+				link:current_link,
+				events:(typeof object.events !== 'undefined')?object.events.join(','):'',
+
+				caption:'@'+user.account,
+
+				class_addon:(1==object.nsfw?' nsfw-content':''),
+				actions:ltmp(ltmp_arr.object_type_text_actions,{
+					//link:link,
+					icon_reply:ltmp_global.icon_reply,
+					icon_repost:ltmp_global.icon_repost,
+					icon_award:ltmp_global.icon_gem,
+					icon_share:ltmp_global.icon_share,
+				}),
+				timestamp:object.data.timestamp,
+			});
+			setTimeout(function(){
+				let text_share_link=link_to_http_gate(object.link);
+				if(false!==text_share_link){
+					load_preview_data(text_share_link,function(preview_data){
+						if(undefined===preview_data.meta){//show link preview anyway
+							preview_data.meta=false;
+						}
+						render_preview_data(user.account,object.block,preview_data);
+					});
+				}
+			},100);
 		}
 		else{
 			if('publication'==object_type){
@@ -12843,6 +12945,11 @@ function render_object(user,object,type,preset_level){
 				}
 			}
 			text_first_link=first_link(text);
+			if(object.is_share){
+				if(undefined !== typeof object.link){
+					text_first_link=object.link
+				}
+			}
 
 			text=escape_html(text);
 			text=fast_str_replace("\n",'<br>',text);
@@ -12928,6 +13035,13 @@ function render_object(user,object,type,preset_level){
 			text_first_link=link_to_http_gate(text_first_link);
 			if(false!==text_first_link){
 				load_preview_data(text_first_link,function(preview_data){
+					if(object.is_share){
+						if(undefined !== typeof object.link){
+							if(undefined===preview_data.meta){//show shared link preview anyway
+								preview_data.meta=false;
+							}
+						}
+					}
 					render_preview_data(user.account,object.block,preview_data);
 				});
 			}

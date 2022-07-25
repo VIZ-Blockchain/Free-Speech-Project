@@ -816,6 +816,24 @@ var ltmp_en_arr = {
 	object_type_text_share: `
 	<div class="share-view"><a tabindex="0" data-href="{link}">{caption}</a> shared:{comment}</div>
 	<div class="load-content"><div class="load-placeholder"><span class="loading-ring"></span></div></div>`,
+	object_type_text_share_link: `
+	<div class="object type-text-share-link" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
+		<div class="share-view"><a tabindex="0" data-href="viz://{author}/">{caption}</a> shared:{comment}</div>
+		<div class="preview-container{class_addon}"></div>
+		<div class="actions-view">{actions}</div>
+	</div>`,
+	object_type_text_share_link_preview: `
+		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
+			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
+			<div class="object-column">
+				<div class="author-view">
+					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
+				</div>
+				<div class="content-view{class_addon}" data-href="{link}">{text}</div>
+				<div class="preview-container{class_addon}"></div>
+				<div class="actions-view">{actions}</div>
+			</div>
+		</div>`,
 	object_type_text_share_comment: ` <div class="comment-view">{comment}</div>`,
 	object_type_text_preview: `
 		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
