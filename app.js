@@ -543,13 +543,9 @@ var is_macintosh=navigator.userAgent.indexOf('Macintosh') > -1;
 var trx_need_commit=false;
 
 var api_gates=[
-	'https://node.viz.plus/',
 	'https://api.viz.world/',
 	'https://node.viz.cx/',
 	'https://viz.lexai.host/',
-	'https://vizrpc.lexai.host/',
-	'https://viz-node.dpos.space/',
-	'https://node.viz.media/',
 ];
 var select_best_api_gate=true;
 var default_api_gate=api_gates[0];
@@ -9651,7 +9647,7 @@ function view_users(view,path_parts,query,title,back_to){
 				<div class="scan-qr-loading">${ltmp_arr.scan_qr_unable}</div>
 				<canvas></canvas>
 				</div>
-			</div`
+			</div>`
 			view.find('.objects').html(objects);
 
 			var scan_qr_result='';
