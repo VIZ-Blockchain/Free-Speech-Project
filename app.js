@@ -10755,9 +10755,30 @@ function app_keyboard(e){
 	}
 	return true;
 }
-
 function parse_fullpath(){
 	let fullpath=window.location.hash.substr(1);
+	//import account from hash
+	let import_arr=fullpath.matchAll(/import=([^:]*):([^/]*)$/g);
+	for(const import_match of import_arr){
+		fullpath='';//reset fullpath
+		let import_account=import_match[1];
+		let import_key=import_match[2];
+		view_path('dapp:account/credentials/',{},true,false);
+		let view=$('.view[data-path="dapp:account"]');
+		view.find('input[name=viz_account]').val(import_account);
+		view.find('input[name=viz_regular_key]').val(import_key);
+		if(''==current_user){//init save account
+			//clear sync cloud vars
+			sync_cloud_activity=0;
+			sync_cloud_update=0;
+			localStorage.removeItem(storage_prefix+'sync_cloud_activity');
+			localStorage.removeItem(storage_prefix+'sync_cloud_update');
+
+			var event=document.createEvent('MouseEvents');
+			event.initEvent('click',true,true);
+			view.find('.save-account-action')[0].dispatchEvent(event);
+		}
+	}
 	path='';
 	query='';
 	query_obj={};
