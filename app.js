@@ -44,6 +44,9 @@ if(null!=localStorage.getItem(storage_prefix+'sync_cloud_update')){
 }
 var preview_url='https://readdle.me/preview/';
 
+var account_pattern=/@[a-z0-9\-\.]*/g;
+var block_pattern=/\/([0-9]+)(\/|)$/g;
+
 var install_event;
 window.addEventListener('beforeinstallprompt',(e)=>{
 	e.preventDefault();
@@ -3210,15 +3213,13 @@ function execute_event(event_object,queue_num){
 												if(0==reply_link.indexOf('viz://')){
 													reply_link=reply_link.toLowerCase();
 													reply_link=escape_html(reply_link);
-													let pattern = /@[a-z0-9\-\.]*/g;
-													let reply_account=reply_link.match(pattern);
+													let reply_account=reply_link.match(account_pattern);
 													if(typeof reply_account[0] != 'undefined'){
-														let pattern_block = /\/([0-9]*)\//g;
-														let reply_block=reply_link.match(pattern_block);
-														if(typeof reply_block[1] != 'undefined'){
+														let reply_block=reply_link.match(block_pattern);
+														if(typeof reply_block[0] != 'undefined'){
 															reply=true;
 															parent_account=reply_account[0].substr(1);
-															parent_block=parseInt(fast_str_replace('/','',reply_block[1]));
+															parent_block=parseInt(fast_str_replace('/','',reply_block[0]));
 														}
 													}
 												}
@@ -3233,15 +3234,13 @@ function execute_event(event_object,queue_num){
 												if(0==share_link.indexOf('viz://')){
 													share_link=share_link.toLowerCase();
 													share_link=escape_html(share_link);
-													let pattern = /@[a-z0-9\-\.]*/g;
-													let share_account=share_link.match(pattern);
+													let share_account=share_link.match(account_pattern);
 													if(typeof share_account[0] != 'undefined'){
-														let pattern_block = /\/([0-9]*)\//g;
-														let share_block=share_link.match(pattern_block);
-														if(typeof share_block[1] != 'undefined'){
+														let share_block=share_link.match(block_pattern);
+														if(typeof share_block[0] != 'undefined'){
 															share=true;
 															parent_account=share_account[0].substr(1);
-															parent_block=parseInt(fast_str_replace('/','',share_block[1]));
+															parent_block=parseInt(fast_str_replace('/','',share_block[0]));
 														}
 													}
 												}
@@ -3638,14 +3637,12 @@ function fast_publish(publish_form){
 										if(0==share_link.indexOf('viz://')){
 											share_link=share_link.toLowerCase();
 											share_link=escape_html(share_link);
-											let pattern = /@[a-z0-9\-\.]*/g;
-											let share_account=share_link.match(pattern);
+											let share_account=share_link.match(account_pattern);
 											if(typeof share_account[0] != 'undefined'){
-												let pattern_block = /\/([0-9]*)\//g;
-												let share_block=share_link.match(pattern_block);
-												if(typeof share_block[1] != 'undefined'){
+												let share_block=share_link.match(block_pattern);
+												if(typeof share_block[0] != 'undefined'){
 													parent_account=share_account[0].substr(1);
-													parent_block=parseInt(fast_str_replace('/','',share_block[1]));
+													parent_block=parseInt(fast_str_replace('/','',share_block[0]));
 													idb_get_id('reposts','object',[parent_account,parent_block],function(repost_id){
 														if(false===repost_id){//create repost entry
 															let add_t=db.transaction(['reposts'],'readwrite');
@@ -3794,14 +3791,12 @@ function publish(view){
 			if(false!==edit){
 				let edit_account='';
 				let edit_block=0;
-				let pattern = /@[a-z0-9\-\.]*/g;
-				let link_account=edit.match(pattern);
+				let link_account=edit.match(account_pattern);
 				if(typeof link_account[0] != 'undefined'){
 					edit_account=link_account[0].substr(1);
-					let pattern_block = /\/([0-9]*)\//g;
-					let link_block=edit.match(pattern_block);
-					if(typeof link_block[1] != 'undefined'){
-						edit_block=parseInt(fast_str_replace('/','',link_block[1]));
+					let link_block=edit.match(block_pattern);
+					if(typeof link_block[0] != 'undefined'){
+						edit_block=parseInt(fast_str_replace('/','',link_block[0]));
 					}
 				}
 				new_object.e='e';//edit
@@ -6057,14 +6052,12 @@ function app_mouse(e){
 					let block=0;
 					link=link.toLowerCase();
 					link=escape_html(link);
-					let pattern = /@[a-z0-9\-\.]*/g;
-					let link_account=link.match(pattern);
+					let link_account=link.match(account_pattern);
 					if(typeof link_account[0] != 'undefined'){
 						account=link_account[0].substr(1);
-						let pattern_block = /\/([0-9]*)\//g;
-						let link_block=link.match(pattern_block);
-						if(typeof link_block[1] != 'undefined'){
-							block=parseInt(fast_str_replace('/','',link_block[1]));
+						let link_block=link.match(block_pattern);
+						if(typeof link_block[0] != 'undefined'){
+							block=parseInt(fast_str_replace('/','',link_block[0]));
 							award(account,block,function(result){
 								if(result){
 									setTimeout(function(){
@@ -6093,14 +6086,12 @@ function app_mouse(e){
 					object_link=fast_str_replace('viz://',whitelabel_copy_link,object_link);
 				}
 				if(pwa && navigator.share){
-					let pattern = /@[a-z0-9\-\.]*/g;
-					let share_account=original_object_link.match(pattern);
+					let share_account=original_object_link.match(account_pattern);
 					if(typeof share_account[0] != 'undefined'){
-						let pattern_block = /\/([0-9]*)\//g;
-						let share_block=original_object_link.match(pattern_block);
-						if(typeof share_block[1] != 'undefined'){
+						let share_block=original_object_link.match(block_pattern);
+						if(typeof share_block[0] != 'undefined'){
 							share_account=share_account[0].substr(1);
-							share_block=parseInt(fast_str_replace('/','',share_block[1]));
+							share_block=parseInt(fast_str_replace('/','',share_block[0]));
 							get_object(share_account,share_block,false,function(err,object_result){
 								let share_obj={};
 								let object_type='text';//by default
@@ -6283,14 +6274,12 @@ function app_mouse(e){
 								if(false!==edit){
 									let edit_account='';
 									let edit_block=0;
-									let pattern = /@[a-z0-9\-\.]*/g;
-									let link_account=edit.match(pattern);
+									let link_account=edit.match(account_pattern);
 									if(typeof link_account[0] != 'undefined'){
 										edit_account=link_account[0].substr(1);
-										let pattern_block = /\/([0-9]*)\//g;
-										let link_block=edit.match(pattern_block);
-										if(typeof link_block[1] != 'undefined'){
-											edit_block=parseInt(fast_str_replace('/','',link_block[1]));
+										let link_block=edit.match(block_pattern);
+										if(typeof link_block[0] != 'undefined'){
+											edit_block=parseInt(fast_str_replace('/','',link_block[0]));
 										}
 									}
 									new_object.e='e';//edit
@@ -7847,15 +7836,13 @@ function parse_object(account,block,feed_load_flag,callback){
 							if(0==reply_link.indexOf('viz://')){
 								reply_link=reply_link.toLowerCase();
 								reply_link=escape_html(reply_link);
-								let pattern = /@[a-z0-9\-\.]*/g;
-								let reply_account=reply_link.match(pattern);
+								let reply_account=reply_link.match(account_pattern);
 								if(typeof reply_account[0] != 'undefined'){
-									let pattern_block = /\/([0-9]*)\//g;
-									let reply_block=reply_link.match(pattern_block);
-									if(typeof reply_block[1] != 'undefined'){
+									let reply_block=reply_link.match(block_pattern);
+									if(typeof reply_block[0] != 'undefined'){
 										reply=true;
 										parent_account=reply_account[0].substr(1);
-										parent_block=parseInt(fast_str_replace('/','',reply_block[1]));
+										parent_block=parseInt(fast_str_replace('/','',reply_block[0]));
 									}
 								}
 							}
@@ -7870,15 +7857,13 @@ function parse_object(account,block,feed_load_flag,callback){
 							if(0==share_link.indexOf('viz://')){
 								share_link=share_link.toLowerCase();
 								share_link=escape_html(share_link);
-								let pattern = /@[a-z0-9\-\.]*/g;
-								let share_account=share_link.match(pattern);
+								let share_account=share_link.match(account_pattern);
 								if(typeof share_account[0] != 'undefined'){
-									let pattern_block = /\/([0-9]*)\//g;
-									let share_block=share_link.match(pattern_block);
-									if(typeof share_block[1] != 'undefined'){
+									let share_block=share_link.match(block_pattern);
+									if(typeof share_block[0] != 'undefined'){
 										share=true;
 										parent_account=share_account[0].substr(1);
-										parent_block=parseInt(fast_str_replace('/','',share_block[1]));
+										parent_block=parseInt(fast_str_replace('/','',share_block[0]));
 									}
 								}
 							}
@@ -8128,15 +8113,13 @@ function load_nested_replies(el){
 	if(0==link.indexOf('viz://')){
 		link=link.toLowerCase();
 		link=escape_html(link);
-		let pattern = /@[a-z0-9\-\.]*/g;
-		let link_account=link.match(pattern);
+		let link_account=link.match(account_pattern);
 		if(typeof link_account[0] != 'undefined'){
-			let pattern_block = /\/([0-9]*)\//g;
-			let link_block=link.match(pattern_block);
-			if(typeof link_block[1] != 'undefined'){
+			let link_block=link.match(block_pattern);
+			if(typeof link_block[0] != 'undefined'){
 				reply=true;
 				parent_account=link_account[0].substr(1);
-				parent_block=parseInt(fast_str_replace('/','',link_block[1]));
+				parent_block=parseInt(fast_str_replace('/','',link_block[0]));
 			}
 		}
 	}
@@ -11234,14 +11217,12 @@ function view_path(location,state,save_state,update){
 									let pinned_object_block=0;
 									pinned_link=pinned_link.toLowerCase();
 									pinned_link=escape_html(pinned_link);
-									let pattern = /@[a-z0-9\-\.]*/g;
-									let link_account=pinned_link.match(pattern);
+									let link_account=pinned_link.match(account_pattern);
 									if(typeof link_account[0] != 'undefined'){
 										pinned_object_account=link_account[0].substr(1);
-										let pattern_block = /\/([0-9]*)\//g;
-										let link_block=pinned_link.match(pattern_block);
-										if(typeof link_block[1] != 'undefined'){
-											pinned_object_block=parseInt(fast_str_replace('/','',link_block[1]));
+										let link_block=pinned_link.match(block_pattern);
+										if(typeof link_block[0] != 'undefined'){
+											pinned_object_block=parseInt(fast_str_replace('/','',link_block[0]));
 											//remove existed pinned objects and prepend new render
 											view.find('.objects .pinned-object').remove();
 											setTimeout(function(){
