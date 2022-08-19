@@ -13737,6 +13737,7 @@ function init_users(callback){
 		callback=function(){};
 	}
 	check_current_user(()=>{
+		render_session();
 		console.log('Startup: init_users check_current_user +');
 		check_whitelabel_account(()=>{
 			console.log('Startup: init_users check_whitelabel_account +');
