@@ -124,8 +124,26 @@ bc.onmessage=function(e){
 			counter_notifications.removeClass('show');
 		}
 		else{
-			counter_notifications.html(e.data.count);
+			counter_notifications.html(count);
 			counter_notifications.addClass('show');
+		}
+	}
+	if('feed_count'==e.data.type){
+		let view=$('.view[data-level="0"]');
+		let new_objects=view.find('.objects .new-objects');
+		let counter_feed=$('.counter-feed');
+		let items=e.data.count;
+
+		new_objects.data('items',items);
+		if(0==items){
+			new_objects.removeClass('show');
+			counter_feed.removeClass('show');
+		}
+		else{
+			new_objects.html(ltmp(ltmp_arr.feed_new_objects,{items:items}));
+			new_objects.addClass('show');
+			counter_feed.html(items);
+			counter_feed.addClass('show');
 		}
 	}
 };
@@ -8594,6 +8612,10 @@ function update_feed_result(result){
 				console.log('show counter_feed',items,mute_notifications);
 				counter_feed.html(items);
 				counter_feed.addClass('show');
+				if(typeof bc === 'object'){
+					//send to others tabs about new items in feed
+					bc.postMessage({type:'feed_count',pid:pid,count:count});
+				}
 			}
 		}
 	}
