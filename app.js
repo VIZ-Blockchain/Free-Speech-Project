@@ -7445,31 +7445,37 @@ function feed_load_more(result,account,next_offset,end_offset,limit,callback){
 						}
 						if('text'==object_type){
 							if(typeof object_result.data.d.text !== 'undefined'){
-								if(-1!=object_result.data.d.text.indexOf('@'+current_user)){//mention
-									let link='viz://@'+object_result.account+'/'+object_result.block+'/';
-									let reply_text=object_result.data.d.text;
-									add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
-									feed=true;
+								if(object_result.account!==current_user){
+									if(-1!=object_result.data.d.text.indexOf('@'+current_user)){//mention
+										let link='viz://@'+object_result.account+'/'+object_result.block+'/';
+										let reply_text=object_result.data.d.text;
+										add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
+										feed=true;
+									}
 								}
 							}
 							else{
 								if(typeof object_result.data.d.t !== 'undefined'){
-									if(-1!=object_result.data.d.t.indexOf('@'+current_user)){//mention
-										let link='viz://@'+object_result.account+'/'+object_result.block+'/';
-										let reply_text=object_result.data.d.t;
-										add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
-										feed=true;
+									if(object_result.account!==current_user){
+										if(-1!=object_result.data.d.t.indexOf('@'+current_user)){//mention
+											let link='viz://@'+object_result.account+'/'+object_result.block+'/';
+											let reply_text=object_result.data.d.t;
+											add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
+											feed=true;
+										}
 									}
 								}
 							}
 						}
 						if('publication'==object_type){
 							if(typeof object_result.data.d.m !== 'undefined'){
-								if(-1!=object_result.data.d.m.indexOf('@'+current_user)){//mention
-									let link='viz://@'+object_result.account+'/'+object_result.block+'/';
-									let reply_text=object_result.data.d.t;//title
-									add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
-									feed=true;
+								if(object_result.account!==current_user){
+									if(-1!=object_result.data.d.m.indexOf('@'+current_user)){//mention
+										let link='viz://@'+object_result.account+'/'+object_result.block+'/';
+										let reply_text=object_result.data.d.t;//title
+										add_notify(true,ltmp(ltmp_arr.notify_arr.new_mention,{account:object_result.account}),reply_text,link);
+										feed=true;
+									}
 								}
 							}
 						}
