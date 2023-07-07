@@ -4833,6 +4833,10 @@ function load_new_objects(indicator){
 			//reset feed counter
 			$('.counter-feed').removeClass('show');
 			$('.counter-feed').html('0');
+			if(typeof bc === 'object'){
+				//send to others tabs about cleared items counter in feed
+				bc.postMessage({type:'feed_count',pid:pid,count:0});
+			}
 
 			for(let i in new_objects){
 				let object=new_objects[i];
@@ -11144,6 +11148,10 @@ function view_path(location,state,save_state,update){
 			view.find('.objects').html(ltmp(ltmp_arr.new_objects+ltmp_arr.feed_loader_notice,{time:0}));
 			$('.counter-feed').removeClass('show');
 			$('.counter-feed').html('0');
+			if(typeof bc === 'object'){
+				//send to others tabs about cleared items counter in feed
+				bc.postMessage({type:'feed_count',pid:pid,count:0});
+			}
 		}
 		path='viz://';
 		level=0;
