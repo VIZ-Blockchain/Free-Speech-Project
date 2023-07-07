@@ -4,6 +4,138 @@ var events_protocol='VE';//Voice Events
 var storage_prefix='viz_voice_';
 var debug=false;
 var pwa=false;
+
+/* + start broadcast channel feature */
+//broadcast channel for communication between tabs
+//main pid is tab with focus
+//if no tabs with focus then last active tab is main
+//if no tabs with focus and no last active tab then largest pid is main
+//only main pid execute all timers (others tabs stop timers)
+//if main pid closed then next largest pid is main
+var bc=new BroadcastChannel('viz_voice');
+var pid=0;
+var max_pid=0;
+
+var set_pid_timer=false;
+var set_main_pid_timer=false;
+
+var pid_active=true;
+function check_pid_active(e){
+	pid_active=(e.type==='focus');
+	console.log('check_pid_active <<< ',pid_active);
+	if(pid_active){
+		if(!main_pid){//not was main_pid (need start timers)
+			start_timers();
+		}
+		main_pid=true;
+		if(0!=pid){//if pid==0 then we are not ready to send messages (will be main after set new pid)
+			console.log('MAIN PID !!!',pid);
+			bc.postMessage({type:'main',pid:pid});
+		}
+	}
+	else{
+		if(!main_pid){//extremely rare case when we are not main_pid and not last active
+			stop_timers();
+			main_pid=false;
+			bc.postMessage({type:'who_main',pid:pid});
+		}
+	}
+};
+window.onfocus=check_pid_active;
+window.onblur=check_pid_active;
+
+var main_pid=false;
+var need_find_main_pid=false;
+function set_main_pid(){
+	if(pid>max_pid){
+		if(!main_pid){//not was main_pid (need start timers)
+			start_timers();
+		}
+		main_pid=true;
+		console.log('MAIN PID !!!',pid);
+		bc.postMessage({type:'main',pid:pid});
+	}
+	else{
+		stop_timers();
+		main_pid=false;
+	}
+}
+function set_pid(){
+	pid=1+max_pid;
+	main_pid=true;
+	console.log('New PID >>> ',pid);
+	bc.postMessage({type:'pong',pid:pid});
+	bc.postMessage({type:'main',pid:pid});
+}
+window.onbeforeunload=function(e){
+	if(main_pid){//only for main_pid, need to find new main_pid
+		pid=0;
+		bc.postMessage({type:'who_main',pid:pid});
+	}
+};
+bc.onmessage=function(e){
+	console.log('BroadcastChannel >>> ',e.data);
+	if('who_main'==e.data.type){
+		need_find_main_pid=true;
+		max_pid=0;
+		if(0!=e.data.pid){
+			if(max_pid<e.data.pid){
+				max_pid=e.data.pid;
+			}
+		}
+		bc.postMessage({type:'pong',pid:pid});
+		clearTimeout(set_main_pid_timer);
+		set_main_pid_timer=setTimeout(function(){
+			set_main_pid();
+		},100);
+	}
+	if('ping'==e.data.type){
+		bc.postMessage({type:'pong',pid:pid});
+	}
+	if('main'==e.data.type){
+		main_pid=false;
+		stop_timers();
+		console.log('main_pid <<< ',main_pid);
+		console.log('new main_pid <<< ',e.data.pid);
+	}
+	if('pong'==e.data.type){
+		if(0!=e.data.pid){
+			if(max_pid<e.data.pid){
+				max_pid=e.data.pid;
+			}
+		}
+		if(0==pid){
+			clearTimeout(set_pid_timer);
+			set_pid_timer=setTimeout(function(){
+				set_pid();
+			},50);
+		}
+		if(need_find_main_pid){
+			clearTimeout(set_main_pid_timer);
+			set_main_pid_timer=setTimeout(function(){
+				set_main_pid();
+			},50);
+		}
+	}
+	if('notifications_count'==e.data.type){
+		let counter_notifications=$('.counter-notifications');
+		let count=e.data.count;
+		if(0==count){
+			counter_notifications.removeClass('show');
+		}
+		else{
+			counter_notifications.html(e.data.count);
+			counter_notifications.addClass('show');
+		}
+	}
+};
+//set pid after 100ms from last pong if no pong received
+set_pid_timer=setTimeout(function(){
+	set_pid();
+},100);
+bc.postMessage({type:'ping',pid:pid});
+/* - end broadcast channel feature */
+
 if(window.matchMedia('(display-mode: standalone)').matches){
 	pwa=true;
 }
@@ -1108,7 +1240,7 @@ function idb_error(e){
 		ltmp_arr.notify_arr.idb_error
 	);
 	*/
-	stop_timers();
+	stop_timers(true);
 	if(idb_init){
 		setTimeout(function(){
 			document.location.reload(true);
@@ -1185,7 +1317,7 @@ function increase_db_version(callback){
 function full_reset_db(){
 	idb.deleteDatabase(storage_prefix+'social_network');
 	db.close();
-	stop_timers();
+	stop_timers(true);
 	setTimeout(function(){
 		db=false;
 		load_db(()=>{
@@ -6892,7 +7024,7 @@ function import_cloud(data,callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
-	stop_timers();
+	stop_timers(true);
 	add_notify(false,
 		ltmp_arr.notify_arr.attention,
 		ltmp_arr.notify_arr.sync_import
@@ -8339,12 +8471,16 @@ function clear_users_cache(callback){
 	};
 }
 
-function stop_timers(){
-	for(let feed_account_timer in feed_load_timers){
-		clearTimeout(feed_load_timers[feed_account_timer]);
+function stop_timers(emergency_stop){
+	console.log('! stop_timers',emergency_stop);
+	emergency_stop=typeof emergency_stop==='undefined'?false:emergency_stop;
+	if(emergency_stop){
+		for(let feed_account_timer in feed_load_timers){
+			clearTimeout(feed_load_timers[feed_account_timer]);
+		}
+		clearTimeout(load_notifications_count_timer);
 	}
 	clearTimeout(update_feed_timer);
-	clearTimeout(load_notifications_count_timer);
 	clearTimeout(load_new_objects_timer);
 	clearTimeout(check_load_more_timer);
 	clearTimeout(clear_cache_timer);
@@ -8353,6 +8489,7 @@ function stop_timers(){
 }
 
 function start_timers(){
+	console.log('! start_timers');
 	clearTimeout(update_feed_timer);
 	update_feed();
 	clearTimeout(load_notifications_count_timer);
@@ -8382,6 +8519,10 @@ function load_notifications_count(){
 		else{
 			counter_notifications.html(count);
 			counter_notifications.addClass('show');
+		}
+		if(typeof bc === 'object'){
+			//send to others tabs about notifications count
+			bc.postMessage({type:'notifications_count',pid:pid,count:count});
 		}
 	};
 }
