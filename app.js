@@ -154,6 +154,42 @@ set_pid_timer=setTimeout(function(){
 bc.postMessage({type:'ping',pid:pid});
 /* - end broadcast channel feature */
 
+/* + start check img for complete status and naturalHeight */
+//many images can be deleted from web
+//we need check status of image and change src if image not loaded
+function check_images(view){
+	view=view||$(document);
+	view.find('img').each(function(){
+		let img=$(this);
+		if(img.hasClass('img-checked')){
+			return;
+		}
+		img.addClass('img-checked');
+		if(img[0].complete){
+			if(img[0].naturalHeight==0){
+				img.attr('src',ltmp_global.unavailable_image);
+				$(img).css('align-self','center');
+			}
+		}
+		else{
+			img.on('load',function(){
+				img.addClass('img-checked');
+				if(img[0].naturalHeight==0){
+					img.attr('src',ltmp_global.unavailable_image);
+					$(img).css('align-self','center');
+				}
+			});
+			img.on('error',function(){
+				img.addClass('img-checked');
+				img.attr('src',ltmp_global.unavailable_image);
+				$(img).css('align-self','center');
+			});
+		}
+
+	});
+}
+/* - end check img for complete status and naturalHeight */
+
 if(window.matchMedia('(display-mode: standalone)').matches){
 	pwa=true;
 }
@@ -4855,6 +4891,7 @@ function load_new_objects(indicator){
 				indicator.insertBefore(objects.find('.object:first-child')[0]);
 				indicator.removeClass('show');
 				indicator.removeClass('disabled');
+				check_images(objects);
 			},200);
 		}
 	};
@@ -9044,8 +9081,9 @@ function save_profile(view){
 	});
 }
 
-function after_view_render(){
+function after_view_render(view){
 	gate_connection_status();
+	check_images(view);
 }
 
 function view_manual(view,path_parts,query,title){
@@ -9100,7 +9138,7 @@ function view_manual(view,path_parts,query,title){
 
 	$('.loader').css('display','none');
 	view.css('display','block');
-	after_view_render();
+	after_view_render(view);
 }
 
 function view_search(view,path_parts,query,title){
@@ -9120,7 +9158,7 @@ function view_search(view,path_parts,query,title){
 	$('.loader').css('display','none');
 	view.css('display','block');
 	view.find('input[name=search]')[0].focus();
-	after_view_render();
+	after_view_render(view);
 }
 
 var notes_save_draft_timer=0;
@@ -9524,7 +9562,7 @@ function view_publish(view,path_parts,query,title){
 	view.find('.add-categories').html('');
 	$('.loader').css('display','none');
 	view.css('display','block');
-	after_view_render();
+	after_view_render(view);
 
 	get_user(current_user,true,function(err,result){
 		if(!err){
@@ -9591,7 +9629,7 @@ function view_notifications(view,path_parts,query,title){
 	$('.loader').css('display','none');
 	view.css('display','block');
 	check_load_more();
-	after_view_render();
+	after_view_render(view);
 }
 
 function uppercase_first_symbol(str){
@@ -9752,7 +9790,7 @@ function view_users(view,path_parts,query,title,back_to){
 			view.find('.header').html(header);
 			$('.loader').css('display','none');
 			view.css('display','block');
-			after_view_render();
+			after_view_render(view);
 		});
 	}
 	else{
@@ -9953,7 +9991,7 @@ function view_users(view,path_parts,query,title,back_to){
 					$('.loader').css('display','none');
 					view.css('display','block');
 					rebind_users_search();
-					after_view_render();
+					after_view_render(view);
 				}
 			};
 		}
@@ -9997,7 +10035,7 @@ function view_users(view,path_parts,query,title,back_to){
 					$('.loader').css('display','none');
 					view.css('display','block');
 					rebind_users_search();
-					after_view_render();
+					after_view_render(view);
 				}
 			};
 		}
@@ -10040,7 +10078,7 @@ function view_users(view,path_parts,query,title,back_to){
 					$('.loader').css('display','none');
 					view.css('display','block');
 					rebind_users_search();
-					after_view_render();
+					after_view_render(view);
 				}
 			};
 		}
@@ -10075,7 +10113,7 @@ function view_hashtags(view,path_parts,query,title,back_to){
 			$('.loader').css('display','none');
 			view.css('display','block');
 			check_load_more();
-			after_view_render();
+			after_view_render(view);
 		});
 	}
 	else{
@@ -10123,7 +10161,7 @@ function view_hashtags(view,path_parts,query,title,back_to){
 					}
 					$('.loader').css('display','none');
 					view.css('display','block');
-					after_view_render();
+					after_view_render(view);
 				}
 			};
 		}
@@ -10164,7 +10202,7 @@ function view_hashtags(view,path_parts,query,title,back_to){
 					}
 					$('.loader').css('display','none');
 					view.css('display','block');
-					after_view_render();
+					after_view_render(view);
 				}
 			};
 		}
@@ -10204,7 +10242,7 @@ function view_hashtags(view,path_parts,query,title,back_to){
 					}
 					$('.loader').css('display','none');
 					view.css('display','block');
-					after_view_render();
+					after_view_render(view);
 				}
 			};
 		}
@@ -10212,7 +10250,7 @@ function view_hashtags(view,path_parts,query,title,back_to){
 			view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.hashtags_not_found}));
 			$('.loader').css('display','none');
 			view.css('display','block');
-			after_view_render();
+			after_view_render(view);
 		}
 	}
 }
@@ -10231,7 +10269,7 @@ function view_awards(view,path_parts,query,title){
 	$('.loader').css('display','none');
 	view.css('display','block');
 	check_load_more();
-	after_view_render();
+	after_view_render(view);
 }
 
 function view_app_settings(view,path_parts,query,title){
@@ -10484,7 +10522,7 @@ function view_app_settings(view,path_parts,query,title){
 
 	$('.loader').css('display','none');
 	view.css('display','block');
-	after_view_render();
+	after_view_render(view);
 }
 
 var apply_theme_mode_timer=0;
@@ -10772,7 +10810,7 @@ function view_account(view,path_parts,query,title){
 	}
 	$('.loader').css('display','none');
 	view.css('display','block');
-	after_view_render();
+	after_view_render(view);
 }
 
 var audio_player_position=false;
@@ -11161,7 +11199,7 @@ function view_path(location,state,save_state,update){
 			$(window)[0].scrollTo({top:(typeof view.data('scroll')!=='undefined'?view.data('scroll'):0)});
 		}
 		check_load_more();
-		after_view_render();
+		after_view_render(view);
 	}
 	else{
 		if(0==path_parts[0].indexOf('dapp:')){//service page
@@ -11178,7 +11216,7 @@ function view_path(location,state,save_state,update){
 			else{
 				$('.loader').css('display','none');
 				view.css('display','block');
-				after_view_render();
+				after_view_render(view);
 			}
 		}
 		else{//dynamic page
@@ -11209,7 +11247,7 @@ function view_path(location,state,save_state,update){
 							view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.gateway_error}));
 							$('.loader').css('display','none');
 							view.css('display','block');
-							after_view_render();
+							after_view_render(view);
 						}
 						else{
 							let profile=JSON.parse(result.profile);
@@ -11445,7 +11483,7 @@ function view_path(location,state,save_state,update){
 								$(window)[0].scrollTo({top:(typeof view.data('scroll')!=='undefined'?view.data('scroll'):0)});
 							}
 							profile_filter_by_type();
-							after_view_render();
+							after_view_render(view);
 						}
 					});
 				}
@@ -11467,7 +11505,7 @@ function view_path(location,state,save_state,update){
 						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
 						$('.loader').css('display','none');
 						view.css('display','block');
-						after_view_render();
+						after_view_render(view);
 					}
 					else{
 						$('.loader').css('display','block');
@@ -11492,7 +11530,7 @@ function view_path(location,state,save_state,update){
 
 								$('.loader').css('display','none');
 								view.css('display','block');
-								after_view_render();
+								after_view_render(view);
 							}
 							else{
 								let profile=JSON.parse(user_result.profile);
@@ -11555,7 +11593,7 @@ function view_path(location,state,save_state,update){
 													}
 													$('.loader').css('display','none');
 													view.css('display','block');
-													after_view_render();
+													after_view_render(view);
 												}
 												else{
 													document.title=check_block+' - '+document.title;
@@ -11591,7 +11629,7 @@ function view_path(location,state,save_state,update){
 													$('.loader').css('display','none');
 													view.css('display','block');
 													check_load_more();
-													after_view_render();
+													after_view_render(view);
 												}
 											});
 										});
@@ -11610,7 +11648,7 @@ function view_path(location,state,save_state,update){
 												}
 												$('.loader').css('display','none');
 												view.css('display','block');
-												after_view_render();
+												after_view_render(view);
 											}
 											else{
 												document.title=check_block+' - '+document.title;
@@ -11646,7 +11684,7 @@ function view_path(location,state,save_state,update){
 												$('.loader').css('display','none');
 												view.css('display','block');
 												check_load_more();
-												after_view_render();
+												after_view_render(view);
 											}
 										});
 									}
@@ -11656,7 +11694,7 @@ function view_path(location,state,save_state,update){
 									view.css('display','block');
 									$(window)[0].scrollTo({top:(typeof view.data('scroll')!=='undefined'?view.data('scroll'):0)});
 									check_load_more();
-									after_view_render();
+									after_view_render(view);
 								}
 							}
 						});
@@ -11679,7 +11717,7 @@ function view_path(location,state,save_state,update){
 						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.data_not_found}));
 						$('.loader').css('display','none');
 						view.css('display','block');
-						after_view_render();
+						after_view_render(view);
 					}
 					else{
 						$('.loader').css('display','block');
@@ -11704,7 +11742,7 @@ function view_path(location,state,save_state,update){
 
 								$('.loader').css('display','none');
 								view.css('display','block');
-								after_view_render();
+								after_view_render(view);
 							}
 							else{
 								let profile=JSON.parse(user_result.profile);
@@ -11768,7 +11806,7 @@ function view_path(location,state,save_state,update){
 													}
 													$('.loader').css('display','none');
 													view.css('display','block');
-													after_view_render();
+													after_view_render(view);
 												}
 												else{
 													document.title=check_block+' - '+document.title;
@@ -11794,7 +11832,7 @@ function view_path(location,state,save_state,update){
 													$('.loader').css('display','none');
 													view.css('display','block');
 													check_load_more();
-													after_view_render();
+													after_view_render(view);
 												}
 											});
 										});
@@ -11812,7 +11850,7 @@ function view_path(location,state,save_state,update){
 												}
 												$('.loader').css('display','none');
 												view.css('display','block');
-												after_view_render();
+												after_view_render(view);
 											}
 											else{
 												document.title=check_block+' - '+document.title;
@@ -11838,7 +11876,7 @@ function view_path(location,state,save_state,update){
 												$('.loader').css('display','none');
 												view.css('display','block');
 												check_load_more();
-												after_view_render();
+												after_view_render(view);
 											}
 										});
 									}
@@ -11851,7 +11889,7 @@ function view_path(location,state,save_state,update){
 									view.css('display','block');
 									$(window)[0].scrollTo({top:(typeof view.data('scroll')!=='undefined'?view.data('scroll'):0)});
 									check_load_more();
-									after_view_render();
+									after_view_render(view);
 								}
 							}
 						});
@@ -11872,7 +11910,7 @@ function view_path(location,state,save_state,update){
 
 					$('.loader').css('display','none');
 					view.css('display','block');
-					after_view_render();
+					after_view_render(view);
 				}
 			}
 		}
@@ -13850,6 +13888,7 @@ function check_load_more(){
 		view=$('.view[data-path="'+path_parts[0]+'"]');
 	}
 	if(0!=view.length){
+		check_images(view);//check images in view before load more and after (because load_more_object try execute check_load_more recursive)
 		view.find('.loader-notice').each(function(){
 			let indicator=$(this);
 			if('1'!=indicator.data('busy')){
