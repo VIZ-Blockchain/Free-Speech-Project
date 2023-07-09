@@ -3171,7 +3171,7 @@ function execute_event(event_object,queue_num){
 										}
 										/* hashtags support */
 										//need replace url with hash to avoid conflict
-										let hashtags_text='';
+										let hashtags_text='none';
 										if('text'==type){
 											hashtags_text=result.data.d.text;
 											if(typeof result.data.d.text !== 'undefined'){
@@ -3456,7 +3456,7 @@ function execute_event(event_object,queue_num){
 
 										/* hashtags support */
 										//need replace url with hash to avoid conflict
-										let hashtags_text='';
+										let hashtags_text='none';
 										if('text'==type){
 											hashtags_text=event_object.data.d.text;
 											if(typeof event_object.data.d.text !== 'undefined'){
@@ -3870,7 +3870,6 @@ function fast_publish(publish_form){
 }
 
 function publish(view){
-	let publish_protocol=app_protocol;
 	let text=view.find('textarea[name="text"]').val();
 	text=text.trim();
 
@@ -3906,11 +3905,16 @@ function publish(view){
 		}
 	}
 
+	let publish_protocol=app_protocol;
 	let edit=false;
 	if(editable_object[2]){//edit mode, need to change custom protocol
 		edit=view.find('input[name="edit-event-object"]').val();
 		publish_protocol=events_protocol;
 		console.log('publish with edit:',edit);
+		if(''==edit){
+			edit=false;
+			publish_protocol=app_protocol;
+		}
 	}
 
 	viz.api.getAccount(current_user,publish_protocol,function(err,response){
@@ -3996,6 +4000,25 @@ function publish(view){
 					return;
 				}
 			}
+			//check passphrase and try encode
+			let passphrase=view.find('.encode-passphrase input[name="encode-passphrase"]').val();
+			if(''!=passphrase){
+				try{
+					new_object['d']['nt']=new_object['t'];//new type
+					new_object['d']=JSON.stringify(new_object);
+					new_object['d']=viz.aes.simpleEncoder(new_object['d'],passphrase);
+					new_object['t']='e';//encoded
+					new_object['p']=previous;
+				}
+				catch(e){
+					console.log(e);
+					view.find('.submit-button-ring').removeClass('show');
+					view.find('.error').html(ltmp_arr.encoding_error);
+					view.find('.button').removeClass('disabled');
+					return;
+				}
+			}
+
 			let object_json=JSON.stringify(new_object);
 
 			if(false===error){
@@ -5064,6 +5087,69 @@ function app_mouse(e){
 	}
 	else{//not editor buttons
 		if(!ignore){
+			if($(target).hasClass('decode-form')){
+				e.preventDefault();
+				if(!$(target).hasClass('activated')){
+					$(target).addClass('activated');
+					$(target).find('.decode-passphrase').addClass('show');
+					$(target).find('.decode-passphrase input')[0].focus();
+				}
+				return;
+			}
+			if($(target).hasClass('encode-object-action')){
+				e.preventDefault();
+				let input_el=$(target).closest('.decode-form').find('.decode-passphrase input');
+				let passphrase=input_el.val();
+				input_el.removeClass('negative');
+				if(''!=passphrase){
+					let object=$(target).closest('.object');
+					let object_preview=false;
+					if(object.hasClass('type-text-preview')){
+						object_preview=true;
+					}
+					let object_account=object.data('account');
+					let object_block=object.data('block');
+					decode_object(object_account,object_block,passphrase,function(result){
+						if(result){
+							get_user(object_account,false,function(err,object_user){
+								if(!err){
+									get_object(object_account,object_block,false,function(err,object_result){
+										if(!err){
+											let object_type='default';
+											if(object_preview){
+												object_type='preview';
+											}
+											new_render=render_object(object_user,object_result,object_type);
+											object.before(new_render);
+											object.remove();//remove old view
+											if(object_preview){
+												update_short_date();
+											}
+											else{
+												let link='viz://@'+object_account+'/'+object_block+'/';
+												set_date_view($('.object[data-link="'+link+'"] .date-view'),true);
+											}
+										}
+										else{
+											input_el.addClass('negative');
+										}
+									});
+								}
+								else{
+									input_el.addClass('negative');
+								}
+							});
+						}
+						else{
+							input_el.addClass('negative');
+						}
+					});
+				}
+				else{
+					input_el.addClass('negative');
+				}
+				return;
+			}
 			if($(target).hasClass('reg-button')){
 				e.preventDefault();
 				Object.assign(document.createElement('a'),{target:'_blank',href:ltmp_arr.reg_service_link}).click();
@@ -6366,6 +6452,10 @@ function app_mouse(e){
 						edit=$('.article-settings input[name="edit-event-object"]').val();
 						publish_protocol=events_protocol;
 						console.log('publish with edit:',edit);
+						if(''==edit){
+							edit=false;
+							publish_protocol=app_protocol;
+						}
 					}
 
 					let editor=$('.article-editor .editor-text')[0];
@@ -6484,6 +6574,25 @@ function app_mouse(e){
 										return;
 									}
 								}
+								//check passphrase and try encode
+								let passphrase=$('.article-settings .encode-passphrase input[name="encode-passphrase"]').val();
+								if(''!=passphrase){
+									try{
+										new_object['d']['nt']=new_object['t'];//new type
+										new_object['d']=JSON.stringify(new_object);
+										new_object['d']=viz.aes.simpleEncoder(new_object['d'],passphrase);
+										new_object['t']='e';//encoded
+										new_object['p']=previous;
+									}
+									catch(e){
+										console.log(e);
+										view.find('.error').html(ltmp_arr.encoding_error);
+										add_notify(false,'',ltmp_arr.encoding_error);
+										$(target).removeClass('disabled');
+										return;
+									}
+								}
+
 								let object_json=JSON.stringify(new_object);
 
 								viz.broadcast.custom(users[current_user].regular_key,[],[current_user],publish_protocol,object_json,function(err,result){
@@ -7783,8 +7892,8 @@ function feed_add(account,block,time,callback){
 	});
 }
 
-var object_types_list=['t','text','p','publication'];
-var object_types_arr={'t':'text','p':'publication'};
+var object_types_list=['t','text','p','publication','e','encoded'];
+var object_types_arr={'t':'text','p':'publication','e':'encoded'};
 
 //need to make queue for additional callbacks in similar parse events (if created)
 var parsing_events=[];
@@ -7821,7 +7930,11 @@ function parse_event(account,block,callback){
 				delete parsing_events[current_parse];
 			}
 			else{
-				viz.api.getOpsInBlock(block,false,function(err,response){
+				//old get_ops_in_block api work only with node plugin operation_history
+				//viz.api.getOpsInBlock(block,false,function(err,response){
+				//new get_block api work with standart database_api node plugin
+				viz.api.getBlock(block,function(err,response){
+					transactions=response.transactions;
 					console.log('parse_event get_ops_in_block',block,err,response);
 					if(err){
 						callback(true,1);//api error or block not found
@@ -7832,14 +7945,22 @@ function parse_event(account,block,callback){
 					}
 					else{
 						let item=false;
-						for(let i in response){
+						//for(let i in response){//old
+						for(let i in transactions){//new
 							let item_i=i;
-							if('custom'==response[item_i].op[0]){
-								if(events_protocol==response[item_i].op[1].id){
-									let op=response[item_i].op[1];
-									if(op.required_regular_auths.includes(account)){
-										item=JSON.parse(response[item_i].op[1].json);
-										item.timestamp=parse_date(response[item_i].timestamp) / 1000 | 0;
+							let trx=transactions[item_i];
+							//let object_timestamp=response[item_i].timestamp;//old
+							//let operation=trx['op'];//old
+							let object_timestamp=response.timestamp;
+							for(let operation_id in trx['operations']){//for new get_block api
+								let operation=trx['operations'][operation_id];
+								if('custom'==operation[0]){
+									if(events_protocol==operation[1].id){
+										let op=operation[1];
+										if(op.required_regular_auths.includes(account)){
+											item=JSON.parse(operation[1].json);
+											item.timestamp=parse_date(object_timestamp) / 1000 | 0;
+										}
 									}
 								}
 							}
@@ -7975,7 +8096,11 @@ function parse_object(account,block,feed_load_flag,callback){
 		//console.log('create new parsing_objects with i:',current_parse,parsing_objects[current_parse]);
 		parsing_object_num++;
 		let result={};
-		viz.api.getOpsInBlock(block,false,function(err,response){
+		//old get_ops_in_block api work only with node plugin operation_history
+		//viz.api.getOpsInBlock(block,false,function(err,response){
+		//new get_block api work with standart database_api node plugin
+		viz.api.getBlock(block,function(err,response){
+			transactions=response.transactions;
 			if(err){
 				callback(true,1);//api error or block not found
 				for(let parse_callback in parsing_objects[current_parse][2]){
@@ -7985,14 +8110,22 @@ function parse_object(account,block,feed_load_flag,callback){
 			}
 			else{
 				let item=false;
-				for(let i in response){
+				//for(let i in response){//old
+				for(let i in transactions){//new
 					let item_i=i;
-					if('custom'==response[item_i].op[0]){
-						if(app_protocol==response[item_i].op[1].id){
-							let op=response[item_i].op[1];
-							if(op.required_regular_auths.includes(account)){
-								item=JSON.parse(response[item_i].op[1].json);
-								item.timestamp=parse_date(response[item_i].timestamp) / 1000 | 0;
+					let trx=transactions[item_i];
+					//let object_timestamp=response[item_i].timestamp;//old
+					//let operation=trx['op'];//old
+					let object_timestamp=response.timestamp;
+					for(let operation_id in trx['operations']){//for new get_block api
+						let operation=trx['operations'][operation_id];
+						if('custom'==operation[0]){
+							if(app_protocol==operation[1].id){
+								let op=operation[1];
+								if(op.required_regular_auths.includes(account)){
+									item=JSON.parse(operation[1].json);
+									item.timestamp=parse_date(object_timestamp) / 1000 | 0;
+								}
 							}
 						}
 					}
@@ -8128,9 +8261,10 @@ function parse_object(account,block,feed_load_flag,callback){
 						}
 						else{
 							if(!find){//object not found in base
+								//benchmark for object execution
 								/* hashtags support */
 								//need replace url with hash to avoid conflict
-								let hashtags_text='';
+								let hashtags_text='none';
 								if('text'==type){
 									hashtags_text=obj.data.d.text;
 									if(typeof obj.data.d.text !== 'undefined'){
@@ -8354,6 +8488,255 @@ function get_replies(object_account,object_block,callback){
 			else{
 				console.log('no replies was found');
 				callback(true,1);
+			}
+		}
+	};
+}
+
+function decode_object(account,block,passphrase,callback){
+	block=parseInt(block);
+	let t,q,req;
+	t=db.transaction(['objects'],'readwrite');
+	q=t.objectStore('objects');
+	req=q.index('object').openCursor(IDBKeyRange.only([account,block]),'next');
+
+	let find=false;
+	let update_context=false;//if object need update context
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let result=cur.value;
+			if('e'==result.data.t){//encoded
+
+			}
+			let new_object_data=false;
+			try{
+				new_object_data=viz.aes.simpleDecoder(result.data.d,passphrase);
+				console.log('succefull decode object',account,block,new_object_data);
+				if(false!==new_object_data){
+					new_object_data=JSON.parse(new_object_data);
+					delete result.data.t;
+					if(typeof new_object_data.d !== 'undefined'){
+						result.data.d=new_object_data.d;
+						result.data.d.decoded=1;
+						if(typeof new_object_data.d.nt !== 'undefined'){
+							result.data.t=new_object_data.d.nt;//new object type
+						}
+					}
+				}
+				update_context=true;
+			}
+			catch(e){
+				console.log('unable decode object',account,block,e);
+			}
+
+			if(update_context){
+				//need to update share/reply statuses, hashtags, nsfw
+				let reply=false;
+				let share=false;
+				let share_link=false;
+				let nsfw=result.nsfw;
+
+				let parent_account=false;
+				let parent_block=false;
+
+				let type='text';//check type
+				if(typeof result.data.t !== 'undefined'){
+					if(-1!=object_types_list.indexOf(result.data.t)){
+						if(typeof object_types_arr[result.data.t] !== 'undefined'){
+							type=object_types_arr[result.data.t];
+						}
+						else{
+							type=result.data.t;
+						}
+					}
+				}
+				if('text'==type){
+					if(typeof result.data.d.r !== 'undefined'){
+						let reply_link=result.data.d.r;
+						if(typeof reply_link !== 'string'){
+							reply_link='';
+						}
+						//internal
+						if(0==reply_link.indexOf('viz://')){
+							reply_link=reply_link.toLowerCase();
+							reply_link=escape_html(reply_link);
+							let reply_account=reply_link.match(account_pattern);
+							if(typeof reply_account[0] != 'undefined'){
+								let reply_block=reply_link.match(block_pattern);
+								if(typeof reply_block[0] != 'undefined'){
+									reply=true;
+									parent_account=reply_account[0].substr(1);
+									parent_block=parseInt(fast_str_replace('/','',reply_block[0]));
+								}
+							}
+						}
+					}
+					else
+					if(typeof result.data.d.s != 'undefined'){
+						share_link=result.data.d.s;
+						if(typeof share_link !== 'string'){
+							share_link='';
+						}
+						//internal
+						if(0==share_link.indexOf('viz://')){
+							share_link=share_link.toLowerCase();
+							share_link=escape_html(share_link);
+							let share_account=share_link.match(account_pattern);
+							if(typeof share_account[0] != 'undefined'){
+								let share_block=share_link.match(block_pattern);
+								if(typeof share_block[0] != 'undefined'){
+									share=true;
+									parent_account=share_account[0].substr(1);
+									parent_block=parseInt(fast_str_replace('/','',share_block[0]));
+								}
+							}
+						}
+						//external
+						if((0==share_link.indexOf('http://'))||(0==share_link.indexOf('https://'))){
+							share=true;
+						}
+					}
+				}
+				if('text'==type){
+					if(reply){
+						result.is_reply=1;
+						result.parent_account=parent_account;
+						result.parent_block=parent_block;
+					}
+					if(share){
+						result.is_share=1;
+						if(false!==parent_account){
+							result.parent_account=parent_account;
+							result.parent_block=parent_block;
+						}
+						else{
+							result.link=share_link;
+						}
+					}
+				}
+
+				/* hashtags support */
+				//need replace url with hash to avoid conflict
+				let hashtags_text='none';
+				if('text'==type){
+					hashtags_text=result.data.d.text;
+					if(typeof result.data.d.text !== 'undefined'){
+						hashtags_text=result.data.d.text;
+					}
+					else{
+						if(typeof result.data.d.t !== 'undefined'){
+							hashtags_text=result.data.d.t;
+						}
+					}
+				}
+				if('publication'==type){
+					hashtags_text=markdown_clear_code(result.data.d.m);//markdown
+					hashtags_text=markdown_decode_text(hashtags_text);
+					let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+					hashtags_text=hashtags_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
+				}
+				let summary_links=[];
+				//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
+				//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
+				let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
+				let http_protocol_links=hashtags_text.match(http_protocol_pattern);
+				if(null!=http_protocol_links){
+					summary_links=summary_links.concat(http_protocol_links);
+				}
+
+				summary_links=array_unique(summary_links);
+				summary_links.sort(sort_by_length_desc);
+
+				for(let i in summary_links){
+					hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
+				}
+
+				let hashtags_pattern = /(|\b)#([^:;@#!.,?\r\n\t <>()\[\]]+)(|\b)/g;;
+				let hashtags_links=hashtags_text.match(hashtags_pattern);
+				if(null!=hashtags_links){
+					hashtags_links=hashtags_links.map(function(value){
+						return value.toLowerCase();
+					});
+					hashtags_links=array_unique(hashtags_links);
+
+					console.log('execute event object hashtags',hashtags_links,result.account,result.block);
+					clear_hashtag_object(result.account,result.block,function(){
+						console.log('execute event after clear_hashtag_object object hashtags',hashtags_links);
+						for(let i in hashtags_links){
+							let hashtag=hashtags_links[i].substr(1);
+							hashtag=hashtag.trim();
+							if(''!=hashtag){
+								idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+									if(false===hashtag_id){
+										let hashtag_info,hashtag_add_t,hashtag_add_q,hashtag_add_req;
+										hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
+										hashtag_add_t=db.transaction(['hashtags'],'readwrite');
+										hashtag_add_q=hashtag_add_t.objectStore('hashtags');
+										hashtag_add_req=hashtag_add_q.add(hashtag_info);
+										if(trx_need_commit){
+											hashtag_add_t.commit();
+										}
+										hashtag_add_req.onsuccess=function(e){
+											idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+												if(false!==hashtag_id){
+													add_hashtag_object(hashtag_id,result.account,result.block);
+												}
+											});
+										}
+									}
+									else{
+										add_hashtag_object(hashtag_id,result.account,result.block);
+									}
+								});
+							}
+						}
+					});
+				}
+
+				/* check nsfw hashtags in object texts */
+				let nsfw_text='';
+				if('text'==type){
+					if(typeof result.data.d.text !== 'undefined'){
+						nsfw_text=result.data.d.text;
+					}
+					else{
+						if(typeof result.data.d.t !== 'undefined'){
+							nsfw_text=result.data.d.t;
+						}
+					}
+				}
+				if('publication'==type){
+					nsfw_text=markdown_clear_code(result.data.d.m);//markdown
+					nsfw_text=markdown_decode_text(nsfw_text);
+					let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+					nsfw_text=nsfw_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
+				}
+				for(let i in settings.nsfw_hashtags){
+					let search_hashtag='#'+settings.nsfw_hashtags[i];
+					if(-1!=nsfw_text.indexOf(search_hashtag)){
+						nsfw=1;
+					}
+				}
+				if(nsfw!=result.nsfw){
+					result.nsfw=nsfw;
+				}
+				cur.update(result);
+			}
+			find=true;
+			cur.continue();
+		}
+		else{
+			if(find){
+				if(update_context){
+					callback(true);
+				}
+				else{
+					callback(false);
+				}
+			}
+			else{
+				callback(false);
 			}
 		}
 	};
@@ -12460,6 +12843,13 @@ function render_object(user,object,type,preset_level){
 				more_view=ltmp(ltmp_arr.more_column,{account:user.account,block:object.block});
 			}
 
+			let decoded_view='';
+			if(typeof object.data.d.decoded !== 'undefined'){
+				if(1==object.data.d.decoded){
+					decoded_view=ltmp(ltmp_arr.decoded_object);
+				}
+			}
+
 			//text=markdown_clear_code(object.data.d.m);//markdown
 			let image_part=(typeof object.data.d.i !== 'undefined');
 			let strikethrough_pattern=/\~\~(.*?)\~\~/gm;
@@ -12481,6 +12871,7 @@ function render_object(user,object,type,preset_level){
 				timestamp:object.data.timestamp,
 				context:publication_html,
 				more:more_view,
+				decoded:decoded_view,
 			});
 		}
 	}
@@ -12590,6 +12981,32 @@ function render_object(user,object,type,preset_level){
 			},100);
 		}
 		else{
+			if('encoded'==object_type){
+				let more_view='';
+				if(user.account==current_user){
+					more_view=ltmp(ltmp_arr.more_column,{account:user.account,block:object.block});
+				}
+
+				render=ltmp(ltmp_arr.object_type_encoded,{
+					author:'@'+user.account,
+					account:user.account,
+					block:object.block,
+					nickname:profile.nickname,
+					avatar:safe_avatar(profile.avatar),
+					link:'viz://@'+user.account+'/'+object.block+'/',
+					events:(typeof object.events !== 'undefined')?object.events.join(','):'',
+					timestamp:object.data.timestamp,
+					actions:ltmp(ltmp_arr.object_type_text_actions,{
+						//link:link,
+						icon_reply:ltmp_global.icon_reply,
+						icon_repost:ltmp_global.icon_repost,
+						icon_award:ltmp_global.icon_gem,
+						icon_share:ltmp_global.icon_share,
+					}),
+					more:more_view,
+				});
+				return render;
+			}
 			if('publication'==object_type){
 				//text=markdown_clear_code(object.data.d.m);//markdown
 				let result='';
@@ -12614,6 +13031,13 @@ function render_object(user,object,type,preset_level){
 					more_view=ltmp(ltmp_arr.more_column,{account:user.account,block:object.block});
 				}
 
+				let decoded_view='';
+				if(typeof object.data.d.decoded !== 'undefined'){
+					if(1==object.data.d.decoded){
+						decoded_view=ltmp(ltmp_arr.decoded_object);
+					}
+				}
+
 				render=ltmp(ltmp_arr.object_type_publication,{
 					author:'@'+user.account,
 					link:'viz://@'+user.account+'/'+object.block+'/',
@@ -12632,6 +13056,7 @@ function render_object(user,object,type,preset_level){
 					addon:wrapper_addon,
 					class_addon:(1==object.nsfw?' nsfw-content':''),
 					more:more_view,
+					decoded:decoded_view,
 				});
 			}
 			if('text'==object_type){
@@ -12687,6 +13112,13 @@ function render_object(user,object,type,preset_level){
 				if(user.account==current_user){
 					more_view=ltmp(ltmp_arr.more_column,{account:user.account,block:object.block});
 				}
+				let decoded_view='';
+				if(typeof object.data.d.decoded !== 'undefined'){
+					if(1==object.data.d.decoded){
+						decoded_view=ltmp(ltmp_arr.decoded_object);
+					}
+				}
+				console.log(decoded_view);
 
 				render=ltmp(ltmp_arr.object_type_text,{
 					reply:reply,
@@ -12706,6 +13138,7 @@ function render_object(user,object,type,preset_level){
 					timestamp:object.data.timestamp,
 					class_addon:(1==object.nsfw?' nsfw-content':''),
 					more:more_view,
+					decoded:decoded_view,
 				});
 			}
 		}
@@ -12822,6 +13255,20 @@ function render_object(user,object,type,preset_level){
 			},100);
 		}
 		else{
+			if('encoded'==object_type){
+				render=ltmp(ltmp_arr.object_type_encoded_preview,{
+					author:'@'+user.account,
+					account:user.account,
+					block:object.block,
+					nickname:profile.nickname,
+					avatar:safe_avatar(profile.avatar),
+					link:'viz://@'+user.account+'/'+object.block+'/',
+					events:(typeof object.events !== 'undefined')?object.events.join(','):'',
+					previous:object.data.p,
+					timestamp:object.data.timestamp,
+				});
+				return render;
+			}
 			if('publication'==object_type){
 				//text=markdown_clear_code(object.data.d.m);//markdown
 				let result='';

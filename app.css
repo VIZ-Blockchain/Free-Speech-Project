@@ -138,6 +138,14 @@ i.icon.scroll svg{
 	margin-top:3px;
 	margin-left:1px;
 }
+i.icon.locked svg{
+	margin-top:4px;
+	margin-left:-1px;
+}
+i.icon.unlocked svg{
+	margin-top:4px;
+	margin-left:-1px;
+}
 .more-column a{
 	color: rgba(100,100,100,0.7);
 }
@@ -1211,6 +1219,65 @@ body.dark .share-view a{
 	font-size:20px;
 	word-break:break-word;
 }
+.decode-form{
+	display:block;
+	border-radius:5px;
+	margin:10px 0;
+	font-size:16px;
+	word-break:break-word;
+	line-height:1.4em;
+	padding:1em;
+	border:1px solid rgba(255,200,120,0.9);
+	background:rgba(255,240,210,0.9);
+	color:#e3792f;
+	text-align:center;
+	cursor:pointer;
+}
+body.dark .decode-form, body.midnight .decode-form{
+	border:1px solid rgba(110,200,255,0.9);
+	background:rgba(190,235,250,0.9);
+	color:#0952ab;
+}
+.decode-form.activated{
+	cursor:default;
+}
+.decode-form .notice-caption{
+	font-size:20px;
+	margin:5px 0;
+	pointer-events:none;
+}
+.decode-form .notice-description{
+	font-size:14px;
+	margin-bottom:10px;
+	pointer-events:none;
+}
+.decode-form .decode-passphrase{
+	display:none;
+}
+.decode-form .decode-passphrase.show{
+	display:block;
+}
+.decode-form .decode-passphrase input{
+	line-height:20px;
+	padding:5px 10px;
+	border:1px solid rgba(165, 180, 192, 0.7);
+	border-radius:15px;
+	margin:5px 0;
+	text-align:center;
+}
+.decode-form .decode-passphrase input.negative{
+	color:#be0a0a;
+	border:1px solid #be0a0a;
+}
+.decoded-column a{
+	color: rgba(100,100,100,0.7);
+}
+.decoded-column a:hover{
+	color: #1c98e5;
+}
+body.dark .decoded-column a:hover{
+	color:#3daff5;
+}
 .avatar img{
 	image-rendering:-webkit-optimize-contrast;
 }
@@ -1531,6 +1598,12 @@ body.dark .object.type-text .content-view a{
 }
 .button:hover{
 	background:#1a83c4;
+}
+.button.small{
+	border-radius:15px;
+	line-height:12px;
+	padding:12px 15px;
+	font-size:16px;
 }
 .neutral-button{
 	background:#fff;
@@ -2443,9 +2516,29 @@ body.dark .menu-notice, body.midnight .menu-notice{
 .edit-event-addon{
 	display:none;
 }
-.beneficiaries-list{}
+.encode-passphrase{
+	padding-bottom:15px;
+	border-bottom:1px solid rgba(204, 204, 221, 0.5);
+	margin-bottom:15px;
+}
+.encode-passphrase-caption{
+	font-size:20px;
+}
+.encode-passphrase-description{
+	font-size:16px;
+	margin:10px 0;
+}
+.beneficiaries-list{
+	padding-bottom:15px;
+	border-bottom:1px solid rgba(204, 204, 221, 0.5);
+	margin-bottom:15px;
+}
 .beneficiaries-list-caption{
-	font-size:22px;
+	font-size:20px;
+}
+.beneficiaries-list-description{
+	font-size:16px;
+	margin:10px 0;
 }
 .beneficiaries-item{
 	margin:5px 0;

@@ -259,12 +259,21 @@ var ltmp_en_arr = {
 	open_publish_addons: `&#x25B8; Additional settings`,
 	close_publish_addons: `&#x25BE; Additional settings`,
 	publish_addons: `
+	<div class="encode-passphrase">
+		<div class="encode-passphrase-caption">%%encoding_caption%%</div>
+		<div class="encode-passphrase-description">%%encoding_description%%</div>
+		%%encoding_form%%
+	</div>
 	<div class="beneficiaries-list">
 		<div class="beneficiaries-list-caption">%%beneficiaries_list_caption%%</div>
 		<div class="beneficiaries-list-desription">%%beneficiaries_list_description%%</div>
 		%%beneficiaries_list_add%%
 	</div>`,
-
+	encoding_caption: `Encode object`,
+	encoding_description: `Type the password that will be used to encrypt the object.<br>
+	Any user will be able to decrypt the object if he knows the password.<br>
+	If the password is not specified, the object will be available to everyone.`,
+	encoding_form: `<input type="text" name="encode-passphrase" class="round" placeholder="Key passphrase..." value="">`,
 	beneficiaries_list_caption: `Beneficiaries`,
 	beneficiaries_list_description: `Specify the users who will receive some of the rewards.`,
 	beneficiaries_list_add: `%%beneficiaries_item%% %%beneficiaries_add_item%%`,
@@ -551,7 +560,7 @@ var ltmp_en_arr = {
 		<div class="user-item-avatar">{avatar}</div>
 		<a class="user-item-nickname" tabindex="0" data-href="viz://@{account}/">{nickname}</a>
 		<a class="user-item-account" tabindex="0" data-href="viz://@{account}/">{account}</a>
-		<div class="user-item-manage"><a tabindex="0" data-href="dapp:users/{account}" title="Управление">{icon}</a></div>
+		<div class="user-item-manage"><a tabindex="0" data-href="dapp:users/{account}" title="Manage">{icon}</a></div>
 	</div>`,
 	users_objects_item_avatar: `<div class="avatar"><div class="shadow" data-href="viz://@{account}/"></div><img src="{avatar}"></div>`,
 
@@ -667,6 +676,7 @@ var ltmp_en_arr = {
 	hashtags_not_found: 'Tag not found',
 	users_not_found: 'No users found',
 	event_not_found: 'Requested event not found',
+	encoding_error: 'Error encoding object data',
 
 	view: `
 		<div class="view" data-level="{level}" data-path="{path}" data-query="{query}">
@@ -750,6 +760,7 @@ var ltmp_en_arr = {
 			<div class="author-view">
 				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+				{decoded}
 				{more}
 			</div>
 			<div class="object-column">
@@ -763,6 +774,7 @@ var ltmp_en_arr = {
 			<div class="author-view">
 				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+				{decoded}
 				{more}
 			</div>
 			<div class="object-column">
@@ -784,14 +796,48 @@ var ltmp_en_arr = {
 		</div>`,
 	object_hidden: `
 		<div class="object object-hidden" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}"></div>`,
+	object_type_encoded: `
+	<div class="object type-text" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}">
+		<div class="author-view">
+			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
+			<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+			{more}
+		</div>
+		<div class="object-column">
+			<div class="decode-form" data-href="{link}">%%decode_form%%</div>
+			<div class="date-view" data-timestamp="{timestamp}">&hellip;</div>
+			<div class="actions-view">{actions}</div>
+		</div>
+	</div>`,
+	object_type_encoded_preview: `
+		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
+		<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
+		<div class="object-column">
+			<div class="author-view">
+				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
+			</div>
+			<div class="decode-form" data-href="{link}">%%decode_form%%</div>
+			<div class="content-view{class_addon}" data-href="{link}">{text}</div>
+		</div>
+	</div>`,
+	decode_form: `
+		<div class="notice-caption">%%icon_locked%% Object is encoded</div>
+		<div class="notice-description">If you know the passphrase you can decode it.<br>All keys will be stored to specific account.<br>Press on me.</div>
+		<div class="decode-passphrase">
+		<input type="password" name="passphrase" placeholder="Key passphrase is..."><br>
+		<a class="button small encode-object-action">Decode</a>
+		</div>
+		`,
 	more_column: `<div class="more-column"><a tabindex="0" class="more-action" title="Available actions" data-account="{account}" data-block="{block}">%%icon_more%%</a></div>`,
 	more_actions: `<a class="edit-more-action">Edit</a><a class="hide-more-action">Hide</a><a class="cancel-more-action">Cancel</a>`,
 	confirm_hide_event: `Are you sure that you want to hide this entry?`,
+	decoded_object: `<div class="decoded-column"><a tabindex="0" title="Object was decoded">%%icon_unlocked%%</a></div>`,
 	object_type_text: `
 		<div class="object type-text" data-link="{link}" data-events="{events}">
 			<div class="author-view">
 				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+				{decoded}
 				{more}
 			</div>
 			<div class="object-column">
