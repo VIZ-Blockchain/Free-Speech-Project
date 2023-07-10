@@ -528,6 +528,11 @@ var ltmp_ru_arr = {
 	hashtags_ignored_tab: 'Игнорируемые',
 	hashtags_objects_header: `<div class="hashtag-item nohover"><div class="hashtag-item-num">№</div><div class="hashtag-item-caption">Тэг</div><div class="hashtag-item-count">Количество</div></div>`,
 	hashtags_objects_item: `<div class="hashtag-item" data-hashtag-id="{id}"><div class="hashtag-item-num">{num}</div><div class="hashtag-item-caption"><a data-href="dapp:hashtags/{tag}">#{tag}{addon}</a></div><div class="hashtag-item-count">{count}</div></div>`,
+	passphrases_objects_item: `
+	<div class="passphrase-item" data-passphrase-id="{id}">
+		<div class="passphrase-item-caption">{passphrase}</div>
+		<div class="passphrase-item-manage"><a class="passphrase-remove-action" tabindex="0" title="Удалить">%%icon_close%%</div>
+	</div>`,
 
 	found_results: 'Найдено: {count}',
 
@@ -543,6 +548,10 @@ var ltmp_ru_arr = {
 	users_qr_code_tab: 'Предоставить',
 	users_scan_qr_code_tab: 'Сканировать',
 	users_scan_retrieving: 'Получаем видео...',
+	users_user_settings_tab: 'Настройки',
+	users_user_passphrases_tab: 'Пароли для расшифровки',
+	users_user_passphrases_description: '<p>Здесь вы найдете все пароли, которыми вы успешно расшифровывали объекты выбранного пользователя.</p>',
+	passphrases_not_found: 'Паролей не найдено',
 	scan_qr_unable: 'Не получается получить доступ к видео потоку (убедитесь, что у вас включена камера)',
 	scan_qr_error: '<div class="scan-qr-error-icon">{icon}</div><div class="scan-qr-error-text">{text}</div>',
 	scan_qr_error_browser: 'Браузер не поддерживает захват видео',
@@ -825,7 +834,7 @@ var ltmp_ru_arr = {
 		<div class="notice-description">Если вы знаете кодовую фразу вы можете расшифровать его.<br>Все ключи будут храниться к конкретному аккаунту.<br>Нажми на мне.</div>
 		<div class="decode-passphrase">
 		<input type="password" name="passphrase" placeholder="Кодовая фраза..."><br>
-		<a class="button small encode-object-action">Декодировать</a>
+		<a class="button small decode-object-action">Декодировать</a>
 		</div>
 		`,
 	more_column: `<div class="more-column"><a tabindex="0" class="more-action" title="Доступные действия" data-account="{account}" data-block="{block}">%%icon_more%%</a></div>`,

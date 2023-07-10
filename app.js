@@ -1316,7 +1316,7 @@ var idb_init=false;
 var db;
 var db_req;
 var db_version=1;
-var global_db_version=9;
+var global_db_version=10;
 var need_update_db_version=false;
 var local_global_db_version=parseInt(localStorage.getItem(storage_prefix+'global_db_version'));
 if(isNaN(local_global_db_version)){
@@ -1545,6 +1545,16 @@ function load_db(callback){
 			//new index for events cache
 		}
 		console.log('Events storage upgraded!');
+
+		if(!db.objectStoreNames.contains('passphrases')){//store passphrases data
+			items_table=db.createObjectStore('passphrases',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('account','account',{unique:false});//one account can handle multiple passphrases
+			items_table.createIndex('time','time',{unique:false});//first usage time
+		}
+		else{
+			//new index for passphrases
+		}
+		console.log('Passphrases storage upgraded');
 
 		if(trx_need_commit){
 			update_trx.commit();
@@ -5087,6 +5097,17 @@ function app_mouse(e){
 	}
 	else{//not editor buttons
 		if(!ignore){
+			if($(target).hasClass('passphrase-remove-action')){
+				e.preventDefault();
+				let passphrase_id=$(target).closest('.passphrase-item').data('passphrase-id');
+				let t=db.transaction(['passphrases'],'readwrite');
+				let q=t.objectStore('passphrases');
+				let req=q.delete(passphrase_id);
+				req.onsuccess=function(event){
+					$(target).closest('.passphrase-item').remove();
+				};
+				return;
+			}
 			if($(target).hasClass('decode-form')){
 				e.preventDefault();
 				if(!$(target).hasClass('activated')){
@@ -5096,7 +5117,7 @@ function app_mouse(e){
 				}
 				return;
 			}
-			if($(target).hasClass('encode-object-action')){
+			if($(target).hasClass('decode-object-action')){
 				e.preventDefault();
 				let input_el=$(target).closest('.decode-form').find('.decode-passphrase input');
 				let passphrase=input_el.val();
@@ -8370,6 +8391,58 @@ function parse_object(account,block,feed_load_flag,callback){
 									add_t.commit();
 								}
 								add_t.oncomplete=function(e){
+									//try load all known passphrases for account if type is encoded
+									if('encoded'==type){
+										get_passphrases(account,function(err,result){
+											if(!err){
+												for(let i in result){
+													let passphrase=result[i];
+													decode_object(account,block,passphrase,function(result){
+														if(result){
+															get_user(account,false,function(err,object_user){
+																if(!err){
+																	get_object(account,block,false,function(err,object_result){
+																		if(!err){
+																			let link='viz://@'+account+'/'+block+'/';
+																			let view=$('.view[data-level="'+level+'"]');
+																			if(-1==path.indexOf('viz://')){//look in services views
+																				let path_parts=path.split('/');
+																				view=$('.view[data-path="'+path_parts[0]+'"]');
+																			}
+																			let find_object=view.find('.objects>.object[data-account="'+account+'"][data-block="'+block+'"]');
+																			if(find_object.length>0){
+																				find_object=view.find('.object[data-link="'+link+'"]');
+																			}
+																			if(find_object.length>0){
+																				let object_preview=false;
+																				if(find_object.hasClass('type-text-preview')){
+																					object_preview=true;
+																				}
+																				let object_type='default';
+																				if(object_preview){
+																					object_type='preview';
+																				}
+																				new_render=render_object(object_user,object_result,object_type);
+																				find_object.before(new_render);
+																				find_object.remove();//remove old view
+																				if(object_preview){
+																					update_short_date();
+																				}
+																				else{
+																					let link='viz://@'+account+'/'+block+'/';
+																					set_date_view($('.object[data-link="'+link+'"] .date-view'),true);
+																				}
+																			}
+																		}
+																	});
+																}
+															});
+														}
+													});
+												}
+											}
+										});
+									}
 									if(!feed_load_flag){
 										//solved by feed_load_flag (true when come from feed_load)
 										//problem code, it's trigger automatically for user, if you open object by link in new page, feed not loaded for him, but it's limited now with current object height
@@ -8493,7 +8566,68 @@ function get_replies(object_account,object_block,callback){
 	};
 }
 
+function add_passphrase(account,passphrase){
+	console.log('!!! add_passphrase',account,passphrase);
+	let t=db.transaction(['passphrases'],'readwrite');
+	let q=t.objectStore('passphrases');
+	req=q.index('account').openCursor(IDBKeyRange.only(account),'next');
+
+	let find=false;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			console.log('!!! add_passphrase check',cur.value);
+			if(cur.value.passphrase==passphrase){
+				find=true;
+			}
+			cur.continue();
+		}
+		else{
+			console.log('!!! add_passphrase find',find);
+			if(!find){
+				/*
+				passphrases struct:
+				account - string
+				passphrase - string
+				time - unixtime
+				*/
+				q.add({account:account,passphrase:passphrase,time:(new Date().getTime() / 1000 | 0)});
+				if(trx_need_commit){
+					t.commit();
+				}
+			}
+		}
+	};
+}
+
+function get_passphrases(account,callback){
+	let passphrases=[];
+	let t=db.transaction(['passphrases'],'readonly');
+	let q=t.objectStore('passphrases');
+	let req=q.index('account').openCursor(IDBKeyRange.only(account),'next');
+	let find=0;
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			passphrases.push(cur.value.passphrase);
+			find++;
+			cur.continue();
+		}
+		else{
+			if(find){
+				callback(false,passphrases);
+			}
+			else{
+				callback(true,[]);
+			}
+		}
+	};
+}
+
 function decode_object(account,block,passphrase,callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
 	block=parseInt(block);
 	let t,q,req;
 	t=db.transaction(['objects'],'readwrite');
@@ -8506,8 +8640,9 @@ function decode_object(account,block,passphrase,callback){
 		let cur=event.target.result;
 		if(cur){
 			let result=cur.value;
-			if('e'==result.data.t){//encoded
-
+			if('e'!=result.data.t){//encoded
+				console.log('object already decoded',account,block);
+				callback(true);//as decoded already
 			}
 			let new_object_data=false;
 			try{
@@ -8524,6 +8659,7 @@ function decode_object(account,block,passphrase,callback){
 						}
 					}
 				}
+				add_passphrase(account,passphrase);
 				update_context=true;
 			}
 			catch(e){
@@ -10121,7 +10257,7 @@ function view_users(view,path_parts,query,title,back_to){
 	header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_global.icon_back,force:back_to});
 
 	view.data('user-account','');
-	if((typeof path_parts[1] != 'undefined')&&(''!=path_parts[1])){
+	if((typeof path_parts[1] != 'undefined')&&(''!=path_parts[1])){//view user page
 		let user_account=decodeURIComponent(path_parts[1]);
 		idb_get_by_id('users','account',user_account,function(user_data){
 			view.data('user-account',user_account);
@@ -10129,6 +10265,14 @@ function view_users(view,path_parts,query,title,back_to){
 				view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.account_not_found}));
 			}
 			else{
+				let tabs='';
+				let current_tab='settings';
+				if(''!=path_parts[2]){
+					current_tab=path_parts[2];
+				}
+				tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users/'+user_account+'/settings/',class:('settings'==current_tab?'current':''),caption:ltmp_arr.users_user_settings_tab});
+				tabs+=ltmp(ltmp_arr.tab,{link:'dapp:users/'+user_account+'/passphrases/',class:('passphrases'==current_tab?'current':''),caption:ltmp_arr.users_user_passphrases_tab});
+				view.find('.tabs').html(tabs);
 				document.title='@'+user_data.account+' - '+document.title;
 				let user_data_profile=JSON.parse(user_data.profile);
 				header+=ltmp(ltmp_arr.header_caption_link,{caption:user_data_profile.nickname,link:'viz://@'+user_data.account});
@@ -10158,17 +10302,40 @@ function view_users(view,path_parts,query,title,back_to){
 						header+=ltmp_arr.user_actions_close;
 					}
 				}
-				view.find('.header').html(header);
 				let objects='';
-				if(typeof user_data.settings === 'undefined'){
-					user_data.settings={};
+				view.find('.objects').html(objects);
+				if('settings'==current_tab){
+					if(typeof user_data.settings === 'undefined'){
+						user_data.settings={};
+					}
+					let prop_value='';
+					if(typeof user_data.settings.activity_period !== 'undefined'){
+						prop_value=user_data.settings.activity_period;
+					}
+
+					objects+=ltmp(ltmp_arr.settings_item,{caption:ltmp_arr.settings_activity_period,prop:'activity_period',placeholder:settings.activity_period,value:prop_value,addon:ltmp_arr.settings_addon_activity_period});
+					view.find('.objects').html(ltmp(ltmp_arr.content_view,{content:objects+ltmp_arr.users_settings_buttons}));
 				}
-				let prop_value='';
-				if(typeof user_data.settings.activity_period !== 'undefined'){
-					prop_value=user_data.settings.activity_period;
+				if('passphrases'==current_tab){
+					let t=db.transaction(['passphrases'],'readonly');
+					let q=t.objectStore('passphrases');
+					let req=q.index('account').openCursor(IDBKeyRange.only(user_account),'next');
+					let find=0;
+					req.onsuccess=function(event){
+						let cur=event.target.result;
+						if(cur){
+							objects+=ltmp(ltmp_arr.passphrases_objects_item,{id:cur.value.id,passphrase:cur.value.passphrase});
+							find++;
+							cur.continue();
+						}
+						else{
+							if(!find){
+								objects+=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.passphrases_not_found});
+							}
+							view.find('.objects').html(ltmp(ltmp_arr.content_view,{content:ltmp_arr.users_user_passphrases_description})+objects);
+						}
+					};
 				}
-				objects+=ltmp(ltmp_arr.settings_item,{caption:ltmp_arr.settings_activity_period,prop:'activity_period',placeholder:settings.activity_period,value:prop_value,addon:ltmp_arr.settings_addon_activity_period});
-				view.find('.objects').html(ltmp(ltmp_arr.content_view,{content:objects+ltmp_arr.users_settings_buttons}));
 			}
 			view.find('.header').html(header);
 			$('.loader').css('display','none');
@@ -13118,7 +13285,6 @@ function render_object(user,object,type,preset_level){
 						decoded_view=ltmp(ltmp_arr.decoded_object);
 					}
 				}
-				console.log(decoded_view);
 
 				render=ltmp(ltmp_arr.object_type_text,{
 					reply:reply,

@@ -861,7 +861,53 @@ body.dark .hashtag-item:hover{
 body.dark .hashtag-item-caption a{
 	color:#3daff5;
 }
+.passphrase-item{
+	font-size:20px;
+	margin-top:0;
+	padding:10px 15px;
+	text-align:left;
+	outline:0;
 
+	position:relative;
+	display:flex;
+	flex-direction:row;
+
+	border-bottom:1px solid rgba(204, 204, 221, 0.5);
+
+	-webkit-transition:all 0.3s ease-out;  /* Saf3.2+, Chrome */
+	-moz-transition:all 0.3s ease-out;  /* FF4+ */
+	-ms-transition:all 0.3s ease-out;  /* IE10 */
+	-o-transition:all 0.3s ease-out;  /* Opera 10.5+ */
+	transition:all 0.3s ease-out;
+}
+.passphrase-item:hover{
+	background-color:rgba(28, 152, 229, 0.05);
+}
+body.dark .passphrase-item:hover{
+	background-color:rgba(179, 180, 184, 0.05);
+}
+.passphrase-item.nohover:hover{
+	background-color:transparent !important;
+}
+.passphrase-item-caption{
+	word-break:break-word;
+	flex-grow:1;
+	font-size:15px;
+	line-height:35px;
+}
+.passphrase-item-manage a{
+	color:#1c98e5;
+}
+body.dark .passphrase-item-manage a{
+	color:#3daff5;
+}
+a.passphrase-remove-action{
+	display:inline-block;
+	color:red;
+}
+a.passphrase-remove-action i{
+	pointer-events:none;
+}
 .user-item-box{
 	line-height:20px;
 	font-size:14px;

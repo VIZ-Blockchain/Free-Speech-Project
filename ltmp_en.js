@@ -528,6 +528,11 @@ var ltmp_en_arr = {
 	hashtags_ignored_tab: 'Ignored',
 	hashtags_objects_header: `<div class="hashtag-item nohover"><div class="hashtag-item-num">№</div><div class="hashtag-item-caption">Tag</div><div class="hashtag-item-count">Count</div></div>`,
 	hashtags_objects_item: `<div class="hashtag-item" data-hashtag-id="{id}"><div class="hashtag-item-num">{num}</div><div class="hashtag-item-caption"><a data-href="dapp:hashtags/{tag}">#{tag}{addon}</a></div><div class="hashtag-item-count">{count}</div></div>`,
+	passphrases_objects_item: `
+	<div class="passphrase-item" data-passphrase-id="{id}">
+		<div class="passphrase-item-caption">{passphrase}</div>
+		<div class="passphrase-item-manage"><a class="passphrase-remove-action" tabindex="0" title="Remove">%%icon_close%%</div>
+	</div>`,
 
 	found_results: 'Found: {count}',
 
@@ -543,6 +548,10 @@ var ltmp_en_arr = {
 	users_qr_code_tab: 'Provide',
 	users_scan_qr_code_tab: 'Scan',
 	users_scan_retrieving: 'Retrieving video...',
+	users_user_settings_tab: 'Settings',
+	users_user_passphrases_tab: 'Passphrases',
+	users_user_passphrases_description: '<p>There are all the passphrases with which you successfully decrypted the objects of the selected user.</p>',
+	passphrases_not_found: 'No passphrases found',
 	scan_qr_unable: 'Unable to access video stream (please make sure you have a webcam enabled)',
 	scan_qr_error: '<div class="scan-qr-error-icon">{icon}</div><div class="scan-qr-error-text">{text}</div>',
 	scan_qr_error_browser: 'Browser not support video capture',
@@ -825,7 +834,7 @@ var ltmp_en_arr = {
 		<div class="notice-description">If you know the passphrase you can decode it.<br>All keys will be stored to specific account.<br>Press on me.</div>
 		<div class="decode-passphrase">
 		<input type="password" name="passphrase" placeholder="Key passphrase is..."><br>
-		<a class="button small encode-object-action">Decode</a>
+		<a class="button small decode-object-action">Decode</a>
 		</div>
 		`,
 	more_column: `<div class="more-column"><a tabindex="0" class="more-action" title="Available actions" data-account="{account}" data-block="{block}">%%icon_more%%</a></div>`,
