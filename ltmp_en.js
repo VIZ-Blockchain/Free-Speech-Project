@@ -119,12 +119,18 @@ var ltmp_en_arr = {
 				<p><input type="text" name="energy" placeholder="1%" value=""></p>
 				<div class="input-addon">(regenerates 20% per day)</div>
 
+				<hr>
+				<p>By create encrypted object:</p>
+				<p><label><input type="checkbox" name="save_passphrase_on_publish"> &mdash; save passphrase</label></p>
+				<div class="input-addon">(turned off by default)</div>
+
 				<p class="error save-settings-error"></p>
 				<p class="success save-settings-success"></p>
 				<p><a class="button save-settings-action">Save</a><span class="submit-button-ring"></span></p>
 				<hr>
 				<p><a class="button neutral-button install-action"></a></p>
 				<p><a class="button neutral-button reset-settings-action">Reset all settings</a></p>
+				<p><a class="button neutral-button delete-all-passphrases-action">Remove all saved passphrases</a></p>
 				<p><a class="button neutral-button reset-database-action">Reset database state</a></p>
 			</div>
 			<div class="content-view" data-tab="feed">
@@ -273,7 +279,7 @@ var ltmp_en_arr = {
 	encoding_description: `Type the password that will be used to encrypt the object.<br>
 	Any user will be able to decrypt the object if he knows the password.<br>
 	If the password is not specified, the object will be available to everyone.`,
-	encoding_form: `<input type="text" name="encode-passphrase" class="round" placeholder="Key passphrase..." value="">`,
+	encoding_form: `<input type="text" name="encode-passphrase" class="round" placeholder="Key passphrase..." value=""><br><input type="text" name="encode-comment" class="round" placeholder="Comment (optional, public)..." value="">`,
 	beneficiaries_list_caption: `Beneficiaries`,
 	beneficiaries_list_description: `Specify the users who will receive some of the rewards.`,
 	beneficiaries_list_add: `%%beneficiaries_item%% %%beneficiaries_add_item%%`,
@@ -413,6 +419,8 @@ var ltmp_en_arr = {
 			<p>The editor allows you to design a complete publication with a header, subheadings, links, images and quotes. In the settings you need to specify an annotation, a link to a thumbnail and optionally add tags from your profile.</p>
 			<p>You can also specify the beneficiaries in the advanced settings by specifying the accounts that will share the reward you receive and the percentages to distribute it.</p>
 			<p>Extended Publications has a separate viewer in the PC version and feels like a popular blogging platform.</p>
+			<hr><p>When creating new notes or publications, there is a section "%%open_publish_addons%%", where you can set a password to encrypt the note, as well as a list of beneficiaries (who will share the reward from users with you). When encrypting, the AES-256-CBC algorithm is used, you can set a public comment to the published object. Anyone you give the password to (or who guesses it) will be able to view the object.</p>
+			<hr><p>If the object is published in the blockchain, then it is impossible to delete it. But with the Voice Events extension, it became possible to hide or edit past objects. The list of possible actions you will see on the page of viewing the object in the drop-down menu expanded by the icon %%icon_more%%.</p>
 		`},
 		uri: {
 			title: 'VIZ links', html: `
@@ -658,6 +666,7 @@ var ltmp_en_arr = {
 	app_settings_caption: 'Application Settings',
 	app_settings_saved: 'Settings saved',
 	app_settings_reset: 'Settings reset',
+	app_passphrases_deleted: 'All passphrases deleted',
 	app_settings_main_tab: 'General',
 	app_settings_feed_tab: 'News Feed',
 	app_settings_theme_tab: 'Color Theme',
@@ -813,6 +822,7 @@ var ltmp_en_arr = {
 			{more}
 		</div>
 		<div class="object-column">
+			{comment}
 			<div class="decode-form" data-href="{link}">%%decode_form%%</div>
 			<div class="date-view" data-timestamp="{timestamp}">&hellip;</div>
 			<div class="actions-view">{actions}</div>
@@ -825,10 +835,11 @@ var ltmp_en_arr = {
 			<div class="author-view">
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
 			</div>
+			{comment}
 			<div class="decode-form" data-href="{link}">%%decode_form%%</div>
-			<div class="content-view{class_addon}" data-href="{link}">{text}</div>
 		</div>
 	</div>`,
+	object_type_encoded_comment: `<div class="content-view">{comment}</div>`,
 	decode_form: `
 		<div class="notice-caption">%%icon_locked%% Object is encoded</div>
 		<div class="notice-description">If you know the passphrase you can decode it.<br>All keys will be stored to specific account.<br>Press on me.</div>

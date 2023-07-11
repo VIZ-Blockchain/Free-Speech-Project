@@ -119,12 +119,18 @@ var ltmp_ru_arr = {
 				<p><input type="text" name="energy" placeholder="1%" value=""></p>
 				<div class="input-addon">(регенерируется 20% за сутки)</div>
 
+				<hr>
+				<p>При создании шифрованного объекта:</p>
+				<p><label><input type="checkbox" name="save_passphrase_on_publish"> &mdash; сохранять кодовую фразу</label></p>
+				<div class="input-addon">(по умолчанию отключено)</div>
+
 				<p class="error save-settings-error"></p>
 				<p class="success save-settings-success"></p>
 				<p><a class="button save-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
 				<hr>
 				<p><a class="button neutral-button install-action"></a></p>
 				<p><a class="button neutral-button reset-settings-action">Сбросить все настройки</a></p>
+				<p><a class="button neutral-button delete-all-passphrases-action">Удалить все сохраненные кодовые фразы</a></p>
 				<p><a class="button neutral-button reset-database-action">Сбросить состояние базы данных</a></p>
 			</div>
 			<div class="content-view" data-tab="feed">
@@ -273,7 +279,7 @@ var ltmp_ru_arr = {
 	encoding_description: `Укажите пароль, который будет использован для шифрования объекта.<br>
 	Любой пользователь сможет расшифровать объект, если он знает пароль.<br>
 	Если пароль не указан, объект будет доступен всем.`,
-	encoding_form: `<input type="text" name="encode-passphrase" class="round" placeholder="Кодовая фраза..." value="">`,
+	encoding_form: `<input type="text" name="encode-passphrase" class="round" placeholder="Кодовая фраза..." value=""><br><input type="text" name="encode-comment" class="round" placeholder="Комментарий (опциональный, публичный)..." value="">`,
 	beneficiaries_list_caption: `Бенефициары`,
 	beneficiaries_list_description: `Укажите пользователей, которые будут получать часть награждений.`,
 	beneficiaries_list_add: `%%beneficiaries_item%% %%beneficiaries_add_item%%`,
@@ -413,6 +419,8 @@ var ltmp_ru_arr = {
 			<p>Редактор позволяет оформить полноценную публикацию с заголовком, подзагаловками, ссылками, изображениями и цитатами. В настройках необходимо указать аннотацию, ссылку на миниатюру и опционально добавить тэги из вашего профиля.</p>
 			<p>Также можно указать бенефициаров в дополнительных настройках, для этого нужно задать аккаунты, которые будут делить получаемую награду и проценты для ее распределения.</p>
 			<p>Расширенные публикации имеют отдельный просмотрщик в версии для ПК и напоминают популярные блог-платформы.</p>
+			<hr><p>При создании новой заметки или публикации есть раздел «%%open_publish_addons%%», где вы можете задать пароль для шифрования заметки, а также список бенефициаров (кто разделит с вами награду от пользователей). При шифровании используется алгоритм AES-256-CBC, вы можете задать публичный комментарий к публикуемому объекту. Любой, кому вы передадите пароль (или кто угадает его) — получит доступ к просмотру объекта.</p>
+			<hr><p>Если объект опубликован в блокчейне, то удалить его невозможно. Но с расширением Voice Events стало возможным скрывать или редактировать прошлые объекты. Список возможных действий вы увидите на странице просмотра объекта в выпадающем меню при нажатии на иконку с тремя точками %%icon_more%%.</p>
 		`},
 		uri: {
 			title: 'Ссылки viz', html: `
@@ -658,6 +666,7 @@ var ltmp_ru_arr = {
 	app_settings_caption: 'Настройки приложения',
 	app_settings_saved: 'Настройки сохранены',
 	app_settings_reset: 'Настройки сброшены',
+	app_passphrases_deleted: 'Все кодовые фразы удалены',
 	app_settings_main_tab: 'Общие',
 	app_settings_feed_tab: 'Лента новостей',
 	app_settings_theme_tab: 'Оформление',
@@ -813,6 +822,7 @@ var ltmp_ru_arr = {
 			{more}
 		</div>
 		<div class="object-column">
+			{comment}
 			<div class="decode-form" data-href="{link}">%%decode_form%%</div>
 			<div class="date-view" data-timestamp="{timestamp}">&hellip;</div>
 			<div class="actions-view">{actions}</div>
@@ -825,10 +835,11 @@ var ltmp_ru_arr = {
 			<div class="author-view">
 				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
 			</div>
-			<div class="decode-form" data-href="{link}">%%decode_form%%</div>
-			<div class="content-view{class_addon}" data-href="{link}">{text}</div>
+			{comment}
+			<div class="decode-form">%%decode_form%%</div>
 		</div>
 	</div>`,
+	object_type_encoded_comment: `<div class="content-view">{comment}</div>`,
 	decode_form: `
 		<div class="notice-caption">%%icon_locked%% Объект зашифрован</div>
 		<div class="notice-description">Если вы знаете кодовую фразу вы можете расшифровать его.<br>Все ключи будут храниться к конкретному аккаунту.<br>Нажми на мне.</div>

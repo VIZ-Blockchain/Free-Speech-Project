@@ -1019,6 +1019,8 @@ var default_settings={
 	sync_size:100,
 	nsfw_warning:true,
 	nsfw_hashtags:['nsfw','sex','porn'],
+
+	save_passphrase_on_publish:false,
 };
 var settings=default_settings;
 
@@ -1146,6 +1148,8 @@ function save_settings(view){
 	energy_str=fast_str_replace(',','.',energy_str);
 	settings.energy=parseInt(parseFloat(energy_str)*100);
 	settings.silent_award=tab.find('input[name="silent_award"]').prop("checked");
+
+	settings.save_passphrase_on_publish=tab.find('input[name="save_passphrase_on_publish"]').prop("checked");
 
 	let settings_json=JSON.stringify(settings);
 	localStorage.setItem(storage_prefix+'settings',settings_json);
@@ -4012,12 +4016,14 @@ function publish(view){
 			}
 			//check passphrase and try encode
 			let passphrase=view.find('.encode-passphrase input[name="encode-passphrase"]').val();
+			let passphrase_comment=view.find('.encode-passphrase input[name="encode-comment"]').val();
 			if(''!=passphrase){
 				try{
 					new_object['d']['nt']=new_object['t'];//new type
 					new_object['d']=JSON.stringify(new_object);
 					new_object['d']=viz.aes.simpleEncoder(new_object['d'],passphrase);
 					new_object['t']='e';//encoded
+					new_object['c']=passphrase_comment;//comment
 					new_object['p']=previous;
 				}
 				catch(e){
@@ -4035,6 +4041,13 @@ function publish(view){
 				viz.broadcast.custom(users[current_user].regular_key,[],[current_user],publish_protocol,object_json,function(err,result){
 					if(result){
 						console.log(result);
+
+						if(settings.save_passphrase_on_publish){
+							if(''!=passphrase){
+								add_passphrase(current_user,passphrase);
+							}
+						}
+
 						view.find('.success').html(ltmp_arr.publish_success);
 
 						view.find('input').val('');
@@ -5097,6 +5110,27 @@ function app_mouse(e){
 	}
 	else{//not editor buttons
 		if(!ignore){
+			if($(target).hasClass('delete-all-passphrases-action')){
+				e.preventDefault();
+				if(!$(target).hasClass('disabled')){
+					$(target).addClass('disabled');
+					let view=$(target).closest('.view');
+					let tab=view.find('.content-view[data-tab="main"]');
+					tab.find('.submit-button-ring').addClass('show');
+					tab.find('.error').html('');
+					tab.find('.success').html('');
+					let t=db.transaction(['passphrases'],'readwrite');
+					let q=t.objectStore('passphrases');
+					let req=q.clear();
+					req.onsuccess=function(){
+						view.find('.button').removeClass('disabled');
+						view.find('.submit-button-ring').removeClass('show');
+						view.find('.error').html('');
+						view.find('.success').html(ltmp_arr.app_passphrases_deleted);
+					};
+				}
+				return;
+			}
 			if($(target).hasClass('passphrase-remove-action')){
 				e.preventDefault();
 				let passphrase_id=$(target).closest('.passphrase-item').data('passphrase-id');
@@ -6597,12 +6631,14 @@ function app_mouse(e){
 								}
 								//check passphrase and try encode
 								let passphrase=$('.article-settings .encode-passphrase input[name="encode-passphrase"]').val();
+								let passphrase_comment=$('.article-settings .encode-passphrase input[name="encode-comment"]').val();
 								if(''!=passphrase){
 									try{
 										new_object['d']['nt']=new_object['t'];//new type
 										new_object['d']=JSON.stringify(new_object);
 										new_object['d']=viz.aes.simpleEncoder(new_object['d'],passphrase);
 										new_object['t']='e';//encoded
+										new_object['c']=passphrase_comment;//comment
 										new_object['p']=previous;
 									}
 									catch(e){
@@ -6619,7 +6655,19 @@ function app_mouse(e){
 								viz.broadcast.custom(users[current_user].regular_key,[],[current_user],publish_protocol,object_json,function(err,result){
 									if(result){
 										console.log(result);
+
+										if(settings.save_passphrase_on_publish){
+											if(''!=passphrase){
+												add_passphrase(current_user,passphrase);
+											}
+										}
+
 										if(false!==edit){
+											if(settings.save_passphrase_on_publish){
+												if(''!=passphrase){
+													add_passphrase(current_user,passphrase);
+												}
+											}
 											setTimeout(function(){
 												update_user_last_event(current_user,function(result){
 													if(false!==result){
@@ -8429,7 +8477,6 @@ function parse_object(account,block,feed_load_flag,callback){
 																					update_short_date();
 																				}
 																				else{
-																					let link='viz://@'+account+'/'+block+'/';
 																					set_date_view($('.object[data-link="'+link+'"] .date-view'),true);
 																				}
 																			}
@@ -8567,7 +8614,6 @@ function get_replies(object_account,object_block,callback){
 }
 
 function add_passphrase(account,passphrase){
-	console.log('!!! add_passphrase',account,passphrase);
 	let t=db.transaction(['passphrases'],'readwrite');
 	let q=t.objectStore('passphrases');
 	req=q.index('account').openCursor(IDBKeyRange.only(account),'next');
@@ -8576,14 +8622,12 @@ function add_passphrase(account,passphrase){
 	req.onsuccess=function(event){
 		let cur=event.target.result;
 		if(cur){
-			console.log('!!! add_passphrase check',cur.value);
 			if(cur.value.passphrase==passphrase){
 				find=true;
 			}
 			cur.continue();
 		}
 		else{
-			console.log('!!! add_passphrase find',find);
 			if(!find){
 				/*
 				passphrases struct:
@@ -8595,6 +8639,8 @@ function add_passphrase(account,passphrase){
 				if(trx_need_commit){
 					t.commit();
 				}
+				//try decode all encoded objects from this account with new passphrase
+				try_decode_all_objects(account,passphrase);
 			}
 		}
 	};
@@ -8620,6 +8666,64 @@ function get_passphrases(account,callback){
 			else{
 				callback(true,[]);
 			}
+		}
+	};
+}
+
+function try_decode_all_objects(account,passphrase){
+	let t=db.transaction(['objects'],'readwrite');
+	let q=t.objectStore('objects');
+	let req=q.index('account').openCursor(IDBKeyRange.only(account),'next');
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let result=cur.value;
+			if('e'==result.data.t){//encoded
+				decode_object(account,result.block,passphrase,function(success){
+					if(success){
+						let block=result.block;
+						console.log('try_decode_all_objects success',account,block);
+						get_user(account,false,function(err,object_user){
+							if(!err){
+								get_object(account,block,false,function(err,object_result){
+									if(!err){
+										let link='viz://@'+account+'/'+block+'/';
+										let view=$('.view[data-level="'+level+'"]');
+										if(-1==path.indexOf('viz://')){//look in services views
+											let path_parts=path.split('/');
+											view=$('.view[data-path="'+path_parts[0]+'"]');
+										}
+										let find_object=view.find('.objects>.object[data-account="'+account+'"][data-block="'+block+'"]');
+										if(find_object.length>0){
+											find_object=view.find('.object[data-link="'+link+'"]');
+										}
+										if(find_object.length>0){
+											let object_preview=false;
+											if(find_object.hasClass('type-text-preview')){
+												object_preview=true;
+											}
+											let object_type='default';
+											if(object_preview){
+												object_type='preview';
+											}
+											new_render=render_object(object_user,object_result,object_type);
+											find_object.before(new_render);
+											find_object.remove();//remove old view
+											if(object_preview){
+												update_short_date();
+											}
+											else{
+												set_date_view($('.object[data-link="'+link+'"] .date-view'),true);
+											}
+										}
+									}
+								});
+							}
+						});
+					}
+				});
+			}
+			cur.continue();
 		}
 	};
 }
@@ -8651,6 +8755,9 @@ function decode_object(account,block,passphrase,callback){
 				if(false!==new_object_data){
 					new_object_data=JSON.parse(new_object_data);
 					delete result.data.t;
+					if(typeof result.data.c !== 'undefined'){
+						delete result.data.c;//remove comment
+					}
 					if(typeof new_object_data.d !== 'undefined'){
 						result.data.d=new_object_data.d;
 						result.data.d.decoded=1;
@@ -10878,7 +10985,8 @@ function view_app_settings(view,path_parts,query,title){
 		tab.find('input[name="nsfw_hashtags"]').val(settings.nsfw_hashtags.join(', '));
 
 		tab.find('input[name="energy"]').val(settings.energy/100);
-		$('input[name="silent_award"]').prop("checked",settings.silent_award);
+		tab.find('input[name="silent_award"]').prop("checked",settings.silent_award);
+		tab.find('input[name="save_passphrase_on_publish"]').prop("checked",settings.save_passphrase_on_publish);
 	}
 	if('feed'==current_tab){
 		tab.find('.button').removeClass('disabled');
@@ -13153,7 +13261,11 @@ function render_object(user,object,type,preset_level){
 				if(user.account==current_user){
 					more_view=ltmp(ltmp_arr.more_column,{account:user.account,block:object.block});
 				}
-
+				let comment='';
+				if(typeof object.data.c !== 'undefined'){
+					comment=object.data.c;
+					comment=ltmp(ltmp_arr.object_type_encoded_comment,{comment:comment});
+				}
 				render=ltmp(ltmp_arr.object_type_encoded,{
 					author:'@'+user.account,
 					account:user.account,
@@ -13171,6 +13283,7 @@ function render_object(user,object,type,preset_level){
 						icon_share:ltmp_global.icon_share,
 					}),
 					more:more_view,
+					comment:comment,
 				});
 				return render;
 			}
@@ -13422,6 +13535,11 @@ function render_object(user,object,type,preset_level){
 		}
 		else{
 			if('encoded'==object_type){
+				let comment='';
+				if(typeof object.data.c !== 'undefined'){
+					comment=object.data.c;
+					comment=ltmp(ltmp_arr.object_type_encoded_comment,{comment:comment});
+				}
 				render=ltmp(ltmp_arr.object_type_encoded_preview,{
 					author:'@'+user.account,
 					account:user.account,
@@ -13432,6 +13550,7 @@ function render_object(user,object,type,preset_level){
 					events:(typeof object.events !== 'undefined')?object.events.join(','):'',
 					previous:object.data.p,
 					timestamp:object.data.timestamp,
+					comment:comment,
 				});
 				return render;
 			}
