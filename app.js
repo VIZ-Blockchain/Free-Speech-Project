@@ -8740,6 +8740,7 @@ function decode_object(account,block,passphrase,callback){
 
 	let find=false;
 	let update_context=false;//if object need update context
+	let new_encoded=false;//if object contain new encoded data
 	req.onsuccess=function(event){
 		let cur=event.target.result;
 		if(cur){
@@ -8757,6 +8758,9 @@ function decode_object(account,block,passphrase,callback){
 					delete result.data.t;
 					if(typeof result.data.c !== 'undefined'){
 						delete result.data.c;//remove comment
+						if(typeof new_object_data.c !== 'undefined'){//if encoded chain
+							result.data.c=new_object_data.c;
+						}
 					}
 					if(typeof new_object_data.d !== 'undefined'){
 						result.data.d=new_object_data.d;
@@ -8764,9 +8768,20 @@ function decode_object(account,block,passphrase,callback){
 						if(typeof new_object_data.d.nt !== 'undefined'){
 							result.data.t=new_object_data.d.nt;//new object type
 						}
+						else{//if encoded chain
+							if(typeof new_object_data.nt !== 'undefined'){
+								result.data.t=new_object_data.nt;//new object type
+							}
+						}
 					}
 				}
 				add_passphrase(account,passphrase);
+				console.log('DECODED',result.data.t);
+				if(typeof result.data.t !== 'undefined'){
+					if('e'==result.data.t||'encoded'==result.data.t){//check if new type is chain encoded
+						new_encoded=true;
+					}
+				}
 				update_context=true;
 			}
 			catch(e){
@@ -8794,175 +8809,178 @@ function decode_object(account,block,passphrase,callback){
 						}
 					}
 				}
-				if('text'==type){
-					if(typeof result.data.d.r !== 'undefined'){
-						let reply_link=result.data.d.r;
-						if(typeof reply_link !== 'string'){
-							reply_link='';
-						}
-						//internal
-						if(0==reply_link.indexOf('viz://')){
-							reply_link=reply_link.toLowerCase();
-							reply_link=escape_html(reply_link);
-							let reply_account=reply_link.match(account_pattern);
-							if(typeof reply_account[0] != 'undefined'){
-								let reply_block=reply_link.match(block_pattern);
-								if(typeof reply_block[0] != 'undefined'){
-									reply=true;
-									parent_account=reply_account[0].substr(1);
-									parent_block=parseInt(fast_str_replace('/','',reply_block[0]));
+				console.log(type);
+				if('encoded'!==type){
+					if('text'==type){
+						if(typeof result.data.d.r !== 'undefined'){
+							let reply_link=result.data.d.r;
+							if(typeof reply_link !== 'string'){
+								reply_link='';
+							}
+							//internal
+							if(0==reply_link.indexOf('viz://')){
+								reply_link=reply_link.toLowerCase();
+								reply_link=escape_html(reply_link);
+								let reply_account=reply_link.match(account_pattern);
+								if(typeof reply_account[0] != 'undefined'){
+									let reply_block=reply_link.match(block_pattern);
+									if(typeof reply_block[0] != 'undefined'){
+										reply=true;
+										parent_account=reply_account[0].substr(1);
+										parent_block=parseInt(fast_str_replace('/','',reply_block[0]));
+									}
 								}
 							}
 						}
-					}
-					else
-					if(typeof result.data.d.s != 'undefined'){
-						share_link=result.data.d.s;
-						if(typeof share_link !== 'string'){
-							share_link='';
-						}
-						//internal
-						if(0==share_link.indexOf('viz://')){
-							share_link=share_link.toLowerCase();
-							share_link=escape_html(share_link);
-							let share_account=share_link.match(account_pattern);
-							if(typeof share_account[0] != 'undefined'){
-								let share_block=share_link.match(block_pattern);
-								if(typeof share_block[0] != 'undefined'){
-									share=true;
-									parent_account=share_account[0].substr(1);
-									parent_block=parseInt(fast_str_replace('/','',share_block[0]));
+						else
+						if(typeof result.data.d.s != 'undefined'){
+							share_link=result.data.d.s;
+							if(typeof share_link !== 'string'){
+								share_link='';
+							}
+							//internal
+							if(0==share_link.indexOf('viz://')){
+								share_link=share_link.toLowerCase();
+								share_link=escape_html(share_link);
+								let share_account=share_link.match(account_pattern);
+								if(typeof share_account[0] != 'undefined'){
+									let share_block=share_link.match(block_pattern);
+									if(typeof share_block[0] != 'undefined'){
+										share=true;
+										parent_account=share_account[0].substr(1);
+										parent_block=parseInt(fast_str_replace('/','',share_block[0]));
+									}
 								}
 							}
-						}
-						//external
-						if((0==share_link.indexOf('http://'))||(0==share_link.indexOf('https://'))){
-							share=true;
+							//external
+							if((0==share_link.indexOf('http://'))||(0==share_link.indexOf('https://'))){
+								share=true;
+							}
 						}
 					}
-				}
-				if('text'==type){
-					if(reply){
-						result.is_reply=1;
-						result.parent_account=parent_account;
-						result.parent_block=parent_block;
-					}
-					if(share){
-						result.is_share=1;
-						if(false!==parent_account){
+					if('text'==type){
+						if(reply){
+							result.is_reply=1;
 							result.parent_account=parent_account;
 							result.parent_block=parent_block;
 						}
-						else{
-							result.link=share_link;
-						}
-					}
-				}
-
-				/* hashtags support */
-				//need replace url with hash to avoid conflict
-				let hashtags_text='none';
-				if('text'==type){
-					hashtags_text=result.data.d.text;
-					if(typeof result.data.d.text !== 'undefined'){
-						hashtags_text=result.data.d.text;
-					}
-					else{
-						if(typeof result.data.d.t !== 'undefined'){
-							hashtags_text=result.data.d.t;
-						}
-					}
-				}
-				if('publication'==type){
-					hashtags_text=markdown_clear_code(result.data.d.m);//markdown
-					hashtags_text=markdown_decode_text(hashtags_text);
-					let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
-					hashtags_text=hashtags_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
-				}
-				let summary_links=[];
-				//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
-				//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
-				let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
-				let http_protocol_links=hashtags_text.match(http_protocol_pattern);
-				if(null!=http_protocol_links){
-					summary_links=summary_links.concat(http_protocol_links);
-				}
-
-				summary_links=array_unique(summary_links);
-				summary_links.sort(sort_by_length_desc);
-
-				for(let i in summary_links){
-					hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
-				}
-
-				let hashtags_pattern = /(|\b)#([^:;@#!.,?\r\n\t <>()\[\]]+)(|\b)/g;;
-				let hashtags_links=hashtags_text.match(hashtags_pattern);
-				if(null!=hashtags_links){
-					hashtags_links=hashtags_links.map(function(value){
-						return value.toLowerCase();
-					});
-					hashtags_links=array_unique(hashtags_links);
-
-					console.log('execute event object hashtags',hashtags_links,result.account,result.block);
-					clear_hashtag_object(result.account,result.block,function(){
-						console.log('execute event after clear_hashtag_object object hashtags',hashtags_links);
-						for(let i in hashtags_links){
-							let hashtag=hashtags_links[i].substr(1);
-							hashtag=hashtag.trim();
-							if(''!=hashtag){
-								idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
-									if(false===hashtag_id){
-										let hashtag_info,hashtag_add_t,hashtag_add_q,hashtag_add_req;
-										hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
-										hashtag_add_t=db.transaction(['hashtags'],'readwrite');
-										hashtag_add_q=hashtag_add_t.objectStore('hashtags');
-										hashtag_add_req=hashtag_add_q.add(hashtag_info);
-										if(trx_need_commit){
-											hashtag_add_t.commit();
-										}
-										hashtag_add_req.onsuccess=function(e){
-											idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
-												if(false!==hashtag_id){
-													add_hashtag_object(hashtag_id,result.account,result.block);
-												}
-											});
-										}
-									}
-									else{
-										add_hashtag_object(hashtag_id,result.account,result.block);
-									}
-								});
+						if(share){
+							result.is_share=1;
+							if(false!==parent_account){
+								result.parent_account=parent_account;
+								result.parent_block=parent_block;
+							}
+							else{
+								result.link=share_link;
 							}
 						}
-					});
-				}
-
-				/* check nsfw hashtags in object texts */
-				let nsfw_text='';
-				if('text'==type){
-					if(typeof result.data.d.text !== 'undefined'){
-						nsfw_text=result.data.d.text;
 					}
-					else{
-						if(typeof result.data.d.t !== 'undefined'){
-							nsfw_text=result.data.d.t;
+
+					/* hashtags support */
+					//need replace url with hash to avoid conflict
+					let hashtags_text='none';
+					if('text'==type){
+						hashtags_text=result.data.d.text;
+						if(typeof result.data.d.text !== 'undefined'){
+							hashtags_text=result.data.d.text;
+						}
+						else{
+							if(typeof result.data.d.t !== 'undefined'){
+								hashtags_text=result.data.d.t;
+							}
 						}
 					}
-				}
-				if('publication'==type){
-					nsfw_text=markdown_clear_code(result.data.d.m);//markdown
-					nsfw_text=markdown_decode_text(nsfw_text);
-					let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
-					nsfw_text=nsfw_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
-				}
-				for(let i in settings.nsfw_hashtags){
-					let search_hashtag='#'+settings.nsfw_hashtags[i];
-					if(-1!=nsfw_text.indexOf(search_hashtag)){
-						nsfw=1;
+					if('publication'==type){
+						hashtags_text=markdown_clear_code(result.data.d.m);//markdown
+						hashtags_text=markdown_decode_text(hashtags_text);
+						let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+						hashtags_text=hashtags_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
 					}
-				}
-				if(nsfw!=result.nsfw){
-					result.nsfw=nsfw;
+					let summary_links=[];
+					//let http_protocol_pattern = /(http|https)\:\/\/[@A-Za-z0-9\-_\.\/#]*/g;//first version
+					//add \u0400-\u04FF for cyrillic https://jrgraphix.net/r/Unicode/0400-04FF
+					let http_protocol_pattern = /((?:https?|ftp):\/\/[\u0400-\u04FF\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\u0400-\u04FF\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
+					let http_protocol_links=hashtags_text.match(http_protocol_pattern);
+					if(null!=http_protocol_links){
+						summary_links=summary_links.concat(http_protocol_links);
+					}
+
+					summary_links=array_unique(summary_links);
+					summary_links.sort(sort_by_length_desc);
+
+					for(let i in summary_links){
+						hashtags_text=fast_str_replace(summary_links[i],'',hashtags_text);
+					}
+
+					let hashtags_pattern = /(|\b)#([^:;@#!.,?\r\n\t <>()\[\]]+)(|\b)/g;;
+					let hashtags_links=hashtags_text.match(hashtags_pattern);
+					if(null!=hashtags_links){
+						hashtags_links=hashtags_links.map(function(value){
+							return value.toLowerCase();
+						});
+						hashtags_links=array_unique(hashtags_links);
+
+						console.log('execute event object hashtags',hashtags_links,result.account,result.block);
+						clear_hashtag_object(result.account,result.block,function(){
+							console.log('execute event after clear_hashtag_object object hashtags',hashtags_links);
+							for(let i in hashtags_links){
+								let hashtag=hashtags_links[i].substr(1);
+								hashtag=hashtag.trim();
+								if(''!=hashtag){
+									idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+										if(false===hashtag_id){
+											let hashtag_info,hashtag_add_t,hashtag_add_q,hashtag_add_req;
+											hashtag_info={'tag':hashtag,'count':0,'status':0,'order':0};
+											hashtag_add_t=db.transaction(['hashtags'],'readwrite');
+											hashtag_add_q=hashtag_add_t.objectStore('hashtags');
+											hashtag_add_req=hashtag_add_q.add(hashtag_info);
+											if(trx_need_commit){
+												hashtag_add_t.commit();
+											}
+											hashtag_add_req.onsuccess=function(e){
+												idb_get_id('hashtags','tag',hashtag,function(hashtag_id){
+													if(false!==hashtag_id){
+														add_hashtag_object(hashtag_id,result.account,result.block);
+													}
+												});
+											}
+										}
+										else{
+											add_hashtag_object(hashtag_id,result.account,result.block);
+										}
+									});
+								}
+							}
+						});
+					}
+
+					/* check nsfw hashtags in object texts */
+					let nsfw_text='';
+					if('text'==type){
+						if(typeof result.data.d.text !== 'undefined'){
+							nsfw_text=result.data.d.text;
+						}
+						else{
+							if(typeof result.data.d.t !== 'undefined'){
+								nsfw_text=result.data.d.t;
+							}
+						}
+					}
+					if('publication'==type){
+						nsfw_text=markdown_clear_code(result.data.d.m);//markdown
+						nsfw_text=markdown_decode_text(nsfw_text);
+						let mnemonics_pattern = /&#[a-z0-9\-\.]+;/g;
+						nsfw_text=nsfw_text.replace(mnemonics_pattern,'');//remove unexpected html mnemonics
+					}
+					for(let i in settings.nsfw_hashtags){
+						let search_hashtag='#'+settings.nsfw_hashtags[i];
+						if(-1!=nsfw_text.indexOf(search_hashtag)){
+							nsfw=1;
+						}
+					}
+					if(nsfw!=result.nsfw){
+						result.nsfw=nsfw;
+					}
 				}
 				cur.update(result);
 			}
@@ -11590,6 +11608,14 @@ function app_keyboard(e){
 	}
 	else
 	if(key==13){//enter
+		if('passphrase'==$(document.activeElement).attr('name')){
+			e.preventDefault();
+			let action=$(document.activeElement).closest('.decode-passphrase').find('.decode-object-action');
+			if(action.length){
+				action[0].click();
+			}
+			return false;
+		}
 		if($(document.activeElement).hasClass('header-link')){
 			e.preventDefault();
 			let search=$(document.activeElement).val();
