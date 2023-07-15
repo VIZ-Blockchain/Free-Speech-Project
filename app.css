@@ -2574,6 +2574,14 @@ body.dark .menu-notice, body.midnight .menu-notice{
 	font-size:16px;
 	margin:10px 0;
 }
+.encode-passphrase-item{
+	margin:5px 0;
+}
+.encode-passphrase-item input{
+	display:inline-block;
+	width:40%;
+	margin-right:10px;
+}
 .beneficiaries-list{
 	padding-bottom:15px;
 	border-bottom:1px solid rgba(204, 204, 221, 0.5);

@@ -4015,16 +4015,44 @@ function publish(view){
 				}
 			}
 			//check passphrase and try encode
-			let passphrase=view.find('.encode-passphrase input[name="encode-passphrase"]').val();
-			let passphrase_comment=view.find('.encode-passphrase input[name="encode-comment"]').val();
-			if(''!=passphrase){
+			let passphrase='';
+			let passphrase_arr=[];
+			let passphrase_comment='';
+			let passphrase_comment_arr=[];
+			view.find('.encode-passphrase .encode-passphrase-item').each(function(i,el){
+				let item=$(el).find('input[name="encode-passphrase"]').val();
+				if(''!=item){
+					passphrase=item;
+					passphrase_arr.push(passphrase);
+				}
+				item=$(el).find('input[name="encode-comment"]').val();
+				if(''!=item){
+					passphrase_comment=item;
+					passphrase_comment_arr.push(passphrase_comment);
+				}
+			});
+			if(passphrase_arr.length>1){//more than one passphrase
+				passphrase_arr=passphrase_arr.reverse();
+				passphrase_comment_arr=passphrase_comment_arr.reverse();
 				try{
-					new_object['d']['nt']=new_object['t'];//new type
-					new_object['d']=JSON.stringify(new_object);
-					new_object['d']=viz.aes.simpleEncoder(new_object['d'],passphrase);
-					new_object['t']='e';//encoded
-					new_object['c']=passphrase_comment;//comment
-					new_object['p']=previous;
+					for(let i in passphrase_arr){
+						let number=i;
+						if(0==number){
+							new_object['nt']='t';//text
+						}
+						else{
+							new_object['nt']='e';//encoded
+						}
+						console.log('encode object',new_object,'with passphrase',passphrase_arr[number],'and comment',passphrase_comment_arr[number]);
+						new_object['d']=JSON.stringify(new_object);
+						new_object['d']=viz.aes.simpleEncoder(new_object['d'],passphrase_arr[number]);
+						if(typeof passphrase_comment_arr === 'object'){
+							if(typeof passphrase_comment_arr[number] === 'string'){
+								new_object['c']=passphrase_comment_arr[number];
+							}
+						}
+					}
+					delete new_object['nt'];//remove new type because it already stringified and encoded
 				}
 				catch(e){
 					console.log(e);
@@ -4032,6 +4060,25 @@ function publish(view){
 					view.find('.error').html(ltmp_arr.encoding_error);
 					view.find('.button').removeClass('disabled');
 					return;
+				}
+				new_object['t']='e';//encoded
+			}
+			else{
+				if(''!=passphrase){
+					try{
+						new_object['d']['nt']=new_object['t'];//new type
+						new_object['d']=JSON.stringify(new_object);
+						new_object['d']=viz.aes.simpleEncoder(new_object['d'],passphrase);
+						new_object['c']=passphrase_comment;//comment
+					}
+					catch(e){
+						console.log(e);
+						view.find('.submit-button-ring').removeClass('show');
+						view.find('.error').html(ltmp_arr.encoding_error);
+						view.find('.button').removeClass('disabled');
+						return;
+					}
+					new_object['t']='e';//encoded
 				}
 			}
 
@@ -5419,6 +5466,19 @@ function app_mouse(e){
 					view.find('.publish-addons').css('display','none');
 				}
 			}
+			if($(target).hasClass('encode-passphrase-add-item-action')){
+				let view=$(target).closest('.content-view');
+				view.find('.encode-passphrase .encode-passphrase-item').each(function(i,el){
+					if(i>0){
+						if(''==$(el).find('input[name="encode-passphrase"]').val()){
+							if(''==$(el).find('input[name="encode-comment"]').val()){
+								el.remove();
+							}
+						}
+					}
+				});
+				$(target).before(ltmp(ltmp_arr.encoding_item));
+			}
 			if($(target).hasClass('beneficiaries-add-item-action')){
 				let view=$(target).closest('.content-view');
 				view.find('.beneficiaries-list .beneficiaries-item').each(function(i,el){
@@ -6630,16 +6690,44 @@ function app_mouse(e){
 									}
 								}
 								//check passphrase and try encode
-								let passphrase=$('.article-settings .encode-passphrase input[name="encode-passphrase"]').val();
-								let passphrase_comment=$('.article-settings .encode-passphrase input[name="encode-comment"]').val();
-								if(''!=passphrase){
+								let passphrase='';
+								let passphrase_arr=[];
+								let passphrase_comment='';
+								let passphrase_comment_arr=[];
+								$('.article-settings .encode-passphrase .encode-passphrase-item').each(function(i,el){
+									let item=$(el).find('input[name="encode-passphrase"]').val();
+									if(''!=item){
+										passphrase=item;
+										passphrase_arr.push(passphrase);
+									}
+									item=$(el).find('input[name="encode-comment"]').val();
+									if(''!=item){
+										passphrase_comment=item;
+										passphrase_comment_arr.push(passphrase_comment);
+									}
+								});
+								if(passphrase_arr.length>1){//more than one passphrase
+									passphrase_arr=passphrase_arr.reverse();
+									passphrase_comment_arr=passphrase_comment_arr.reverse();
 									try{
-										new_object['d']['nt']=new_object['t'];//new type
-										new_object['d']=JSON.stringify(new_object);
-										new_object['d']=viz.aes.simpleEncoder(new_object['d'],passphrase);
-										new_object['t']='e';//encoded
-										new_object['c']=passphrase_comment;//comment
-										new_object['p']=previous;
+										for(let i in passphrase_arr){
+											let number=i;
+											if(0==number){
+												new_object['nt']='p';//publication
+											}
+											else{
+												new_object['nt']='e';//encoded
+											}
+											console.log('encode object',new_object,'with passphrase',passphrase_arr[number],'and comment',passphrase_comment_arr[number]);
+											new_object['d']=JSON.stringify(new_object);
+											new_object['d']=viz.aes.simpleEncoder(new_object['d'],passphrase_arr[number]);
+											if(typeof passphrase_comment_arr === 'object'){
+												if(typeof passphrase_comment_arr[number] === 'string'){
+													new_object['c']=passphrase_comment_arr[number];
+												}
+											}
+										}
+										delete new_object['nt'];//remove new type because it already stringified and encoded
 									}
 									catch(e){
 										console.log(e);
@@ -6647,6 +6735,25 @@ function app_mouse(e){
 										add_notify(false,'',ltmp_arr.encoding_error);
 										$(target).removeClass('disabled');
 										return;
+									}
+									new_object['t']='e';//encoded
+								}
+								else{
+									if(''!=passphrase){//not empty passphrase
+										try{
+											new_object['d']['nt']=new_object['t'];//new type
+											new_object['d']=JSON.stringify(new_object);
+											new_object['d']=viz.aes.simpleEncoder(new_object['d'],passphrase);
+											new_object['c']=passphrase_comment;//comment
+										}
+										catch(e){
+											console.log(e);
+											view.find('.error').html(ltmp_arr.encoding_error);
+											add_notify(false,'',ltmp_arr.encoding_error);
+											$(target).removeClass('disabled');
+											return;
+										}
+										new_object['t']='e';//encoded
 									}
 								}
 
@@ -8335,7 +8442,6 @@ function parse_object(account,block,feed_load_flag,callback){
 								//need replace url with hash to avoid conflict
 								let hashtags_text='none';
 								if('text'==type){
-									hashtags_text=obj.data.d.text;
 									if(typeof obj.data.d.text !== 'undefined'){
 										hashtags_text=obj.data.d.text;
 									}

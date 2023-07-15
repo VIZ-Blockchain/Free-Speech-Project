@@ -268,7 +268,7 @@ var ltmp_en_arr = {
 	<div class="encode-passphrase">
 		<div class="encode-passphrase-caption">%%encoding_caption%%</div>
 		<div class="encode-passphrase-description">%%encoding_description%%</div>
-		%%encoding_form%%
+		%%encoding_item%% %%encoding_add_item%%
 	</div>
 	<div class="beneficiaries-list">
 		<div class="beneficiaries-list-caption">%%beneficiaries_list_caption%%</div>
@@ -278,8 +278,12 @@ var ltmp_en_arr = {
 	encoding_caption: `Encode object`,
 	encoding_description: `Type the password that will be used to encrypt the object.<br>
 	Any user will be able to decrypt the object if he knows the password.<br>
-	If the password is not specified, the object will be available to everyone.`,
-	encoding_form: `<input type="text" name="encode-passphrase" class="round" placeholder="Key passphrase..." value=""><br><input type="text" name="encode-comment" class="round" placeholder="Comment (optional, public)..." value="">`,
+	<b>If the password is not specified, the object will be available to everyone.</b><br>
+	If you specify several passwords, the user will have to decrypt the object several times.<br>
+	From top to bottom, from the first password to the last.<br>
+	<em>Comments are public for everyone, but optional.</em>`,
+	encoding_item: `<div class="encode-passphrase-item"><input type="text" name="encode-passphrase" class="round" placeholder="Key passphrase..." value=""><input type="text" name="encode-comment" class="round" placeholder="Comment (optional, public)..." value=""></div>`,
+	encoding_add_item: `<a tabindex="0" class="encode-passphrase-add-item-action" title="Add passphrase">%%icon_editor_plus%%</a>`,
 	beneficiaries_list_caption: `Beneficiaries`,
 	beneficiaries_list_description: `Specify the users who will receive some of the rewards.`,
 	beneficiaries_list_add: `%%beneficiaries_item%% %%beneficiaries_add_item%%`,
