@@ -34,7 +34,7 @@ p | previous | Block number for previous account activity in current protocol sc
 t | type | Contains type of object. Default value: t (text).
 d | data | Contains data of object.
 
-### Data structure for text type
+### Data structure for t (text) type
 
 Type description: Simple short text note without markup.
 
@@ -45,7 +45,7 @@ r* | reply | Link to replied context in `viz://` url scheme.
 s* | share | Link to shared context in any url scheme.
 b* | beneficiaries | Array of objects contains `{account,weight}` for awarding beneficiaries details.
 
-### Data structure for publication type
+### Data structure for p (publication) type
 
 Type description: Extended text with voice markdown markup.
 
@@ -58,3 +58,13 @@ i* | image | Link to publication image for preview thumbnail.
 r* | reply | Link to replied context in `viz://` url scheme.
 s* | share | Link to shared context in any url scheme.
 b* | beneficiaries | Array of objects contains `{account,weight}` for awarding beneficiaries details.
+
+### Data structure for e (encoded) type
+
+Type description: AES-256-CBC encrypted object. The new data is found in the parameter type nt (new type), either inside d/data or outside. When the object is decrypted, it is deleted.
+
+Attribute short | Attribute long | Description
+------------ | ------------ | -------------
+d | data | An encrypted string inside which the json of the object of the desired data structure is stored. The structure type is stored in the nt (new type) parameter and can be anything. Including newly encoded.
+nt* | new type | An optional new object type that will be assigned upon successful data decryption.
+c* | comment | Comment to the encrypted object. Allows you to leave a mark both for yourself and for an outside observer (used mainly for riddles and quests with a reward inside).
