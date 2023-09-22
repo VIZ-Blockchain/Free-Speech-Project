@@ -14895,7 +14895,9 @@ var terms_of_user_scroll=function(){
 		}
 	}
 }
+var terms_of_use_redirect=false;
 function show_terms_of_use(){
+	terms_of_use_redirect=window.location.hash.substr(1);
 	localStorage.removeItem('terms_of_use_accept');
 	terms_of_use_accept=false;
 	$('body').removeClass('loaded');
@@ -15123,4 +15125,10 @@ function main_app(){
 		setTimeout(function(){window.onresize(true)},20);
 		console.log('The orientation of the device is now '+screen.orientation.angle,screen.orientation);
 	});
+
+	//add redirect after terms of use accept for saved window location hash (import account, for example)
+	if(false!==terms_of_use_redirect){
+		document.location.hash=terms_of_use_redirect;
+		terms_of_use_redirect=false;
+	}
 }
