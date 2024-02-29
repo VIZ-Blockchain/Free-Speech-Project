@@ -231,7 +231,7 @@ if(null!=localStorage.getItem(storage_prefix+'sync_cloud_update')){
 var preview_url='https://readdle.me/preview/';
 
 var account_pattern=/@[a-z0-9\-\.]*/g;
-var block_pattern=/\/([0-9]+)(\/|)$/g;
+var block_pattern=/\/([0-9]+)\//g;
 
 var install_event;
 window.addEventListener('beforeinstallprompt',(e)=>{
