@@ -12756,6 +12756,20 @@ function set_date_view(el,full){
 		}
 	}
 
+
+	if(day<10){
+		day='0'+day;
+	}
+	if(month<10){
+		month='0'+month;
+	}
+	if(minutes<10){
+		minutes='0'+minutes;
+	}
+	if(hours<10){
+		hours='0'+hours;
+	}
+
 	let time_str=ltmp(ltmp_arr.date.time_format,{hour:hours,min:minutes,times:(times_am?ltmp_arr.date.times_am:ltmp_arr.date.times_pm)});
 	let date_str=ltmp(ltmp_arr.date.date_format,{day:day,short_month:ltmp_arr.date.short_month[month]});
 	let date_str_with_year=date_str+ltmp(ltmp_arr.date.year,{year:year});
