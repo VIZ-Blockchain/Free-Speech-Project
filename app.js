@@ -12648,7 +12648,6 @@ function view_path(location,state,save_state,update){
 												let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 
 												view.find('.objects').html(object_view);
-												let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
 												set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
 
 												get_replies(user_result.account,object_result.block,function(err,replies_result){
@@ -12755,7 +12754,6 @@ function set_date_view(el,full){
 			}
 		}
 	}
-
 
 	if(day<10){
 		day='0'+day;
