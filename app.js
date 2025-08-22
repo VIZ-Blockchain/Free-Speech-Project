@@ -5582,7 +5582,6 @@ function app_mouse(e){
 				if(is_mobile()){
 					clearTimeout(mobile_hide_menu_timer);
 					$('div.menu').removeClass('hidden');
-					$('div.menu').addClass('show');
 					if($('div.menu').hasClass('show')){
 						$('body').removeClass('noscroll');
 						$('div.menu').removeClass('show');
