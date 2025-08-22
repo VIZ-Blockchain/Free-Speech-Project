@@ -2017,73 +2017,99 @@ div.menu .secondary a{
 	margin-right:0;
 	margin-left:0;
 }
-.terms-of-use-wrapper{
+
+.documents-short-list{
+	margin-bottom:2.5vh;
+	text-align: center;
+}
+.documents-short-list .select-document.selected{
+	color:#000;
+	font-weight:bold;
+}
+.documents-short-list .select-document-wrapper{
+	display:inline-block;
+}
+.documents-short-list .select-document-wrapper::before{
+	content:'•';
+	margin-right:5px;
+	margin-left:5px;
+	position:relative;
+	top:1px;
+	color:#000;
+}
+.documents-short-list .select-document-wrapper:first-child::before{
+	content:'';
+	margin-right:0;
+	margin-left:0;
+}
+
+.document-wrapper{
 	background:#fff;
 	color:#000;
 	width:100vw;
 	font-size:1.2em;
 	line-height:1.6em;
 }
-.terms-of-use-wrapper .content{
+.document-wrapper .content{
 	display:block;
 }
-.terms-of-use-wrapper .view{
+.document-wrapper .view{
 	display:block;
 	padding:1.2vw;
 	padding-top:2.5vh;
 	padding-bottom:100px;
 }
-.terms-of-use-wrapper .view a{
+.document-wrapper .view a{
 	color:#0b86d2;
 }
-.terms-of-use-wrapper .view p{
+.document-wrapper .view p{
 	margin-bottom:4vh;
 }
-.terms-of-use-wrapper .view .smaller, .terms-of-use-inherit .smaller{
+.document-wrapper .view .smaller, .document-inherit .smaller{
 	font-size:0.9em;
 }
-.terms-of-use-wrapper .view .bigger, .terms-of-use-inherit .bigger{
+.document-wrapper .view .bigger, .document-inherit .bigger{
 	font-size:1.4em !important;
 }
-.terms-of-use-wrapper .view .big, .terms-of-use-inherit .big{
+.document-wrapper .view .big, .document-inherit .big{
 	font-size:1.1em !important;
 }
-.terms-of-use-wrapper .view .big2, .terms-of-use-inherit .big2{
+.document-wrapper .view .big2, .document-inherit .big2{
 	font-size:1.2em !important;
 }
-.terms-of-use-wrapper .view p.boldest, .terms-of-use-inherit p.boldest{
+.document-wrapper .view p.boldest, .document-inherit p.boldest{
 	font-size:1.1em;
 	font-weight:bold;
 }
-.terms-of-use-wrapper ul{
+.document-wrapper ul{
 	list-style-type:disc;
 	margin-left:1.4em;
 }
-.terms-of-use-wrapper ul li{
+.document-wrapper ul li{
 	margin-bottom:1.4em;
 }
-.terms-of-use-wrapper .bad-face svg, .terms-of-use-inherit .bad-face svg{
+.document-wrapper .bad-face svg, .document-inherit .bad-face svg{
 	color:#0b86d2;
 	float:right;
 	width:135px;
 	height:135px;
 	margin:10px;
 }
-.terms-of-use-wrapper .hand-like svg, .terms-of-use-inherit .hand-like svg{
+.document-wrapper .hand-like svg, .document-inherit .hand-like svg{
 	color:#0b86d2;
 	float:right;
 	width:135px;
 	height:135px;
 	margin:10px;
 }
-.terms-of-use-wrapper .incognito svg, .terms-of-use-inherit .incognito svg{
+.document-wrapper .incognito svg, .document-inherit .incognito svg{
 	color:#0b86d2;
 	float:right;
 	width:135px;
 	height:135px;
 	margin:10px;
 }
-.terms-of-use-readline{
+.document-readline{
 	position:sticky;
 	height:6px;
 	margin:0;
@@ -2095,7 +2121,7 @@ div.menu .secondary a{
 	background:rgba(255, 255, 255, 0.692);
 	border-bottom:1px solid #0b86d294;
 }
-.terms-of-use-readline .fill-level{
+.document-readline .fill-level{
 	display:block;
 	position:relative;
 	width:0%;
@@ -2115,14 +2141,13 @@ div.menu .secondary a{
 	-webkit-user-select:none;
 	-o-user-select:none;
 }
-.terms-of-use-accept-action{
+.documents-accept-action{
 	text-align:center;
 	position:fixed;
 	bottom:1vh;
-	margin-right:4vw;
-	max-width:600px;
+	width:calc(600px - 2.8vw);
 }
-.terms-of-use-inherit .terms-of-use-accept-action{
+.document-inherit .documents-accept-action{
 	display:none;
 }
 .startup-screen{
@@ -2872,7 +2897,7 @@ all and (orientation:portrait),
 	.content{
 		width:100vw;
 		min-width:auto;
-		max-width:600px;
+		max-width:100vw;
 		margin:0;
 	}
 	body.publication-mode .content{
@@ -3040,9 +3065,17 @@ all and (orientation:portrait),
 	.adaptive-hide-flex{
 		display:none !important;
 	}
-
+	.documents-accept-action{
+		width:calc(100vw - 6vw);
+	}
 }
 @media only screen and (min-width:0) and (max-width:600px){
+	.content{
+		max-width: 100vw;
+	}
+	.documents-accept-action{
+		width:calc(100vw - 6vw);
+	}
 	.notifications .notify-wrapper .notify{
 		margin:15px;
 		margin-top:0;

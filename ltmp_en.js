@@ -226,6 +226,7 @@ var ltmp_en_arr = {
 	api_list_item:`<p><label><input type="radio" name="api_gate" value="{value}"{selected}> &mdash; {domain}</label></p>`,
 	languages_list_item:`<p><label><input type="radio" name="language" value="{value}"{selected}> &mdash; {caption}</label></p>`,
 	languages_short_list_item:`<div class="select-language-wrapper"><a class="select-language{selected}" data-value="{value}">{caption}</a></div>`,
+	documents_short_list_item:`<div class="select-document-wrapper"><a class="select-document{selected}" data-value="{value}">{caption}</a></div>`,
 
 	node_request:'Sending a request to a node&hellip;',
 	node_not_respond:'Node is not responding',
@@ -447,11 +448,14 @@ var ltmp_en_arr = {
 		services: {
 			title: 'Microservices', html: `
 			<p>Some of the usual services are simply not available on the browser side. Some of the current problems are link previews and synchronization between devices.</p>
-			<p>Additional microservices can be developed to solve these problems. For example, ReaddleMe uses passwordless authentication to store and load account actions (such as subscribing to users, ignoring tags, settings).</p>
+			<p>Additional microservices can be developed to solve these problems. For example, %%brand_caption%% uses passwordless authentication to store and load account actions (such as subscribing to users, ignoring tags, settings).</p>
 			<p>A separate microservice creates a preview for links, telling the browser the meta-information about the requested url. For example, this provides a player for audio files.</p>
 			<p>In the future, it may be possible to bring the microservices provider into a separate application, adding to this the storage of files and records with the ability to delete them according to GDRP.</p>
 		`},
-		terms_of_use: {title: '%%terms_of_use_caption%%', html: `<div class="terms-of-use-inherit">%%terms_of_use_html%%</div>`},
+		terms_of_use: {title: '%%terms_of_use_caption%%', html: `<div class="document-inherit">%%terms_of_use_html%%</div>`},
+		community_rules: {title: '%%community_rules_caption%%', html: `<div class="document-inherit">%%community_rules_html%%</div>`},
+		privacy_policy: {title: '%%privacy_policy_caption%%', html: `<div class="document-inherit">%%privacy_policy_html%%</div>`},
+		manifest: {title: '%%manifest_caption%%', html: `<div class="document-inherit">%%manifest_html%%</div>`},
 	},
 	manual_next_link: `<br><p><a tabIndex="0" data-href="dapp:manual/{item}/">Continue &rarr;</a></p>`,
 	manual_contents_link: `<hr><p><a tabIndex="0" data-href="dapp:manual">&larr; Back to content</a></p>`,
@@ -1012,20 +1016,68 @@ var ltmp_en_arr = {
 	fast_publish_share: `Add comment`,
 	fast_publish_button: `Submit`,
 
-	terms_of_use_wrapper: `
-	<div class="terms-of-use-wrapper">
-	<div class="terms-of-use-readline"><div class="fill-level"></div></div>
+	documents_wrapper: `
+	<div class="document-wrapper">
+	<div class="document-readline"><div class="fill-level"></div></div>
 		<div class="content">
-			<div class="header space-between"><div class="caption grow">%%terms_of_use_caption%%</div></div>
+			<div class="header space-between"><div class="caption grow"></div></div>
 			<div class="view">
 				<div class="languages-short-list"></div>
-				%%terms_of_use_html%%
+				<div class="documents-short-list"></div>
+				<div class="document-html"></div>
+				<a class="button documents-accept-action">%%documents_accept%%</a>
 			</div>
 		</div>
 	</div>`,
+	documents_accept: `Accept All`,
 	terms_of_use_caption: `Terms of Use`,
-	terms_of_use_html: `
-	<p class="boldest bigger">Readdle.me Manifesto</p>
+	terms_of_use_html: `<p>This software and accompanying materials are provided "as is", without warranty of any kind, express or implied.</p>
+	<p><b>You use this software solely at your own risk.</b></p>
+	<p>The author and copyright holder shall not be held liable for:</p>
+	<ul>
+		<li>Any direct, indirect, incidental, special, consequential, or other damages resulting from the use or inability to use the software.</li>
+		<li>Loss of data, failures of hardware or software, or any other damage to your systems or data.</li>
+		<li>The correctness of operation, fitness for a particular purpose, or the absence of errors in the software.</li>
+	</ul>
+	<p>By using this software, you acknowledge that you have understood and agreed to these terms and assume all responsibility for any consequences of its use.</p>`,
+	community_rules_caption: `Community Rules`,
+	community_rules_html: `<p>To ensure a safe and positive environment for everyone, please follow these rules:</p>
+	<p><b>1. Be Respectful</b><br>
+	Treat all members with respect. Healthy debates are encouraged, but kindness is required.</p>
+
+	<p><b>2. No Hate Speech or Harassment</b><br>
+	We have zero tolerance for hate speech, racism, sexism, homophobia, religious intolerance, or any other form of discriminatory or harassing content.</p>
+
+	<p><b>3. No Threats or Violence</b><br>
+	Never post content that threatens, incites, or glorifies violence against anyone. This includes threats of physical harm.</p>
+
+	<p><b>4. No Bullying or Personal Attacks</b><br>
+	Do not bully, intimidate, or harass other users. Personal attacks, insults, and trolling are not allowed.</p>
+
+	<p><b>5. Keep It Clean</b><br>
+	Avoid obscene, sexually explicit, or otherwise offensive content.</p>
+
+	<p><b>6. Respect Privacy</b><br>
+	Do not post personal or confidential information about others (doxing), including addresses, phone numbers, or private messages.</p>
+
+	<p><b>7. No Spam or Excessive Self-Promotion</b><br>
+	Do not spam the community with advertisements, repetitive content, or excessive links to your own websites/channels.</p>
+
+	<p><b>Reporting Violations:</b><br>
+	If you see a post or comment that violates these rules, please use the Report button. Our moderation community will review it and take appropriate action, which may include censor the content, issuing a warning, or banning the user from public view.</p>
+
+	<p>By participating in this community, you agree to abide by these rules. Thank you for helping us keep this a welcoming space for all!</p>`,
+	privacy_policy_caption: `Privacy policy`,
+	privacy_policy_html: `<p>Each instance of the software assumes both a short privacy policy and its own extended one. Short:</p>
+	<p><b>Public & Permanent Data:</b><br>
+	All your public actions (posts, comments) are written to a blockchain. This data is immutable and cannot be altered or deleted by anyone, including us.</p>
+	<p><b>Content Moderation:</b><br>
+	The community can create blacklists to hide content from certain users or accounts. While the data remains on the blockchain, it may not be visible within the app's interface.</p>
+	<p><b>Third-Party Services:</b><br>If you use a third-party service (like a wallet or a gateway) to interact with this social network, their own privacy policy applies to your interaction with their service. We are not responsible for their data practices.</p>`,
+
+	manifest_caption: `Manifest`,
+	manifest_html: `
+	<p class="boldest bigger">The Free Speech Project dapp Manifesto</p>
 
 	<p>Classic social networks has given everyone a loudspeaker.</p>
 
@@ -1040,8 +1092,9 @@ var ltmp_en_arr = {
 	Everywhere.<br>
 	<span class="smaller">And everyone.</span></p>
 
-	<p>Readdle.me is <strong>changing the established rules</strong>. It runs on VIZ Blockchain and uses the Voice protocol.<br>
-	Voice — <a href="https://github.com/VIZ-Blockchain/Free-Speech-Project/blob/master/README.md" target="_blank">global protocol</a> for the social network of free speech.</p>
+	<p>The Free Speech Project is <strong>changing the established rules</strong>. It runs on VIZ Blockchain and uses the Voice protocol.<br>
+	Voice — <a href="https://github.com/VIZ-Blockchain/Free-Speech-Project/blob/master/specification.md" target="_blank">global protocol</a> for the social network of free speech.<br>
+	Voice Events — <a href="https://github.com/VIZ-Blockchain/Free-Speech-Project/blob/master/events-specification.md" target="_blank">additional protocol</a> for events on objects.</p>
 
 	%%svg_hand_like%%
 	<p><span class="big2">No Ads.</span><br>
@@ -1065,18 +1118,15 @@ var ltmp_en_arr = {
 
 	<p>By continuing you understand and accept that:</p>
 	<ul>
-		<li>The Readdle.me code is technology-neutral, like websites or torrents.</li>
+		<li>The <a href="https://github.com/VIZ-Blockchain/Free-Speech-Project/tree/master" target="_blank">Free Speech Project</a> code is technology-neutral, like websites or torrents.</li>
 		<li>Neither you nor anyone else can see who is reading or ignoring who. Because <strong>IT’S NOT YOUR BUSINESS</strong>. You can only guess by replies or reposts.</li>
 		<li>If you are a child under the age of 99, close this window immediately.</li>
 		<li>All you see is unmoderated content and it cannot be moderated.</li>
-		<li>If you readdle an artist drawing illustrations for children's books, you will see the activity of this artist. If you readdle a porn actress, you will see the activity of that porn actress. It's your own fault for what you see. Don't like someone, don't readdle them. Or add them to the ignore list.</li>
+		<li>If you read an artist drawing illustrations for children's books, you will see the activity of this artist. If you read a porn actress, you will see the activity of that porn actress. It's your own fault for what you see. Don't like someone, don't readdle them. Or add them to the ignore list.</li>
 		<li>The content you submit may not be deleted or hidden from the public blockchain.</li>
 		<li>Behind the public names may be fraudsters or cybersquatters. Make sure through other public channels that the author of the content is really who you expect.</li>
 		<li>Blockchain nodes are not responsible for the content sent by network participants.</li>
 		<li>You cannot make content disappear.</li>
 		<li>The developers and software are not responsible for user behavior. If you’re offended by someone, talk to a therapist and add the user to your ignore list.</li>
-	</ul>
-	<a class="button terms-of-use-accept-action">%%terms_of_use_accept%%</a>
-	`,
-	terms_of_use_accept: `I read and agree with the terms of use`,
+	</ul>`,
 };
