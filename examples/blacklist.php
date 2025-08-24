@@ -99,7 +99,7 @@ if($auth_status){
 				$result[]=[
 					'account'=>$m['account'],
 					'block_id'=>$m['block_id'],
-					'type'=>0,//0=block,1=unblock
+					'type'=>$m['type'],//0=block,1=unblock
 					'initiator'=>$m['initiator'],
 					'reason'=>$m['reason'],
 					'time'=>$m['time'],
