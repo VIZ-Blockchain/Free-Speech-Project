@@ -9146,9 +9146,17 @@ function upsert_blacklist_record(account, block_id, type, initiator, reason, tim
 		reason='';
 	}
 
+	// Normalize block_id to ensure it's a valid value for IndexedDB key
+	if(typeof block_id === 'undefined' || block_id === null || block_id === '' || isNaN(block_id)){
+		block_id = 0;
+	}
+	else{
+		block_id = parseInt(block_id) || 0;
+	}
+
 	let blacklist_record = {
 		account: account,
-		block_id: block_id || 0, //0 for all account blocks
+		block_id: block_id, //0 for all account blocks
 		type: type, //0=block, 1=unblock
 		initiator: initiator,
 		reason: reason || '',
@@ -9159,7 +9167,7 @@ function upsert_blacklist_record(account, block_id, type, initiator, reason, tim
 	let q=t.objectStore('blacklist');
 
 	// Check if record with same account+block_id already exists
-	let range = IDBKeyRange.only([account, block_id || 0]);
+	let range = IDBKeyRange.only([account, block_id]);
 	let req = q.index('account_block').openCursor(range, 'prev'); //newest first
 
 	req.onsuccess=function(event){
@@ -9203,6 +9211,14 @@ function upsert_blacklist_record(account, block_id, type, initiator, reason, tim
 function check_blacklist(account, block_id, callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
+	}
+
+	// Normalize block_id to ensure it's a valid value for IndexedDB key
+	if(typeof block_id === 'undefined' || block_id === null || block_id === '' || isNaN(block_id)){
+		block_id = 0;
+	}
+	else{
+		block_id = parseInt(block_id) || 0;
 	}
 
 	let t=db.transaction(['blacklist'],'readonly');
