@@ -9216,6 +9216,7 @@ function upsert_blacklist_record(account, block_id, type, initiator, reason, tim
 }
 
 function check_blacklist(account, block_id, callback){
+	console.log('check_blacklist',account,block_id);
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
