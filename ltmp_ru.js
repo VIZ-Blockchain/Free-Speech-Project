@@ -168,6 +168,14 @@ var ltmp_ru_arr = {
 				<p class="success save-theme-settings-success"></p>
 				<p><a class="button save-theme-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
 			</div>
+			<div class="content-view" data-tab="blacklist">
+				<p><label><input type="checkbox" name="show_report_button"> &mdash; Показывать кнопку жалобы</label></p>
+				<div class="input-addon">(включает значок жалобы в список действий)</div>
+
+				<p class="error save-blacklist-settings-error"></p>
+				<p class="success save-blacklist-settings-success"></p>
+				<p><a class="button save-blacklist-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
+			</div>
 			<div class="content-view" data-tab="connection">
 				<p>Выберите ноду из списка:</p>
 				<div class="api-gates-list">
@@ -621,6 +629,11 @@ var ltmp_ru_arr = {
 		upload_percent: 'Статус загрузки: {percent}%',
 		beneficiaries_summary_weight: 'Проверьте суммарный процент бенефициаров',
 		category_is_founded: 'В тексте уже найдена категория',
+		report_reason_prompt: 'Пожалуйста, укажите причину жалобы на данный контент:',
+		report_submit_success: 'Жалоба успешно отправлена',
+		report_submit_error: 'Не удалось отправить жалобу. Попробуйте еще раз позже.',
+		report_network_error: 'Ошибка сети. Проверьте соединение и попробуйте снова.',
+		report_send_error: 'Не удалось отправить жалобу. Попробуйте еще раз.',
 	},
 	notifications_all_tab: 'Все',
 	notifications_new_tab: 'Новые',
@@ -678,6 +691,7 @@ var ltmp_ru_arr = {
 	app_settings_main_tab: 'Общие',
 	app_settings_feed_tab: 'Лента новостей',
 	app_settings_theme_tab: 'Оформление',
+	app_settings_blacklist_tab: 'Чёрный список',
 	app_settings_sync_tab: 'Перенос данных',
 	app_settings_connection_tab: 'Подключение',
 	app_settings_languages_tab: 'Языки',
@@ -880,7 +894,9 @@ var ltmp_ru_arr = {
 	<a tabindex="0" class="reply-action" title="Комментировать">{icon_reply}<span class="replies-count"></span></a>
 	<a tabindex="0" class="share-action" title="Репост">{icon_repost}</a>
 	<a tabindex="0" class="award-action" title="Наградить">{icon_award}</a>
+	{report_action}
 	<a tabindex="0" class="external-share-action" title="Поделиться">{icon_share}</a>`,
+	report_action: `<a tabindex="0" class="report-action" title="Пожаловаться">{icon_report}</a>`,
 	object_type_text_pinned: `<div class="object type-text-loading pinned-object" data-link="{link}" data-events="{events}">{context}</div>`,
 	object_type_text_pinned_caption: `
 	<div class="share-view">{icon} Закрепленная запись</div>
@@ -960,6 +976,10 @@ var ltmp_ru_arr = {
 	feed_no_new_objects: 'Ничего нового нет',
 
 	nsfw_warning: '<div tabindex="0" class="nsfw-warning nsfw-reveal-action">Данный контент может содержать информацию для взрослых.<br>Нажмите, чтобы показать.</div>',
+
+	blacklist_warning: '<div class="blacklist-warning">Данный контент заблокирован пользователем {initiator}.{reason_text}</div>',
+	blacklist_reason_label: ' Причина: ',
+	profile_blacklist_warning: '<div class="profile-blacklist-warning">Данный аккаунт заблокирован пользователем {initiator}.{reason_text}</div>',
 
 	plural: {
 		hours: {

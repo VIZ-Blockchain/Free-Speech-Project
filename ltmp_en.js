@@ -168,6 +168,14 @@ var ltmp_en_arr = {
 				<p class="success save-theme-settings-success"></p>
 				<p><a class="button save-theme-settings-action">Save</a><span class="submit-button-ring"></span></p>
 			</div>
+			<div class="content-view" data-tab="blacklist">
+				<p><label><input type="checkbox" name="show_report_button"> &mdash; Show report button</label></p>
+				<div class="input-addon">(enables report icon in actions list)</div>
+
+				<p class="error save-blacklist-settings-error"></p>
+				<p class="success save-blacklist-settings-success"></p>
+				<p><a class="button save-blacklist-settings-action">Save</a><span class="submit-button-ring"></span></p>
+			</div>
 			<div class="content-view" data-tab="connection">
 				<p>Select node from the list:</p>
 				<div class="api-gates-list">
@@ -621,6 +629,11 @@ var ltmp_en_arr = {
 		upload_percent: 'Uploading: {percent}%',
 		beneficiaries_summary_weight: 'Check the total beneficiaries percentage',
 		category_is_founded: 'Category already found in the text',
+		report_reason_prompt: 'Please provide a reason for reporting this content:',
+		report_submit_success: 'Report submitted successfully',
+		report_submit_error: 'Failed to submit report. Please try again later.',
+		report_network_error: 'Network error. Please check your connection and try again.',
+		report_send_error: 'Failed to send report. Please try again.',
 	},
 	notifications_all_tab: 'All',
 	notifications_new_tab: 'New',
@@ -678,6 +691,7 @@ var ltmp_en_arr = {
 	app_settings_main_tab: 'General',
 	app_settings_feed_tab: 'News Feed',
 	app_settings_theme_tab: 'Color Theme',
+	app_settings_blacklist_tab: 'Blacklist',
 	app_settings_sync_tab: 'Data Transfer',
 	app_settings_connection_tab: 'Connection',
 	app_settings_languages_tab: 'Languages',
@@ -880,7 +894,9 @@ var ltmp_en_arr = {
 	<a tabindex="0" class="reply-action" title="Comment">{icon_reply}<span class="replies-count"></span></a>
 	<a tabindex="0" class="share-action" title="Repost">{icon_repost}</a>
 	<a tabindex="0" class="award-action" title="Award">{icon_award}</a>
+	{report_action}
 	<a tabindex="0" class="external-share-action" title="Share">{icon_share}</a>`,
+	report_action: `<a tabindex="0" class="report-action" title="Report">{icon_report}</a>`,
 	object_type_text_pinned: `<div class="object type-text-loading pinned-object" data-link="{link}" data-events="{events}">{context}</div>`,
 	object_type_text_pinned_caption: `
 	<div class="share-view">{icon} Pinned post</div>
@@ -960,6 +976,10 @@ var ltmp_en_arr = {
 	feed_no_new_objects: 'Nothing new',
 
 	nsfw_warning: '<div tabindex="0" class="nsfw-warning nsfw-reveal-action">This content may contain adult information.<br>Click to show.</div>',
+
+	blacklist_warning: '<div class="blacklist-warning">This content has been blocked by {initiator}.{reason_text}</div>',
+	blacklist_reason_label: ' Reason: ',
+	profile_blacklist_warning: '<div class="profile-blacklist-warning">This account has been blacklisted by {initiator}.{reason_text}</div>',
 
 	plural: {
 		hours: {

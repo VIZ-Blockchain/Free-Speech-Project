@@ -985,6 +985,8 @@ if(null!=localStorage.getItem(storage_prefix+'current_user')){
 	current_user=localStorage.getItem(storage_prefix+'current_user');
 }
 
+var blacklist_url='https://readdle.me/blacklist/';
+
 var default_settings={
 	feed_size:10000,
 	activity_size:0,
@@ -1020,6 +1022,7 @@ var default_settings={
 	nsfw_warning:true,
 	nsfw_hashtags:['nsfw','sex','porn'],
 
+	show_report_button:true,
 	save_passphrase_on_publish:false,
 };
 var settings=default_settings;
@@ -1056,6 +1059,19 @@ function save_theme_settings(view){
 
 	tab.find('.success').html(ltmp_arr.app_settings_saved);
 	apply_theme_mode();
+}
+function save_blacklist_settings(view){
+	let tab=view.find('.content-view[data-tab="blacklist"]');
+	tab.find('.button').removeClass('disabled');
+	tab.find('.submit-button-ring').removeClass('show');
+	tab.find('.error').html('');
+
+	settings.show_report_button=tab.find('input[name="show_report_button"]').prop('checked');
+
+	let settings_json=JSON.stringify(settings);
+	localStorage.setItem(storage_prefix+'settings',settings_json);
+
+	tab.find('.success').html(ltmp_arr.app_settings_saved);
 }
 function save_feed_settings(view){
 	let tab=view.find('.content-view[data-tab="feed"]');
@@ -1320,7 +1336,7 @@ var idb_init=false;
 var db;
 var db_req;
 var db_version=1;
-var global_db_version=10;
+var global_db_version=11;
 var need_update_db_version=false;
 var local_global_db_version=parseInt(localStorage.getItem(storage_prefix+'global_db_version'));
 if(isNaN(local_global_db_version)){
@@ -1559,6 +1575,19 @@ function load_db(callback){
 			//new index for passphrases
 		}
 		console.log('Passphrases storage upgraded');
+
+		if(!db.objectStoreNames.contains('blacklist')){//store blacklist records
+			items_table=db.createObjectStore('blacklist',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('account','account',{unique:false});//blocked account
+			items_table.createIndex('initiator','initiator',{unique:false});//who initiated the block
+			items_table.createIndex('time','time',{unique:false});//unixtime
+			items_table.createIndex('type','type',{unique:false});//0=block, 1=unblock
+			items_table.createIndex('account_block',['account','block_id'],{unique:false});//for specific block filtering
+		}
+		else{
+			//new index for blacklist
+		}
+		console.log('Blacklist storage upgraded');
 
 		if(trx_need_commit){
 			update_trx.commit();
@@ -6303,6 +6332,17 @@ function app_mouse(e){
 					save_theme_settings(view);
 				}
 			}
+			if($(target).hasClass('save-blacklist-settings-action')){
+				if(!$(target).hasClass('disabled')){
+					$(target).addClass('disabled');
+					let view=$(target).closest('.view');
+					let tab=view.find('.content-view[data-tab="blacklist"]');
+					tab.find('.submit-button-ring').addClass('show');
+					tab.find('.error').html('');
+					tab.find('.success').html('');
+					save_blacklist_settings(view);
+				}
+			}
 			if($(target).hasClass('save-settings-action')){
 				if(!$(target).hasClass('disabled')){
 					$(target).addClass('disabled');
@@ -6589,6 +6629,87 @@ function app_mouse(e){
 					setTimeout(function(){
 						$(target).removeClass('success');
 					},3000);
+				}
+			}
+			if($(target).hasClass('report-action')){
+				// Check if user is logged in and report button is enabled
+				if(''==current_user || !settings.show_report_button){
+					return;
+				}
+
+				let object_el=$(target).closest('.object');
+				let object_link=object_el.data('link');
+				let object_account='';
+				let object_block=0;
+
+				if(0==object_link.indexOf('viz://')){
+					object_link=object_link.toLowerCase();
+					object_link=escape_html(object_link);
+					let link_account=object_link.match(account_pattern);
+					if(typeof link_account[0] != 'undefined'){
+						object_account=link_account[0].substr(1);
+						let link_block=object_link.match(block_pattern);
+						if(typeof link_block[0] != 'undefined'){
+							object_block=parseInt(fast_str_replace('/','',link_block[0]));
+
+							// Check if user has regular_key available for authentication
+							if(typeof users[current_user] === 'undefined' || typeof users[current_user].regular_key === 'undefined'){
+								add_notify(false,ltmp_arr.notify_arr.error,ltmp_arr.account_settings_empty_regular_key);
+								return;
+							}
+
+							// Show confirmation dialog with text input using localized prompt
+							let report_reason=prompt(ltmp_arr.notify_arr.report_reason_prompt);
+							if(report_reason && report_reason.trim().length > 0){
+								report_reason=report_reason.trim();
+
+								// Get passwordless auth data for session proof
+								let auth_data=passwordless_auth(current_user,users[current_user].regular_key);
+
+								// Prepare data to send with authentication proof
+								auth_data.action='report';
+								auth_data.account=object_account;
+								auth_data.block_id=object_block;
+								auth_data.initiator=current_user;
+								auth_data.reason=report_reason;
+
+								// Send XMLHttpRequest to blacklist_url
+								let xhr=new XMLHttpRequest();
+								xhr.open('POST',blacklist_url,true);
+								xhr.setRequestHeader('Content-Type','application/json');
+
+								xhr.onreadystatechange=function(){
+									if(xhr.readyState===4){
+										if(xhr.status===200||xhr.status===201){
+											$(target).addClass('success');
+											setTimeout(function(){
+												$(target).removeClass('success');
+											},3000);
+											add_notify(false,'',ltmp_arr.notify_arr.report_submit_success);
+											console.log('Report submitted successfully');
+										}
+										else{
+											console.error('Failed to submit report:',xhr.status,xhr.responseText);
+											add_notify(false,ltmp_arr.notify_arr.error,ltmp_arr.notify_arr.report_submit_error);
+										}
+									}
+								};
+
+								xhr.onerror=function(){
+									console.error('Network error while submitting report');
+									add_notify(false,ltmp_arr.notify_arr.error,ltmp_arr.notify_arr.report_network_error);
+								};
+
+								try{
+									xhr.send(JSON.stringify(auth_data));
+								}
+								catch(error){
+									console.error('Error sending report:',error);
+									add_notify(false,ltmp_arr.notify_arr.error,ltmp_arr.notify_arr.report_send_error);
+								}
+							}
+						}
+					}
 				}
 			}
 			if($(target).hasClass('fast-publish-action')){
@@ -8813,6 +8934,116 @@ function get_passphrases(account,callback){
 			else{
 				callback(true,[]);
 			}
+		}
+	};
+}
+
+//Blacklist management functions
+function add_blacklist_record(account, block_id, type, initiator, reason, callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	if(typeof reason==='undefined'){
+		reason='';
+	}
+	let unixtime = new Date().getTime() / 1000 | 0;
+	let blacklist_record = {
+		account: account,
+		block_id: block_id || 0, //0 for all account blocks
+		type: type, //0=block, 1=unblock
+		initiator: initiator,
+		reason: reason || '',
+		time: unixtime
+	};
+
+	let t=db.transaction(['blacklist'],'readwrite');
+	let q=t.objectStore('blacklist');
+	let req=q.add(blacklist_record);
+	if(trx_need_commit){
+		t.commit();
+	}
+	req.onsuccess=function(e){
+		callback(true);
+	};
+	req.onerror=function(e){
+		callback(false);
+	};
+}
+
+function check_blacklist(account, block_id, callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+
+	let t=db.transaction(['blacklist'],'readonly');
+	let q=t.objectStore('blacklist');
+	let req, range;
+
+	//Check for both specific block and general account blocks
+	if(block_id && block_id > 0){
+		//Check specific block first
+		range = IDBKeyRange.only([account, block_id]);
+		req = q.index('account_block').openCursor(range, 'prev'); //newest first
+	}
+	else{
+		//Check account-wide blocks
+		range = IDBKeyRange.only([account, 0]);
+		req = q.index('account_block').openCursor(range, 'prev'); //newest first
+	}
+
+	let blocked = false;
+	let last_reason = '';
+	let last_initiator = '';
+
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			let record = cur.value;
+			//Type 0 = block, Type 1 = unblock
+			if(record.type === 0){
+				blocked = true;
+				last_reason = record.reason;
+				last_initiator = record.initiator;
+			}
+			else if(record.type === 1){
+				blocked = false;
+			}
+			cur.continue();
+		}
+		else{
+			//If specific block not found and block_id > 0, check account-wide
+			if(block_id && block_id > 0 && !blocked){
+				range = IDBKeyRange.only([account, 0]);
+				req = q.index('account_block').openCursor(range, 'prev');
+				block_id = 0; //prevent infinite recursion
+				return;
+			}
+			callback(blocked, {
+				reason: last_reason,
+				initiator: last_initiator
+			});
+		}
+	};
+}
+
+function get_blacklist_records(account, callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+
+	let records = [];
+	let t=db.transaction(['blacklist'],'readonly');
+	let q=t.objectStore('blacklist');
+	let req=q.index('account').openCursor(IDBKeyRange.only(account),'prev'); //newest first
+
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			records.push(cur.value);
+			cur.continue();
+		}
+		else{
+			callback(records);
 		}
 	};
 }
@@ -11114,6 +11345,7 @@ function view_app_settings(view,path_parts,query,title){
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/main',class:('main'==current_tab?'current':''),caption:ltmp_arr.app_settings_main_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/theme',class:('theme'==current_tab?'current':''),caption:ltmp_arr.app_settings_theme_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/blacklist',class:('blacklist'==current_tab?'current':''),caption:ltmp_arr.app_settings_blacklist_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/connection',class:('connection'==current_tab?'current':''),caption:ltmp_arr.app_settings_connection_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/languages',class:('languages'==current_tab?'current':''),caption:ltmp_arr.app_settings_languages_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/sync',class:('sync'==current_tab?'current':''),caption:ltmp_arr.app_settings_sync_tab});
@@ -11200,6 +11432,21 @@ function view_app_settings(view,path_parts,query,title){
 			localStorage.setItem(storage_prefix+'settings',settings_json);
 
 			apply_theme_mode();
+		});
+	}
+	if('blacklist'==current_tab){
+		tab.find('.button').removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+		tab.find('.error').html('');
+		tab.find('.success').html('');
+
+		tab.find('input[name="show_report_button"]').prop('checked',settings.show_report_button);
+
+		tab.find('input[name="show_report_button"]').off('change');
+		tab.find('input[name="show_report_button"]').on('change',function(){
+			settings.show_report_button=$(this).prop('checked');
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
 		});
 	}
 	if('connection'==current_tab){
@@ -12081,80 +12328,132 @@ function view_path(location,state,save_state,update){
 							after_view_render(view);
 						}
 						else{
-							let profile=JSON.parse(result.profile);
-							let profile_view='';
-							let profile_found=false;
-							let json_metadata={};
-							let profile_contacts='';
-							let pinned_link=false;
+							// Check if account is blacklisted before loading profile content
+							check_blacklist(check_account, null, function(is_blocked, blacklist_record) {
+								if (is_blocked) {
+									// Account is blacklisted, show warning instead of profile content
+									document.title='@'+result.account+' - '+title;
 
-							if(typeof profile.nickname !== 'undefined'){
-								document.title=profile.nickname+' (@'+result.account+') '+document.title;
-							}
-							else{
-								document.title='@'+result.account+' - '+title;
-							}
+									// Prepare reason text
+									let reason_text = '';
+									if (blacklist_record.reason && blacklist_record.reason.trim().length > 0) {
+										reason_text = ltmp_arr.blacklist_reason_label + blacklist_record.reason;
+									}
 
-							if(typeof profile != 'undefined'){
-								if(typeof profile.pinned != 'undefined'){
-										pinned_link=profile.pinned;
-								}
-								if(typeof profile.about != 'undefined'){
-									profile_view+=ltmp(ltmp_arr.profile_about,{about:profile.about});
-									profile_found=true;
-								}
-								if(typeof profile.categories != 'undefined'){
-									if(profile.categories.length>0){
-										let categories_view='';
-										for(let i in profile.categories){
-											let category_caption=profile.categories[i];
-											if(category_caption.length>0){
-												let category_hashtag=category_caption.replaceAll(' ','_').trim().toLowerCase();
-												categories_view+=ltmp(ltmp_arr.profile_categories_item,{caption:category_caption,hashtag:category_hashtag});
-											}
-										}
-										profile_view+=ltmp(ltmp_arr.profile_categories,{categories:categories_view});
-										profile_found=true;
+									// Show localized profile blacklist warning
+									let profile_blacklist_html = ltmp(ltmp_arr.profile_blacklist_warning, {
+										initiator: blacklist_record.initiator || 'unknown',
+										reason_text: reason_text
+									});
+
+									$('.loader').css('display','block');
+									$('.view').css('display','none');
+									if(!update){
+										level++;
+										let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:'',profile:profile_blacklist_html});
+										$('.content').append(new_view);
+										update=true;
 									}
+									let view=$('.view[data-level="'+level+'"]');
+
+									let header='';
+									header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_global.icon_back,force:back_to});
+									header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp(ltmp_arr.header_link_icons)});
+									view.find('.header').html(header);
+
+									// Show message that profile content is not loaded due to blacklist
+									view.find('.objects').html('');
+									$('.loader').css('display','none');
+									view.css('display','block');
+									after_view_render(view);
+									return;
 								}
-								if(typeof profile.interests != 'undefined'){
-									if(profile.interests.length>0){
-										let interests_view='';
-										for(let i in profile.interests){
-											let interest_caption=profile.interests[i];
-											if(interest_caption.length>0){
-												let interest_hashtag=interest_caption.replaceAll(' ','_').trim().toLowerCase();
-												interests_view+=ltmp(ltmp_arr.profile_interests_item,{caption:interest_caption,hashtag:interest_hashtag});
-											}
-										}
-										profile_view+=ltmp(ltmp_arr.profile_interests,{interests:interests_view});
-										profile_found=true;
-									}
-								}
-								if(typeof profile.github != 'undefined'){
-									profile_contacts+=ltmp(ltmp_arr.profile_contacts_github,{github:profile.github,icon_github:ltmp_global.icon_github});
-									profile_found=true;
-								}
-								if(typeof profile.telegram != 'undefined'){
-									profile_contacts+=ltmp(ltmp_arr.profile_contacts_telegram,{telegram:profile.telegram,icon_telegram:ltmp_global.icon_telegram});
-									profile_found=true;
-								}
-								if(''!=profile_contacts){
-									profile_view+=ltmp(ltmp_arr.profile_contacts,{contacts:profile_contacts});
-								}
-							}
-							let profile_section='';
-							if(profile_found){
-								profile_section=ltmp(ltmp_arr.profile,{profile:profile_view});
-							}
-							$('.loader').css('display','block');
-							$('.view').css('display','none');
-							let new_level=true;
-							if(!update){
-								if(level==0){
-									new_level=true;
+
+								// Account is not blacklisted, proceed with normal profile rendering
+								let profile=JSON.parse(result.profile);
+								let profile_view='';
+								let profile_found=false;
+								let json_metadata={};
+								let profile_contacts='';
+								let pinned_link=false;
+
+								if(typeof profile.nickname !== 'undefined'){
+									document.title=profile.nickname+' (@'+result.account+') '+document.title;
 								}
 								else{
+									document.title='@'+result.account+' - '+title;
+								}
+
+								if(typeof profile != 'undefined'){
+									if(typeof profile.pinned != 'undefined'){
+											pinned_link=profile.pinned;
+									}
+									if(typeof profile.about != 'undefined'){
+										profile_view+=ltmp(ltmp_arr.profile_about,{about:profile.about});
+										profile_found=true;
+									}
+									if(typeof profile.categories != 'undefined'){
+										if(profile.categories.length>0){
+											let categories_view='';
+											for(let i in profile.categories){
+												let category_caption=profile.categories[i];
+												if(category_caption.length>0){
+													let category_hashtag=category_caption.replaceAll(' ','_').trim().toLowerCase();
+													categories_view+=ltmp(ltmp_arr.profile_categories_item,{caption:category_caption,hashtag:category_hashtag});
+												}
+											}
+											profile_view+=ltmp(ltmp_arr.profile_categories,{categories:categories_view});
+											profile_found=true;
+										}
+									}
+									if(typeof profile.interests != 'undefined'){
+										if(profile.interests.length>0){
+											let interests_view='';
+											for(let i in profile.interests){
+												let interest_caption=profile.interests[i];
+												if(interest_caption.length>0){
+													let interest_hashtag=interest_caption.replaceAll(' ','_').trim().toLowerCase();
+													interests_view+=ltmp(ltmp_arr.profile_interests_item,{caption:interest_caption,hashtag:interest_hashtag});
+												}
+											}
+											profile_view+=ltmp(ltmp_arr.profile_interests,{interests:interests_view});
+											profile_found=true;
+										}
+									}
+									if(typeof profile.github != 'undefined'){
+										profile_contacts+=ltmp(ltmp_arr.profile_contacts_github,{github:profile.github,icon_github:ltmp_global.icon_github});
+										profile_found=true;
+									}
+									if(typeof profile.telegram != 'undefined'){
+										profile_contacts+=ltmp(ltmp_arr.profile_contacts_telegram,{telegram:profile.telegram,icon_telegram:ltmp_global.icon_telegram});
+										profile_found=true;
+									}
+									if(''!=profile_contacts){
+										profile_view+=ltmp(ltmp_arr.profile_contacts,{contacts:profile_contacts});
+									}
+								}
+								let profile_section='';
+								if(profile_found){
+									profile_section=ltmp(ltmp_arr.profile,{profile:profile_view});
+								}
+								$('.loader').css('display','block');
+								$('.view').css('display','none');
+								let new_level=true;
+								if(!update){
+									if(level==0){
+										new_level=true;
+									}
+									else{
+										if(path!=$('.view[data-level="'+level+'"]').data('path')){
+											new_level=true;
+										}
+										else{
+											new_level=false;
+										}
+									}
+								}
+								else{
+									//fix: update toggled, check the need for a new level (different path in rare conditions?)
 									if(path!=$('.view[data-level="'+level+'"]').data('path')){
 										new_level=true;
 									}
@@ -12162,159 +12461,150 @@ function view_path(location,state,save_state,update){
 										new_level=false;
 									}
 								}
-							}
-							else{
-								//fix: update toggled, check the need for a new level (different path in rare conditions?)
-								if(path!=$('.view[data-level="'+level+'"]').data('path')){
-									new_level=true;
-								}
-								else{
-									new_level=false;
-								}
-							}
 
-							if(new_level){
-								level++;
-								let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:ltmp(ltmp_arr.tabs),profile:profile_section});
-								$('.content').append(new_view);
-								update=true;
-							}
-							let view=$('.view[data-level="'+level+'"]');
-
-							// Profile tabs
-							let current_tab='main';
-							if((typeof query != 'undefined')&&(''!=query)){
-								current_tab=query;
-							}
-							let tabs='';
-							tabs+=ltmp(ltmp_arr.tab,{link:path+'?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.profile_main_tab});
-							tabs+=ltmp(ltmp_arr.tab,{link:path+'?posts',class:('posts'==current_tab?'current':''),caption:ltmp_arr.profile_posts_tab});
-							tabs+=ltmp(ltmp_arr.tab,{link:path+'?shares',class:('shares'==current_tab?'current':''),caption:ltmp_arr.profile_shares_tab});
-							tabs+=ltmp(ltmp_arr.tab,{link:path+'?replies',class:('replies'==current_tab?'current':''),caption:ltmp_arr.profile_replies_tab});
-							view.find('.tabs').html(tabs);
-							if('main'!=current_tab){
-								document.title=ltmp_arr['profile_'+current_tab+'_tab']+' - '+document.title;
-							}
-							view.data('profile',1);
-							if(!new_level){
-								view.data('query',query);
-							}
-							if(update){
-								let header='';
-								header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_global.icon_back,force:back_to});
-								header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp(ltmp_arr.header_link_icons)});
-								if(check_account==current_user){
-									header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_global.icon_edit_profile});
-									header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_global.icon_new_object});
+								if(new_level){
+									level++;
+									let new_view=ltmp(ltmp_arr.view,{level:level,path:location,query:query,tabs:ltmp(ltmp_arr.tabs),profile:profile_section});
+									$('.content').append(new_view);
+									update=true;
 								}
-								else{
-									if(-1!=whitelabel_accounts.indexOf(check_account)){
+								let view=$('.view[data-level="'+level+'"]');
+
+								// Profile tabs
+								let current_tab='main';
+								if((typeof query != 'undefined')&&(''!=query)){
+									current_tab=query;
+								}
+								let tabs='';
+								tabs+=ltmp(ltmp_arr.tab,{link:path+'?main',class:('main'==current_tab?'current':''),caption:ltmp_arr.profile_main_tab});
+								tabs+=ltmp(ltmp_arr.tab,{link:path+'?posts',class:('posts'==current_tab?'current':''),caption:ltmp_arr.profile_posts_tab});
+								tabs+=ltmp(ltmp_arr.tab,{link:path+'?shares',class:('shares'==current_tab?'current':''),caption:ltmp_arr.profile_shares_tab});
+								tabs+=ltmp(ltmp_arr.tab,{link:path+'?replies',class:('replies'==current_tab?'current':''),caption:ltmp_arr.profile_replies_tab});
+								view.find('.tabs').html(tabs);
+								if('main'!=current_tab){
+									document.title=ltmp_arr['profile_'+current_tab+'_tab']+' - '+document.title;
+								}
+								view.data('profile',1);
+								if(!new_level){
+									view.data('query',query);
+								}
+								if(update){
+									let header='';
+									header+=ltmp(ltmp_arr.header_back_action,{icon:ltmp_global.icon_back,force:back_to});
+									header+=ltmp(ltmp_arr.header_link,{link:location,icons:ltmp(ltmp_arr.header_link_icons)});
+									if(check_account==current_user){
+										header+=ltmp(ltmp_arr.edit_profile_link,{icon_edit_profile:ltmp_global.icon_edit_profile});
+										header+=ltmp(ltmp_arr.new_object_link,{icon_new_object:ltmp_global.icon_new_object});
 									}
 									else{
-										header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
-										if(1==result.status){
-											header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_global.icon_subscribed});
-											header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_global.icon_unsubscribe});
-										}
-										else
-										if(2==result.status){
-											header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_global.icon_ignored});
-											header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_global.icon_unsubscribe});
+										if(-1!=whitelabel_accounts.indexOf(check_account)){
 										}
 										else{
-											header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_global.icon_subscribe});
-											header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_global.icon_ignore});
+											header+=ltmp(ltmp_arr.user_actions_open,{user:check_account});
+											if(1==result.status){
+												header+=ltmp(ltmp_arr.subscribed_link,{icon:ltmp_global.icon_subscribed});
+												header+=ltmp(ltmp_arr.unsubscribe_link,{icon:ltmp_global.icon_unsubscribe});
+											}
+											else
+											if(2==result.status){
+												header+=ltmp(ltmp_arr.ignored_link,{icon:ltmp_global.icon_ignored});
+												header+=ltmp(ltmp_arr.unignore_link,{icon:ltmp_global.icon_unsubscribe});
+											}
+											else{
+												header+=ltmp(ltmp_arr.subscribe_link,{icon:ltmp_global.icon_subscribe});
+												header+=ltmp(ltmp_arr.ignore_link,{icon:ltmp_global.icon_ignore});
+											}
+											header+=ltmp_arr.user_actions_close;
 										}
-										header+=ltmp_arr.user_actions_close;
 									}
+									view.find('.header').html(header);
 								}
-								view.find('.header').html(header);
-							}
-							if(update){
-								//if profile view path is new update, then need load events
-								let events_deep=1;//dont need more for unknown account
-								if(1==result.status){//subscribed
-									events_deep=settings.activity_deep;
-								}
-								if(2!=result.status){//if not ignored
-									check_user_last_event(check_account,function(last_event){
-										if(false!==last_event){//no user events at all
-											//console.log('view_path check_user_last_event block num',check_account,last_event);
-											let need_new=false;
-											load_events_train({},check_account,last_event,0,need_new,events_deep,function(train){
-												finish_events_train(train,check_account,function(affected_objects){
-													console.log('view_path finish_events_train affected_objects',check_account,affected_objects);
-													for(let i in affected_objects){
-														let affected_object_block=affected_objects[i];
-														//need to update render view for all affected objects (preview/pinned in profile feed)
-														setTimeout(function(){
-															get_user(check_account,false,function(err,affected_user){
-																if(!err)
-																get_object(check_account,affected_object_block,false,function(err,affected_object_result){
-																	if(!err){
-																		let find_object=view.find('.objects>.object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]');
-																		if(find_object.length>0){
-																			let found_object_type='preview';
-																			if(find_object.hasClass('pinned-object')){
-																				found_object_type='pinned';
+								if(update){
+									//if profile view path is new update, then need load events
+									let events_deep=1;//dont need more for unknown account
+									if(1==result.status){//subscribed
+										events_deep=settings.activity_deep;
+									}
+									if(2!=result.status){//if not ignored
+										check_user_last_event(check_account,function(last_event){
+											if(false!==last_event){//no user events at all
+												//console.log('view_path check_user_last_event block num',check_account,last_event);
+												let need_new=false;
+												load_events_train({},check_account,last_event,0,need_new,events_deep,function(train){
+													finish_events_train(train,check_account,function(affected_objects){
+														console.log('view_path finish_events_train affected_objects',check_account,affected_objects);
+														for(let i in affected_objects){
+															let affected_object_block=affected_objects[i];
+															//need to update render view for all affected objects (preview/pinned in profile feed)
+															setTimeout(function(){
+																get_user(check_account,false,function(err,affected_user){
+																	if(!err)
+																	get_object(check_account,affected_object_block,false,function(err,affected_object_result){
+																		if(!err){
+																			let find_object=view.find('.objects>.object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]');
+																			if(find_object.length>0){
+																				let found_object_type='preview';
+																				if(find_object.hasClass('pinned-object')){
+																					found_object_type='pinned';
+																				}
+																				let affected_render=render_object(affected_user,affected_object_result,found_object_type);
+																				find_object.before(affected_render);
+																				find_object.remove();//remove old view
+																				update_short_date(view.find('.objects .object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]').find('.short-date-view'));
+																				profile_filter_by_type();
 																			}
-																			let affected_render=render_object(affected_user,affected_object_result,found_object_type);
-																			find_object.before(affected_render);
-																			find_object.remove();//remove old view
-																			update_short_date(view.find('.objects .object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]').find('.short-date-view'));
-																			profile_filter_by_type();
 																		}
-																	}
+																	});
 																});
-															});
-														},10);
-													}
-												});
-											});
-										}
-									});
-								}
-								view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:result.account,block:0}));
-							}
-							if('main'==current_tab){
-								//pinned object from profile
-								if(false!==pinned_link)
-								if(0==pinned_link.indexOf('viz://')){
-									let pinned_object_account='';
-									let pinned_object_block=0;
-									pinned_link=pinned_link.toLowerCase();
-									pinned_link=escape_html(pinned_link);
-									let link_account=pinned_link.match(account_pattern);
-									if(typeof link_account[0] != 'undefined'){
-										pinned_object_account=link_account[0].substr(1);
-										let link_block=pinned_link.match(block_pattern);
-										if(typeof link_block[0] != 'undefined'){
-											pinned_object_block=parseInt(fast_str_replace('/','',link_block[0]));
-											//remove existed pinned objects and prepend new render
-											view.find('.objects .pinned-object').remove();
-											setTimeout(function(){
-												get_user(pinned_object_account,false,function(err,pinned_user_result){
-													if(!err)
-													get_object(pinned_object_account,pinned_object_block,false,function(err,pinned_object_result){
-														if(!err){
-															pinned_render=render_object(pinned_user_result,pinned_object_result,'pinned');
-															view.find('.objects').prepend(pinned_render);
+															},10);
 														}
 													});
 												});
-											},10);
+											}
+										});
+									}
+									view.find('.objects').html(ltmp(ltmp_arr.loader_notice,{account:result.account,block:0}));
+								}
+								if('main'==current_tab){
+									//pinned object from profile
+									if(false!==pinned_link)
+									if(0==pinned_link.indexOf('viz://')){
+										let pinned_object_account='';
+										let pinned_object_block=0;
+										pinned_link=pinned_link.toLowerCase();
+										pinned_link=escape_html(pinned_link);
+										let link_account=pinned_link.match(account_pattern);
+										if(typeof link_account[0] != 'undefined'){
+											pinned_object_account=link_account[0].substr(1);
+											let link_block=pinned_link.match(block_pattern);
+											if(typeof link_block[0] != 'undefined'){
+												pinned_object_block=parseInt(fast_str_replace('/','',link_block[0]));
+												//remove existed pinned objects and prepend new render
+												view.find('.objects .pinned-object').remove();
+												setTimeout(function(){
+													get_user(pinned_object_account,false,function(err,pinned_user_result){
+														if(!err)
+														get_object(pinned_object_account,pinned_object_block,false,function(err,pinned_object_result){
+															if(!err){
+																pinned_render=render_object(pinned_user_result,pinned_object_result,'pinned');
+																view.find('.objects').prepend(pinned_render);
+															}
+														});
+													});
+												},10);
 
+											}
 										}
 									}
 								}
-							}
-							$('.loader').css('display','none');
-							view.css('display','block');
-							if(!update){
-								$(window)[0].scrollTo({top:(typeof view.data('scroll')!=='undefined'?view.data('scroll'):0)});
-							}
-							profile_filter_by_type();
-							after_view_render(view);
+								$('.loader').css('display','none');
+								view.css('display','block');
+								if(!update){
+									$(window)[0].scrollTo({top:(typeof view.data('scroll')!=='undefined'?view.data('scroll'):0)});
+								}
+								profile_filter_by_type();
+								after_view_render(view);
+							}); // Close blacklist check callback
 						}
 					});
 				}
@@ -13326,6 +13616,7 @@ function render_object(user,object,type,preset_level){
 					icon_reply:ltmp_global.icon_reply,
 					icon_repost:ltmp_global.icon_repost,
 					icon_award:ltmp_global.icon_gem,
+					report_action:(settings.show_report_button?ltmp(ltmp_arr.report_action,{icon_report:ltmp_global.icon_report}):''),
 					icon_share:ltmp_global.icon_share,
 				}),
 				timestamp:object.data.timestamp,
@@ -13425,6 +13716,7 @@ function render_object(user,object,type,preset_level){
 					icon_reply:ltmp_global.icon_reply,
 					icon_repost:ltmp_global.icon_repost,
 					icon_award:ltmp_global.icon_gem,
+					report_action:(settings.show_report_button?ltmp(ltmp_arr.report_action,{icon_report:ltmp_global.icon_report}):''),
 					icon_share:ltmp_global.icon_share,
 				}),
 			});
@@ -13465,6 +13757,7 @@ function render_object(user,object,type,preset_level){
 						icon_reply:ltmp_global.icon_reply,
 						icon_repost:ltmp_global.icon_repost,
 						icon_award:ltmp_global.icon_gem,
+						report_action:(settings.show_report_button?ltmp(ltmp_arr.report_action,{icon_report:ltmp_global.icon_report}):''),
 						icon_share:ltmp_global.icon_share,
 					}),
 					more:more_view,
@@ -13514,6 +13807,7 @@ function render_object(user,object,type,preset_level){
 						icon_reply:ltmp_global.icon_reply,
 						icon_repost:ltmp_global.icon_repost,
 						icon_award:ltmp_global.icon_gem,
+						report_action:(settings.show_report_button?ltmp(ltmp_arr.report_action,{icon_report:ltmp_global.icon_report}):''),
 						icon_share:ltmp_global.icon_share,
 					}),
 					timestamp:object.data.timestamp,
@@ -13597,6 +13891,7 @@ function render_object(user,object,type,preset_level){
 						icon_reply:ltmp_global.icon_reply,
 						icon_repost:ltmp_global.icon_repost,
 						icon_award:ltmp_global.icon_gem,
+						report_action:(settings.show_report_button?ltmp(ltmp_arr.report_action,{icon_report:ltmp_global.icon_report}):''),
 						icon_share:ltmp_global.icon_share,
 					}),
 					timestamp:object.data.timestamp,
@@ -13702,6 +13997,7 @@ function render_object(user,object,type,preset_level){
 					icon_reply:ltmp_global.icon_reply,
 					icon_repost:ltmp_global.icon_repost,
 					icon_award:ltmp_global.icon_gem,
+					report_action:(settings.show_report_button?ltmp(ltmp_arr.report_action,{icon_report:ltmp_global.icon_report}):''),
 					icon_share:ltmp_global.icon_share,
 				}),
 				timestamp:object.data.timestamp,
@@ -13773,6 +14069,7 @@ function render_object(user,object,type,preset_level){
 						icon_reply:ltmp_global.icon_reply,
 						icon_repost:ltmp_global.icon_repost,
 						icon_award:ltmp_global.icon_gem,
+						report_action:(settings.show_report_button?ltmp(ltmp_arr.report_action,{icon_report:ltmp_global.icon_report}):''),
 						icon_share:ltmp_global.icon_share,
 					}),
 					timestamp:object.data.timestamp,
@@ -13850,6 +14147,7 @@ function render_object(user,object,type,preset_level){
 						icon_reply:ltmp_global.icon_reply,
 						icon_repost:ltmp_global.icon_repost,
 						icon_award:ltmp_global.icon_gem,
+						report_action:(settings.show_report_button?ltmp(ltmp_arr.report_action,{icon_report:ltmp_global.icon_report}):''),
 						icon_share:ltmp_global.icon_share,
 					}),
 					timestamp:object.data.timestamp,
@@ -13992,6 +14290,7 @@ function render_object(user,object,type,preset_level){
 				icon_reply:ltmp_global.icon_reply,
 				icon_repost:ltmp_global.icon_repost,
 				icon_award:ltmp_global.icon_gem,
+				report_action:(settings.show_report_button?ltmp(ltmp_arr.report_action,{icon_report:ltmp_global.icon_report}):''),
 				icon_share:ltmp_global.icon_share,
 			}),
 			timestamp:object.data.timestamp,
@@ -14060,6 +14359,7 @@ function render_object(user,object,type,preset_level){
 					icon_reply:ltmp_global.icon_reply,
 					icon_repost:ltmp_global.icon_repost,
 					icon_award:ltmp_global.icon_gem,
+					report_action:(settings.show_report_button?ltmp(ltmp_arr.report_action,{icon_report:ltmp_global.icon_report}):''),
 					icon_share:ltmp_global.icon_share,
 				}),
 				timestamp:object.data.timestamp,
@@ -14133,6 +14433,7 @@ function render_object(user,object,type,preset_level){
 					icon_reply:ltmp_global.icon_reply,
 					icon_repost:ltmp_global.icon_repost,
 					icon_award:ltmp_global.icon_gem,
+					report_action:(settings.show_report_button?ltmp(ltmp_arr.report_action,{icon_report:ltmp_global.icon_report}):''),
 					icon_share:ltmp_global.icon_share,
 				}),
 				timestamp:object.data.timestamp,
@@ -14165,6 +14466,42 @@ function render_object(user,object,type,preset_level){
 			}
 			check_nsfw(user.account,object.block);
 		}
+
+		// Check blacklist status
+		check_blacklist(user.account, object.block, function(is_blocked, blacklist_record) {
+			if (is_blocked) {
+				let check_blacklist_display = function(account, block, record) {
+					let current_link = 'viz://@' + account + '/' + block + '/';
+					let view = $('.view[data-level="' + level + '"]');
+					if (-1 == path.indexOf('viz://')) { // look in services views
+						let path_parts = path.split('/');
+						view = $('.view[data-path="' + path_parts[0] + '"]');
+					}
+					let object_view = view.find('.objects .object[data-link="' + current_link + '"]');
+
+					// Hide the actual content but show blacklist warning
+					object_view.find('.content-view').css('display', 'none');
+					object_view.find('.preview-container').css('display', 'none');
+
+					// Prepare reason text
+					let reason_text = '';
+					if (record.reason && record.reason.trim().length > 0) {
+						reason_text = ltmp_arr.blacklist_reason_label + record.reason;
+					}
+
+					// Show localized blacklist warning
+					let warning_html = ltmp(ltmp_arr.blacklist_warning, {
+						initiator: record.initiator || 'unknown',
+						reason_text: reason_text
+					});
+
+					// Insert warning before content-view
+					$(object_view.find('.content-view')[0]).before(warning_html);
+				}
+				check_blacklist_display(user.account, object.block, blacklist_record);
+			}
+		});
+
 		if(false!==text_first_link){
 			text_first_link=link_to_http_gate(text_first_link);
 			if(false!==text_first_link){
