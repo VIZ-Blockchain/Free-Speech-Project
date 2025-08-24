@@ -228,6 +228,12 @@ if(null!=localStorage.getItem(storage_prefix+'sync_cloud_update')){
 		localStorage.removeItem(storage_prefix+'sync_cloud_update');
 	}
 }
+if(null!=localStorage.getItem(storage_prefix+'blacklist_sync_activity')){
+	blacklist_sync_activity=parseInt(localStorage.getItem(storage_prefix+'blacklist_sync_activity'));
+	if(isNaN(blacklist_sync_activity)){
+		localStorage.removeItem(storage_prefix+'blacklist_sync_activity');
+	}
+}
 var preview_url='https://readdle.me/preview/';
 
 var account_pattern=/@[a-z0-9\-\.]*/g;
@@ -439,10 +445,139 @@ function check_sync_cloud_activity(callback){
 	},check_sync_cloud_activity_interval);
 }
 
+function check_blacklist_sync_activity(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	if(''==current_user){
+		return;
+	}
+	if(typeof users[current_user] === 'undefined'){
+		return;
+	}
+	if(typeof users[current_user].regular_key === 'undefined'){
+		return;
+	}
+	if(false===blacklist_url){
+		return;
+	}
+	get_blacklist_latest_time(function(latest_time){
+		if(latest_time > blacklist_sync_activity){
+			blacklist_sync_activity = latest_time;
+			localStorage.setItem(storage_prefix+'blacklist_sync_activity',blacklist_sync_activity);
+		}
+		load_blacklist_sync_get_updates();
+		callback(true);
+		clearTimeout(blacklist_sync_update_timer);
+		blacklist_sync_update_timer=setTimeout(function(){
+			check_blacklist_sync_activity();
+		},blacklist_sync_update_interval);
+	});
+}
+
+function load_blacklist_sync_get_updates(){
+	if(!blacklist_sync_update_busy){
+		blacklist_sync_update_busy=true;
+		let xhr = new XMLHttpRequest();
+		xhr.timeout=5000;
+		xhr.overrideMimeType('text/plain');
+		xhr.open('POST',blacklist_url);
+		xhr.setRequestHeader('accept','application/json, text/plain, */*');
+		xhr.setRequestHeader('content-type','application/json');
+		xhr.ontimeout = function() {
+			console.log('load_blacklist_sync_get_updates timeout',blacklist_url);
+			blacklist_sync_update_busy=false;
+		};
+		xhr.onreadystatechange = function() {
+			if(4==xhr.readyState && 200==xhr.status){
+				try{
+					let json=JSON.parse(xhr.response);
+					console.log('load_blacklist_sync_get_updates response',json);
+					if(typeof json.result !=='undefined' && Array.isArray(json.result)){
+						for(let i in json.result){
+							let update=json.result[i];
+							if(update.time > blacklist_sync_activity){
+								blacklist_sync_updates_queue.push(update);
+								blacklist_sync_activity=update.time;
+								localStorage.setItem(storage_prefix+'blacklist_sync_activity',blacklist_sync_activity);
+							}
+						}
+						clearTimeout(blacklist_sync_update_worker_timer);
+						blacklist_sync_update_worker_timer=setTimeout(function(){
+							blacklist_sync_update_worker();
+						},blacklist_sync_update_worker_interval);
+
+						// If we got 250 items (max limit), schedule immediate retry
+						if(json.result.length >= 250){
+							clearTimeout(blacklist_sync_update_timer);
+							blacklist_sync_update_timer=setTimeout(function(){
+								check_blacklist_sync_activity();
+							},1000); // retry in 1 second
+						}
+					}
+				}
+				catch(e){
+					console.log('load_blacklist_sync_get_updates response json error',xhr.response,e);
+				}
+				blacklist_sync_update_busy=false;
+			}
+			if(4==xhr.readyState && 200!=xhr.status){
+				console.log('load_blacklist_sync_get_updates status error',xhr.status);
+				blacklist_sync_update_busy=false;
+			}
+		};
+		let auth_data=passwordless_auth(current_user,users[current_user].regular_key);
+		auth_data.action='updates';
+		auth_data.time=blacklist_sync_activity;
+		xhr.send(JSON.stringify(auth_data));
+	}
+}
+
+function blacklist_sync_update_worker(){
+	if(!blacklist_sync_update_worker_busy){
+		blacklist_sync_update_worker_busy=true;
+
+		let update=blacklist_sync_updates_queue.shift();
+		if(typeof update !== 'undefined'){
+			// Upsert the blacklist record to IndexedDB (add new or update existing)
+			upsert_blacklist_record(update.account, update.block_id, update.type, update.initiator, update.reason, update.time, function(success){
+				if(success){
+					console.log('blacklist_sync_update_worker OK with update',update);
+				}
+				else{
+					console.log('blacklist_sync_update_worker error with update',update);
+				}
+				blacklist_sync_update_worker_busy=false;
+				clearTimeout(blacklist_sync_update_worker_timer);
+				blacklist_sync_update_worker_timer=setTimeout(function(){
+					blacklist_sync_update_worker();
+				},blacklist_sync_update_worker_interval);
+			});
+		}
+		else{
+			blacklist_sync_update_worker_busy=false;
+			clearTimeout(blacklist_sync_update_worker_timer);
+			blacklist_sync_update_worker_timer=setTimeout(function(){
+				blacklist_sync_update_worker();
+			},blacklist_sync_update_worker_interval);
+		}
+	}
+}
+
 var sync_cloud_updates_queue=[];
 var sync_cloud_update_worker_busy=false;
 var sync_cloud_update_worker_timer=0;
 var sync_cloud_update_worker_interval=1*1000;
+
+// Blacklist sync variables
+var blacklist_sync_activity=0;
+var blacklist_sync_update_timer=0;
+var blacklist_sync_update_interval=30*60*1000; // 30 minutes
+var blacklist_sync_update_busy=false;
+var blacklist_sync_updates_queue=[];
+var blacklist_sync_update_worker_busy=false;
+var blacklist_sync_update_worker_timer=0;
+var blacklist_sync_update_worker_interval=1*1000;
 function sync_cloud_update_worker(){
 	if(!sync_cloud_update_worker_busy){
 		sync_cloud_update_worker_busy=true;
@@ -1290,6 +1425,7 @@ function remove_session(view){
 				localStorage.removeItem(storage_prefix+'install_close');
 				localStorage.removeItem(storage_prefix+'sync_cloud_activity');
 				localStorage.removeItem(storage_prefix+'sync_cloud_update');
+				localStorage.removeItem(storage_prefix+'blacklist_sync_activity');
 				render_menu();
 				render_session();
 				setTimeout(function(){
@@ -1796,6 +1932,7 @@ function save_account_settings(view,login,regular_key){
 
 			localStorage.removeItem(storage_prefix+'sync_cloud_activity');
 			localStorage.removeItem(storage_prefix+'sync_cloud_update');
+			localStorage.removeItem(storage_prefix+'blacklist_sync_activity');
 
 			req.onsuccess=function(event){
 				let cur=event.target.result;
@@ -1827,6 +1964,11 @@ function save_account_settings(view,login,regular_key){
 								check_sync_cloud_activity_timer=setTimeout(function(){
 									check_sync_cloud_activity();
 								},200);
+								//init blacklist sync
+								clearTimeout(blacklist_sync_update_timer);
+								blacklist_sync_update_timer=setTimeout(function(){
+									check_blacklist_sync_activity();
+								},500);
 							});
 						}
 					}
@@ -1840,6 +1982,11 @@ function save_account_settings(view,login,regular_key){
 							check_sync_cloud_activity_timer=setTimeout(function(){
 								check_sync_cloud_activity();
 							},200);
+							//init blacklist sync
+							clearTimeout(blacklist_sync_update_timer);
+							blacklist_sync_update_timer=setTimeout(function(){
+								check_blacklist_sync_activity();
+							},500);
 						});
 					}
 				}
@@ -8938,6 +9085,27 @@ function get_passphrases(account,callback){
 	};
 }
 
+//Blacklist sync functions
+function get_blacklist_latest_time(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	let latest_time = blacklist_sync_activity;
+	let t=db.transaction(['blacklist'],'readonly');
+	let q=t.objectStore('blacklist');
+	let req=q.index('time').openCursor(null,'prev'); //newest first
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			latest_time = cur.value.time;
+			cur.continue();
+		}
+		else{
+			callback(latest_time);
+		}
+	};
+}
+
 //Blacklist management functions
 function add_blacklist_record(account, block_id, type, initiator, reason, callback){
 	if(typeof callback==='undefined'){
@@ -8964,6 +9132,68 @@ function add_blacklist_record(account, block_id, type, initiator, reason, callba
 	}
 	req.onsuccess=function(e){
 		callback(true);
+	};
+	req.onerror=function(e){
+		callback(false);
+	};
+}
+
+function upsert_blacklist_record(account, block_id, type, initiator, reason, time, callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+	if(typeof reason==='undefined'){
+		reason='';
+	}
+
+	let blacklist_record = {
+		account: account,
+		block_id: block_id || 0, //0 for all account blocks
+		type: type, //0=block, 1=unblock
+		initiator: initiator,
+		reason: reason || '',
+		time: time || (new Date().getTime() / 1000 | 0)
+	};
+
+	let t=db.transaction(['blacklist'],'readwrite');
+	let q=t.objectStore('blacklist');
+
+	// Check if record with same account+block_id already exists
+	let range = IDBKeyRange.only([account, block_id || 0]);
+	let req = q.index('account_block').openCursor(range, 'prev'); //newest first
+
+	req.onsuccess=function(event){
+		let cur=event.target.result;
+		if(cur){
+			// Record exists, update it
+			let existing_record = cur.value;
+			existing_record.type = blacklist_record.type;
+			existing_record.initiator = blacklist_record.initiator;
+			existing_record.reason = blacklist_record.reason;
+			existing_record.time = blacklist_record.time;
+
+			let update_req = cur.update(existing_record);
+			update_req.onsuccess=function(e){
+				callback(true);
+			};
+			update_req.onerror=function(e){
+				callback(false);
+			};
+			cur.continue();
+		}
+		else{
+			// No existing record, add new one
+			let add_req=q.add(blacklist_record);
+			if(trx_need_commit){
+				t.commit();
+			}
+			add_req.onsuccess=function(e){
+				callback(true);
+			};
+			add_req.onerror=function(e){
+				callback(false);
+			};
+		}
 	};
 	req.onerror=function(e){
 		callback(false);
@@ -9567,6 +9797,8 @@ function stop_timers(emergency_stop){
 	clearTimeout(clear_cache_timer);
 	clearTimeout(dgp_timer);
 	clearTimeout(sync_cloud_update_worker_timer);
+	clearTimeout(blacklist_sync_update_timer);
+	clearTimeout(blacklist_sync_update_worker_timer);
 }
 
 function start_timers(){
@@ -9583,6 +9815,14 @@ function start_timers(){
 	sync_cloud_update_worker_timer=setTimeout(function(){
 		sync_cloud_update_worker();
 	},sync_cloud_update_worker_interval);
+	clearTimeout(blacklist_sync_update_timer);
+	blacklist_sync_update_timer=setTimeout(function(){
+		check_blacklist_sync_activity();
+	},200);
+	clearTimeout(blacklist_sync_update_worker_timer);
+	blacklist_sync_update_worker_timer=setTimeout(function(){
+		blacklist_sync_update_worker();
+	},blacklist_sync_update_worker_interval);
 }
 
 var load_notifications_count_timer=0;
