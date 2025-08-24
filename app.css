@@ -1899,11 +1899,17 @@ body.dark .loading-ring:after {
 	padding:20vh 0;
 	font-size:20px;
 }
+.blacklist-warning{
+	text-align:center;
+	padding:2.5vh 0;
+	color:rgb(222, 0, 11);
+	line-height:30px;
+}
 .profile-blacklist-warning{
 	text-align:center;
 	font-weight:bold;
 	padding:5vh 0;
-	color:rgb(195, 0, 3);
+	color:rgb(222, 0, 11);
 	line-height:40px;
 }
 .load-more-end-notice{
