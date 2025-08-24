@@ -14715,7 +14715,7 @@ function render_object(user,object,type,preset_level){
 	setTimeout(function(){
 		check_object_repost(user.account,object.block);
 		check_object_award(user.account,object.block);
-		console.log('render_object timeout check first link',type,text_first_link,user.account,object.block);
+		console.log('render_object timeout check first link',type,text_first_link,user.account,object.block,object);
 		if(1==object.nsfw){
 			let check_nsfw=function(account,block){
 				let current_link='viz://@'+account+'/'+block+'/';
