@@ -5147,8 +5147,9 @@ function load_new_objects(indicator){
 
 			for(let i in new_objects){
 				let object=new_objects[i];
-				let object_view=render_object(object.account,object.block,'feed',check_level);
-				indicator.before(object_view);
+				render_object(object.account,object.block,'feed',check_level,function(result){
+					indicator.before(result);
+				});
 				if(0==objects_counter){
 					$(window)[0].scrollTo({top:0});
 				}
@@ -5399,16 +5400,17 @@ function app_mouse(e){
 											if(object_preview){
 												object_type='preview';
 											}
-											new_render=render_object(object_user,object_result,object_type);
-											object.before(new_render);
-											object.remove();//remove old view
-											if(object_preview){
-												update_short_date();
-											}
-											else{
-												let link='viz://@'+object_account+'/'+object_block+'/';
-												set_date_view($('.object[data-link="'+link+'"] .date-view'),true);
-											}
+											render_object(object_user,object_result,object_type,level,function(new_render){
+												object.before(new_render);
+												object.remove();//remove old view
+												if(object_preview){
+													update_short_date();
+												}
+												else{
+													let link='viz://@'+object_account+'/'+object_block+'/';
+													set_date_view($('.object[data-link="'+link+'"] .date-view'),true);
+												}
+											});
 										}
 										else{
 											input_el.addClass('negative');
@@ -8887,15 +8889,17 @@ function parse_object(account,block,feed_load_flag,callback){
 																				if(object_preview){
 																					object_type='preview';
 																				}
-																				new_render=render_object(object_user,object_result,object_type);
-																				find_object.before(new_render);
-																				find_object.remove();//remove old view
-																				if(object_preview){
-																					update_short_date();
-																				}
-																				else{
-																					set_date_view($('.object[data-link="'+link+'"] .date-view'),true);
-																				}
+																				render_object(object_user,object_result,object_type,level,function(result){
+																					find_object.before(result);
+																					find_object.remove();//remove old view
+																					if(object_preview){
+																						update_short_date();
+																					}
+																					else{
+																						set_date_view($('.object[data-link="'+link+'"] .date-view'),true);
+																					}
+																				});
+																				return;
 																			}
 																		}
 																	});
@@ -8999,8 +9003,9 @@ function load_nested_replies(el){
 				for(let i in replies_result){
 					let reply_object=replies_result[i];
 					let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
-					reply_render=render_object(reply_object.account,reply_object.block,'reply');
-					nest.append(reply_render);
+					render_object(reply_object.account,reply_object.block,'reply',level,function(reply_render){
+						nest.append(reply_render);
+					});
 				}
 			}
 		});
@@ -9380,15 +9385,16 @@ function try_decode_all_objects(account,passphrase){
 											if(object_preview){
 												object_type='preview';
 											}
-											new_render=render_object(object_user,object_result,object_type);
-											find_object.before(new_render);
-											find_object.remove();//remove old view
-											if(object_preview){
-												update_short_date();
-											}
-											else{
-												set_date_view($('.object[data-link="'+link+'"] .date-view'),true);
-											}
+											render_object(object_user,object_result,object_type,level,function(new_render){
+												find_object.before(new_render);
+												find_object.remove();//remove old view
+												if(object_preview){
+													update_short_date();
+												}
+												else{
+													set_date_view($('.object[data-link="'+link+'"] .date-view'),true);
+												}
+											});
 										}
 									}
 								});
@@ -10014,9 +10020,10 @@ function update_feed_events_subscribes(check_account){
 										console.log(affected_object_result);
 										let find_object=view.find('.objects>.object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]');
 										if(find_object.length>0){
-											let affected_render=render_object(affected_user,affected_object_result,'feed',check_level);
-											find_object.before(affected_render);
-											find_object.remove();//remove old view
+											render_object(affected_user,affected_object_result,'feed',check_level,function(affected_render){
+												find_object.before(affected_render);
+												find_object.remove();//remove old view
+											});
 										}
 									}
 								});
@@ -12853,11 +12860,12 @@ function view_path(location,state,save_state,update){
 																				if(find_object.hasClass('pinned-object')){
 																					found_object_type='pinned';
 																				}
-																				let affected_render=render_object(affected_user,affected_object_result,found_object_type);
-																				find_object.before(affected_render);
-																				find_object.remove();//remove old view
-																				update_short_date(view.find('.objects .object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]').find('.short-date-view'));
-																				profile_filter_by_type();
+																				render_object(affected_user,affected_object_result,found_object_type,level,function(affected_render){
+																					find_object.before(affected_render);
+																					find_object.remove();//remove old view
+																					update_short_date(view.find('.objects .object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]').find('.short-date-view'));
+																					profile_filter_by_type();
+																				});
 																			}
 																		}
 																	});
@@ -12892,8 +12900,9 @@ function view_path(location,state,save_state,update){
 														if(!err)
 														get_object(pinned_object_account,pinned_object_block,false,function(err,pinned_object_result){
 															if(!err){
-																pinned_render=render_object(pinned_user_result,pinned_object_result,'pinned');
-																view.find('.objects').prepend(pinned_render);
+																render_object(pinned_user_result,pinned_object_result,'pinned',level,function(pinned_render){
+																	view.find('.objects').prepend(pinned_render);
+																});
 															}
 														});
 													});
@@ -13024,39 +13033,41 @@ function view_path(location,state,save_state,update){
 												}
 												else{
 													document.title=check_block+' - '+document.title;
-													let object_view=render_object(user_result,object_result);
-													let link='viz://@'+user_result.account+'/'+object_result.block+'/';
+													render_object(user_result,object_result,undefined,level,function(object_view){
+														let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 
-													view.find('.objects').html(object_view);
+														view.find('.objects').html(object_view);
 
-													let hidden=false;
-													if(typeof object_result.hidden !== 'undefined'){
-														if(1==object_result.hidden){
-															hidden=true;
-														}
-													}
-
-													if(hidden){
-														view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_is_hidden}));
-													}
-													else{
-														let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
-														set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
-
-														get_replies(user_result.account,object_result.block,function(err,replies_result){
-															for(let i in replies_result){
-																let reply_object=replies_result[i];
-																let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
-																reply_render=render_object(reply_object.account,reply_object.block,'reply');
-																view.find('.objects').append(reply_render);
+														let hidden=false;
+														if(typeof object_result.hidden !== 'undefined'){
+															if(1==object_result.hidden){
+																hidden=true;
 															}
-														});
-													}
+														}
 
-													$('.loader').css('display','none');
-													view.css('display','block');
-													check_load_more();
-													after_view_render(view);
+														if(hidden){
+															view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_is_hidden}));
+														}
+														else{
+															let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+															set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
+
+															get_replies(user_result.account,object_result.block,function(err,replies_result){
+																for(let i in replies_result){
+																	let reply_object=replies_result[i];
+																	let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+																	render_object(reply_object.account,reply_object.block,'reply',level,function(reply_render){
+																		view.find('.objects').append(reply_render);
+																	});
+																}
+															});
+														}
+
+														$('.loader').css('display','none');
+														view.css('display','block');
+														check_load_more();
+														after_view_render(view);
+													});
 												}
 											});
 										});
@@ -13079,39 +13090,41 @@ function view_path(location,state,save_state,update){
 											}
 											else{
 												document.title=check_block+' - '+document.title;
-												let object_view=render_object(user_result,object_result);
-												let link='viz://@'+user_result.account+'/'+object_result.block+'/';
+												render_object(user_result,object_result,undefined,level,function(object_view){
+													let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 
-												view.find('.objects').html(object_view);
+													view.find('.objects').html(object_view);
 
-												let hidden=false;
-												if(typeof object_result.hidden !== 'undefined'){
-													if(1==object_result.hidden){
-														hidden=true;
-													}
-												}
-
-												if(hidden){
-													view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_is_hidden}));
-												}
-												else{
-													let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
-													set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
-
-													get_replies(user_result.account,object_result.block,function(err,replies_result){
-														for(let i in replies_result){
-															let reply_object=replies_result[i];
-															let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
-															reply_render=render_object(reply_object.account,reply_object.block,'reply');
-															view.find('.objects').append(reply_render);
+													let hidden=false;
+													if(typeof object_result.hidden !== 'undefined'){
+														if(1==object_result.hidden){
+															hidden=true;
 														}
-													});
-												}
+													}
 
-												$('.loader').css('display','none');
-												view.css('display','block');
-												check_load_more();
-												after_view_render(view);
+													if(hidden){
+														view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_is_hidden}));
+													}
+													else{
+														let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+														set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
+
+														get_replies(user_result.account,object_result.block,function(err,replies_result){
+															for(let i in replies_result){
+																let reply_object=replies_result[i];
+																let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+																render_object(reply_object.account,reply_object.block,'reply',level,function(reply_render){
+																	view.find('.objects').append(reply_render);
+																});
+															}
+														});
+													}
+
+													$('.loader').css('display','none');
+													view.css('display','block');
+													check_load_more();
+													after_view_render(view);
+												});
 											}
 										});
 									}
@@ -13237,29 +13250,31 @@ function view_path(location,state,save_state,update){
 												}
 												else{
 													document.title=check_block+' - '+document.title;
-													let object_view=render_object(user_result,object_result,'publication');
-													let link='viz://@'+user_result.account+'/'+object_result.block+'/';
+													render_object(user_result,object_result,'publication',level,function(object_view){
+														let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 
-													view.find('.objects').html(object_view);
-													let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
-													set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
+														view.find('.objects').html(object_view);
+														let timestamp=view.find('.object[data-link="'+link+'"] .date-view').data('timestamp');
+														set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
 
-													get_replies(user_result.account,object_result.block,function(err,replies_result){
-														for(let i in replies_result){
-															let reply_object=replies_result[i];
-															let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
-															reply_render=render_object(reply_object.account,reply_object.block,'reply');
-															view.find('.objects').append(reply_render);
-														}
+														get_replies(user_result.account,object_result.block,function(err,replies_result){
+															for(let i in replies_result){
+																let reply_object=replies_result[i];
+																let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+																render_object(reply_object.account,reply_object.block,'reply',level,function(reply_render){
+																	view.find('.objects').append(reply_render);
+																});
+															}
+														});
+
+														//publication content view mode
+														$('body').addClass('publication-mode');
+
+														$('.loader').css('display','none');
+														view.css('display','block');
+														check_load_more();
+														after_view_render(view);
 													});
-
-													//publication content view mode
-													$('body').addClass('publication-mode');
-
-													$('.loader').css('display','none');
-													view.css('display','block');
-													check_load_more();
-													after_view_render(view);
 												}
 											});
 										});
@@ -13281,28 +13296,30 @@ function view_path(location,state,save_state,update){
 											}
 											else{
 												document.title=check_block+' - '+document.title;
-												let object_view=render_object(user_result,object_result,'publication');
-												let link='viz://@'+user_result.account+'/'+object_result.block+'/';
+												render_object(user_result,object_result,'publication',level,function(object_view){
+													let link='viz://@'+user_result.account+'/'+object_result.block+'/';
 
-												view.find('.objects').html(object_view);
-												set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
+													view.find('.objects').html(object_view);
+													set_date_view(view.find('.object[data-link="'+link+'"] .date-view'),true);
 
-												get_replies(user_result.account,object_result.block,function(err,replies_result){
-													for(let i in replies_result){
-														let reply_object=replies_result[i];
-														let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
-														reply_render=render_object(reply_object.account,reply_object.block,'reply');
-														view.find('.objects').append(reply_render);
-													}
+													get_replies(user_result.account,object_result.block,function(err,replies_result){
+														for(let i in replies_result){
+															let reply_object=replies_result[i];
+															let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+															render_object(reply_object.account,reply_object.block,'reply',level,function(reply_render){
+																view.find('.objects').append(reply_render);
+															});
+														}
+													});
+
+													//publication content view mode
+													$('body').addClass('publication-mode');
+
+													$('.loader').css('display','none');
+													view.css('display','block');
+													check_load_more();
+													after_view_render(view);
 												});
-
-												//publication content view mode
-												$('body').addClass('publication-mode');
-
-												$('.loader').css('display','none');
-												view.css('display','block');
-												check_load_more();
-												after_view_render(view);
 											}
 										});
 									}
@@ -13840,9 +13857,10 @@ function check_object_award(account,block){
 	};
 }
 
-function render_object(user,object,type,preset_level){
+function render_object(user,object,type,preset_level,callback){
 	type=typeof type==='undefined'?'default':type;
 	preset_level=typeof preset_level==='undefined'?level:preset_level;
+	callback=typeof callback==='function'?callback:function(){};
 	if(typeof object.block !== 'undefined'){
 		object.block=parseInt(object.block);
 	}
@@ -13944,7 +13962,8 @@ function render_object(user,object,type,preset_level){
 			events:(typeof object.events !== 'undefined')?object.events.join(','):'',
 			previous:object.data.p,
 		});
-		return render;
+		callback(render);
+		return;
 	}
 	if('publication'==type){
 		if('publication'==object_type){
@@ -14031,13 +14050,15 @@ function render_object(user,object,type,preset_level){
 							let sub_render='';
 							if(err){
 								sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_not_found});
+								load_content.html(sub_render);
 							}
 							else{
-								sub_render=render_object(sub_user,sub_object,'share-preview');
+								render_object(sub_user,sub_object,'share-preview',level,function(sub_render){
+									load_content.html(sub_render);
+									let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
+									update_short_date(new_object.find('.short-date-view'));
+								});
 							}
-							load_content.html(sub_render);
-							let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
-							update_short_date(new_object.find('.short-date-view'));
 						});
 					}
 				});
@@ -14123,7 +14144,8 @@ function render_object(user,object,type,preset_level){
 					more:more_view,
 					comment:comment,
 				});
-				return render;
+				callback(render);
+				return;
 			}
 			if('publication'==object_type){
 				//text=markdown_clear_code(object.data.d.m);//markdown
@@ -14307,13 +14329,15 @@ function render_object(user,object,type,preset_level){
 							let sub_render='';
 							if(err){
 								sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_not_found});
+								load_content.html(sub_render);
 							}
 							else{
-								sub_render=render_object(sub_user,sub_object,'share-preview');
+								render_object(sub_user,sub_object,'share-preview',level,function(sub_render){
+									load_content.html(sub_render);
+									let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
+									update_short_date(new_object.find('.short-date-view'));
+								});
 							}
-							load_content.html(sub_render);
-							let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
-							update_short_date(new_object.find('.short-date-view'));
 						});
 					}
 				});
@@ -14393,7 +14417,8 @@ function render_object(user,object,type,preset_level){
 					timestamp:object.data.timestamp,
 					comment:comment,
 				});
-				return render;
+				callback(render);
+				return;
 			}
 			if('publication'==object_type){
 				//text=markdown_clear_code(object.data.d.m);//markdown
@@ -14544,11 +14569,12 @@ function render_object(user,object,type,preset_level){
 				view=$('.view[data-path="'+path_parts[0]+'"]');
 			}
 			let load_content=view.find('.object[data-link="'+current_link+'"].type-text-loading.pinned-object .load-content');
-			sub_render=render_object(user,object,'share-preview');
-			load_content.html(sub_render);
-			let new_object=load_content.find('.object[data-link="viz://@'+user.account+'/'+object.block+'/"]');
-			new_object.addClass('pinned-object');
-			update_short_date(new_object.find('.short-date-view'));
+			render_object(user,object,'share-preview',preset_level,function(sub_render){
+				load_content.html(sub_render);
+				let new_object=load_content.find('.object[data-link="viz://@'+user.account+'/'+object.block+'/"]');
+				new_object.addClass('pinned-object');
+				update_short_date(new_object.find('.short-date-view'));
+			});
 		},10);
 	}
 	if('feed'==type){
@@ -14573,13 +14599,15 @@ function render_object(user,object,type,preset_level){
 						let sub_render='';
 						if(err){
 							sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_not_found});
+							load_content.html(sub_render);
 						}
 						else{
-							sub_render=render_object(sub_user,sub_object,'preview');
+							render_object(sub_user,sub_object,'preview',preset_level,function(sub_render){
+								load_content.html(sub_render);
+								let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
+								update_short_date(new_object.find('.short-date-view'));
+							});
 						}
-						load_content.html(sub_render);
-						let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
-						update_short_date(new_object.find('.short-date-view'));
 					});
 				}
 			});
@@ -14607,13 +14635,15 @@ function render_object(user,object,type,preset_level){
 						let sub_render='';
 						if(err){
 							sub_render=ltmp(ltmp_arr.error_notice,{error:ltmp_arr.object_not_found});
+							load_content.html(sub_render);
 						}
 						else{
-							sub_render=render_object(sub_user,sub_object,'reply-view');
+							render_object(sub_user,sub_object,'reply-view',preset_level,function(sub_render){
+								load_content.html(sub_render);
+								let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
+								update_short_date(new_object.find('.short-date-view'));
+							});
 						}
-						load_content.html(sub_render);
-						let new_object=load_content.find('.object[data-link="viz://@'+sub_user.account+'/'+sub_object.block+'/"]');
-						update_short_date(new_object.find('.short-date-view'));
 					});
 				}
 			});
@@ -14863,7 +14893,7 @@ function render_object(user,object,type,preset_level){
 		}
 	},100);
 
-	return render;
+	callback(render);
 }
 
 function render_notify(data,check_level){
@@ -15211,8 +15241,9 @@ function load_more_objects(indicator,check_level){
 				else{
 					for(let i in objects){
 						let object=objects[i];
-						let object_view=render_object(object.account,object.block,'feed',check_level);
-						indicator.before(object_view);
+						render_object(object.account,object.block,'feed',check_level,function(object_view){
+							indicator.before(object_view);
+						});
 					}
 					indicator.data('awards-id',last_id);
 					indicator.data('busy','0');
@@ -15267,8 +15298,9 @@ function load_more_objects(indicator,check_level){
 				else{
 					for(let i in objects){
 						let object=objects[i];
-						let object_view=render_object(object.account,object.block,'feed',check_level);
-						indicator.before(object_view);
+						render_object(object.account,object.block,'feed',check_level,function(object_view){
+							indicator.before(object_view);
+						});
 					}
 					indicator.data('hashtags-feed-id',last_id);
 					indicator.data('busy','0');
@@ -15329,8 +15361,9 @@ function load_more_objects(indicator,check_level){
 				else{
 					for(let i in objects){
 						let object=objects[i];
-						let object_view=render_object(object.account,object.block,'feed');
-						indicator.before(object_view);
+						render_object(object.account,object.block,'feed',check_level,function(object_view){
+							indicator.before(object_view);
+						});
 					}
 					indicator.data('feed-time',same_time);
 					indicator.data('busy','0');
@@ -15399,17 +15432,18 @@ function load_more_objects(indicator,check_level){
 					}
 				}
 				else{
-					let object_view=render_object(user_result,object_result,'preview');
-					indicator.before(object_view);
-					let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
-					new_object.css('display','none');
-					update_short_date(new_object.find('.short-date-view'));
-					profile_filter_by_type();
-					indicator.data('busy','0');
-					clearTimeout(check_load_more_timer);
-					check_load_more_timer=setTimeout(function(){
-						check_load_more();
-					},100);
+					render_object(user_result,object_result,'preview',check_level,function(object_view){
+						indicator.before(object_view);
+						let new_object=indicator.parent().find('.object[data-link="viz://@'+user_result.account+'/'+object_result.block+'/"]');
+						new_object.css('display','none');
+						update_short_date(new_object.find('.short-date-view'));
+						profile_filter_by_type();
+						indicator.data('busy','0');
+						clearTimeout(check_load_more_timer);
+						check_load_more_timer=setTimeout(function(){
+							check_load_more();
+						},100);
+					});
 
 					//load more object in profile trigger load new event (1), for unknown accounts too
 					let events_deep=1;//dont need deeper, but need dig new event, subscribed accounts already go deeper while loading profile feed
@@ -15437,11 +15471,12 @@ function load_more_objects(indicator,check_level){
 															if(find_object.hasClass('pinned-object')){
 																found_object_type='pinned';
 															}
-															let affected_render=render_object(affected_user,affected_object_result,found_object_type);
-															find_object.before(affected_render);
-															find_object.remove();//remove old view
-															update_short_date(view.find('.objects .object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]').find('.short-date-view'));
-															profile_filter_by_type();
+															render_object(affected_user,affected_object_result,found_object_type,level,function(affected_render){
+																find_object.before(affected_render);
+																find_object.remove();//remove old view
+																update_short_date(view.find('.objects .object[data-account="'+check_account+'"][data-block="'+affected_object_block+'"]').find('.short-date-view'));
+																profile_filter_by_type();
+															});
 														}
 													}
 												});
