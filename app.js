@@ -15717,6 +15717,7 @@ function main_app(){
 					view_path(path+(''==query?'':'?'+query),{},false,false);
 					check_sync_cloud_activity();
 					update_feed();
+					check_blacklist_sync_activity();
 					if(false!==whitelabel_logo){
 						dapp_loaded();
 					}
