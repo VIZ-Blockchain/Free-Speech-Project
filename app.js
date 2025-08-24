@@ -13929,6 +13929,7 @@ function render_object(user,object,type,preset_level){
 					if(object_view.length > 0) {
 						object_view.replaceWith(blocked_render);
 						update_short_date(object_view.find('.short-date-view'));
+						set_date_view(object_view.find('.date-view'),true);
 					}
 				}
 			});
