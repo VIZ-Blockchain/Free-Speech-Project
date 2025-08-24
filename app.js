@@ -446,6 +446,7 @@ function check_sync_cloud_activity(callback){
 }
 
 function check_blacklist_sync_activity(callback){
+	console.log('check_blacklist_sync_activity');
 	if(typeof callback==='undefined'){
 		callback=function(){};
 	}
@@ -462,6 +463,7 @@ function check_blacklist_sync_activity(callback){
 		return;
 	}
 	get_blacklist_latest_time(function(latest_time){
+		console.log('get_blacklist_latest_time',latest_time);
 		if(latest_time > blacklist_sync_activity){
 			blacklist_sync_activity = latest_time;
 			localStorage.setItem(storage_prefix+'blacklist_sync_activity',blacklist_sync_activity);
