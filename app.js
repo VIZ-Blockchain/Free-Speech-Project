@@ -8991,18 +8991,22 @@ function load_nested_replies(el){
 	}
 	if(parent_account){
 		get_replies(parent_account,parent_block,function(err,replies_result){
-			nest.html('');
-			for(let i in replies_result){
-				let reply_object=replies_result[i];
-				let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
-				reply_render=render_object(reply_object.account,reply_object.block,'reply');
-				nest.append(reply_render);
+			if(!err){
+				console.log('get_replies result',replies_result);
+				nest.html('');
+				for(let i in replies_result){
+					let reply_object=replies_result[i];
+					let reply_link='viz://@'+reply_object.account+'/'+reply_object.block+'/';
+					reply_render=render_object(reply_object.account,reply_object.block,'reply');
+					nest.append(reply_render);
+				}
 			}
 		});
 	}
 }
 
 function get_replies(object_account,object_block,callback){
+	console.log('get_replies',object_account,object_block);
 	let replies=[];
 	let t=db.transaction(['replies'],'readonly');
 	let q=t.objectStore('replies');
@@ -14738,41 +14742,6 @@ function render_object(user,object,type,preset_level){
 			check_nsfw(user.account,object.block);
 		}
 
-		// Check blacklist status
-		check_blacklist(user.account, object.block, function(is_blocked, blacklist_record) {
-			if (is_blocked) {
-				let check_blacklist_display = function(account, block, record) {
-					let current_link = 'viz://@' + account + '/' + block + '/';
-					let view = $('.view[data-level="' + level + '"]');
-					if (-1 == path.indexOf('viz://')) { // look in services views
-						let path_parts = path.split('/');
-						view = $('.view[data-path="' + path_parts[0] + '"]');
-					}
-					let object_view = view.find('.objects .object[data-link="' + current_link + '"]');
-
-					// Hide the actual content but show blacklist warning
-					object_view.find('.content-view').css('display', 'none');
-					object_view.find('.preview-container').css('display', 'none');
-
-					// Prepare reason text
-					let reason_text = '';
-					if (record.reason && record.reason.trim().length > 0) {
-						reason_text = ltmp_arr.blacklist_reason_label + record.reason;
-					}
-
-					// Show localized blacklist warning
-					let warning_html = ltmp(ltmp_arr.blacklist_warning, {
-						initiator: record.initiator || 'unknown',
-						reason_text: reason_text
-					});
-
-					// Insert warning before content-view
-					$(object_view.find('.content-view')[0]).before(warning_html);
-				}
-				check_blacklist_display(user.account, object.block, blacklist_record);
-			}
-		});
-
 		if(false!==text_first_link){
 			text_first_link=link_to_http_gate(text_first_link);
 			if(false!==text_first_link){
@@ -14789,6 +14758,7 @@ function render_object(user,object,type,preset_level){
 			}
 		}
 		if(typeof user.account !== 'undefined'){
+			// Update replies count
 			let current_link='viz://@'+user.account+'/'+object.block+'/';
 			idb_get_count('replies','parent',[user.account,parseInt(object.block)],false,function(replies_count){
 				if(99<replies_count){
@@ -14804,6 +14774,41 @@ function render_object(user,object,type,preset_level){
 				}
 				let object_view=view.find('.objects .object[data-link="'+current_link+'"]');
 				object_view.find('.replies-count').html(replies_count);
+			});
+
+			// Check blacklist status
+			check_blacklist(user.account, object.block, function(is_blocked, blacklist_record) {
+				if (is_blocked) {
+					let check_blacklist_display = function(account, block, record) {
+						let current_link = 'viz://@' + account + '/' + block + '/';
+						let view = $('.view[data-level="' + level + '"]');
+						if (-1 == path.indexOf('viz://')) { // look in services views
+							let path_parts = path.split('/');
+							view = $('.view[data-path="' + path_parts[0] + '"]');
+						}
+						let object_view = view.find('.objects .object[data-link="' + current_link + '"]');
+
+						// Hide the actual content but show blacklist warning
+						object_view.find('.content-view').css('display', 'none');
+						object_view.find('.preview-container').css('display', 'none');
+
+						// Prepare reason text
+						let reason_text = '';
+						if (record.reason && record.reason.trim().length > 0) {
+							reason_text = ltmp_arr.blacklist_reason_label + record.reason;
+						}
+
+						// Show localized blacklist warning
+						let warning_html = ltmp(ltmp_arr.blacklist_warning, {
+							initiator: record.initiator || 'unknown',
+							reason_text: reason_text
+						});
+
+						// Insert warning before content-view
+						$(object_view.find('.content-view')[0]).before(warning_html);
+					}
+					check_blacklist_display(user.account, object.block, blacklist_record);
+				}
 			});
 		}
 	},100);
