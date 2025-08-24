@@ -13928,6 +13928,7 @@ function render_object(user,object,type,preset_level){
 					// Completely replace object with warning content
 					if(object_view.length > 0) {
 						object_view.replaceWith(blocked_render);
+						update_short_date(object_view.find('.short-date-view'));
 					}
 				}
 			});
