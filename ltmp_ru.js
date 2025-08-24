@@ -874,6 +874,17 @@ var ltmp_ru_arr = {
 	more_actions: `<a class="edit-more-action">Редактировать</a><a class="hide-more-action">Скрыть</a><a class="cancel-more-action">Отмена</a>`,
 	confirm_hide_event: `Вы уверены, что хотите скрыть данную запись?`,
 	decoded_object: `<div class="decoded-column"><a tabindex="0" title="Объект был расшифрован">%%icon_unlocked%%</a></div>`,
+	object_type_blacklist: `
+		<div class="object type-text" data-link="{link}" data-events="{events}">
+			<div class="author-view">
+				<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
+				<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a></div>
+			</div>
+			<div class="object-column">
+				<div class="content-view">{text}</div>
+				<div class="date-view" data-timestamp="{timestamp}">&hellip;</div>
+			</div>
+		</div>`,
 	object_type_text: `
 		<div class="object type-text" data-link="{link}" data-events="{events}">
 			<div class="author-view">
@@ -925,6 +936,16 @@ var ltmp_ru_arr = {
 			</div>
 		</div>`,
 	object_type_text_share_comment: ` <div class="comment-view">{comment}</div>`,
+	object_type_blacklist_preview: `
+		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}">
+			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
+			<div class="object-column">
+				<div class="author-view">
+					<div class="author-column"><a tabindex="0" data-href="viz://{author}/" class="profile-name">{nickname}</a><a tabindex="0" data-href="viz://{author}/" class="profile-link">{author}</a><a tabindex="0" data-href="{link}" class="short-date-view" data-timestamp="{timestamp}">&hellip;</a></div>
+				</div>
+				<div class="content-view" data-href="{link}">{text}</div>
+			</div>
+		</div>`,
 	object_type_text_preview: `
 		<div class="object type-text-preview" data-account="{account}" data-block="{block}" data-link="{link}" data-events="{events}" data-previous="{previous}" data-is-reply="{is_reply}" data-is-share="{is_share}">
 			<div class="avatar-column"><div class="avatar"><div class="shadow" data-href="viz://{author}/"></div><img src="{avatar}"></div></div>
