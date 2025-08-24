@@ -978,7 +978,7 @@ var ltmp_en_arr = {
 	nsfw_warning: '<div tabindex="0" class="nsfw-warning nsfw-reveal-action">This content may contain adult information.<br>Click to show.</div>',
 
 	blacklist_warning: '<div class="blacklist-warning">This content has been blocked by {initiator}.{reason_text}</div>',
-	blacklist_reason_label: ' Reason: ',
+	blacklist_reason_label: '<br>Reason: ',
 	profile_blacklist_warning: '<div class="profile-blacklist-warning">This account has been blacklisted by {initiator}.{reason_text}</div>',
 
 	plural: {

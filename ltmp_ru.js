@@ -978,7 +978,7 @@ var ltmp_ru_arr = {
 	nsfw_warning: '<div tabindex="0" class="nsfw-warning nsfw-reveal-action">Данный контент может содержать информацию для взрослых.<br>Нажмите, чтобы показать.</div>',
 
 	blacklist_warning: '<div class="blacklist-warning">Данный контент заблокирован пользователем {initiator}.{reason_text}</div>',
-	blacklist_reason_label: ' Причина: ',
+	blacklist_reason_label: '<br>Причина: ',
 	profile_blacklist_warning: '<div class="profile-blacklist-warning">Данный аккаунт заблокирован пользователем {initiator}.{reason_text}</div>',
 
 	plural: {
