@@ -9284,10 +9284,10 @@ function check_blacklist(account, block_id, callback){
 				blocked = false;
 				last_reason = '';
 				last_initiator = '';
-				
+
 				range = IDBKeyRange.only([account, 0]);
 				req = q.index('account_block').openCursor(range, 'prev');
-				
+
 				// Set up event handler for account-wide check
 				req.onsuccess = function(event){
 					let cur = event.target.result;
@@ -14822,6 +14822,7 @@ function render_object(user,object,type,preset_level){
 						// Hide the actual content but show blacklist warning
 						object_view.find('.content-view').css('display', 'none');
 						object_view.find('.preview-container').css('display', 'none');
+						object_view.find('.actions-view').css('display', 'none');
 
 						// Prepare reason text
 						let reason_text = '';
