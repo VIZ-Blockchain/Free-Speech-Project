@@ -9280,9 +9280,38 @@ function check_blacklist(account, block_id, callback){
 		else{
 			//If specific block not found and block_id > 0, check account-wide
 			if(block_id && block_id > 0 && !blocked){
+				// Reset variables for account-wide check
+				blocked = false;
+				last_reason = '';
+				last_initiator = '';
+				
 				range = IDBKeyRange.only([account, 0]);
 				req = q.index('account_block').openCursor(range, 'prev');
-				block_id = 0; //prevent infinite recursion
+				
+				// Set up event handler for account-wide check
+				req.onsuccess = function(event){
+					let cur = event.target.result;
+					if(cur){
+						let record = cur.value;
+						//Type 0 = block, Type 1 = unblock
+						if(record.type === 0){
+							blocked = true;
+							last_reason = record.reason;
+							last_initiator = record.initiator;
+						}
+						else if(record.type === 1){
+							blocked = false;
+						}
+						cur.continue();
+					}
+					else{
+						// Account-wide check complete
+						callback(blocked, {
+							reason: last_reason,
+							initiator: last_initiator
+						});
+					}
+				};
 				return;
 			}
 			callback(blocked, {
