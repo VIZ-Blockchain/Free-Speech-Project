@@ -1901,9 +1901,10 @@ body.dark .loading-ring:after {
 }
 .profile-blacklist-warning{
 	text-align:center;
+	font-weight:bold;
 	padding:5vh 0;
-	color:rgba(222, 0, 4, 0.7);
-	line-height:50px;
+	color:rgb(195, 0, 3);
+	line-height:40px;
 }
 .load-more-end-notice{
 	text-align:center;
