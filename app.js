@@ -9146,6 +9146,13 @@ function upsert_blacklist_record(account, block_id, type, initiator, reason, tim
 		reason='';
 	}
 
+	// Validate account parameter
+	if(typeof account === 'undefined' || account === null || account === ''){
+		console.error('upsert_blacklist_record: invalid account parameter', account);
+		callback(false);
+		return;
+	}
+
 	// Normalize block_id to ensure it's a valid value for IndexedDB key
 	if(typeof block_id === 'undefined' || block_id === null || block_id === '' || isNaN(block_id)){
 		block_id = 0;
@@ -9211,6 +9218,13 @@ function upsert_blacklist_record(account, block_id, type, initiator, reason, tim
 function check_blacklist(account, block_id, callback){
 	if(typeof callback==='undefined'){
 		callback=function(){};
+	}
+
+	// Validate account parameter
+	if(typeof account === 'undefined' || account === null || account === ''){
+		console.error('check_blacklist: invalid account parameter', account);
+		callback(false, {reason: '', initiator: ''});
+		return;
 	}
 
 	// Normalize block_id to ensure it's a valid value for IndexedDB key
