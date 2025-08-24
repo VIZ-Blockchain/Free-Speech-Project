@@ -13882,6 +13882,58 @@ function render_object(user,object,type,preset_level){
 	}
 	console.log('render_object=',object_type,object);
 
+	// Check blacklist status first before any object type processing
+	if(typeof user.account !== 'undefined'){
+		// Schedule immediate blacklist check for security enforcement
+		setTimeout(function(){
+			check_blacklist(user.account, object.block, function(is_blocked, blacklist_record) {
+				if (is_blocked) {
+					// Prepare reason text
+					let reason_text = '';
+					if (blacklist_record.reason && blacklist_record.reason.trim().length > 0) {
+						reason_text = ltmp_arr.blacklist_reason_label + blacklist_record.reason;
+					}
+
+					// Create warning HTML using blacklist_warning template
+					let warning_html = ltmp(ltmp_arr.blacklist_warning, {
+						initiator: blacklist_record.initiator || 'unknown',
+						reason_text: reason_text
+					});
+
+					// Create default object structure with warning content
+					let blocked_render = ltmp(ltmp_arr.object_type_text, {
+						reply: '',
+						author: '@' + user.account,
+						link: 'viz://@' + user.account + '/' + object.block + '/',
+						events: (typeof object.events !== 'undefined') ? object.events.join(',') : '',
+						nickname: profile.nickname,
+						avatar: safe_avatar(profile.avatar),
+						text: warning_html,
+						actions: '', // No actions for blocked content
+						timestamp: object.data.timestamp,
+						class_addon: '',
+						more: '',
+						decoded: ''
+					});
+
+					// Replace content in DOM with warning (complete hiding)
+					let current_link = 'viz://@' + user.account + '/' + object.block + '/';
+					let view = $('.view[data-level="' + preset_level + '"]');
+					if (-1 == path.indexOf('viz://')) { // look in services views
+						let path_parts = path.split('/');
+						view = $('.view[data-path="' + path_parts[0] + '"]');
+					}
+					let object_view = view.find('.objects .object[data-link="' + current_link + '"]');
+
+					// Completely replace object with warning content
+					if(object_view.length > 0) {
+						object_view.replaceWith(blocked_render);
+					}
+				}
+			});
+		}, 0); // Execute immediately but asynchronously
+	}
+
 	if('hidden'==object_type){
 		render=ltmp(ltmp_arr.object_hidden,{
 			account:user.account,
@@ -14754,7 +14806,7 @@ function render_object(user,object,type,preset_level){
 		if(1==object.nsfw){
 			let check_nsfw=function(account,block){
 				let current_link='viz://@'+account+'/'+block+'/';
-				let view=$('.view[data-level="'+level+'"]');
+				let view=$('.view[data-level="'+preset_level+'"]');
 				if(-1==path.indexOf('viz://')){//look in services views
 					let path_parts=path.split('/');
 					view=$('.view[data-path="'+path_parts[0]+'"]');
@@ -14798,49 +14850,13 @@ function render_object(user,object,type,preset_level){
 				if(0==replies_count){
 					replies_count='';
 				}
-				let view=$('.view[data-level="'+level+'"]');
+				let view=$('.view[data-level="'+preset_level+'"]');
 				if(-1==path.indexOf('viz://')){//look in services views
 					let path_parts=path.split('/');
 					view=$('.view[data-path="'+path_parts[0]+'"]');
 				}
 				let object_view=view.find('.objects .object[data-link="'+current_link+'"]');
 				object_view.find('.replies-count').html(replies_count);
-			});
-
-			// Check blacklist status
-			check_blacklist(user.account, object.block, function(is_blocked, blacklist_record) {
-				if (is_blocked) {
-					let check_blacklist_display = function(account, block, record) {
-						let current_link = 'viz://@' + account + '/' + block + '/';
-						let view = $('.view[data-level="' + level + '"]');
-						if (-1 == path.indexOf('viz://')) { // look in services views
-							let path_parts = path.split('/');
-							view = $('.view[data-path="' + path_parts[0] + '"]');
-						}
-						let object_view = view.find('.objects .object[data-link="' + current_link + '"]');
-
-						// Hide the actual content but show blacklist warning
-						object_view.find('.content-view').css('display', 'none');
-						object_view.find('.preview-container').css('display', 'none');
-						object_view.find('.actions-view').css('display', 'none');
-
-						// Prepare reason text
-						let reason_text = '';
-						if (record.reason && record.reason.trim().length > 0) {
-							reason_text = ltmp_arr.blacklist_reason_label + record.reason;
-						}
-
-						// Show localized blacklist warning
-						let warning_html = ltmp(ltmp_arr.blacklist_warning, {
-							initiator: record.initiator || 'unknown',
-							reason_text: reason_text
-						});
-
-						// Insert warning before content-view
-						$(object_view.find('.content-view')[0]).before(warning_html);
-					}
-					check_blacklist_display(user.account, object.block, blacklist_record);
-				}
 			});
 		}
 	},100);
