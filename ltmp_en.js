@@ -171,6 +171,14 @@ var ltmp_en_arr = {
 			<div class="content-view" data-tab="blacklist">
 				<p><label><input type="checkbox" name="show_report_button"> &mdash; Show report button</label></p>
 				<div class="input-addon">(enables report icon in actions list)</div>
+				<hr>
+				<p>Select blacklist service from the list:</p>
+				<div class="blacklist-urls-list">
+				</div>
+				<p>Set the blacklist service URL manually:</p>
+				<p><input type="text" name="blacklist_url_str" placeholder="https://" value=""></p>
+				<div class="input-addon">(test URL status with time=0 parameter)</div>
+				<div class="blacklist-url-status"></div>
 
 				<p class="error save-blacklist-settings-error"></p>
 				<p class="success save-blacklist-settings-success"></p>
@@ -232,6 +240,7 @@ var ltmp_en_arr = {
 		</div>
 	</div>`,
 	api_list_item:`<p><label><input type="radio" name="api_gate" value="{value}"{selected}> &mdash; {domain}</label></p>`,
+	blacklist_url_list_item:`<p><label><input type="radio" name="blacklist_url" value="{value}"{selected}> &mdash; {domain}</label></p>`,
 	languages_list_item:`<p><label><input type="radio" name="language" value="{value}"{selected}> &mdash; {caption}</label></p>`,
 	languages_short_list_item:`<div class="select-language-wrapper"><a class="select-language{selected}" data-value="{value}">{caption}</a></div>`,
 	documents_short_list_item:`<div class="select-document-wrapper"><a class="select-document{selected}" data-value="{value}">{caption}</a></div>`,
@@ -242,6 +251,14 @@ var ltmp_en_arr = {
 	node_protocol_error:'Address must contain the protocol (http/https/ws/wss)',
 	node_empty_error:'Address cannot be empty',
 	node_success:'Node is set as the default',
+
+	blacklist_url_request:'Testing blacklist service&hellip;',
+	blacklist_url_not_respond:'Blacklist service is not responding',
+	blacklist_url_wrong_response:'Service response does not match expected format',
+	blacklist_url_protocol_error:'Blacklist URL must use HTTP or HTTPS protocol',
+	blacklist_url_empty_error:'Blacklist URL cannot be empty',
+	blacklist_url_success:'Blacklist service is working correctly',
+	blacklist_url_saved:'Blacklist settings saved successfully',
 
 	gate_connection_error:'<div class="gate-connection-error">Connection error, <a tabindex="0" data-href="dapp:app_settings/connection/">check the settings&hellip;</a></div>',
 

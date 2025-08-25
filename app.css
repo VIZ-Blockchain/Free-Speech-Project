@@ -2764,6 +2764,12 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 .languages-list p.positive{
 	color:#26be0a;
 }
+.blacklist-url-status.positive{
+	color:#26be0a;
+}
+.blacklist-url-status.negative{
+	color:#be0a0a;
+}
 
 .gate-connection-error{
 	position:sticky;

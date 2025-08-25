@@ -1002,6 +1002,80 @@ function check_api_gate(node,callback){
 		callback(ltmp_arr.node_empty_error);
 	}
 }
+
+var check_blacklist_url_timer=0;
+function check_blacklist_url(url,callback){
+	if(''!=url){
+		let protocol='none';
+		let url_protocol=url.substring(0,url.indexOf(':'));
+		if('http'==url_protocol||'https'==url_protocol){
+			protocol='http';
+		}
+		if('http'==protocol){
+			callback(ltmp_arr.blacklist_url_request,true);
+			let xhr=new XMLHttpRequest();
+			xhr.timeout=5000;
+			xhr.overrideMimeType('text/plain');
+			xhr.open('POST',url);
+			xhr.setRequestHeader('accept','application/json, text/plain, */*');
+			xhr.setRequestHeader('content-type','application/json');
+			clearTimeout(check_blacklist_url_timer);
+			check_blacklist_url_timer=setTimeout(function(){
+				callback(ltmp_arr.blacklist_url_not_respond);
+			},5000);
+			xhr.ontimeout=function(){
+				callback(ltmp_arr.blacklist_url_not_respond);
+			};
+			xhr.onerror=function(){
+				callback(ltmp_arr.blacklist_url_not_respond);
+			};
+			xhr.onreadystatechange=function(){
+				if(4==xhr.readyState && 200==xhr.status){
+					clearTimeout(check_blacklist_url_timer);
+					try{
+						let json=JSON.parse(xhr.responseText);
+						// Check for expected blacklist API response format
+						if(json && (typeof json.result !== 'undefined' || typeof json.error !== 'undefined')){
+							callback(false,ltmp_arr.blacklist_url_success);
+						}
+						else{
+							callback(ltmp_arr.blacklist_url_wrong_response);
+							console.log('Blacklist URL check - unexpected response:',json);
+						}
+					}
+					catch(err){
+						callback(ltmp_arr.blacklist_url_wrong_response);
+						console.log('Blacklist URL check - JSON parse error:',err);
+					}
+				}
+				else if(4==xhr.readyState && 200!=xhr.status){
+					clearTimeout(check_blacklist_url_timer);
+					callback(ltmp_arr.blacklist_url_not_respond);
+				}
+			};
+			// Test with time=0 to get immediate response
+			let test_data={
+				action:'updates',
+				time:0
+			};
+			
+			// Add authentication proof if user is logged in
+			if(''!=current_user && typeof users[current_user] !== 'undefined' && typeof users[current_user].regular_key !== 'undefined'){
+				let auth_data=passwordless_auth(current_user,users[current_user].regular_key);
+				// Merge auth_data with test_data
+				Object.assign(test_data, auth_data);
+			}
+			
+			xhr.send(JSON.stringify(test_data));
+		}
+		else{
+			callback(ltmp_arr.blacklist_url_protocol_error);
+		}
+	}
+	else{
+		callback(ltmp_arr.blacklist_url_empty_error);
+	}
+}
 function select_best_gate(){
 	for(i in api_gates){
 		let current_gate=i;
@@ -1122,7 +1196,18 @@ if(null!=localStorage.getItem(storage_prefix+'current_user')){
 	current_user=localStorage.getItem(storage_prefix+'current_user');
 }
 
-var blacklist_url='https://readdle.me/blacklist/';
+var blacklist_url_arr=[
+	'https://readdle.me/blacklist/',
+	'https://blocklist.rkn.gov.ru/viz/',
+];
+var blacklist_default_id=0;
+var default_blacklist_url=blacklist_url_arr[blacklist_default_id];
+var blacklist_url=default_blacklist_url;
+
+// Load blacklist_url from localStorage if available
+if(null!=localStorage.getItem(storage_prefix+'blacklist_url')){
+	blacklist_url=localStorage.getItem(storage_prefix+'blacklist_url');
+}
 
 var default_settings={
 	feed_size:10000,
@@ -1205,10 +1290,44 @@ function save_blacklist_settings(view){
 
 	settings.show_report_button=tab.find('input[name="show_report_button"]').prop('checked');
 
+	// Handle blacklist URL selection
+	let new_blacklist_url=tab.find('input[name="blacklist_url_str"]').val().trim();
+	let url_changed=false;
+
+	if(new_blacklist_url !== blacklist_url){
+		url_changed=true;
+		blacklist_url=new_blacklist_url;
+		localStorage.setItem(storage_prefix+'blacklist_url',blacklist_url);
+		console.log('Blacklist URL changed to:',blacklist_url);
+	}
+
 	let settings_json=JSON.stringify(settings);
 	localStorage.setItem(storage_prefix+'settings',settings_json);
 
-	tab.find('.success').html(ltmp_arr.app_settings_saved);
+	// If URL changed, flush database and restart sync
+	if(url_changed && blacklist_url && blacklist_url.trim() !== ''){
+		console.log('Flushing blacklist database due to URL change');
+		flush_blacklist_database(function(success){
+			if(success){
+				// Reset sync activity timestamp
+				blacklist_sync_activity=0;
+				localStorage.setItem(storage_prefix+'blacklist_sync_activity',blacklist_sync_activity);
+
+				// Restart blacklist sync timer
+				clearTimeout(blacklist_sync_update_timer);
+				blacklist_sync_update_timer=setTimeout(function(){
+					check_blacklist_sync_activity();
+				},200);
+
+				console.log('Blacklist database flushed and sync restarted');
+			}
+			else{
+				console.log('Failed to flush blacklist database');
+			}
+		});
+	}
+
+	tab.find('.success').html(ltmp_arr.blacklist_url_saved);
 }
 function save_feed_settings(view){
 	let tab=view.find('.content-view[data-tab="feed"]');
@@ -6491,7 +6610,28 @@ function app_mouse(e){
 					tab.find('.submit-button-ring').addClass('show');
 					tab.find('.error').html('');
 					tab.find('.success').html('');
-					save_blacklist_settings(view);
+					tab.find('.blacklist-url-status').html('');
+
+					let test_url=tab.find('input[name="blacklist_url_str"]').val().trim();
+
+					// Test URL if provided
+					if(test_url && test_url !== ''){
+						check_blacklist_url(test_url,function(err,result){
+							tab.find('.blacklist-url-status').removeClass('positive negative');
+							if(false!==err){
+								tab.find('.blacklist-url-status').html(err).addClass('negative');
+							}
+							else{
+								tab.find('.blacklist-url-status').html(result).addClass('positive');
+							}
+							// Save settings regardless of test result
+							save_blacklist_settings(view);
+						});
+					}
+					else{
+						// No URL to test, just save
+						save_blacklist_settings(view);
+					}
 				}
 			}
 			if($(target).hasClass('save-settings-action')){
@@ -9349,6 +9489,31 @@ function get_blacklist_records(account, callback){
 	};
 }
 
+function flush_blacklist_database(callback){
+	if(typeof callback==='undefined'){
+		callback=function(){};
+	}
+
+	console.log('flush_blacklist_database: clearing all blacklist records');
+	let t=db.transaction(['blacklist'],'readwrite');
+	let q=t.objectStore('blacklist');
+	let req=q.clear();
+
+	if(trx_need_commit){
+		t.commit();
+	}
+
+	req.onsuccess=function(e){
+		console.log('flush_blacklist_database: successfully cleared all records');
+		callback(true);
+	};
+
+	req.onerror=function(e){
+		console.log('flush_blacklist_database: error clearing records',e);
+		callback(false);
+	};
+}
+
 function try_decode_all_objects(account,passphrase){
 	let t=db.transaction(['objects'],'readwrite');
 	let q=t.objectStore('objects');
@@ -11752,6 +11917,7 @@ function view_app_settings(view,path_parts,query,title){
 		tab.find('.submit-button-ring').removeClass('show');
 		tab.find('.error').html('');
 		tab.find('.success').html('');
+		tab.find('.blacklist-url-status').html('');
 
 		tab.find('input[name="show_report_button"]').prop('checked',settings.show_report_button);
 
@@ -11760,6 +11926,55 @@ function view_app_settings(view,path_parts,query,title){
 			settings.show_report_button=$(this).prop('checked');
 			let settings_json=JSON.stringify(settings);
 			localStorage.setItem(storage_prefix+'settings',settings_json);
+		});
+
+		// Populate blacklist URL list
+		tab.find('.blacklist-urls-list').html('');
+		let blacklist_url_list='';
+		for(let i in blacklist_url_arr){
+			let value=blacklist_url_arr[i];
+			let url_domain=blacklist_url_arr[i];
+			if(-1!=url_domain.indexOf('//')){
+				url_domain=url_domain.substr(url_domain.indexOf('//')+2);
+			}
+			if(-1!=url_domain.indexOf('/')){
+				url_domain=url_domain.substr(0,url_domain.indexOf('/'));
+			}
+			let url_selected=false;
+			if(blacklist_url==value){
+				url_selected=true;
+			}
+			blacklist_url_list+=ltmp(ltmp_arr.blacklist_url_list_item,{value:value,domain:url_domain,selected:url_selected?' checked':''});
+		}
+		tab.find('input[name="blacklist_url_str"]').val(blacklist_url);
+
+		tab.find('.blacklist-urls-list').html(blacklist_url_list);
+
+		tab.find('input[name="blacklist_url"]').off('change');
+		tab.find('input[name="blacklist_url"]').on('change',function(){
+			if($(this).prop('checked')){
+				tab.find('input[name="blacklist_url_str"]').val($(this).val());
+				// Test the URL when selected from list
+				let test_url=$(this).val();
+				tab.find('.blacklist-url-status').html('');
+				check_blacklist_url(test_url,function(err,result){
+					tab.find('.blacklist-url-status').removeClass('positive negative');
+					if(false!==err){
+						tab.find('.blacklist-url-status').html(err).addClass('negative');
+					}
+					else{
+						tab.find('.blacklist-url-status').html(result).addClass('positive');
+					}
+				});
+			}
+		});
+
+		// Handle manual URL input changes
+		tab.find('input[name="blacklist_url_str"]').off('input');
+		tab.find('input[name="blacklist_url_str"]').on('input',function(){
+			// Uncheck all radio buttons when manually typing
+			tab.find('input[name="blacklist_url"]').prop('checked',false);
+			tab.find('.blacklist-url-status').html('');
 		});
 	}
 	if('connection'==current_tab){
