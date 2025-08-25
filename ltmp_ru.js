@@ -148,14 +148,19 @@ var ltmp_ru_arr = {
 				<p><a class="button save-feed-settings-action">Сохранить</a><span class="submit-button-ring"></span></p>
 			</div>
 			<div class="content-view" data-tab="theme">
-				<p>Используемая тема:</p>
-				<p><label><input type="radio" name="theme-mode" value="light"> &mdash; дневная</label></p>
-				<p><label><input type="radio" name="theme-mode" value="night"> &mdash; ночная</label></p>
+				<p>Режим темы:</p>
+				<p><label><input type="radio" name="theme-mode" value="light"> &mdash; дневной режим</label></p>
+				<p><label><input type="radio" name="theme-mode" value="night"> &mdash; ночной режим</label></p>
 				<p><label><input type="radio" name="theme-mode" value="auto"> &mdash; автоматический режим</label></p>
 				<hr>
-				<p>Ночная тема:</p>
-				<p><label><input type="radio" name="theme-night-mode" value="midnight"> &mdash; полночь</label></p>
-				<p><label><input type="radio" name="theme-night-mode" value="dark"> &mdash; тьма</label></p>
+				<p>Пресет дневной темы:</p>
+				<p><label><input type="radio" name="theme-light-preset" value="light"> &mdash; обычная (синяя)</label></p>
+				<p><label><input type="radio" name="theme-light-preset" value="emerald"> &mdash; изумруд (зеленая)</label></p>
+				<hr>
+				<p>Пресет ночной темы:</p>
+				<p><label><input type="radio" name="theme-night-preset" value="midnight"> &mdash; полночь (синяя)</label></p>
+				<p><label><input type="radio" name="theme-night-preset" value="dark"> &mdash; тьма (серая)</label></p>
+				<p><label><input type="radio" name="theme-night-preset" value="dark-emerald"> &mdash; темный изумруд (зеленая)</label></p>
 				<hr>
 				<p>Автоматический режим</p>
 				<p>День начинается:</p>

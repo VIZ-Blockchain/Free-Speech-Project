@@ -148,14 +148,19 @@ var ltmp_en_arr = {
 				<p><a class="button save-feed-settings-action">Save</a><span class="submit-button-ring"></span></p>
 			</div>
 			<div class="content-view" data-tab="theme">
-				<p>Theme used:</p>
-				<p><label><input type="radio" name="theme-mode" value="light"> &mdash; light</label></p>
-				<p><label><input type="radio" name="theme-mode" value="night"> &mdash; night</label></p>
+				<p>Theme mode:</p>
+				<p><label><input type="radio" name="theme-mode" value="light"> &mdash; light mode</label></p>
+				<p><label><input type="radio" name="theme-mode" value="night"> &mdash; night mode</label></p>
 				<p><label><input type="radio" name="theme-mode" value="auto"> &mdash; automatic mode</label></p>
 				<hr>
-				<p>Night theme:</p>
-				<p><label><input type="radio" name="theme-night-mode" value="midnight"> &mdash; midnight</label></p>
-				<p><label><input type="radio" name="theme-night-mode" value="dark"> &mdash; dark</label></p>
+				<p>Light theme preset:</p>
+				<p><label><input type="radio" name="theme-light-preset" value="light"> &mdash; default (blue)</label></p>
+				<p><label><input type="radio" name="theme-light-preset" value="emerald"> &mdash; emerald (green)</label></p>
+				<hr>
+				<p>Night theme preset:</p>
+				<p><label><input type="radio" name="theme-night-preset" value="midnight"> &mdash; midnight (blue)</label></p>
+				<p><label><input type="radio" name="theme-night-preset" value="dark"> &mdash; dark (gray)</label></p>
+				<p><label><input type="radio" name="theme-night-preset" value="dark-emerald"> &mdash; dark emerald (green)</label></p>
 				<hr>
 				<p>Automatic mode</p>
 				<p>The day starts:</p>

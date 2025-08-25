@@ -1058,14 +1058,14 @@ function check_blacklist_url(url,callback){
 				action:'updates',
 				time:0
 			};
-			
+
 			// Add authentication proof if user is logged in
 			if(''!=current_user && typeof users[current_user] !== 'undefined' && typeof users[current_user].regular_key !== 'undefined'){
 				let auth_data=passwordless_auth(current_user,users[current_user].regular_key);
 				// Merge auth_data with test_data
 				Object.assign(test_data, auth_data);
 			}
-			
+
 			xhr.send(JSON.stringify(test_data));
 		}
 		else{
@@ -1229,7 +1229,8 @@ var default_settings={
 	hashtags_addon_popular_limit:5,
 
 	theme_mode:'light',
-	theme_night_mode:'midnight',
+	theme_light_preset:'light',
+	theme_night_preset:'midnight',
 	theme_auto_light:'06:00',
 	theme_auto_night:'21:00',
 
@@ -1256,6 +1257,16 @@ if(null!=localStorage.getItem(storage_prefix+'settings')){
 			settings[i]=default_settings[i];
 		}
 	}
+
+	// Migrate old theme_night_mode to new preset system
+	if(typeof settings.theme_night_mode !== 'undefined' && typeof settings.theme_night_preset === 'undefined'){
+		settings.theme_night_preset = settings.theme_night_mode;
+		delete settings.theme_night_mode;
+	}
+	// Ensure light preset exists
+	if(typeof settings.theme_light_preset === 'undefined'){
+		settings.theme_light_preset = 'light';
+	}
 }
 
 function save_theme_settings(view){
@@ -1263,6 +1274,16 @@ function save_theme_settings(view){
 	tab.find('.button').removeClass('disabled');
 	tab.find('.submit-button-ring').removeClass('show');
 	tab.find('.error').html('');
+
+	// Save light and night presets
+	let selected_light_preset=tab.find('input[name="theme-light-preset"]:checked').val();
+	let selected_night_preset=tab.find('input[name="theme-night-preset"]:checked').val();
+	if(selected_light_preset){
+		settings.theme_light_preset=selected_light_preset;
+	}
+	if(selected_night_preset){
+		settings.theme_night_preset=selected_night_preset;
+	}
 
 	settings.theme_auto_light=tab.find('input[name="theme-auto-light"]').val();
 	if(!/^([0-9]?[0-9]?\:[0-9]?[0-9]?)$/.test(settings.theme_auto_light)){
@@ -11892,11 +11913,21 @@ function view_app_settings(view,path_parts,query,title){
 		tab.find('input[name="theme-auto-night"]').val(settings.theme_auto_night);
 
 		tab.find('input[name="theme-mode"][value="'+settings.theme_mode+'"]').prop("checked",true);
-		tab.find('input[name="theme-night-mode"][value="'+settings.theme_night_mode+'"]').prop("checked",true);
+		tab.find('input[name="theme-light-preset"][value="'+settings.theme_light_preset+'"]').prop("checked",true);
+		tab.find('input[name="theme-night-preset"][value="'+settings.theme_night_preset+'"]').prop("checked",true);
 
-		tab.find('input[name="theme-night-mode"]').off('change');
-		tab.find('input[name="theme-night-mode"]').on('change',function(){
-			settings.theme_night_mode=this.value;
+		tab.find('input[name="theme-night-preset"]').off('change');
+		tab.find('input[name="theme-night-preset"]').on('change',function(){
+			settings.theme_night_preset=this.value;
+			let settings_json=JSON.stringify(settings);
+			localStorage.setItem(storage_prefix+'settings',settings_json);
+
+			apply_theme_mode();
+		});
+
+		tab.find('input[name="theme-light-preset"]').off('change');
+		tab.find('input[name="theme-light-preset"]').on('change',function(){
+			settings.theme_light_preset=this.value;
 			let settings_json=JSON.stringify(settings);
 			localStorage.setItem(storage_prefix+'settings',settings_json);
 
@@ -12128,6 +12159,8 @@ function apply_theme_mode(){
 	$('body').removeClass('light');
 	$('body').removeClass('midnight');
 	$('body').removeClass('dark');
+	$('body').removeClass('emerald');
+	$('body').removeClass('dark-emerald');
 	let mode=settings.theme_mode;
 	if('auto'==mode){
 		let h=new Date().getHours();
@@ -12157,11 +12190,11 @@ function apply_theme_mode(){
 		}
 	}
 	if('light'==mode){
-		$('body').addClass(mode);
+		$('body').addClass(settings.theme_light_preset);
 		$('.toggle-theme-icon').html(ltmp_global.icon_theme_sun);
 	}
 	else{
-		$('body').addClass(settings.theme_night_mode);
+		$('body').addClass(settings.theme_night_preset);
 		$('.toggle-theme-icon').html(ltmp_global.icon_theme_moon);
 	}
 	let theme_color=$('body').css('background-color');
