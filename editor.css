@@ -7,8 +7,8 @@
 	left:0;
 	right:0;
 	height:40px;
-	background:#fff;
-	border-bottom:1px solid rgba(204, 204, 221, 0.5);
+	background: var(--bg-primary);
+	border-bottom:1px solid var(--border-primary);
 	overflow-x:auto;
 	white-space:nowrap;
 
@@ -23,20 +23,20 @@
 	height:2px;
 }
 .editor-formatter::-webkit-scrollbar-track{
-	background:rgba(200, 200, 220, 0.3);
+	background: var(--scrollbar-track);
 }
 .editor-formatter::-webkit-scrollbar-thumb{
-	background:rgba(200, 200, 220, 1.0);
+	background: var(--scrollbar-thumb);
 }
 .editor-formatter::-webkit-scrollbar-thumb:hover{
-	background:rgba(150, 150, 150, 1.0);
+	background: var(--scrollbar-thumb-hover);
 }
 .editor-formatter .separator{
 	display:inline-block;
 	margin:3px;
 	width:1px;
 	overflow:hidden;
-	background:rgba(204, 204, 221, 0.5);
+	background: var(--border-primary);
 	height:25px;
 	vertical-align:middle;
 }
@@ -44,12 +44,12 @@
 	border-radius:3px;
 }
 .editor-formatter a.positive .icon{
-	background:rgba(38, 196, 9, 0.1);
-	color:#26be0a;
+	background: var(--positive-bg);
+	color: var(--positive-color);
 }
 .editor-formatter a.positive-alt .icon{
-	background:rgba(180, 200, 3, 0.1);
-	color:#9ec600;
+	background: var(--positive-alt-bg);
+	color: var(--positive-alt-color);
 }
 .editor-formatter a.disabled .icon{
 	opacity:0.3;
@@ -82,7 +82,7 @@
 }
 .article code{
 	clear:both;
-	background-color:rgba(28, 152, 229, 0.2);
+	background-color: var(--code-bg);
 	border-radius:3px;
 	margin:0 2px;
 	padding:1px 4px 2px;
@@ -101,7 +101,7 @@
 	display:block;
 	width:100px;
 	position:absolute;
-	border-top:2px solid #000;
+	border-top:2px solid var(--text-primary);
 	left:calc(50% - 50px);
 	margin-top:-10px;
 }
@@ -111,14 +111,14 @@
 	display:block;
 	width:100px;
 	position:absolute;
-	border-bottom:2px solid #000;
+	border-bottom:2px solid var(--text-primary);
 	left:calc(50% - 50px);
 	margin-top:15px;
 }
 .article blockquote{
 	display:block;
 	padding:20px 15px;
-	border-left:2px solid #000;
+	border-left:2px solid var(--text-primary);
 	padding-right:0;
 	margin:15px 0;
 	font-style:normal;
@@ -189,7 +189,7 @@
 	clear:both;
 }
 .article a{
-	color:#1c98e5;
+	color: var(--accent-primary);
 }
 [contenteditable]{
 	-webkit-user-select:auto;
