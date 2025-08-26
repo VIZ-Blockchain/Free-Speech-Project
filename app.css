@@ -329,6 +329,138 @@ body.dark-emerald {
 	--code-bg: rgba(52, 211, 153, 0.2);
 }
 
+body.amethyst {
+	/* Amethyst Theme */
+	--bg-primary: #ffffff;
+	--bg-secondary: #ffffff;
+	--bg-tertiary: #fdf4ff;
+	--text-primary: #1a0025;
+	--text-secondary: rgba(88, 28, 135, 0.7);
+	--text-tertiary: rgba(88, 28, 135, 0.5);
+	--border-primary: rgba(147, 51, 234, 0.3);
+	--border-secondary: rgba(147, 51, 234, 0.4);
+	--border-tertiary: rgba(147, 51, 234, 0.2);
+	--border-input: rgba(147, 51, 234, 0.5);
+	--accent-primary: #7c3aed;
+	--accent-hover: #6d28d9;
+	--accent-secondary: #8b5cf6;
+	--positive-color: #15803d;
+	--negative-color: #dc2626;
+	--positive-bg: rgba(21, 128, 61, 0.1);
+	--negative-bg: rgba(220, 38, 38, 0.1);
+	--icon-hover: rgba(196, 181, 253, 0.2);
+	--shadow-color: rgba(147, 51, 234, 0.3);
+	--overlay-bg: rgba(245, 243, 255, 0.95);
+	--overlay-border: rgba(147, 51, 234, 0.6);
+	--overlay-text: #6d28d9;
+	--warning-bg: rgba(254, 240, 138, 0.6);
+	--warning-border: rgba(245, 158, 11, 0.6);
+	--warning-text: #92400e;
+	--input-bg: var(--bg-primary);
+	--neutral-border: #ede9fe;
+	--neutral-border-hover: #ddd6fe;
+	--box-bg: rgba(124, 58, 237, 0.05);
+	--more-list-bg: #faf5ff;
+	--more-list-shadow: rgba(147, 51, 234, 0.3);
+	--more-list-text: #1a0025;
+	--menu-hover-bg: rgba(196, 181, 253, 0.15);
+	--item-hover-bg: rgba(124, 58, 237, 0.05);
+	--notification-bg: rgba(124, 58, 237, 0);
+	--object-text-color: #1a0025;
+	--share-text-color: rgba(88, 28, 135, 0.7);
+	--object-preview-hover-bg: rgba(124, 58, 237, 0.05);
+	--gradient-bg-start: rgba(250, 245, 255, 0);
+	--gradient-bg-end: #faf5ff;
+	--gradient-hover-start: rgba(245, 243, 255, 0);
+	--gradient-hover-end: rgb(245, 243, 255);
+	--notice-text-color: rgba(88, 28, 135, 0.7);
+	--menu-secondary-color: rgba(88, 28, 135, 0.5);
+	--counter-bg: #7c3aed;
+	--placeholder-color: #6b7280;
+	--neutral-text: #9ca3af;
+	--neutral-text-hover: #6b7280;
+	--categories-bg: #dc2626;
+	--document-bg: #ffffff;
+	--document-text: #1a0025;
+	--document-link: #7c3aed;
+	--document-readline-bg: rgba(250, 245, 255, 0.8);
+	--document-readline-border: rgba(124, 58, 237, 0.4);
+	--document-fill-bg: #8b5cf6;
+	--document-fill-border: #7c3aed;
+	--scrollbar-track: rgba(221, 214, 254, 0.5);
+	--scrollbar-thumb: rgba(147, 51, 234, 0.7);
+	--scrollbar-thumb-hover: rgba(124, 58, 237, 0.9);
+	--positive-alt-bg: rgba(21, 128, 61, 0.1);
+	--positive-alt-color: #15803d;
+	--code-bg: rgba(139, 92, 246, 0.15);
+}
+
+body.dark-amethyst {
+	/* Dark Amethyst Theme */
+	--bg-primary: #1b0c50;
+	--bg-secondary: #1b0c50;
+	--bg-tertiary: #4c1d95;
+	--text-primary: #ffffff;
+	--text-secondary: rgba(233, 213, 255, 0.8);
+	--text-tertiary: rgba(233, 213, 255, 0.6);
+	--border-primary: rgba(147, 51, 234, 0.4);
+	--border-secondary: rgba(147, 51, 234, 0.5);
+	--border-tertiary: rgba(147, 51, 234, 0.3);
+	--border-input: rgba(147, 51, 234, 0.6);
+	--accent-primary: #8b5cf6;
+	--accent-hover: #7c3aed;
+	--accent-secondary: #a78bfa;
+	--positive-color: #22c55e;
+	--negative-color: #ef4444;
+	--positive-bg: rgba(34, 197, 94, 0.15);
+	--negative-bg: rgba(239, 68, 68, 0.15);
+	--icon-hover: rgba(196, 181, 253, 0.25);
+	--shadow-color: rgba(147, 51, 234, 0.4);
+	--overlay-bg: rgba(88, 28, 135, 0.95);
+	--overlay-border: rgba(139, 92, 246, 0.8);
+	--overlay-text: #ddd6fe;
+	--warning-bg: rgba(245, 158, 11, 0.2);
+	--warning-border: rgba(245, 158, 11, 0.4);
+	--warning-text: #fbbf24;
+	--input-bg: var(--bg-primary);
+	--neutral-border: #6b21a8;
+	--neutral-border-hover: #7e22ce;
+	--box-bg: rgba(139, 92, 246, 0.08);
+	--more-list-bg: var(--bg-primary);
+	--more-list-shadow: rgba(88, 28, 135, 0.8);
+	--more-list-text: var(--text-primary);
+	--menu-hover-bg: rgba(196, 181, 253, 0.2);
+	--item-hover-bg: rgba(139, 92, 246, 0.08);
+	--notification-bg: rgba(139, 92, 246, 0);
+	--object-text-color: #ffffff;
+	--share-text-color: rgba(233, 213, 255, 0.8);
+	--object-preview-hover-bg: rgba(139, 92, 246, 0.08);
+	--gradient-bg-start: rgba(45, 27, 105, 0);
+	--gradient-bg-end: #1b0c50;
+	--gradient-hover-start: rgba(88, 28, 135, 0);
+	--gradient-hover-end: rgb(88, 28, 135);
+	--notice-text-color: rgba(233, 213, 255, 0.8);
+	--menu-secondary-color: rgba(233, 213, 255, 0.6);
+	--counter-bg: #8b5cf6;
+	--placeholder-color: #6b7280;
+	--neutral-text: #9ca3af;
+	--neutral-text-hover: #d1d5db;
+	--categories-bg: #ef4444;
+	--document-bg: #1b0c50;
+	--document-text: #ffffff;
+	--document-link: #a78bfa;
+	--document-readline-bg: rgba(45, 27, 105, 0.8);
+	--document-readline-border: rgba(139, 92, 246, 0.5);
+	--document-fill-bg: #a78bfa;
+	--document-fill-border: #8b5cf6;
+	--scrollbar-track: rgba(88, 28, 135, 0.5);
+	--scrollbar-thumb: rgba(139, 92, 246, 0.8);
+	--scrollbar-thumb-hover: rgba(147, 51, 234, 1.0);
+	--positive-alt-bg: rgba(34, 197, 94, 0.15);
+	--positive-alt-color: #22c55e;
+	--code-bg: rgba(196, 181, 253, 0.2);
+}
+
 body{
 	background: var(--bg-primary);
 	color: var(--text-primary);
@@ -1248,6 +1380,14 @@ body.dark .notify-item{
 	background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" transform="rotate(10)" viewBox="0 0 24 24" fill="none" stroke="rgba(150,150,150,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>') 545px 50% no-repeat rgba(179, 180, 184, 0);
 	color: var(--text-primary);
 }
+body.amethyst .notify-item{
+	background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" transform="rotate(10)" viewBox="0 0 24 24" fill="none" stroke="rgba(88,28,135,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>') 95% 50% no-repeat rgba(124, 58, 237, 0);
+	color: var(--text-primary);
+}
+body.dark-amethyst .notify-item{
+	background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" transform="rotate(10)" viewBox="0 0 24 24" fill="none" stroke="rgba(196,181,253,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>') 545px 50% no-repeat rgba(139, 92, 246, 0);
+	color: var(--text-primary);
+}
 .notify-item:hover{
 	background-color: var(--item-hover-bg);
 }
@@ -1941,6 +2081,14 @@ body.dark .submit-button-ring:after {
 	border:5px solid #000;
 	border-color:rgba(255, 255, 255, 0.3) transparent rgba(255, 255, 255, 0.3) transparent;
 }
+body.amethyst .submit-button-ring:after {
+	border:5px solid #fff;
+	border-color:rgba(26, 0, 37, 0.3) transparent rgba(26, 0, 37, 0.3) transparent;
+}
+body.dark-amethyst .submit-button-ring:after {
+	border:5px solid #000;
+	border-color:rgba(233, 213, 255, 0.3) transparent rgba(233, 213, 255, 0.3) transparent;
+}
 
 .loading-ring{
 	display:inline-block;
@@ -1966,6 +2114,14 @@ body.midnight .loading-ring:after {
 body.dark .loading-ring:after {
 	border:5px solid #000;
 	border-color:rgba(255, 255, 255, 0.3) transparent rgba(255, 255, 255, 0.3) transparent;
+}
+body.amethyst .loading-ring:after {
+	border:5px solid #fff;
+	border-color:rgba(26, 0, 37, 0.3) transparent rgba(26, 0, 37, 0.3) transparent;
+}
+body.dark-amethyst .loading-ring:after {
+	border:5px solid #000;
+	border-color:rgba(233, 213, 255, 0.3) transparent rgba(233, 213, 255, 0.3) transparent;
 }
 
 @keyframes ring {
@@ -2532,6 +2688,16 @@ body.dark .menu-notice, body.midnight .menu-notice{
 	background:rgba(190,235,250,0.9);
 	color:#0952ab;
 }
+body.amethyst .menu-notice{
+	border:1px solid var(--overlay-border);
+	background: var(--overlay-bg);
+	color: var(--overlay-text);
+}
+body.dark-amethyst .menu-notice{
+	border:1px solid var(--overlay-border);
+	background: var(--overlay-bg);
+	color: var(--overlay-text);
+}
 .menu.short .menu-notice{
 	display:none;
 }
@@ -2715,26 +2881,51 @@ body.dark .menu-notice, body.midnight .menu-notice{
 .article hr{
 	font-family:"PT Serif",serif;
 }
-body.dark .editor-formatter{
-	background:#18191c;
-}
-body.midnight .editor-formatter{
-	background:#14202c;
-}
+
 body.dark .article cite:after,body.midnight .article cite:after{
-	border-top:2px solid #fff;
+	border-top:2px solid var(--text-primary);
 }
 body.dark .article cite:before,body.midnight .article cite:before{
-	border-bottom:2px solid #fff;
+	border-bottom:2px solid var(--text-primary);
+}
+body.amethyst .article cite:after{
+	border-top:2px solid var(--text-primary);
+}
+body.amethyst .article cite:before{
+	border-bottom:2px solid var(--text-primary);
+}
+body.dark-amethyst .article cite:after{
+	border-top:2px solid var(--text-primary);
+}
+body.dark-amethyst .article cite:before{
+	border-bottom:2px solid var(--text-primary);
 }
 body.dark .article blockquote,body.midnight .article blockquote{
-	border-left:2px solid #fff;
+	border-left:2px solid var(--text-primary);
+}
+body.amethyst .article blockquote{
+	border-left:2px solid var(--text-primary);
+}
+body.dark-amethyst .article blockquote{
+	border-left:2px solid var(--text-primary);
 }
 body.dark .article a{
 	color: var(--accent-secondary);
 }
+body.amethyst .article a{
+	color: var(--accent-primary);
+}
+body.dark-amethyst .article a{
+	color: var(--accent-secondary);
+}
 body.dark .article code{
-	background:rgba(179, 180, 184, 0.2);
+	background: var(--code-bg);
+}
+body.amethyst .article code{
+	background: var(--code-bg);
+}
+body.dark-amethyst .article code{
+	background: var(--code-bg);
 }
 .object-column .article{
 	margin-top:10px;
@@ -2768,6 +2959,16 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 	border:1px solid rgba(65,150,200,0.6);
 	background:rgba(50,150,190,0.6);
 	color:#aaddff;
+}
+body.amethyst .nsfw-warning{
+	border:1px solid var(--warning-border);
+	background: var(--warning-bg);
+	color: var(--warning-text);
+}
+body.dark-amethyst .nsfw-warning{
+	border:1px solid var(--warning-border);
+	background: var(--warning-bg);
+	color: var(--warning-text);
 }
 .tooltip{
 	border-bottom:1px dashed var(--object-text-color);
@@ -2803,7 +3004,7 @@ body.dark .nsfw-warning, body.midnight .nsfw-warning{
 	-o-user-select: none;
 }
 .install-close-action i.icon:hover{
-	background:rgba(255,161,79,0.4);
+	background: var(--icon-hover);
 }
 .install-notice .install-action{
 	border-bottom:1px dashed var(--warning-text);

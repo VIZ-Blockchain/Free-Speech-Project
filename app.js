@@ -12161,6 +12161,8 @@ function apply_theme_mode(){
 	$('body').removeClass('dark');
 	$('body').removeClass('emerald');
 	$('body').removeClass('dark-emerald');
+	$('body').removeClass('amethyst');
+	$('body').removeClass('dark-amethyst');
 	let mode=settings.theme_mode;
 	if('auto'==mode){
 		let h=new Date().getHours();

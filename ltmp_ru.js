@@ -156,11 +156,13 @@ var ltmp_ru_arr = {
 				<p>Пресет дневной темы:</p>
 				<p><label><input type="radio" name="theme-light-preset" value="light"> &mdash; обычная (синяя)</label></p>
 				<p><label><input type="radio" name="theme-light-preset" value="emerald"> &mdash; изумруд (зеленая)</label></p>
+				<p><label><input type="radio" name="theme-light-preset" value="amethyst"> &mdash; аметист (фиолетовая)</label></p>
 				<hr>
 				<p>Пресет ночной темы:</p>
 				<p><label><input type="radio" name="theme-night-preset" value="midnight"> &mdash; полночь (синяя)</label></p>
 				<p><label><input type="radio" name="theme-night-preset" value="dark"> &mdash; тьма (серая)</label></p>
 				<p><label><input type="radio" name="theme-night-preset" value="dark-emerald"> &mdash; темный изумруд (зеленая)</label></p>
+				<p><label><input type="radio" name="theme-night-preset" value="dark-amethyst"> &mdash; темный аметист (фиолетовая)</label></p>
 				<hr>
 				<p>Автоматический режим</p>
 				<p>День начинается:</p>

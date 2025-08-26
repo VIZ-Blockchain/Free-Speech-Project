@@ -156,11 +156,13 @@ var ltmp_en_arr = {
 				<p>Light theme preset:</p>
 				<p><label><input type="radio" name="theme-light-preset" value="light"> &mdash; default (blue)</label></p>
 				<p><label><input type="radio" name="theme-light-preset" value="emerald"> &mdash; emerald (green)</label></p>
+				<p><label><input type="radio" name="theme-light-preset" value="amethyst"> &mdash; amethyst (purple)</label></p>
 				<hr>
 				<p>Night theme preset:</p>
 				<p><label><input type="radio" name="theme-night-preset" value="midnight"> &mdash; midnight (blue)</label></p>
 				<p><label><input type="radio" name="theme-night-preset" value="dark"> &mdash; dark (gray)</label></p>
 				<p><label><input type="radio" name="theme-night-preset" value="dark-emerald"> &mdash; dark emerald (green)</label></p>
+				<p><label><input type="radio" name="theme-night-preset" value="dark-amethyst"> &mdash; dark amethyst (purple)</label></p>
 				<hr>
 				<p>Automatic mode</p>
 				<p>The day starts:</p>
