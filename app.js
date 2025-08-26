@@ -15856,6 +15856,7 @@ function dapp_loaded(){
 	clearTimeout(dapp_loaded_timer);
 	dapp_loaded_timer=setTimeout(function(){
 		$('body').addClass('loaded');
+		apply_theme_mode();
 		if(1!=localStorage.getItem(storage_prefix+'install_close')){
 			$('.install-notice').addClass('show');
 		}
@@ -16022,11 +16023,11 @@ function main_app(){
 	}
 	else{
 		$('body').addClass('loaded');
+		apply_theme_mode();
 	}
 	console.log('Startup: main_app');
 	preset_view();
 	parse_fullpath();
-	apply_theme_mode();
 	render_menu();
 	render_session();
 	render_right_addon();
