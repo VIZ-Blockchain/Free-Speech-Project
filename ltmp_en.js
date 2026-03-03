@@ -244,6 +244,167 @@ var ltmp_en_arr = {
 				<p><a class="button sync-import-file-action">Import from a file</a><span class="submit-button-ring" rel="import-file"></span></p>
 				<p><a class="button sync-import-cloud-action">Reset and sync from the cloud</a><span class="submit-button-ring" rel="import-cloud"></span></p>
 			</div>
+			<div class="content-view" data-tab="trusted_domains">
+				<p>%%trusted_domains_title%%</p>
+				<p>%%trusted_domains_description%%</p>
+
+				<div class="settings-section">
+					<p>Default Trusted Domains:</p>
+					<div class="default-domains-list"></div>
+				</div>
+
+				<div class="settings-section">
+					<p>Your Custom Domains:</p>
+					<div class="user-domains-list"></div>
+
+					<div class="domain-input-group">
+						<input type="text" name="new_domain" placeholder="Enter domain (e.g., example.com)" value="">
+						<a class="button add-domain-action">Add Domain</a>
+					</div>
+				</div>
+
+				<p class="error"></p>
+				<p class="success"></p>
+			</div>
+			<div class="content-view" data-tab="storage">
+				<p>%%storage_management_title%%</p>
+				<p>%%storage_management_description%%</p>
+
+				<div class="storage-section">
+					<p>%%cache_statistics_title%%:</p>
+					<div class="storage-stats">
+						<div class="stat-card stat-total-images">
+							<div class="stat-value">0</div>
+							<div class="stat-label">%%total_cached_images%%</div>
+						</div>
+						<div class="stat-card stat-total-size">
+							<div class="stat-value">0 B</div>
+							<div class="stat-label">%%total_storage_used%%</div>
+						</div>
+						<div class="stat-card stat-expired">
+							<div class="stat-value">0</div>
+							<div class="stat-label">Expired Items</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="storage-section storage-quota-section" style="display: none;">
+					<p>Storage Quota:</p>
+					<div class="storage-quota-info">
+						<div class="quota-warning warning" style="display: none;">%%storage_quota_warning%%</div>
+						<div class="quota-error error" style="display: none;">%%storage_quota_exceeded%%</div>
+						<div class="quota-details">
+							<div>%%bucket_usage%%: <span class="quota-usage">0 B</span></div>
+							<div>%%bucket_quota%%: <span class="quota-limit">0 B</span></div>
+							<div>%%bucket_available%%: <span class="quota-available">0 B</span></div>
+						</div>
+						<div class="quota-actions">
+							<a class="button request-quota-increase-action">%%request_quota_increase%%</a>
+						</div>
+					</div>
+				</div>
+
+				<hr>
+
+				<div class="storage-section">
+					<p>%%cache_categories_title%%:</p>
+					<div class="category-actions">
+						<div class="category-avatars">
+							<span>%%category_avatars%%: </span><span class="stat-value">0</span>
+							<a class="category-btn clear clear-category-action" data-category="avatar">%%clear_category_button%%</a>
+						</div>
+						<div class="category-images">
+							<span>%%category_images%%: </span><span class="stat-value">0</span>
+							<a class="category-btn clear clear-category-action" data-category="image">%%clear_category_button%%</a>
+						</div>
+						<div class="category-videos">
+							<span>%%category_videos%%: </span><span class="stat-value">0</span>
+							<a class="category-btn clear clear-category-action" data-category="video">%%clear_category_button%%</a>
+						</div>
+						<div class="category-audio">
+							<span>%%category_audio%%: </span><span class="stat-value">0</span>
+							<a class="category-btn clear clear-category-action" data-category="audio">%%clear_category_button%%</a>
+						</div>
+						<div class="category-files">
+							<span>%%category_files%%: </span><span class="stat-value">0</span>
+							<a class="category-btn clear clear-category-action" data-category="file">%%clear_category_button%%</a>
+						</div>
+					</div>
+				</div>
+
+				<hr>
+
+				<div class="storage-section">
+					<p>%%ttl_settings_title%%:</p>
+					<div class="ttl-settings">
+						<div class="ttl-setting">
+							<label>%%ttl_avatars%%:</label>
+							<input type="number" name="ttl_avatars" min="1" max="365" value="30">
+						</div>
+						<div class="ttl-setting">
+							<label>%%ttl_images%%:</label>
+							<input type="number" name="ttl_images" min="1" max="365" value="7">
+						</div>
+						<div class="ttl-setting">
+							<label>%%ttl_videos%%:</label>
+							<input type="number" name="ttl_videos" min="1" max="365" value="3">
+						</div>
+						<div class="ttl-setting">
+							<label>%%ttl_audio%%:</label>
+							<input type="number" name="ttl_audio" min="1" max="365" value="3">
+						</div>
+						<div class="ttl-setting">
+							<label>%%ttl_files%%:</label>
+							<input type="number" name="ttl_files" min="1" max="365" value="1">
+						</div>
+						<div class="ttl-actions">
+							<a class="button save-ttl-settings-action">Save TTL Settings</a>
+						</div>
+					</div>
+				</div>
+
+				<hr>
+
+				<div class="storage-section">
+					<p>%%storage_buckets_title%%:</p>
+					<p>%%storage_buckets_description%%</p>
+					<div class="storage-buckets-info">
+						<div class="buckets-support-status">
+							<span>%%storage_buckets_supported%%: </span>
+							<span class="support-status supported" style="display: none;">Yes</span>
+							<span class="support-status not-supported" style="display: none;">No</span>
+						</div>
+						<div class="buckets-enable-setting">
+							<label>
+								<input type="checkbox" name="enable_storage_buckets">
+								<span class="buckets-status-enabled" style="display: none;">%%storage_buckets_enabled%%</span>
+								<span class="buckets-status-disabled" style="display: none;">%%storage_buckets_disabled%%</span>
+							</label>
+						</div>
+						<div class="bucket-quota-info" style="display: none;">
+							<p>%%bucket_quota_info%%:</p>
+							<div class="quota-details">
+								<div>%%bucket_usage%%: <span class="bucket-usage">0 B</span></div>
+								<div>%%bucket_quota%%: <span class="bucket-quota">0 B</span></div>
+								<div>%%bucket_available%%: <span class="bucket-available">0 B</span></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<hr>
+
+				<div class="storage-section">
+					<p>Cache Management:</p>
+					<div class="clear-actions">
+						<a class="button clear-expired-action">%%clear_expired_button%%</a>
+						<a class="button clear-all-cache-action">%%clear_all_cache_button%%</a>
+					</div>
+				</div>
+
+				<p class="error"></p>
+				<p class="success"></p>
+			</div>
 		</div>
 	</div>`,
 	api_list_item:`<p><label><input type="radio" name="api_gate" value="{value}"{selected}> &mdash; {domain}</label></p>`,
@@ -1194,4 +1355,105 @@ var ltmp_en_arr = {
 		<li>You cannot make content disappear.</li>
 		<li>The developers and software are not responsible for user behavior. If you’re offended by someone, talk to a therapist and add the user to your ignore list.</li>
 	</ul>`,
+
+	// Trust Domains System
+	trusted_domains_tab: `Trusted Domains`,
+	trusted_domains_title: `Trusted Domains Management`,
+	trusted_domains_description: `Control which domains are trusted for automatic image caching. Images from trusted domains will be cached locally for faster loading, while untrusted images will show a placeholder with management options.`,
+
+	default_domains_title: `Default Trusted Domains`,
+	user_domains_title: `Your Custom Domains`,
+
+	add_domain_placeholder: `Enter domain (e.g., example.com)`,
+	add_domain_button: `Add Domain`,
+	remove_domain_button: `Remove`,
+
+	domain_added_success: `Domain successfully added to trusted list`,
+	domain_removed_success: `Domain successfully removed from trusted list`,
+	domain_already_exists: `This domain is already in your trusted list`,
+	domain_invalid_format: `Invalid domain format. Please enter a valid domain name`,
+	domain_add_error: `Failed to add domain. Please try again`,
+	domain_remove_error: `Failed to remove domain. Please try again`,
+
+	trust_domain_tooltip: `
+	<div class="trust-domain-tooltip">
+		<div class="tooltip-header">
+			<span class="domain-name">{domain}</span>
+			<span class="domain-status {status_class}">{status_text}</span>
+		</div>
+		<div class="tooltip-body">
+			<p class="domain-info">{info_text}</p>
+			<div class="tooltip-actions">
+				{action_buttons}
+			</div>
+		</div>
+	</div>`,
+
+	trust_domain_button: `Trust Domain`,
+	ignore_domain_button: `Ignore Domain`,
+	show_image_button: `Show This Image`,
+	manage_domains_button: `Manage Domains`,
+
+	status_trusted: `Trusted`,
+	status_untrusted: `Untrusted`,
+	status_ignored: `Ignored`,
+
+	untrusted_domain_info: `This domain is not in your trusted list. Images from untrusted domains are not cached automatically for security and storage management.`,
+	trusted_domain_info: `This domain is trusted. Images are automatically cached for faster loading.`,
+	ignored_domain_info: `This domain is ignored. Images will never be cached or displayed.`,
+
+	// Storage Management
+	storage_tab: `Storage`,
+	storage_management_title: `Storage Management`,
+	storage_management_description: `Manage cached images and storage usage. You can clear cache by category or manage individual domains.`,
+
+	cache_statistics_title: `Cache Statistics`,
+	total_cached_images: `Total Cached Images`,
+	total_storage_used: `Total Storage Used`,
+
+	cache_categories_title: `Cache by Category`,
+	category_avatars: `Avatars`,
+	category_images: `Images`,
+	category_videos: `Videos`,
+	category_audio: `Audio`,
+	category_files: `Files`,
+
+	clear_category_button: `Clear {category}`,
+	clear_all_cache_button: `Clear All Cache`,
+	clear_expired_button: `Clear Expired`,
+
+	cache_cleared_success: `Cache cleared successfully`,
+	cache_clear_error: `Failed to clear cache. Please try again`,
+
+	confirm_clear_cache: `Are you sure you want to clear the cache? This action cannot be undone.`,
+	confirm_clear_category: `Are you sure you want to clear all {category} from cache?`,
+
+	storage_quota_warning: `Storage quota is running low. Consider clearing some cached content.`,
+	storage_quota_exceeded: `Storage quota exceeded. Some images may not be cached until space is freed.`,
+
+	ttl_settings_title: `Cache Time-to-Live (TTL) Settings`,
+	ttl_avatars: `Avatar Cache TTL (days)`,
+	ttl_images: `Image Cache TTL (days)`,
+	ttl_videos: `Video Cache TTL (days)`,
+	ttl_audio: `Audio Cache TTL (days)`,
+	ttl_files: `File Cache TTL (days)`,
+
+	ttl_updated_success: `TTL settings updated successfully`,
+	ttl_update_error: `Failed to update TTL settings. Please try again`,
+
+	storage_buckets_title: `Storage Buckets`,
+	storage_buckets_description: `Advanced storage management using browser Storage Buckets API for better performance and quota management.`,
+	storage_buckets_supported: `Storage Buckets API is supported`,
+	storage_buckets_not_supported: `Storage Buckets API is not supported in this browser`,
+	enable_storage_buckets: `Enable Storage Buckets`,
+	storage_buckets_enabled: `Storage Buckets are enabled`,
+	storage_buckets_disabled: `Storage Buckets are disabled`,
+
+	bucket_quota_info: `Bucket Quota Information`,
+	bucket_usage: `Bucket Usage`,
+	bucket_quota: `Bucket Quota`,
+	bucket_available: `Available Space`,
+	request_quota_increase: `Request Quota Increase`,
+	quota_increase_requested: `Quota increase requested`,
+	quota_increase_error: `Failed to request quota increase`,
 };

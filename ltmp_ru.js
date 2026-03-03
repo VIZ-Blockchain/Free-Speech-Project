@@ -244,6 +244,167 @@ var ltmp_ru_arr = {
 				<p><a class="button sync-import-file-action">Импортировать из файла</a><span class="submit-button-ring" rel="import-file"></span></p>
 				<p><a class="button sync-import-cloud-action">Сброс и синхронизация из облака</a><span class="submit-button-ring" rel="import-cloud"></span></p>
 			</div>
+			<div class="content-view" data-tab="trusted_domains">
+				<p>%%trusted_domains_title%%</p>
+				<p>%%trusted_domains_description%%</p>
+
+				<div class="settings-section">
+					<p>Домены по умолчанию:</p>
+					<div class="default-domains-list"></div>
+				</div>
+
+				<div class="settings-section">
+					<p>Ваши пользовательские домены:</p>
+					<div class="user-domains-list"></div>
+
+					<div class="domain-input-group">
+						<input type="text" name="new_domain" placeholder="Введите домен (например, example.com)" value="">
+						<a class="button add-domain-action">Добавить домен</a>
+					</div>
+				</div>
+
+				<p class="error"></p>
+				<p class="success"></p>
+			</div>
+			<div class="content-view" data-tab="storage">
+				<p>%%storage_management_title%%</p>
+				<p>%%storage_management_description%%</p>
+
+				<div class="storage-section">
+					<p>%%cache_statistics_title%%:</p>
+					<div class="storage-stats">
+						<div class="stat-card stat-total-images">
+							<div class="stat-value">0</div>
+							<div class="stat-label">%%total_cached_images%%</div>
+						</div>
+						<div class="stat-card stat-total-size">
+							<div class="stat-value">0 B</div>
+							<div class="stat-label">%%total_storage_used%%</div>
+						</div>
+						<div class="stat-card stat-expired">
+							<div class="stat-value">0</div>
+							<div class="stat-label">Просроченные элементы</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="storage-section storage-quota-section" style="display: none;">
+					<p>Квота хранилища:</p>
+					<div class="storage-quota-info">
+						<div class="quota-warning warning" style="display: none;">%%storage_quota_warning%%</div>
+						<div class="quota-error error" style="display: none;">%%storage_quota_exceeded%%</div>
+						<div class="quota-details">
+							<div>%%bucket_usage%%: <span class="quota-usage">0 B</span></div>
+							<div>%%bucket_quota%%: <span class="quota-limit">0 B</span></div>
+							<div>%%bucket_available%%: <span class="quota-available">0 B</span></div>
+						</div>
+						<div class="quota-actions">
+							<a class="button request-quota-increase-action">%%request_quota_increase%%</a>
+						</div>
+					</div>
+				</div>
+
+				<hr>
+
+				<div class="storage-section">
+					<p>%%cache_categories_title%%:</p>
+					<div class="category-actions">
+						<div class="category-avatars">
+							<span>%%category_avatars%%: </span><span class="stat-value">0</span>
+							<a class="category-btn clear clear-category-action" data-category="avatar">%%clear_category_button%%</a>
+						</div>
+						<div class="category-images">
+							<span>%%category_images%%: </span><span class="stat-value">0</span>
+							<a class="category-btn clear clear-category-action" data-category="image">%%clear_category_button%%</a>
+						</div>
+						<div class="category-videos">
+							<span>%%category_videos%%: </span><span class="stat-value">0</span>
+							<a class="category-btn clear clear-category-action" data-category="video">%%clear_category_button%%</a>
+						</div>
+						<div class="category-audio">
+							<span>%%category_audio%%: </span><span class="stat-value">0</span>
+							<a class="category-btn clear clear-category-action" data-category="audio">%%clear_category_button%%</a>
+						</div>
+						<div class="category-files">
+							<span>%%category_files%%: </span><span class="stat-value">0</span>
+							<a class="category-btn clear clear-category-action" data-category="file">%%clear_category_button%%</a>
+						</div>
+					</div>
+				</div>
+
+				<hr>
+
+				<div class="storage-section">
+					<p>%%ttl_settings_title%%:</p>
+					<div class="ttl-settings">
+						<div class="ttl-setting">
+							<label>%%ttl_avatars%%:</label>
+							<input type="number" name="ttl_avatars" min="1" max="365" value="30">
+						</div>
+						<div class="ttl-setting">
+							<label>%%ttl_images%%:</label>
+							<input type="number" name="ttl_images" min="1" max="365" value="7">
+						</div>
+						<div class="ttl-setting">
+							<label>%%ttl_videos%%:</label>
+							<input type="number" name="ttl_videos" min="1" max="365" value="3">
+						</div>
+						<div class="ttl-setting">
+							<label>%%ttl_audio%%:</label>
+							<input type="number" name="ttl_audio" min="1" max="365" value="3">
+						</div>
+						<div class="ttl-setting">
+							<label>%%ttl_files%%:</label>
+							<input type="number" name="ttl_files" min="1" max="365" value="1">
+						</div>
+						<div class="ttl-actions">
+							<a class="button save-ttl-settings-action">Сохранить настройки TTL</a>
+						</div>
+					</div>
+				</div>
+
+				<hr>
+
+				<div class="storage-section">
+					<p>%%storage_buckets_title%%:</p>
+					<p>%%storage_buckets_description%%</p>
+					<div class="storage-buckets-info">
+						<div class="buckets-support-status">
+							<span>Поддержка Storage Buckets API: </span>
+							<span class="support-status supported" style="display: none;">Да</span>
+							<span class="support-status not-supported" style="display: none;">Нет</span>
+						</div>
+						<div class="buckets-enable-setting">
+							<label>
+								<input type="checkbox" name="enable_storage_buckets">
+								<span class="buckets-status-enabled" style="display: none;">%%storage_buckets_enabled%%</span>
+								<span class="buckets-status-disabled" style="display: none;">%%storage_buckets_disabled%%</span>
+							</label>
+						</div>
+						<div class="bucket-quota-info" style="display: none;">
+							<p>%%bucket_quota_info%%:</p>
+							<div class="quota-details">
+								<div>%%bucket_usage%%: <span class="bucket-usage">0 B</span></div>
+								<div>%%bucket_quota%%: <span class="bucket-quota">0 B</span></div>
+								<div>%%bucket_available%%: <span class="bucket-available">0 B</span></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<hr>
+
+				<div class="storage-section">
+					<p>Управление кэшем:</p>
+					<div class="clear-actions">
+						<a class="button clear-expired-action">%%clear_expired_button%%</a>
+						<a class="button clear-all-cache-action">%%clear_all_cache_button%%</a>
+					</div>
+				</div>
+
+				<p class="error"></p>
+				<p class="success"></p>
+			</div>
 		</div>
 	</div>`,
 	api_list_item:`<p><label><input type="radio" name="api_gate" value="{value}"{selected}> &mdash; {domain}</label></p>`,
@@ -888,7 +1049,7 @@ var ltmp_ru_arr = {
 	object_type_encoded_comment: `<div class="content-view">{comment}</div>`,
 	decode_form: `
 		<div class="notice-caption">%%icon_locked%% Объект зашифрован</div>
-		<div class="notice-description">Если вы знаете кодовую фразу вы можете расшифровать его.<br>Все ключи будут храниться к конкретному аккаунту.<br>Нажми на мне.</div>
+		<div class="notice-description">Если вы знаете кодовую фразу вы можете расшифровать его.<br>Все ключи будут храниться к конкретному аккаунту.<br>Нажми на меня.</div>
 		<div class="decode-passphrase">
 		<input type="password" name="passphrase" placeholder="Кодовая фраза..."><br>
 		<a class="button small decode-object-action">Декодировать</a>
@@ -1194,4 +1355,105 @@ var ltmp_ru_arr = {
 		<li>Вы не можете заставить контент исчезнуть.</li>
 		<li>Разработчики и софт не отвечают за поведение пользователей. Если вас кто-то обидел, обратитесь к психотерапевту и добавьте пользователя в список для игнорирования.</li>
 	</ul>`,
+
+	// Система доверенных доменов
+	trusted_domains_tab: `Доверенные домены`,
+	trusted_domains_title: `Управление доверенными доменами`,
+	trusted_domains_description: `Контролируйте, какие домены считаются доверенными для автоматического кэширования изображений. Изображения с доверенных доменов будут кэшироваться локально для более быстрой загрузки, а недоверенные изображения будут показывать заглушку с опциями управления.`,
+
+	default_domains_title: `Домены по умолчанию`,
+	user_domains_title: `Ваши пользовательские домены`,
+
+	add_domain_placeholder: `Введите домен (например, example.com)`,
+	add_domain_button: `Добавить домен`,
+	remove_domain_button: `Удалить`,
+
+	domain_added_success: `Домен успешно добавлен в список доверенных`,
+	domain_removed_success: `Домен успешно удален из списка доверенных`,
+	domain_already_exists: `Этот домен уже есть в вашем списке доверенных`,
+	domain_invalid_format: `Неверный формат домена. Пожалуйста, введите корректное имя домена`,
+	domain_add_error: `Не удалось добавить домен. Попробуйте еще раз`,
+	domain_remove_error: `Не удалось удалить домен. Попробуйте еще раз`,
+
+	trust_domain_tooltip: `
+	<div class="trust-domain-tooltip">
+		<div class="tooltip-header">
+			<span class="domain-name">{domain}</span>
+			<span class="domain-status {status_class}">{status_text}</span>
+		</div>
+		<div class="tooltip-body">
+			<p class="domain-info">{info_text}</p>
+			<div class="tooltip-actions">
+				{action_buttons}
+			</div>
+		</div>
+	</div>`,
+
+	trust_domain_button: `Доверять домену`,
+	ignore_domain_button: `Игнорировать домен`,
+	show_image_button: `Показать это изображение`,
+	manage_domains_button: `Управление доменами`,
+
+	status_trusted: `Доверенный`,
+	status_untrusted: `Недоверенный`,
+	status_ignored: `Игнорируемый`,
+
+	untrusted_domain_info: `Этот домен не находится в вашем списке доверенных. Изображения с недоверенных доменов не кэшируются автоматически для безопасности и управления хранилищем.`,
+	trusted_domain_info: `Этот домен доверенный. Изображения автоматически кэшируются для более быстрой загрузки.`,
+	ignored_domain_info: `Этот домен игнорируется. Изображения никогда не будут кэшироваться или отображаться.`,
+
+	// Управление хранилищем
+	storage_tab: `Хранилище`,
+	storage_management_title: `Управление хранилищем`,
+	storage_management_description: `Управляйте кэшированными изображениями и использованием хранилища. Вы можете очищать кэш по категориям или управлять отдельными доменами.`,
+
+	cache_statistics_title: `Статистика кэша`,
+	total_cached_images: `Всего кэшированных изображений`,
+	total_storage_used: `Общее использование хранилища`,
+
+	cache_categories_title: `Кэш по категориям`,
+	category_avatars: `Аватары`,
+	category_images: `Изображения`,
+	category_videos: `Видео`,
+	category_audio: `Аудио`,
+	category_files: `Файлы`,
+
+	clear_category_button: `Очистить {category}`,
+	clear_all_cache_button: `Очистить весь кэш`,
+	clear_expired_button: `Очистить просроченные`,
+
+	cache_cleared_success: `Кэш успешно очищен`,
+	cache_clear_error: `Не удалось очистить кэш. Попробуйте еще раз`,
+
+	confirm_clear_cache: `Вы уверены, что хотите очистить кэш? Это действие нельзя отменить.`,
+	confirm_clear_category: `Вы уверены, что хотите очистить все {category} из кэша?`,
+
+	storage_quota_warning: `Квота хранилища почти исчерпана. Рассмотрите возможность очистки некоторого кэшированного контента.`,
+	storage_quota_exceeded: `Квота хранилища превышена. Некоторые изображения могут не кэшироваться, пока не будет освобождено место.`,
+
+	ttl_settings_title: `Настройки времени жизни кэша (TTL)`,
+	ttl_avatars: `TTL кэша аватаров (дни)`,
+	ttl_images: `TTL кэша изображений (дни)`,
+	ttl_videos: `TTL кэша видео (дни)`,
+	ttl_audio: `TTL кэша аудио (дни)`,
+	ttl_files: `TTL кэша файлов (дни)`,
+
+	ttl_updated_success: `Настройки TTL успешно обновлены`,
+	ttl_update_error: `Не удалось обновить настройки TTL. Попробуйте еще раз`,
+
+	storage_buckets_title: `Корзины хранилища`,
+	storage_buckets_description: `Расширенное управление хранилищем с использованием API Storage Buckets браузера для лучшей производительности и управления квотами.`,
+	storage_buckets_supported: `API Storage Buckets поддерживается`,
+	storage_buckets_not_supported: `API Storage Buckets не поддерживается в этом браузере`,
+	enable_storage_buckets: `Включить Storage Buckets`,
+	storage_buckets_enabled: `Storage Buckets включены`,
+	storage_buckets_disabled: `Storage Buckets отключены`,
+
+	bucket_quota_info: `Информация о квоте корзины`,
+	bucket_usage: `Использование корзины`,
+	bucket_quota: `Квота корзины`,
+	bucket_available: `Доступное место`,
+	request_quota_increase: `Запросить увеличение квоты`,
+	quota_increase_requested: `Запрос на увеличение квоты отправлен`,
+	quota_increase_error: `Не удалось запросить увеличение квоты`,
 };

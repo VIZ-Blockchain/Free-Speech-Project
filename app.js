@@ -1614,7 +1614,7 @@ var idb_init=false;
 var db;
 var db_req;
 var db_version=1;
-var global_db_version=11;
+var global_db_version=12;
 var need_update_db_version=false;
 var local_global_db_version=parseInt(localStorage.getItem(storage_prefix+'global_db_version'));
 if(isNaN(local_global_db_version)){
@@ -1866,6 +1866,32 @@ function load_db(callback){
 			//new index for blacklist
 		}
 		console.log('Blacklist storage upgraded');
+
+		if(!db.objectStoreNames.contains('trusted_domains')){//store trusted domains for image caching
+			items_table=db.createObjectStore('trusted_domains',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('domain','domain',{unique:true});//domain name
+			items_table.createIndex('type','type',{unique:false});//default, user, ignored
+			items_table.createIndex('status','status',{unique:false});//0=inactive, 1=active, 2=ignored
+			items_table.createIndex('rule','rule',{unique:false});//allow, ignore
+		}
+		else{
+			//new index for trusted_domains
+		}
+		console.log('Trusted domains storage upgraded');
+
+		if(!db.objectStoreNames.contains('storage_cache')){//store cached image metadata
+			items_table=db.createObjectStore('storage_cache',{keyPath:'id',autoIncrement:true});
+			items_table.createIndex('original_url','original_url',{unique:true});//original image URL
+			items_table.createIndex('domain','domain',{unique:false});//extracted domain
+			items_table.createIndex('category','category',{unique:false});//avatar, image, video, audio, file
+			items_table.createIndex('ttl_expires','ttl_expires',{unique:false});//TTL expiration timestamp
+			items_table.createIndex('account','account',{unique:false});//associated account
+			items_table.createIndex('last_accessed','last_accessed',{unique:false});//LRU cleanup
+		}
+		else{
+			//new index for storage_cache
+		}
+		console.log('Cached images storage upgraded');
 
 		if(trx_need_commit){
 			update_trx.commit();
@@ -2822,7 +2848,50 @@ function safe_image(link){
 	}
 	return result;
 }
-function safe_avatar(avatar){
+function safe_avatar(avatar, account, callback){
+	console.log('safe_avatar',avatar, account, callback);
+	// Handle different parameter combinations for backward compatibility
+	if (typeof account === 'function') {
+		// Called as safe_avatar(avatar, callback)
+		callback = account;
+		account = '';
+	} else if (typeof callback === 'undefined') {
+		// Called as safe_avatar(avatar) or safe_avatar(avatar, account)
+		// Return synchronous result for backward compatibility
+		return safe_avatar_sync(avatar);
+	}
+
+	// Asynchronous mode with trusted domain checking and downloading
+	let processed_url = safe_avatar_sync(avatar);
+
+	// If sync processing failed, return error immediately
+	if (processed_url === ltmp_global.profile_default_avatar) {
+		callback(false, processed_url, 'invalid_protocol');
+		return;
+	}
+
+	// Use validate_image_with_storage_bucket for trusted domain checking and caching
+	// This will DOWNLOAD the image if it's from a trusted domain and STORE it in local storage
+	validate_image_with_storage_bucket(processed_url, 'avatar', account || '', function(success, final_url, status) {
+		console.log('validate_image_with_storage_bucket result',success, final_url, status);
+		if (success) {
+			// Avatar successfully downloaded and cached from trusted domain
+			// Status can be: 'bucket_cached', 'newly_cached', 'object_url_fallback'
+			callback(true, final_url, status);
+		} else {
+			// Use untrusted image placeholder for domain trust failures
+			if (status === 'untrusted_domain') {
+				callback(false, ltmp_global.untrusted_image, status);
+			} else {
+				// For other failures (fetch errors, invalid format, etc.), use default avatar
+				callback(false, ltmp_global.profile_default_avatar, status);
+			}
+		}
+	});
+}
+
+// Synchronous version for backward compatibility
+function safe_avatar_sync(avatar){
 	let result='';
 	let error=false;
 	//console.log(typeof avatar,avatar);
@@ -2854,6 +2923,20 @@ function safe_avatar(avatar){
 	return result;
 }
 
+// Helper function for rendering avatars with trusted domain checking
+function safe_avatar_with_domain_check(avatar, account, callback) {
+	if (typeof callback === 'undefined') {
+		// Return sync version with default placeholder for untrusted domains
+		// This is used when immediate rendering is needed
+		return safe_avatar_sync(avatar);
+	}
+
+	// Process avatar with trusted domain checking
+	safe_avatar(avatar, function(success, processed_url, status) {
+		callback(success, processed_url, status);
+	});
+}
+
 var user_profile=false;
 function render_session(){
 	let toggle_menu=ltmp(ltmp_arr.toggle_menu,{title:ltmp_arr.toggle_menu_title,icon:ltmp_global.icon_close});
@@ -2863,7 +2946,10 @@ function render_session(){
 				if(false===user_profile){
 					user_profile=JSON.parse(result.profile);
 				}
-				$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_account,{'account':result.account,'nickname':user_profile.nickname,'avatar':safe_avatar(user_profile.avatar)}));
+				// Use trusted domain checking for session avatar with account info
+				safe_avatar(user_profile.avatar, result.account, function(success, processed_avatar, status) {
+					$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_account,{'account':result.account,'nickname':user_profile.nickname,'avatar':processed_avatar}));
+				});
 			}
 			else{
 				$('div.menu .session').html(toggle_menu+ltmp(ltmp_arr.menu_session_empty,{caption:ltmp_arr.menu_session_error,avatar:ltmp_global.profile_default_avatar}));
@@ -6710,7 +6796,7 @@ function app_mouse(e){
 			}
 			if($(target).hasClass('toggle-theme-action')){
 				if('auto'==settings.theme_mode){
-					view_path('dapp:app_settings/theme/',{},true,false);
+					view_path('dapp:app_settings/theme',{},true,false);
 				}
 				else
 				if('light'==settings.theme_mode){
@@ -11535,6 +11621,10 @@ function view_users(view,path_parts,query,title,back_to){
 					if(find){
 						objects=ltmp_arr.users_objects_header+objects;
 						view.find('.objects').html(objects);
+						// Upgrade avatars with trusted domain checking after rendering
+						setTimeout(function() {
+							upgrade_user_avatars_with_trusted_domains(view);
+						}, 100);
 					}
 					else{
 						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.users_not_found}));
@@ -11580,6 +11670,10 @@ function view_users(view,path_parts,query,title,back_to){
 					if(find){
 						objects=ltmp_arr.users_objects_header+objects;
 						view.find('.objects').html(objects);
+						// Upgrade avatars with trusted domain checking after rendering
+						setTimeout(function() {
+							upgrade_user_avatars_with_trusted_domains(view);
+						}, 100);
 					}
 					else{
 						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.users_not_found}));
@@ -11623,6 +11717,10 @@ function view_users(view,path_parts,query,title,back_to){
 					if(find){
 						objects=ltmp_arr.users_objects_header+objects;
 						view.find('.objects').html(objects);
+						// Upgrade avatars with trusted domain checking after rendering
+						setTimeout(function() {
+							upgrade_user_avatars_with_trusted_domains(view);
+						}, 100);
 					}
 					else{
 						view.find('.objects').html(ltmp(ltmp_arr.error_notice,{error:ltmp_arr.users_not_found}));
@@ -11844,6 +11942,8 @@ function view_app_settings(view,path_parts,query,title){
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/main',class:('main'==current_tab?'current':''),caption:ltmp_arr.app_settings_main_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/feed',class:('feed'==current_tab?'current':''),caption:ltmp_arr.app_settings_feed_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/theme',class:('theme'==current_tab?'current':''),caption:ltmp_arr.app_settings_theme_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/trusted_domains',class:('trusted_domains'==current_tab?'current':''),caption:ltmp_arr.trusted_domains_tab});
+		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/storage',class:('storage'==current_tab?'current':''),caption:ltmp_arr.storage_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/blacklist',class:('blacklist'==current_tab?'current':''),caption:ltmp_arr.app_settings_blacklist_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/connection',class:('connection'==current_tab?'current':''),caption:ltmp_arr.app_settings_connection_tab});
 		tabs+=ltmp(ltmp_arr.tab,{link:'dapp:app_settings/languages',class:('languages'==current_tab?'current':''),caption:ltmp_arr.app_settings_languages_tab});
@@ -12070,6 +12170,121 @@ function view_app_settings(view,path_parts,query,title){
 		});
 	}
 
+	if('trusted_domains'==current_tab){
+		tab.find('.button').removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+		tab.find('.error').html('');
+		tab.find('.success').html('');
+
+		// Load trusted domains list
+		load_trusted_domains_list(tab);
+
+		// Add domain functionality
+		tab.find('.add-domain-action').off('click');
+		tab.find('.add-domain-action').on('click',function(){
+			let domain_input=tab.find('input[name="new_domain"]');
+			let domain=domain_input.val().trim().toLowerCase();
+			if(domain){
+				add_trusted_domain(domain,'user',function(success,error){
+					if(success){
+						tab.find('.success').html(ltmp_arr.domain_added_success);
+						domain_input.val('');
+						load_trusted_domains_list(tab);
+					}
+					else{
+						if(error=='already_exists'){
+							tab.find('.error').html(ltmp_arr.domain_already_exists);
+						}
+						else{
+							tab.find('.error').html(ltmp_arr.domain_add_error);
+						}
+					}
+				});
+			}
+		});
+	}
+	if('storage'==current_tab){
+		tab.find('.button').removeClass('disabled');
+		tab.find('.submit-button-ring').removeClass('show');
+		tab.find('.error').html('');
+		tab.find('.success').html('');
+
+		// Load storage statistics
+		load_storage_statistics(tab);
+
+		// Load TTL settings
+		load_ttl_settings(tab);
+
+		// Load storage bucket info
+		load_storage_bucket_info(tab);
+
+		// Clear cache actions
+		tab.find('.clear-all-cache-action').off('click');
+		tab.find('.clear-all-cache-action').on('click',function(){
+			if(confirm(ltmp_arr.confirm_clear_cache)){
+				clear_all_cache(function(success){
+					if(success){
+						tab.find('.success').html(ltmp_arr.cache_cleared_success);
+						load_storage_statistics(tab);
+					}
+					else{
+						tab.find('.error').html(ltmp_arr.cache_clear_error);
+					}
+				});
+			}
+		});
+
+		tab.find('.clear-expired-action').off('click');
+		tab.find('.clear-expired-action').on('click',function(){
+			clear_expired_cache(function(count){
+				tab.find('.success').html(ltmp_arr.cache_cleared_success+' ('+count+' items)');
+				load_storage_statistics(tab);
+			});
+		});
+
+		// Category clear actions
+		tab.find('.clear-category-action').off('click');
+		tab.find('.clear-category-action').on('click',function(){
+			let category=$(this).data('category');
+			if(confirm(ltmp_arr.confirm_clear_category.replace('{category}',ltmp_arr['category_'+category]))){
+				clear_cache_by_category(category,function(count){
+					tab.find('.success').html(ltmp_arr.cache_cleared_success+' ('+count+' items)');
+					load_storage_statistics(tab);
+				});
+			}
+		});
+
+		// Save TTL settings
+		tab.find('.save-ttl-settings-action').off('click');
+		tab.find('.save-ttl-settings-action').on('click',function(){
+			save_ttl_settings(tab, function(success) {
+				if(success) {
+					tab.find('.success').html(ltmp_arr.ttl_updated_success);
+				} else {
+					tab.find('.error').html(ltmp_arr.ttl_update_error);
+				}
+			});
+		});
+
+		// Toggle storage buckets
+		tab.find('input[name="enable_storage_buckets"]').off('change');
+		tab.find('input[name="enable_storage_buckets"]').on('change',function(){
+			toggle_storage_buckets(tab, $(this).prop('checked'));
+		});
+
+		// Request quota increase
+		tab.find('.request-quota-increase-action').off('click');
+		tab.find('.request-quota-increase-action').on('click',function(){
+			request_quota_increase(tab, function(success) {
+				if(success) {
+					tab.find('.success').html(ltmp_arr.quota_increase_requested);
+					load_storage_bucket_info(tab);
+				} else {
+					tab.find('.error').html(ltmp_arr.quota_increase_error);
+				}
+			});
+		});
+	}
 	if('sync'==current_tab){
 		tab.find('.button').removeClass('disabled');
 		tab.find('.submit-button-ring').removeClass('show');
@@ -16010,6 +16225,211 @@ function more_list_position(){
 	}
 }
 
+//Trust Domain Manager functions
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function load_storage_statistics(tab) {
+	get_cache_statistics(function(stats) {
+		// Update statistics display
+		tab.find('.stat-total-images .stat-value').html(stats.total_images);
+		tab.find('.stat-total-size .stat-value').html(format_bytes(stats.total_size));
+		tab.find('.stat-expired .stat-value').html(stats.expired_count);
+
+		// Update category counts
+		for (let category in stats.categories) {
+			tab.find('.category-' + category + ' .stat-value').html(stats.categories[category]);
+		}
+	});
+}
+
+function clear_all_cache(callback) {
+	if (typeof callback === 'undefined') {
+		callback = function(){};
+	}
+
+	let t = db.transaction(['storage_cache'], 'readwrite');
+	let q = t.objectStore('storage_cache');
+	let req = q.openCursor(null, 'next');
+
+	let deleted_count = 0;
+	req.onsuccess = function(event) {
+		let cur = event.target.result;
+		if (cur) {
+			cur.delete();
+			deleted_count++;
+			cur.continue();
+		} else {
+			if (trx_need_commit) {
+				t.commit();
+			}
+			console.log('Cleared all cache:', deleted_count, 'items');
+			callback(true, deleted_count);
+		}
+	};
+}
+
+function format_bytes(bytes) {
+	if (bytes === 0) return '0 B';
+	const k = 1024;
+	const sizes = ['B', 'KB', 'MB', 'GB'];
+	const i = Math.floor(Math.log(bytes) / Math.log(k));
+	return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+
+function clear_expired_cache(callback) {
+	if (typeof callback === 'undefined') {
+		callback = function(){};
+	}
+
+	let current_time = new Date().getTime();
+	let t = db.transaction(['storage_cache'], 'readwrite');
+	let q = t.objectStore('storage_cache');
+	let req = q.index('ttl_expires').openCursor(IDBKeyRange.upperBound(current_time), 'next');
+
+	let deleted_count = 0;
+	req.onsuccess = function(event) {
+		let cur = event.target.result;
+		if (cur) {
+			cur.delete();
+			deleted_count++;
+			cur.continue();
+		} else {
+			if (trx_need_commit) {
+				t.commit();
+			}
+			console.log('Cleared', deleted_count, 'expired cached images');
+			callback(deleted_count);
+		}
+	};
+}
+
+function clear_cache_by_category(category, callback) {
+	if (typeof callback === 'undefined') {
+		callback = function(){};
+	}
+
+	let t = db.transaction(['storage_cache'], 'readwrite');
+	let q = t.objectStore('storage_cache');
+	let req = q.index('category').openCursor(IDBKeyRange.only(category), 'next');
+
+	let deleted_count = 0;
+	req.onsuccess = function(event) {
+		let cur = event.target.result;
+		if (cur) {
+			cur.delete();
+			deleted_count++;
+			cur.continue();
+		} else {
+			if (trx_need_commit) {
+				t.commit();
+			}
+			console.log('Cleared', deleted_count, category, 'cached images');
+			callback(deleted_count);
+		}
+	};
+}
+
+function get_cache_statistics(callback) {
+	if (typeof callback === 'undefined') {
+		callback = function(){};
+	}
+
+	let stats = {
+		total_images: 0,
+		categories: {},
+		domains: {},
+		total_size: 0, // This would need Storage Bucket API to get actual sizes
+		expired_count: 0
+	};
+
+	let current_time = new Date().getTime();
+	let t = db.transaction(['storage_cache'], 'readonly');
+	let q = t.objectStore('storage_cache');
+	let req = q.openCursor(null, 'next');
+
+	req.onsuccess = function(event) {
+		let cur = event.target.result;
+		if (cur) {
+			let record = cur.value;
+			stats.total_images++;
+
+			// Count by category
+			if (!stats.categories[record.category]) {
+				stats.categories[record.category] = 0;
+			}
+			stats.categories[record.category]++;
+
+			// Count by domain
+			if (!stats.domains[record.domain]) {
+				stats.domains[record.domain] = 0;
+			}
+			stats.domains[record.domain]++;
+
+			// Count expired
+			if (record.ttl_expires < current_time) {
+				stats.expired_count++;
+			}
+
+			cur.continue();
+		} else {
+			callback(stats);
+		}
+	};
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var ignore_resize=false;
 function main_app(){
 	if(false===terms_of_use_accept){
@@ -16037,19 +16457,28 @@ function main_app(){
 
 	init_users(()=>{
 		console.log('Startup: init_users +');
-		clear_feed(()=>{
-			console.log('Startup: clear_feed +');
-			clear_users_objects(()=>{
-				console.log('Startup: clear_users_objects +');
-				clear_cache(()=>{
-					console.log('Startup: clear_cache +');
-					view_path(path+(''==query?'':'?'+query),{},false,false);
-					check_sync_cloud_activity();
-					update_feed();
-					check_blacklist_sync_activity();
-					if(false!==whitelabel_logo){
-						dapp_loaded();
-					}
+		init_trust_domains_system(()=>{
+			console.log('Startup: init_trust_domains_system +');
+			init_storage_bucket_manager(()=>{
+				console.log('Startup: init_storage_bucket_manager + (Storage Buckets enabled:', storage_bucket_enabled, ')');
+				// Initialize tooltip system
+				setup_untrusted_image_event_handlers();
+				console.log('Startup: tooltip system initialized +');
+				clear_feed(()=>{
+					console.log('Startup: clear_feed +');
+					clear_users_objects(()=>{
+						console.log('Startup: clear_users_objects +');
+						clear_cache(()=>{
+							console.log('Startup: clear_cache +');
+							view_path(path+(''==query?'':'?'+query),{},false,false);
+							check_sync_cloud_activity();
+							update_feed();
+							check_blacklist_sync_activity();
+							if(false!==whitelabel_logo){
+								dapp_loaded();
+							}
+						});
+					});
 				});
 			});
 		});
@@ -16156,4 +16585,69 @@ function main_app(){
 		document.location.hash=terms_of_use_redirect;
 		terms_of_use_redirect=false;
 	}
+}
+
+function load_ttl_settings(tab) {
+	// Load TTL settings from localStorage or use defaults
+	let ttl_settings = {
+		avatar: parseInt(localStorage.getItem(storage_prefix + 'ttl_avatar')) || 30,
+		image: parseInt(localStorage.getItem(storage_prefix + 'ttl_image')) || 7,
+		video: parseInt(localStorage.getItem(storage_prefix + 'ttl_video')) || 3,
+		audio: parseInt(localStorage.getItem(storage_prefix + 'ttl_audio')) || 3,
+		file: parseInt(localStorage.getItem(storage_prefix + 'ttl_file')) || 1
+	};
+
+	// Update UI with loaded settings
+	tab.find('input[name="ttl_avatars"]').val(ttl_settings.avatar);
+	tab.find('input[name="ttl_images"]').val(ttl_settings.image);
+	tab.find('input[name="ttl_videos"]').val(ttl_settings.video);
+	tab.find('input[name="ttl_audio"]').val(ttl_settings.audio);
+	tab.find('input[name="ttl_files"]').val(ttl_settings.file);
+}
+
+function save_ttl_settings(tab, callback) {
+	if (typeof callback === 'undefined') {
+		callback = function(){};
+	}
+
+	// Get values from UI
+	let ttl_settings = {
+		avatar: parseInt(tab.find('input[name="ttl_avatars"]').val()) || 30,
+		image: parseInt(tab.find('input[name="ttl_images"]').val()) || 7,
+		video: parseInt(tab.find('input[name="ttl_videos"]').val()) || 3,
+		audio: parseInt(tab.find('input[name="ttl_audio"]').val()) || 3,
+		file: parseInt(tab.find('input[name="ttl_files"]').val()) || 1
+	};
+
+	// Validate values (1-365 days)
+	for (let category in ttl_settings) {
+		if (ttl_settings[category] < 1) ttl_settings[category] = 1;
+		if (ttl_settings[category] > 365) ttl_settings[category] = 365;
+		// Update UI with validated values
+		tab.find('input[name="ttl_' + category + 's"]').val(ttl_settings[category]);
+	}
+
+
+// Save to localStorage
+	try {
+		localStorage.setItem(storage_prefix + 'ttl_avatar', ttl_settings.avatar);
+		localStorage.setItem(storage_prefix + 'ttl_image', ttl_settings.image);
+		localStorage.setItem(storage_prefix + 'ttl_video', ttl_settings.video);
+		localStorage.setItem(storage_prefix + 'ttl_audio', ttl_settings.audio);
+		localStorage.setItem(storage_prefix + 'ttl_file', ttl_settings.file);
+		callback(true);
+	} catch (e) {
+		console.error('Failed to save TTL settings:', e);
+		callback(false);
+	}
+}
+
+function load_storage_bucket_info(tab) {
+	get_storage_bucket_info(function(info) {
+		tab.find('.storage-bucket-supported').html(info.supported ? ltmp_arr.yes : ltmp_arr.no);
+		tab.find('.storage-bucket-enabled').html(info.enabled ? ltmp_arr.yes : ltmp_arr.no);
+		tab.find('.storage-bucket-quota').html(format_bytes(info.quota));
+		tab.find('.storage-bucket-usage').html(format_bytes(info.usage));
+		tab.find('.storage-bucket-available').html(format_bytes(info.available));
+	});
 }
