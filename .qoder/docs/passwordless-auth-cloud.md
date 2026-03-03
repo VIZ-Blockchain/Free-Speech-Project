@@ -220,7 +220,7 @@ function signCloudRequest(account, operation, privateKey) {
 // Create session
 async function createSession(account, privateKey) {
     const { data, signature } = signCloudRequest(account, 'login', privateKey);
-    
+
     const response = await fetch('https://api.example.com/cloud.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -230,7 +230,7 @@ async function createSession(account, privateKey) {
             signature: signature
         })
     });
-    
+
     return await response.json();
 }
 
@@ -246,7 +246,7 @@ async function getUpdates(sessionId, lastActivity, lastUpdate) {
             update: lastUpdate
         })
     });
-    
+
     return await response.json();
 }
 ```

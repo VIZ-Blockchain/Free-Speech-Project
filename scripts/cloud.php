@@ -1,31 +1,31 @@
 <?php
 /**
  * Cloud Sync API - Passwordless Authentication with VIZ Blockchain
- * 
+ *
  * This script provides a cloud synchronization service using VIZ blockchain
  * signatures for authentication. No passwords, no account creation - users
  * prove ownership by signing messages with their VIZ private key.
- * 
+ *
  * Authentication Methods:
  *   1. Direct signature - Each request signed individually (most secure)
  *   2. Session-based - First request creates session, subsequent use session ID
- * 
+ *
  * API Actions:
  *   - session:     Create authenticated session from signature
  *   - activity:    Get last activity timestamp and update ID
  *   - get_updates: Retrieve updates since last sync
  *   - put_update:  Store new update (subscribe, backup, ignore, etc.)
- * 
+ *
  * Request Format:
  *   POST with JSON body containing:
  *   - action: The operation to perform
  *   - session: Session ID (for session-based auth)
  *   - OR data + signature: Signed data (for direct signature auth)
- * 
+ *
  * Data Format for Signing:
  *   {domain}:{operation}:{account}:{timestamp}:{nonce}
  *   Example: "readdle.me:login:myaccount:1709510400:abc123"
- * 
+ *
  * @author Free-Speech-Project
  * @version 1.0.0
  * @see https://github.com/viz-cx/viz-php-lib for VIZ Auth library
@@ -42,15 +42,15 @@
 $CONFIG = [
     // VIZ blockchain node for signature verification
     'viz_node' => 'https://node.viz.plus/',
-    
+
     // Domain identifier for signature verification
     // This should match what clients sign in their data string
     'auth_domain' => 'readdle.me',
-    
+
     // Session time-to-live in seconds (10 minutes default)
     // Shorter = more secure, longer = better UX
     'session_ttl' => 60 * 10,
-    
+
     // Database configuration
     // In production, use environment variables: getenv('DB_HOST')
     'db_host' => 'localhost',
@@ -58,11 +58,11 @@ $CONFIG = [
     'db_pass' => '',
     'db_name' => 'readdle',
     'db_charset' => 'utf8mb4',
-    
+
     // Rate limiting (requests per minute per account)
     // Set to 0 to disable
     'rate_limit' => 60,
-    
+
     // Maximum data size for updates (bytes)
     'max_update_size' => 1024 * 1024,  // 1 MB
 ];
@@ -157,7 +157,7 @@ mysqli_set_charset($db, $CONFIG['db_charset']);
 
 /**
  * Send JSON response with appropriate headers
- * 
+ *
  * @param array $data Response data
  * @param int $code HTTP status code (default 200)
  */
@@ -171,7 +171,7 @@ function send_response($data, $code = 200) {
 
 /**
  * Escape string for database query
- * 
+ *
  * @param mysqli $db Database connection
  * @param string $str String to escape
  * @return string Escaped string
@@ -183,7 +183,7 @@ function db_escape($db, $str) {
 /**
  * Validate account name format
  * VIZ accounts: 3-16 chars, lowercase letters, numbers, dots, hyphens
- * 
+ *
  * @param string $account Account name to validate
  * @return bool True if valid
  */
@@ -194,7 +194,7 @@ function is_valid_account($account) {
 /**
  * Clean expired sessions from database
  * Called periodically to prevent table bloat
- * 
+ *
  * @param mysqli $db Database connection
  */
 function cleanup_expired_sessions($db) {
@@ -221,13 +221,13 @@ if (isset($request['session']) && !empty($request['session'])) {
     // Lookup session in database
     // Sessions stored as binary for efficiency (UNHEX converts hex string to binary)
     $session_id = db_escape($db, $request['session']);
-    $query = mysqli_query($db, 
-        "SELECT `account` FROM `session` 
-         WHERE `id` = UNHEX('{$session_id}') 
+    $query = mysqli_query($db,
+        "SELECT `account` FROM `session`
+         WHERE `id` = UNHEX('{$session_id}')
          AND `time` > " . time()
     );
     $row = @mysqli_fetch_assoc($query);
-    
+
     if (isset($row['account'])) {
         // Valid session found
         $account = $row['account'];
@@ -252,14 +252,14 @@ if (isset($request['signature']) && isset($request['data'])) {
     // Verify signature using VIZ Auth library
     // This checks the signature against account's public keys on blockchain
     $auth_status = $viz_auth->check($request['data'], $request['signature']);
-    
+
     if ($auth_status) {
         // Extract account from signed data
         // Data format: {domain}:{operation}:{account}:{timestamp}:{nonce}
         $data_parts = explode(':', $request['data']);
         if (count($data_parts) >= 3) {
             $account = $data_parts[2];
-            
+
             // Validate account name format
             if (!is_valid_account($account)) {
                 $auth_status = false;
@@ -284,10 +284,10 @@ $response['auth'] = $auth_status;
 if ($auth_status) {
     $error = false;
     $action = $request['action'] ?? '';
-    
+
     // Cleanup old sessions periodically
     cleanup_expired_sessions($db);
-    
+
     // -------------------------------------------------------------------------
     // ACTION: Create Session
     // Converts signature-based auth into session for subsequent requests
@@ -296,31 +296,31 @@ if ($auth_status) {
         // Generate session ID from signed data (deterministic, unique per signature)
         $session_id = md5($request['data'] . $request['signature']);
         $expire_time = time() + $CONFIG['session_ttl'];
-        
+
         // Store session in database
         // Using REPLACE to handle session refresh gracefully
-        @mysqli_query($db, 
-            "REPLACE INTO `session` (`id`, `account`, `time`) 
+        @mysqli_query($db,
+            "REPLACE INTO `session` (`id`, `account`, `time`)
              VALUES (UNHEX('{$session_id}'), '{$account}', '{$expire_time}')"
         );
-        
+
         $response['session'] = $session_id;
         $response['expire'] = $expire_time;
         $response['ttl'] = $CONFIG['session_ttl'];
     }
-    
+
     // -------------------------------------------------------------------------
     // ACTION: Get Activity
     // Returns last activity timestamp and update ID for sync decisions
     // -------------------------------------------------------------------------
     else if ($action === 'activity') {
-        $query = mysqli_query($db, 
-            "SELECT * FROM `activity` 
-             WHERE `account` = '" . db_escape($db, $account) . "' 
+        $query = mysqli_query($db,
+            "SELECT * FROM `activity`
+             WHERE `account` = '" . db_escape($db, $account) . "'
              LIMIT 1"
         );
         $row = @mysqli_fetch_assoc($query);
-        
+
         if ($row === null) {
             // No activity yet - new account
             $response['activity'] = 0;
@@ -330,7 +330,7 @@ if ($auth_status) {
             $response['update'] = (int)$row['update'];
         }
     }
-    
+
     // -------------------------------------------------------------------------
     // ACTION: Get Updates
     // Retrieves all updates since specified activity time and update ID
@@ -339,15 +339,15 @@ if ($auth_status) {
     else if ($action === 'get_updates') {
         $since_time = intval($request['activity'] ?? 0);
         $since_update = intval($request['update'] ?? 0);
-        
+
         $result = [];
-        $query = mysqli_query($db, 
-            "SELECT * FROM `updates` 
-             WHERE `account` = '" . db_escape($db, $account) . "' 
+        $query = mysqli_query($db,
+            "SELECT * FROM `updates`
+             WHERE `account` = '" . db_escape($db, $account) . "'
              AND `time` >= {$since_time}
              ORDER BY `id` ASC"
         );
-        
+
         while ($row = @mysqli_fetch_assoc($query)) {
             // Only include updates after the specified update ID
             // This handles the edge case of multiple updates at same timestamp
@@ -360,21 +360,21 @@ if ($auth_status) {
                 ];
             }
         }
-        
+
         $response['result'] = $result;
         $response['count'] = count($result);
     }
-    
+
     // -------------------------------------------------------------------------
     // ACTION: Put Update
     // Stores new update (subscribe, backup, ignore, etc.)
     // -------------------------------------------------------------------------
     else if ($action === 'put_update') {
         global $UPDATE_TYPES;
-        
+
         $type = intval($request['type'] ?? 0);
         $value = $request['value'] ?? '';
-        
+
         // Validate update type
         if (!isset($UPDATE_TYPES[$type])) {
             $error = true;
@@ -387,10 +387,10 @@ if ($auth_status) {
         }
         else {
             $current_time = time();
-            
+
             // Insert the update
-            $query = mysqli_query($db, 
-                "INSERT INTO `updates` (`account`, `time`, `type`, `data`) 
+            $query = mysqli_query($db,
+                "INSERT INTO `updates` (`account`, `time`, `type`, `data`)
                  VALUES (
                      '" . db_escape($db, $account) . "',
                      {$current_time},
@@ -398,43 +398,43 @@ if ($auth_status) {
                      '" . db_escape($db, $value) . "'
                  )"
             );
-            
+
             $last_id = mysqli_insert_id($db);
-            
+
             // Special handling for backup type (type 1)
             // A new backup supersedes all previous updates
             if ($type === 1 && $last_id) {
-                @mysqli_query($db, 
-                    "DELETE FROM `updates` 
-                     WHERE `account` = '" . db_escape($db, $account) . "' 
+                @mysqli_query($db,
+                    "DELETE FROM `updates`
+                     WHERE `account` = '" . db_escape($db, $account) . "'
                      AND `id` < {$last_id}"
                 );
             }
-            
+
             // Update activity tracker
-            $activity_query = mysqli_query($db, 
-                "SELECT * FROM `activity` 
-                 WHERE `account` = '" . db_escape($db, $account) . "' 
+            $activity_query = mysqli_query($db,
+                "SELECT * FROM `activity`
+                 WHERE `account` = '" . db_escape($db, $account) . "'
                  LIMIT 1"
             );
             $activity_row = @mysqli_fetch_assoc($activity_query);
-            
+
             if ($activity_row === null) {
                 // First update for this account
-                mysqli_query($db, 
-                    "INSERT INTO `activity` (`account`, `time`, `update`) 
+                mysqli_query($db,
+                    "INSERT INTO `activity` (`account`, `time`, `update`)
                      VALUES ('" . db_escape($db, $account) . "', {$current_time}, {$last_id})"
                 );
             } else {
                 // Update existing activity record
-                mysqli_query($db, 
-                    "UPDATE `activity` 
-                     SET `time` = {$current_time}, `update` = {$last_id} 
-                     WHERE `account` = '" . db_escape($db, $account) . "' 
+                mysqli_query($db,
+                    "UPDATE `activity`
+                     SET `time` = {$current_time}, `update` = {$last_id}
+                     WHERE `account` = '" . db_escape($db, $account) . "'
                      LIMIT 1"
                 );
             }
-            
+
             $response['result'] = [
                 'activity' => $current_time,
                 'update' => $last_id,
@@ -442,7 +442,7 @@ if ($auth_status) {
             ];
         }
     }
-    
+
     // -------------------------------------------------------------------------
     // ACTION: Unknown
     // -------------------------------------------------------------------------
@@ -450,7 +450,7 @@ if ($auth_status) {
         $error = true;
         $response['message'] = 'Unknown action: ' . $action;
     }
-    
+
     // Handle errors
     if ($error) {
         $response['error'] = true;

@@ -2,7 +2,7 @@
 -- Cloud Sync Database Schema
 -- Passwordless Authentication with VIZ Blockchain
 -- =============================================================================
--- 
+--
 -- This schema supports the cloud sync API with:
 -- - Session management (signature-derived sessions)
 -- - Activity tracking (last sync timestamps)
@@ -29,18 +29,18 @@
 CREATE TABLE IF NOT EXISTS `session` (
     -- Session ID: MD5 hash stored as binary (16 bytes vs 32 chars)
     `id` BINARY(16) NOT NULL,
-    
+
     -- VIZ account name that owns this session
     `account` VARCHAR(64) NOT NULL,
-    
+
     -- Expiration timestamp (Unix epoch)
     `time` INT UNSIGNED NOT NULL,
-    
+
     PRIMARY KEY (`id`),
-    
+
     -- Index for cleanup queries
     INDEX `idx_time` (`time`),
-    
+
     -- Index for account lookups (if needed)
     INDEX `idx_account` (`account`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -55,13 +55,13 @@ CREATE TABLE IF NOT EXISTS `session` (
 CREATE TABLE IF NOT EXISTS `activity` (
     -- VIZ account name (primary key - one entry per account)
     `account` VARCHAR(64) NOT NULL,
-    
+
     -- Last activity timestamp (Unix epoch)
     `time` INT UNSIGNED NOT NULL DEFAULT 0,
-    
+
     -- Last update ID (for precise sync positioning)
     `update` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    
+
     PRIMARY KEY (`account`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -75,13 +75,13 @@ CREATE TABLE IF NOT EXISTS `activity` (
 CREATE TABLE IF NOT EXISTS `updates` (
     -- Auto-incrementing ID for ordering
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    
+
     -- VIZ account that owns this update
     `account` VARCHAR(64) NOT NULL,
-    
+
     -- Timestamp when update was created (Unix epoch)
     `time` INT UNSIGNED NOT NULL,
-    
+
     -- Update type ID:
     -- 1 = backup (full data, replaces previous)
     -- 2 = subscribe
@@ -91,15 +91,15 @@ CREATE TABLE IF NOT EXISTS `updates` (
     -- 6 = unpin_hashtag (reset_hashtag)
     -- 7 = ignore_hashtag
     `type` TINYINT UNSIGNED NOT NULL,
-    
+
     -- Update data (account name, hashtag, or JSON backup)
     `data` MEDIUMTEXT,
-    
+
     PRIMARY KEY (`id`),
-    
+
     -- Index for fetching updates by account and time
     INDEX `idx_account_time` (`account`, `time`),
-    
+
     -- Index for fetching updates by account and ID (for precise sync)
     INDEX `idx_account_id` (`account`, `id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
